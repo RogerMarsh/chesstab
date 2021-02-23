@@ -34,6 +34,7 @@ from ..core.filespec import (
     GAMES_FILE_DEF,
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
+    DB_ENVIRONMENT_MAXLOCKS,
     SECONDARY,
     )
 from ..core.chessrecord import ChessDBrecordGameImport
@@ -124,6 +125,7 @@ class ChessDatabase(bsddb3du_database.Database):
                                  DB_PRIVATE),
                        'gbytes': DB_ENVIRONMENT_GIGABYTES,
                        'bytes': DB_ENVIRONMENT_BYTES,
+                       'maxlocks': DB_ENVIRONMENT_MAXLOCKS,
                        }
         # Deferred update for games file only
         #for t in list(names.keys()):

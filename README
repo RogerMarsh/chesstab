@@ -52,6 +52,14 @@ You may need to give the path and version of Python depending on your system's c
 
 Use `Python`_ 3.6 or later.
 
+If this installation replaces ChessTab-4.1.1 or earlier you should run:
+
+python -m chesstab.tools.chesstab-4-1-1_castling-option-correction
+
+to fix the incorrect position and analysis index keys generated for moves Rxa8, Rxh8, Rxa1, and Rxh1, where the captured piece is a rook and neither rook involved in the move, nor either king, has moved previously.
+
+For the 233,765 games in twic920g.zip through twic999g.zip downloaded from https://theweekinchess.com the run takes about two hours.
+
 
 Chess Engines
 =============

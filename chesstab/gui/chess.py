@@ -933,7 +933,7 @@ class Chess(ChessException):
 
         # Show empty title and query lines or not?
         if self.ui.base_partials.is_visible():
-            position.cql_statement.process_cql_statement('')
+            position.cql_statement.process_statement('')
             position.set_cql_statement()
 
         self.ui.add_partial_position_to_display(position)

@@ -149,7 +149,7 @@ class CQLScore(ChessException):
         """"""
         # No mapping of tokens to text in widget (yet).
         self.score.insert(tkinter.INSERT,
-                          self.cql_statement.get_name_cql_statement_text())
+                          self.cql_statement.get_name_statement_text())
         
     def popup_inactive_menu(self, event=None):
         """Show the popup menu for a ChessQL statement in an inactive item.
@@ -174,11 +174,11 @@ class CQLScore(ChessException):
         
     def get_partial_key_cql_statement(self):
         """Return ChessQL statement for use as partial key."""
-        if self.cql_statement.is_cql_statement():
+        if self.cql_statement.is_statement():
 
             # Things must be arranged so a tuple, not a list, can be returned.
             #return tuple(self.cql_statement.position)
-            return self.cql_statement.get_cql_statement_text() # Maybe!
+            return self.cql_statement.get_statement_text() # Maybe!
         
         else:
             return False
@@ -193,11 +193,41 @@ class CQLScore(ChessException):
         cqls = self.cql_statement
         if cqls.cql_error:
             grid.datasource.get_cql_statement_games(None, None)
-        elif self._is_cql_query_editable:
-            grid.datasource.get_cql_statement_games(cqls, None)
         else:
-            grid.datasource.get_cql_statement_games(
-                cqls, self.recalculate_after_edit)
+            try:
+                if self._is_cql_query_editable:
+                    grid.datasource.get_cql_statement_games(cqls, None)
+                else:
+                    grid.datasource.get_cql_statement_games(
+                        cqls, self.recalculate_after_edit)
+            except AttributeError as exc:
+                if str(exc) == "'NoneType' object has no attribute 'answer'":
+                    msg = ''.join(
+                        ("Unable to list games for ChessQL statement, ",
+                         "probably because an 'empty square' is in the query ",
+                         "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                         str(exc),
+                         ))
+                else:
+                    msg = ''.join(
+                        ("Unable to list games for ChessQL statement:\n\n",
+                         "The reported error is:\n\n",
+                         str(exc),
+                         ))
+                grid.datasource.get_cql_statement_games(None, None)
+                dialogues.showinfo(
+                    title='ChessQL Statement',
+                    message=msg)
+            except Exception as exc:
+                msg = ''.join(
+                    ("Unable to list games for ChessQL statement:\n\n",
+                     "The reported error is:\n\n",
+                     str(exc),
+                     ))
+                grid.datasource.get_cql_statement_games(None, None)
+                dialogues.showinfo(
+                    title='ChessQL Statement',
+                    message=msg)
         grid.partial = self.get_partial_key_cql_statement()
         #grid.rows = 1
         grid.load_new_index()

@@ -245,7 +245,7 @@ class CQLDisplay(ChessException, Display):
                                  'Partial position list hidden.')))
             return
         updater = ChessDBrecordPartial()
-        uvr = updater.value.process_cql_statement(
+        uvr = updater.value.process_statement(
             self.get_name_cql_statement_text())
         title = 'Insert ChessQL Statement'
         tname = title.replace('Insert ', '').replace('S', 's')
@@ -366,10 +366,72 @@ class CQLDisplay(ChessException, Display):
         elif instance.newrecord is None:
             pds.forget_cql_statement_games(instance)
         elif instance.newrecord is False:
-            pds.update_cql_statement_games(instance)
+            try:
+                pds.update_cql_statement_games(instance)
+            except AttributeError as exc:
+                if str(exc) == "'NoneType' object has no attribute 'answer'":
+                    msg = ''.join(
+                        ("Unable to add ChessQL statement to database, ",
+                         "probably because an 'empty square' is in the query ",
+                         "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                         str(exc),
+                         ))
+                else:
+                    msg = ''.join(
+                        ("Unable to add ChessQL statement to database:\n\n",
+                         "The reported error is:\n\n",
+                         str(exc),
+                         ))
+                dialogues.showinfo(
+                    title='Insert ChessQL Statement',
+                    message=msg)
+                return
+            except Exception as exc:
+                msg = ''.join(
+                    ("Unable to add ChessQL statement to database:\n\n",
+                     "The reported error is:\n\n",
+                     str(exc),
+                     ))
+                dialogues.showinfo(
+                    title='Insert ChessQL Statement',
+                    message=msg)
+                return
         else:
+
+            # Unfortunatly the existing list will have to be recalculated if
+            # one of the caught exceptions occurs.
             pds.forget_cql_statement_games(instance)
-            pds.update_cql_statement_games(instance.newrecord)
+            try:
+                pds.update_cql_statement_games(instance.newrecord)
+            except AttributeError as exc:
+                if str(exc) == "'NoneType' object has no attribute 'answer'":
+                    msg = ''.join(
+                        ("Unable to edit ChessQL statement on database, ",
+                         "probably because an 'empty square' is in the query ",
+                         "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                         str(exc),
+                         ))
+                else:
+                    msg = ''.join(
+                        ("Unable to edit ChessQL statement on database:\n\n",
+                         "The reported error is:\n\n",
+                         str(exc),
+                         ))
+                dialogues.showinfo(
+                    title='Insert ChessQL Statement',
+                    message=msg)
+                return
+            except Exception as exc:
+                msg = ''.join(
+                    ("Unable to edit ChessQL statement on database:\n\n",
+                     "The reported error is:\n\n",
+                     str(exc),
+                     ))
+                dialogues.showinfo(
+                    title='Insert ChessQL Statement',
+                    message=msg)
+                return
+
         if self is self.ui.partial_items.active_item:
             if self.sourceobject is not None and key == self.sourceobject.key:
                 
@@ -495,7 +557,34 @@ class CQLDisplay(ChessException, Display):
         else:
             key = None
         p.close_client_cursor()
-        p.datasource.get_cql_statement_games(statement, self.sourceobject)
+        try:
+            p.datasource.get_cql_statement_games(statement, self.sourceobject)
+        except AttributeError as exc:
+            if str(exc) == "'NoneType' object has no attribute 'answer'":
+                msg = ''.join(
+                    ("Unable to list games for ChessQL statement, ",
+                     "probably because an 'empty square' is in the query ",
+                     "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                     str(exc),
+                     ))
+            else:
+                msg = ''.join(
+                    ("Unable to list games for ChessQL statement:\n\n",
+                     "The reported error is:\n\n",
+                     str(exc),
+                     ))
+            dialogues.showinfo(
+                title='Delete ChessQL Statement',
+                message=msg)
+        except Exception as exc:
+            msg = ''.join(
+                ("Unable to list games for ChessQL statement:\n\n",
+                 "The reported error is:\n\n",
+                 str(exc),
+                 ))
+            dialogues.showinfo(
+                title='Delete ChessQL Statement',
+                message=msg)
         p.fill_view(currentkey=key, exclude=False)
         if p.datasource.not_implemented:
             dialogues.showinfo(
@@ -632,12 +721,12 @@ class DatabaseCQLDisplay(CQLDisplay, CQL, DataNotify):
         s = self.cql_statement
 
         # Consider changing this since the call no longer ever returns None.
-        if s.is_cql_statement() is not None:
+        if s.is_statement() is not None:
             
             v = self.sourceobject.value
             if (s.get_name_text() != v.get_name_text() or
-                s.is_cql_statement() != v.is_cql_statement() or
-                s.get_cql_statement_text() != v.get_cql_statement_text()):
+                s.is_statement() != v.is_statement() or
+                s.get_statement_text() != v.get_statement_text()):
                 dialogues.showinfo(
                     title='Delete ChessQL Statement',
                     message='\n'.join((
@@ -751,10 +840,37 @@ class DatabaseCQLInsert(CQLDisplay, CQLEdit, DataNotify):
         s = CQLStatement()
         # Not sure this is needed or wanted.
         #s.dbset = self.ui.base_games.datasource.dbset
-        s.process_cql_statement(
+        s.process_statement(
             self.get_name_cql_statement_text())
         self.cql_statement = s
-        self.refresh_game_list()
+        try:
+            self.refresh_game_list()
+        except AttributeError as exc:
+            if str(exc) == "'NoneType' object has no attribute 'answer'":
+                msg = ''.join(
+                    ("Unable to list games for ChessQL statement, probably ",
+                     "because an 'empty square' is in the query ",
+                     "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                     str(exc),
+                     ))
+            else:
+                msg = ''.join(
+                    ("Unable to list games for ChessQL statement:\n\n",
+                     "The reported error is:\n\n",
+                     str(exc),
+                     ))
+            dialogues.showinfo(
+                title='ChessQL Statement',
+                message=msg)
+        except Exception as exc:
+            msg = ''.join(
+                ("Unable to list games for ChessQL statement:\n\n",
+                 "The reported error is:\n\n",
+                 str(exc),
+                 ))
+            dialogues.showinfo(
+                title='ChessQL Statement',
+                message=msg)
         return 'break'
 
     def insert_char_to_right(self, char):
@@ -870,7 +986,7 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
         # Then original would not be used. Instead DataSource.new_row
         # gets record keyed by sourceobject and update is used to edit this.
         updater = ChessDBrecordPartial()
-        uvr = updater.value.process_cql_statement(
+        uvr = updater.value.process_statement(
             self.get_name_cql_statement_text())
         title = 'Edit ChessQL Statement'
         tname = title.replace('Edit ', '').replace('S', 's')

@@ -35,13 +35,13 @@ class ChessDBeditCQL(ChessException, DataEdit):
             showinitial = DialogueCQLDisplay(master=parent, ui=ui)
             if ui is not None:
                 ui.partials_in_toplevels.add(showinitial)
-            showinitial.cql_statement.process_cql_statement(
+            showinitial.cql_statement.process_statement(
                 oldobject.get_srvalue())
             showinitial.set_cql_statement()
         newview = DialogueCQLEdit(master=parent, ui=ui)
         if ui is not None:
             ui.partials_in_toplevels.add(newview)
-        newview.cql_statement.process_cql_statement(newobject.get_srvalue())
+        newview.cql_statement.process_statement(newobject.get_srvalue())
         newview.set_cql_statement()
         super().__init__(
             newobject,

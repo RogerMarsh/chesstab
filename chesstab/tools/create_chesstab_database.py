@@ -48,8 +48,7 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
     """Create a ChessTab database."""
 
     _START_TEXT = ''.join(
-        ('Right-click for menu.\n\n',
-         'ChessTab would create a new database with the top-left engine, ',
+        ('ChessTab would create a new database with the top-left engine, ',
          'and segment size 4000.',
          ))
 

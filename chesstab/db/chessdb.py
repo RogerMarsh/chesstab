@@ -39,6 +39,7 @@ from ..core.filespec import (
     FileSpec,
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
+    DB_ENVIRONMENT_MAXLOCKS,
     )
 from ..basecore import database
 
@@ -69,6 +70,7 @@ class ChessDatabase(database.Database, bsddb3_database.Database):
                                  DB_PRIVATE),
                        'gbytes': DB_ENVIRONMENT_GIGABYTES,
                        'bytes': DB_ENVIRONMENT_BYTES,
+                       'maxlocks': DB_ENVIRONMENT_MAXLOCKS,
                        }
 
         super().__init__(

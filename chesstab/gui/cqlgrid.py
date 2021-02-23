@@ -78,7 +78,7 @@ class CQLListGrid(ChessException, DataGrid, Display):
             itemgrid=self.ui.partial_games,
             sourceobject=sourceobject)
         #    sourceobject.get_srvalue())
-        selection.cql_statement.process_cql_statement(
+        selection.cql_statement.process_statement(
             sourceobject.get_srvalue())
         return selection
         
@@ -108,7 +108,7 @@ class CQLListGrid(ChessException, DataGrid, Display):
             itemgrid=self.ui.partial_games,
             sourceobject=sourceobject)
         #    sourceobject.get_srvalue())
-        selection.cql_statement.process_cql_statement(
+        selection.cql_statement.process_statement(
             sourceobject.get_srvalue())
         return selection
         
@@ -194,7 +194,7 @@ class CQLListGrid(ChessException, DataGrid, Display):
         """Create insert dialogue."""
         instance = self.datasource.new_row()
 
-        # Later process_cql_statement() causes display of empty title and
+        # Later process_statement() causes display of empty title and
         # query lines.
         instance.srvalue = repr('')
 
@@ -616,7 +616,7 @@ class CQLGrid(CQLListGrid):
                 ''.join(
                     (p.get_name_text(),
                      '   (',
-                     p.get_cql_statement_text(),
+                     p.get_statement_text(),
                      ')')))
         else:
             self.ui.statusbar.set_status_text('')

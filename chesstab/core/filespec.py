@@ -74,9 +74,11 @@ _NEWGAMES_FIELD_NAME = 'NewGames'
 _OPENING_ERROR_FIELD_NAME = 'OpeningError'
 _PGN_DATE_FIELD_NAME = 'PGNdate'
 
-# Berkeley DB environment
+# Berkeley DB environment.
 DB_ENVIRONMENT_GIGABYTES = 0
 DB_ENVIRONMENT_BYTES = 1024000
+DB_ENVIRONMENT_MAXLOCKS = 10000 # OpenBSD only.
+
 # Any partial position indexed by NEWGAMES_FIELD_VALUE on _NEWGAMES_FIELD_NAME
 # has not been recalculated since an update to the games file.  The partial
 # position's _PARTIALGAMES_FIELD_NAME reference on the games file is out of

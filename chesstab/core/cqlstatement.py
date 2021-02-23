@@ -96,19 +96,8 @@ class CQLStatement(Statement):
     def set_database(self, database=None):
         """Set Database instance to which ChessQL query is applied."""
         self.__database = database
-
-    # Until the naming convention is resolved.
-    def get_name_cql_statement_text(self):
-        """Return name and statement text."""
-        return super().get_name_statement_text()
-
-    # Until the naming convention is resolved.
-    def get_cql_statement_text(self):
-        """Return statement text."""
-        return super().get_statement_text()
         
-    # Until the naming convention is resolved.
-    def process_cql_statement(self, text):
+    def process_statement(self, text):
         """Lex and parse the ChessQL statement."""
 
         # None or False returned depending on problem.
@@ -126,54 +115,3 @@ class CQLStatement(Statement):
         if r:
             self.cql_error = r
         return result
-
-    # Until the naming convention is resolved.
-    def is_cql_statement(self):
-        """Return True if the statement text is valid CQL syntax."""
-        return super().is_statement()
-
-    # Not sure this is needed or wanted.
-    #@property
-    #def dbset(self):
-    #    return self._dbset
-
-    # Not sure this is needed or wanted.
-    #@dbset.setter
-    #def dbset(self, value):
-    #    if self._dbset is None:
-    #        self._dbset = value
-    #    elif self._dbset != value:
-    #        raise QueryStatementError(
-    #            ''.join(("Database file name already set to ",
-    #                     repr(self._dbset),
-    #                     ", cannot change to ",
-    #                     repr(value),
-    #                     ".")))
-        
-    #def _transform_piece_designators(self, filter_):
-    #    """Apply transforms to piece designators in CQL statement."""
-    #    children = filter_.children
-    #    for n in filter_.node.children:
-    #        children.append(FSNode(n))
-    #        r = self._transform_piece_designators(children[-1])
-    #        if r:
-    #            return r
-    #    r = filter_.transform_descendant_piece_designators()
-    #    if r:
-    #        return r
-        
-    #def expand_piece_designators(self, filter_):
-    #    """Expand piece designators in CQL statement.
-
-    #    Expanded piece designators are made available in FSNode.designator_set,
-    #    and cache for optimizing index access.
-
-    #    """
-    #    for n in filter_.children:
-    #        self.expand_piece_designators(n)
-    #    if filter_.leaf:
-    #        if filter_.type == PIECE_DESIGNATOR_FILTER:
-    #            pd = PieceDesignator(filter_.leaf)
-    #            pd.parse()
-    #            pd.expand_piece_designator()
-    #            filter_.data = pd

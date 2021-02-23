@@ -23,7 +23,7 @@ class ChessDBshowCQL(ChessException, DataShow):
         oldview = DialogueCQLDisplay(master=parent, ui=ui)
         if ui is not None:
             ui.partials_in_toplevels.add(oldview)
-        oldview.cql_statement.process_cql_statement(instance.get_srvalue())
+        oldview.cql_statement.process_statement(instance.get_srvalue())
         oldview.set_cql_statement(instance.value)
         super().__init__(
             instance,

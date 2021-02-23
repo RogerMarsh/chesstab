@@ -43,6 +43,7 @@ from ..core.filespec import (
     NEWGAMES_FIELD_VALUE,
     PARTIALPOSITION_FIELD_DEF,
     )
+from ..core.chessrecord import ChessDBrecordGameUpdate
 
 AND_FILTERS = frozenset((constants.LEFT_BRACE_FILTER,
                          'cql',
@@ -82,6 +83,15 @@ class ChessQLGames:
         super().__init__(*a, **k)
 
         # recordclass argument must be used to support non-index field finds.
+        # Empty square searches can be transformed into equivalent occupied
+        # square searches, but it does not work yet.
+        # ChessDBrecordGameUpdate is the closest class to that needed.
+        # No update capability is needed, and a different set of 'per move'
+        # attributes might be better.
+        # The 'try ...' statements in .gui.cqldisplay and .gui.cqlscore fit the
+        # version of Find(...) call with the recordclass argument.
+        #self.cqlfinder = Find(
+        #    self.dbhome, self.dbset, recordclass=ChessDBrecordGameUpdate)
         self.cqlfinder = Find(self.dbhome, self.dbset)
 
         self.not_implemented = set()
@@ -610,7 +620,7 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
             sq = ps[1:]
             emptyds.add(' '.join(
                 (NOT,
-                 psmfield,
+                 smfield,
                  EQ,
                  ''.join((mns, variation_code, sq + ANY_WHITE_PIECE_NAME)),
                  OR,

@@ -558,12 +558,15 @@ class ChessDBrecordGameUpdate(Record):
     
         # Never called because attribute is not bound anywhere and no
         # exceptions are seen ever.
-        if self.value.callbacktried:
-            pass
-        elif self.value.callbacktried == None:
-            pass
-        elif not self.value.callbacktried:
-            self.value.set_game_source(record[0])
+        # Until ..tools.chesstab-4-1-1_castling-option-correction written, and
+        # following code commented.  I assume the idea made sense once!
+        # Might as well let superclass method be used directly.
+        #if self.value.callbacktried:
+        #    pass
+        #elif self.value.callbacktried == None:
+        #    pass
+        #elif not self.value.callbacktried:
+        #    self.value.set_game_source(record[0])
     
 
 class ChessDBrecordGameImport(Record):
@@ -630,8 +633,8 @@ class ChessDBvaluePartial(CQLStatement, Value):
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
         try:
-            if (self.get_name_cql_statement_text() !=
-                other.get_name_cql_statement_text()):
+            if (self.get_name_statement_text() !=
+                other.get_name_statement_text()):
                 return False
             else:
                 return True
@@ -641,8 +644,8 @@ class ChessDBvaluePartial(CQLStatement, Value):
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
         try:
-            if (self.get_name_cql_statement_text() ==
-                other.get_name_cql_statement_text()):
+            if (self.get_name_statement_text() ==
+                other.get_name_statement_text()):
                 return False
             else:
                 return True
@@ -651,11 +654,11 @@ class ChessDBvaluePartial(CQLStatement, Value):
     
     def load(self, value):
         """Set partial position from value"""
-        self.process_cql_statement(literal_eval(value))
+        self.process_statement(literal_eval(value))
 
     def pack_value(self):
         """Return partial position value"""
-        return repr(self.get_name_cql_statement_text())
+        return repr(self.get_name_statement_text())
 
     def pack(self):
         """Extend, return partial position record and index data."""

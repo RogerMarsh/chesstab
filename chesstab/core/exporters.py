@@ -768,8 +768,8 @@ def export_single_position(partialposition, filename):
     if filename is None:
         return
     pgn = CQLStatement()
-    pgn.process_cql_statement(partialposition)
-    if not pgn.is_cql_statement():
+    pgn.process_statement(partialposition)
+    if not pgn.is_statement():
         return
     gamesout = open(filename, 'w')
     try:
