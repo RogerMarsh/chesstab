@@ -63,4 +63,4 @@ class ChessDatabase(database.Database, unqlite_database.Database):
 
     def delete_database(self):
         """Close and delete the open chess database."""
-        super().delete_database((self.database_file,))
+        return super().delete_database((self.database_file,))

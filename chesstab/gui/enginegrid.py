@@ -6,20 +6,20 @@
 """
 
 import tkinter
+import tkinter.messagebox
 from urllib.parse import urlsplit, parse_qs
-
-from solentware_misc.workarounds import dialogues
 
 from solentware_grid.datagrid import DataGrid
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from ..core.chessrecord import ChessDBrecordEngine
 from .enginerow import ChessDBrowEngine
-from .chessexception import ChessException
 from .eventspec import EventSpec, DummyEvent
 from .display import Display
 
 
-class EngineListGrid(ChessException, DataGrid, Display):
+class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     """A DataGrid for lists of chess engine definition.
 
@@ -330,7 +330,8 @@ class EngineGrid(EngineListGrid):
         try:
             super().set_selection(key)
         except KeyError:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.parent,
                 title='Insert Engine Definition Workaround',
                 message=''.join(
                     ('All records have same name on this display.\n\nThe new ',
@@ -362,18 +363,21 @@ class EngineGrid(EngineListGrid):
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
         #if self.ui.uci.uci_drivers_reply is None:
-        #    dialogues.showinfo(
-        #        'Chesstab Restriction',
-        #        ' '.join(('Starting an UCI chess engine is not allowed because',
-        #                  'an interface cannot be created:',
-        #                  'this is expected if running under Wine.')))
+        #    tkinter.messagebox.showinfo(
+        #        parent=self.parent,
+        #        title='Chesstab Restriction',
+        #        message=' '.join(
+        #            ('Starting an UCI chess engine is not allowed because',
+        #             'an interface cannot be created:',
+        #             'this is expected if running under Wine.')))
         #    return
 
         url = urlsplit(definition.get_engine_command_text())
         try:
             url.port
         except ValueError as exc:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title='Run Engine',
                 message=''.join(('The port in the chess engine definition is ',
                                  'invalid.\n\n',
@@ -382,7 +386,8 @@ class EngineGrid(EngineListGrid):
                                  )))
             return
         if not definition.get_engine_command_text():
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.parent,
                 title='Run Engine',
                 message=''.join((
                     'The engine definition does not have a command to ',
@@ -391,7 +396,8 @@ class EngineGrid(EngineListGrid):
             return
         elif not (url.port or url.hostname):
             if not definition.is_run_engine_command():
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
                     title='Run Engine',
                     message=''.join((
                         'The engine definition command to run a chess engine ',
@@ -400,7 +406,8 @@ class EngineGrid(EngineListGrid):
                 return
         if url.hostname or url.port:
             if url.path and url.query:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent=self.parent,
                     title='Run Engine',
                     message=''.join(
                         ('Engine must be query with hostname or port.\n\n',
@@ -409,7 +416,8 @@ class EngineGrid(EngineListGrid):
                          )))
                 return
             elif url.path:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent=self.parent,
                     title='Run Engine',
                     message=''.join(
                         ('Engine must be query with hostname or port.\n\n',
@@ -417,7 +425,8 @@ class EngineGrid(EngineListGrid):
                          )))
                 return
             elif not url.query:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent=self.parent,
                     title='Run Engine',
                     message='Engine must be query with hostname or port.\n\n')
                 return
@@ -425,7 +434,8 @@ class EngineGrid(EngineListGrid):
                 try:
                     query = parse_qs(url.query, strict_parsing=True)
                 except ValueError as exc:
-                    dialogues.showerror(
+                    tkinter.messagebox.showerror(
+                        parent=self.parent,
                         title='Run Engine',
                         message=''.join(
                             ("Problem in chess engine specification.  ",
@@ -434,7 +444,8 @@ class EngineGrid(EngineListGrid):
                              )))
                     return
                 if len(query) > 1:
-                    dialogues.showerror(
+                    tkinter.messagebox.showerror(
+                        parent=self.parent,
                         title='Run Engine',
                         message=''.join(
                             ("Engine must be single 'key=value' or ",
@@ -445,7 +456,8 @@ class EngineGrid(EngineListGrid):
                 elif len(query) == 1:
                     for k, v in query.items():
                         if k != 'name':
-                            dialogues.showerror(
+                            tkinter.messagebox.showerror(
+                                parent=self.parent,
                                 title='Run Engine',
                                 message=''.join(
                                     ("Engine must be single 'key=value' or ",
@@ -455,7 +467,8 @@ class EngineGrid(EngineListGrid):
                                      )))
                             return
                         elif len(v) > 1:
-                            dialogues.showerror(
+                            tkinter.messagebox.showerror(
+                                parent=self.parent,
                                 title='Run Engine',
                                 message=''.join(
                                     ("Engine must be single 'key=value' or ",
@@ -465,7 +478,8 @@ class EngineGrid(EngineListGrid):
                                      )))
                             return
         elif url.path and url.query:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title='Run Engine',
                 message=''.join(
                     ('Engine must be path without hostname or port.\n\n',
@@ -474,7 +488,8 @@ class EngineGrid(EngineListGrid):
                      )))
             return
         elif url.query:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title='Run Engine',
                 message=''.join(
                     ('Engine must be path without hostname or port.\n\n',
@@ -482,7 +497,8 @@ class EngineGrid(EngineListGrid):
                      )))
             return
         elif not url.path:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title='Run Engine',
                 message='Engine must be path without hostname or port.\n')
             return

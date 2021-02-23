@@ -17,13 +17,13 @@ The DialogueEngineEdit class adds insert and edit record to the
 EngineDialogue class.
 
 """
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .engine import Engine
 from .engineedit import EngineEdit
-from .chessexception import ChessException
 
 
-class EngineDialogue(ChessException):
+class EngineDialogue(ExceptionHandler):
     
     """Manage UI interaction with database for a displayed engine definition.
 

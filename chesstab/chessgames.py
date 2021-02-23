@@ -22,76 +22,50 @@ Windows.
 if __name__ == '__main__':
 
     from . import APPLICATION_NAME
-    
+
     try:
-
-        from .gui.chess import Chess
-
-        app = Chess(allowcreate=True)
-        try:
-            app.root.mainloop()
-        except SystemExit:
-            try:
-                app.root.destroy()
-            except:
-                pass
-            try:
-                del app
-            except:
-                pass
-        except:
-            try:
-
-                import tkinter.messagebox
-
-                try:
-                    tkinter.messagebox.showerror(
-                        master=app.root,
-                        title=APPLICATION_NAME,
-                        message=''.join(
-                            ('An error which cannot be handled by ',
-                             APPLICATION_NAME,
-                             ' has occurred.')),
-                        )
-                except:
-
-                    import tkinter
-
-                    ser = tkinter.Tk()
-                    ser.wm_title(APPLICATION_NAME)
-                    tkinter.messagebox.showerror(
-                        master=ser,
-                        title=APPLICATION_NAME,
-                        message=''.join(
-                            ('An error which cannot be handled by ',
-                             APPLICATION_NAME,
-                             ' has occurred.')),
-                        )
-                    ser.destroy()
-                    del ser
-                try:
-                    app.root.destroy()
-                except:
-                    pass
-                try:
-                    del app
-                except:
-                    pass
-            except:
-                pass
-    except:
-
-        import tkinter, tkinter.messagebox
-
-        ser = tkinter.Tk()
-        ser.wm_title(APPLICATION_NAME)
-        tkinter.messagebox.showerror(
-            master=ser,
-            title=APPLICATION_NAME,
-            message=''.join(
-                ('An error has occurred while attempting to start ',
-                 APPLICATION_NAME, '.',
-                 )),
+        from solentware_misc.gui.startstop import (
+            start_application_exception,
+            stop_application,
+            application_exception,
             )
-        ser.destroy()
-        del ser
+    except Exception as error:
+        import tkinter.messagebox
+        try:
+           tkinter.messagebox.showerror(
+               title='Start Exception',
+               message='.\n\nThe reported exception is:\n\n'.join(
+                   ('Unable to import solentware_misc.gui.startstop module',
+                    str(error))),
+               )
+        except:
+            pass
+        raise SystemExit('Unable to import start application utilities')
+    try:
+        from .gui.chess import Chess
+    except Exception as error:
+        start_application_exception(
+            error,
+            appname=APPLICATION_NAME,
+            action='import')
+        raise SystemExit(' import '.join(('Unable to', APPLICATION_NAME)))
+    try:
+        app = Chess(allowcreate=True)
+    except Exception as error:
+        start_application_exception(
+            error,
+            appname=APPLICATION_NAME,
+            action='initialise')
+        raise SystemExit(' initialise '.join(('Unable to', APPLICATION_NAME)))
+    try:
+        app.root.mainloop()
+    except SystemExit:
+        stop_application(app, app.root)
+        raise
+    except Exception as error:
+        application_exception(
+            error,
+            app,
+            app.root,
+            title=APPLICATION_NAME,
+            appname=APPLICATION_NAME)

@@ -5,15 +5,15 @@
 """Delete dialogue for Chess Query Language (ChessQL) statement record.
 """
 
-from solentware_misc.workarounds import dialogues
+import tkinter.messagebox
 
 from solentware_grid.gui.datadelete import DataDelete
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from .cqldisplay import DialogueCQLDisplay
 
 
-class ChessDBdeleteCQL(ChessException, DataDelete):
+class ChessDBdeleteCQL(ExceptionHandler, DataDelete):
     """Dialog to delete a ChessQL statement from database.
 
     The ChessQL statement is in it's own Toplevel widget.
@@ -57,7 +57,8 @@ class ChessDBdeleteCQL(ChessException, DataDelete):
             return False
         if self.ui.partial_items.active_item:
             if self.ui.partial_items.active_item.sourceobject is None:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
                     title=self.__title,
                     message=''.join((
                         "Cannot use this delete dialogue while the active ",
@@ -66,7 +67,8 @@ class ChessDBdeleteCQL(ChessException, DataDelete):
                 return False
             if (self.ui.partial_items.active_item.sourceobject.key ==
                 self.object.key):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
                     title=self.__title,
                     message=''.join((
                         "Cannot use this delete dialogue while the active ",

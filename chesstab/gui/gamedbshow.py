@@ -7,14 +7,15 @@
 
 from solentware_grid.gui.datashow import DataShow
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
-from .chessexception import ChessException
 from .gamedisplay import DialogueGameDisplay
 
 
-class ChessDBshowGame(ChessException, DataShow):
+class ChessDBshowGame(ExceptionHandler, DataShow):
     
     """Dialog to show a game from database.
 

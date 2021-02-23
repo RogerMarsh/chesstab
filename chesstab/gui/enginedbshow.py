@@ -7,11 +7,12 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .enginedisplay import DialogueEngineDisplay
 
 
-class ChessDBshowEngine(ChessException, DataShow):
+class ChessDBshowEngine(ExceptionHandler, DataShow):
     """Dialog to show a chess engine definition from database.
 
     The chess engine definition is in it's own Toplevel widget.

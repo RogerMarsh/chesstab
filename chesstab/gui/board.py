@@ -33,6 +33,8 @@ x  any black piece
 import tkinter
 import tkinter.font
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
     FEN_WHITE_QUEEN,
@@ -51,7 +53,6 @@ from pgn_read.core.constants import (
     )
 from pgn_read.core.squares import Squares
 
-from .chessexception import ChessException
 from . import constants
 from ..core.constants import NOPIECE
 
@@ -73,7 +74,7 @@ _pieces = {NOPIECE:'',
            FEN_BLACK_PAWN:'o'}
 
 
-class Board(ChessException):
+class Board(ExceptionHandler):
     
     """Chess board widget.
 

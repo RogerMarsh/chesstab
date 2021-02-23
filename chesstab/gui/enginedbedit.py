@@ -5,16 +5,16 @@
 """Customise edit dialogue to edit or insert chess engine definition record.
 """
 from urllib.parse import urlsplit, parse_qs
-
-from solentware_misc.workarounds import dialogues
+import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .enginedisplay import DialogueEngineDisplay, DialogueEngineEdit
 
 
-class ChessDBeditEngine(ChessException, DataEdit):
+class ChessDBeditEngine(ExceptionHandler, DataEdit):
     """Dialog to edit or insert a chess engine definition on database.
 
     The chess engine definition is in it's own Toplevel widget.
@@ -74,7 +74,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
             return False
         ed = self.newview.get_name_engine_definition_dict()
         if not ed:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message=''.join(('No chess engine definition given.\n\n',
                                  'Name of chess engine definition must be ',
@@ -84,7 +85,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
             return False
         self.newobject.value.load(repr(ed))
         if not self.newobject.value.get_engine_command_text():
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message=''.join(('No chess engine definition given.\n\n',
                                  'Name of chess engine definition must be ',
@@ -96,7 +98,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
         try:
             url.port
         except ValueError as exc:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message=''.join(('Invalid chess engine definition given.\n\n',
                                  'The reported error for the port is:\n\n',
@@ -105,7 +108,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
             return False
         if url.hostname or url.port:
             if url.path and url.query:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent = self.parent,
                     title=self.__title,
                     message=''.join(
                         ('Give engine as query with hostname or port.\n\n',
@@ -114,7 +118,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                          )))
                 return False
             elif url.path:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent = self.parent,
                     title=self.__title,
                     message=''.join(
                         ('Give engine as query with hostname or port.\n\n',
@@ -122,7 +127,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                          )))
                 return False
             elif not url.query:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent = self.parent,
                     title=self.__title,
                     message='Give engine as query with hostname or port.\n\n')
                 return False
@@ -130,7 +136,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                 try:
                     query = parse_qs(url.query, strict_parsing=True)
                 except ValueError as exc:
-                    dialogues.showerror(
+                    tkinter.messagebox.showerror(
+                        parent = self.parent,
                         title=self.__title,
                         message=''.join(
                             ("Problem specifying chess engine.  The reported ",
@@ -139,7 +146,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                              )))
                     return False
                 if len(query) > 1:
-                    dialogues.showerror(
+                    tkinter.messagebox.showerror(
+                        parent = self.parent,
                         title=self.__title,
                         message=''.join(
                             ("Give engine as single 'key=value' or ",
@@ -150,7 +158,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                 elif len(query) == 1:
                     for k, v in query.items():
                         if k != 'name':
-                            dialogues.showerror(
+                            tkinter.messagebox.showerror(
+                                parent = self.parent,
                                 title=self.__title,
                                 message=''.join(
                                     ("Give engine as single 'key=value' or ",
@@ -160,7 +169,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                                      )))
                             return False
                         elif len(v) > 1:
-                            dialogues.showerror(
+                            tkinter.messagebox.showerror(
+                                parent = self.parent,
                                 title=self.__title,
                                 message=''.join(
                                     ("Give engine as single 'key=value' or ",
@@ -170,7 +180,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                                      )))
                             return False
         elif url.path and url.query:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message=''.join(
                     ('Give engine as path without hostname or port.\n\n',
@@ -179,7 +190,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                      )))
             return False
         elif url.query:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message=''.join(
                     ('Give engine as path without hostname or port.\n\n',
@@ -187,7 +199,8 @@ class ChessDBeditEngine(ChessException, DataEdit):
                      )))
             return False
         elif not url.path:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.parent,
                 title=self.__title,
                 message='Give engine as path without hostname or port.\n')
             return False

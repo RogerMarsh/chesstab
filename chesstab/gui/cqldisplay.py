@@ -33,23 +33,22 @@ class.
 import tkinter
 import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
-
 from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .cql import CQL
 from .cqledit import CQLEdit
 from ..core.chessrecord import ChessDBrecordPartial
 from ..core.cqlstatement import CQLStatement
-from .chessexception import ChessException
 from .eventspec import EventSpec
 from .display import Display
 from .. import APPLICATION_NAME
 
 
-class CQLDisplay(ChessException, Display):
+class CQLDisplay(ExceptionHandler, Display):
     
     """Manage UI interaction with database for displayed ChessQL statements.
 
@@ -224,7 +223,8 @@ class CQLDisplay(ChessException, Display):
     def insert_cql_statement_database(self, event=None):
         """Add ChessQL statement to database."""
         if self.ui.partial_items.active_item is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert ChessQL Statement',
                 message='No active ChessQL statement to insert into database.')
             return
@@ -232,14 +232,16 @@ class CQLDisplay(ChessException, Display):
         # This should see if ChessQL statement with same name already exists,
         # after checking for database open, and offer option to insert anyway.
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert ChessQL Statement',
                 message='Cannot add ChessQL statement:\n\nNo database open.')
             return
 
         datasource = self.ui.base_partials.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert ChessQL Statement',
                 message=''.join(('Cannot add ChessQL statement:\n\n',
                                  'Partial position list hidden.')))
@@ -250,7 +252,8 @@ class CQLDisplay(ChessException, Display):
         title = 'Insert ChessQL Statement'
         tname = title.replace('Insert ', '').replace('S', 's')
         if not len(updater.value.get_name_text()):
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join((
                     "The '",
@@ -266,20 +269,24 @@ class CQLDisplay(ChessException, Display):
                 updater.value.get_name_text(),
                 '\n\nto database.\n\n'))]
         if not updater.value.cql_error:
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join(message)):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title=title,
                     message=tname.join(('Add ',
                                         ' to database abandonned.')))
                 return
         else:
             message.append(updater.value.cql_error.get_error_report())
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join(message)):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title=title,
                     message=tname.join(('Add ',
                                         ' to database abandonned.')))
@@ -289,7 +296,8 @@ class CQLDisplay(ChessException, Display):
         updater.set_database(editor.get_data_source().dbhome)
         updater.key.recno = None#0
         editor.put()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title=title,
             message=''.join((tname,
                              ' "',
@@ -368,7 +376,8 @@ class CQLDisplay(ChessException, Display):
                          "The reported error is:\n\n",
                          str(exc),
                          ))
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Insert ChessQL Statement',
                     message=msg)
                 return
@@ -378,7 +387,8 @@ class CQLDisplay(ChessException, Display):
                      "The reported error is:\n\n",
                      str(exc),
                      ))
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Insert ChessQL Statement',
                     message=msg)
                 return
@@ -403,7 +413,8 @@ class CQLDisplay(ChessException, Display):
                          "The reported error is:\n\n",
                          str(exc),
                          ))
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Insert ChessQL Statement',
                     message=msg)
                 return
@@ -413,7 +424,8 @@ class CQLDisplay(ChessException, Display):
                      "The reported error is:\n\n",
                      str(exc),
                      ))
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Insert ChessQL Statement',
                     message=msg)
                 return
@@ -559,7 +571,8 @@ class CQLDisplay(ChessException, Display):
                      "The reported error is:\n\n",
                      str(exc),
                      ))
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message=msg)
         except Exception as exc:
@@ -568,12 +581,14 @@ class CQLDisplay(ChessException, Display):
                  "The reported error is:\n\n",
                  str(exc),
                  ))
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message=msg)
         p.fill_view(currentkey=key, exclude=False)
         if p.datasource.not_implemented:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='ChessQL Statement Not Implemented',
                 message=''.join(('These filters are not implemented and ',
                                  'are ignored:\n\n',
@@ -673,20 +688,23 @@ class DatabaseCQLDisplay(CQLDisplay, CQL, DataNotify):
     def delete_cql_statement_database(self, event=None):
         """Remove ChessQL statement from database."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message=''.join(('Cannot delete ChessQL statement:\n\n',
                                  'No database open.')))
             return
         datasource = self.ui.base_partials.get_data_source()
         if datasource is None:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message=''.join(('Cannot delete ChessQL statement:\n\n',
                                  'ChessQL statement list hidden.')))
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message=''.join(('The ChessQL statement to delete has not ',
                                  'been given.\n\nProbably because database ',
@@ -694,13 +712,15 @@ class DatabaseCQLDisplay(CQLDisplay, CQL, DataNotify):
                                  'was displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete ChessQL Statement',
                 message='\n'.join((
                     'Cannot delete ChessQL statement.',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Delete ChessQL Statement',
             message='Confirm request to delete ChessQL statement.'):
             return
@@ -713,7 +733,8 @@ class DatabaseCQLDisplay(CQLDisplay, CQL, DataNotify):
             if (s.get_name_text() != v.get_name_text() or
                 s.is_statement() != v.is_statement() or
                 s.get_statement_text() != v.get_statement_text()):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Delete ChessQL Statement',
                     message='\n'.join((
                         'Cannot delete ChessQL statement.',
@@ -724,7 +745,8 @@ class DatabaseCQLDisplay(CQLDisplay, CQL, DataNotify):
         editor = RecordDelete(self.sourceobject)
         editor.set_data_source(datasource, editor.on_data_change)
         editor.delete()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Delete ChessQL Statement',
             message=''.join(('ChessQL statement "',
                              self.sourceobject.value.get_name_text(),
@@ -845,7 +867,8 @@ class DatabaseCQLInsert(CQLDisplay, CQLEdit, DataNotify):
                      "The reported error is:\n\n",
                      str(exc),
                      ))
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='ChessQL Statement',
                 message=msg)
         except Exception as exc:
@@ -854,7 +877,8 @@ class DatabaseCQLInsert(CQLDisplay, CQLEdit, DataNotify):
                  "The reported error is:\n\n",
                  str(exc),
                  ))
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='ChessQL Statement',
                 message=msg)
         return 'break'
@@ -937,19 +961,22 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
     def update_cql_statement_database(self, event=None):
         """Modify existing ChessQL statement record."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit ChessQL Statement',
                 message='Cannot edit ChessQL statement:\n\nNo database open.')
             return
         datasource = self.ui.base_partials.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit ChessQL Statement',
                 message=''.join(('Cannot edit ChessQL statement:\n\n',
                                  'Partial position list hidden.')))
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit ChessQL Statement',
                 message=''.join(('The ChessQL statement to edit has not ',
                                  'been given.\n\nProbably because database ',
@@ -957,7 +984,8 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
                                  'was displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit ChessQL Statement',
                 message='\n'.join((
                     'Cannot edit ChessQL statement.',
@@ -977,7 +1005,8 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
         title = 'Edit ChessQL Statement'
         tname = title.replace('Edit ', '').replace('S', 's')
         if not len(updater.value.get_name_text()):
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join((
                     "The '",
@@ -993,20 +1022,24 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
                 updater.value.get_name_text(),
                 '\n\non database.\n\n'))]
         if not updater.value.cql_error:
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join(message)):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title=title,
                     message=tname.join(('Edit ',
                                         ' on database abandonned.')))
                 return
         else:
             message.append(updater.value.cql_error.get_error_report())
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title=title,
                 message=''.join(message)):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title=title,
                     message=tname.join(('Edit ',
                                         ' on database abandonned.')))
@@ -1017,7 +1050,8 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno
         editor.edit()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title=title,
             message=''.join((tname,
                              ' "',
@@ -1025,7 +1059,7 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
                              '" amended on database.')))
 
 
-class CQLDialogue(ChessException):
+class CQLDialogue(ExceptionHandler):
     
     """Manage UI interaction with database for a displayed ChessQL statement.
 

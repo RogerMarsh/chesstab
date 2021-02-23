@@ -24,15 +24,16 @@ import os
 import tkinter
 import tkinter.ttk
 import tkinter.messagebox
+import tkinter.filedialog
 import queue
 import gc
 
 from solentware_grid.core.dataclient import DataSource
 
-from solentware_misc.workarounds import dialogues
 from solentware_base import modulequery, do_deferred_updates
 from solentware_misc.api import callthreadqueue
 from solentware_misc.gui.textentry import get_text_modal
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
@@ -46,7 +47,7 @@ from .querydisplay import DatabaseQueryInsert
 from . import constants, options
 from . import colourscheme
 from . import help
-from .. import APPLICATION_DATABASE_MODULE, APPLICATION_NAME
+from .. import APPLICATION_DATABASE_MODULE, APPLICATION_NAME, ERROR_LOG
 from .. import (
     PARTIAL_POSITION_MODULE,
     FULL_POSITION_MODULE,
@@ -67,7 +68,6 @@ from ..core.filespec import (
     BLACK_FIELD_DEF,
     RESULT_FIELD_DEF,
     )
-from .chessexception import ChessException
 from ..core import exporters
 from .uci import UCI
 from .chess_ui import ChessUI
@@ -82,12 +82,14 @@ _SelectionDS = 'SelectionDS'
 STARTUP_MINIMUM_WIDTH = 340
 STARTUP_MINIMUM_HEIGHT = 400
 
+ExceptionHandler.set_application_name(APPLICATION_NAME)
+
 
 class ChessError(Exception):
     pass
 
 
-class Chess(ChessException):
+class Chess(ExceptionHandler):
     
     """Connect a chess database with User Interface.
     
@@ -519,9 +521,10 @@ class Chess(ChessException):
         def index_changed():
             """Set the index used to display list of games."""
             if self.opendatabase is None:
-                dialogues.showinfo(
-                    'Select Index for games database',
-                    'No chess database open')
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
+                    title='Select Index for games database',
+                    message='No chess database open')
                 return
 
             ui = self.ui
@@ -546,17 +549,20 @@ class Chess(ChessException):
     def database_new(self):
         """Create and open a new chess database."""
         if self.opendatabase is not None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message='A chess database is already open',
                 title='New',
                 )
             return
 
-        chessfolder = dialogues.askdirectory(
+        chessfolder = tkinter.filedialog.askdirectory(
+            parent=self.get_toplevel(),
             title='Select folder for new chess database',
             initialdir='~')
         if not chessfolder:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message='Create new chess database cancelled',
                 title='New',
                 )
@@ -565,7 +571,8 @@ class Chess(ChessException):
         if os.path.exists(chessfolder):
             if len(modulequery.modules_for_existing_databases(
                 chessfolder, FileSpec())):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
                     message=''.join((
                         'A chess database already exists in ',
                         os.path.basename(chessfolder))),
@@ -576,7 +583,8 @@ class Chess(ChessException):
             try:
                 os.makedirs(chessfolder)
             except OSError:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
                     message=''.join((
                         'Folder ',
                         os.path.basename(chessfolder),
@@ -586,7 +594,7 @@ class Chess(ChessException):
                 return
         
         # Set the error file in top folder of chess database
-        self.set_error_file_name(directory=chessfolder)
+        self._set_error_file_name(directory=chessfolder)
         
         # the default preference order is used rather than ask the user or
         # an order specific to this application.  An earlier version of this
@@ -594,7 +602,8 @@ class Chess(ChessException):
         # a choice.
         idm = modulequery.installed_database_modules()
         if len(idm) == 0:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'No modules able to create database in\n\n',
                     os.path.basename(chessfolder),
@@ -611,7 +620,8 @@ class Chess(ChessException):
                     _modulename = APPLICATION_DATABASE_MODULE[e]
                     break
         if _modulename is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'None of the available database engines can be used to ',
                     'create a database.')),
@@ -620,7 +630,8 @@ class Chess(ChessException):
             return
         if self._database_modulename != _modulename:
             if self._database_modulename is not None:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
                     message=''.join((
                         'The database engine needed for this database ',
                         'is not the one already in use.\n\nYou will ',
@@ -656,7 +667,8 @@ class Chess(ChessException):
         try:
             self._database_open(chessfolder)
         except Exception as exc:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'Unable to create database\n\n',
                     str(chessfolder),
@@ -670,31 +682,35 @@ class Chess(ChessException):
     def database_open(self):
         """Open chess database."""
         if self.opendatabase is not None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message='A chess database is already open',
                 title='Open',
                 )
             return
 
-        chessfolder = dialogues.askdirectory(
+        chessfolder = tkinter.filedialog.askdirectory(
+            parent=self.get_toplevel(),
             title='Select folder containing a chess database',
             initialdir='~',
             mustexist=tkinter.TRUE)
         if not chessfolder:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message='Open chess database cancelled',
                 title='Open',
                 )
             return
 
         # Set the error file in top folder of chess database
-        self.set_error_file_name(directory=chessfolder)
+        self._set_error_file_name(directory=chessfolder)
         
         ed = modulequery.modules_for_existing_databases(chessfolder, FileSpec())
         # A database module is chosen when creating the database
         # so there should be either only one entry in edt or None
         if not ed:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'Chess database in ',
                     os.path.basename(chessfolder),
@@ -704,7 +720,8 @@ class Chess(ChessException):
                 )
             return
         elif len(ed) > 1:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'There is more than one chess database in folder\n\n',
                     os.path.basename(chessfolder),
@@ -719,7 +736,8 @@ class Chess(ChessException):
         for  k, v in idm.items():
             if v in ed[0]:
                 if _enginename:
-                    dialogues.showinfo(
+                    tkinter.messagebox.showinfo(
+                        parent=self.get_toplevel(),
                         message=''.join((
                             'Several modules able to open database in\n\n',
                             os.path.basename(chessfolder),
@@ -728,7 +746,8 @@ class Chess(ChessException):
                     return
                 _enginename = k
         if _enginename is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'No modules able to open database in\n\n',
                     os.path.basename(chessfolder),
@@ -739,7 +758,8 @@ class Chess(ChessException):
         _modulename = APPLICATION_DATABASE_MODULE[_enginename]
         if self._database_modulename != _modulename:
             if self._database_modulename is not None:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
                     message=''.join((
                         'The database engine needed for this database ',
                         'is not the one already in use.\n\nYou will ',
@@ -775,7 +795,8 @@ class Chess(ChessException):
         try:
             self._database_open(chessfolder)
         except Exception as exc:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 message=''.join((
                     'Unable to open database\n\n',
                     str(chessfolder),
@@ -789,21 +810,25 @@ class Chess(ChessException):
     def database_close(self):
         """Close chess database."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Close',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Close',
+                message='No chess database open')
         elif self._database_class is None:
-            dialogues.showinfo(
-                'Close',
-                'Database interface not defined')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Close',
+                message='Database interface not defined')
         elif self.is_import_subprocess_active():
-            dialogues.showinfo(
-                'Close',
-                'An import of PGN data is in progress')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Close',
+                message='An import of PGN data is in progress')
         else:
-            dlg = dialogues.askquestion(
-                'Close',
-                'Close chess database')
+            dlg = tkinter.messagebox.askquestion(
+                parent=self.get_toplevel(),
+                title='Close',
+                message='Close chess database')
             if dlg == tkinter.messagebox.YES:
                 if self.opendatabase:
                     self._database_close()
@@ -812,26 +837,30 @@ class Chess(ChessException):
     def database_import(self):
         """Import games to open database."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Import',
-                'No chess database open to receive import')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import',
+                message='No chess database open to receive import')
             return
         if self._database_class is None:
-            dialogues.showinfo(
-                'Import',
-                'Database interface not defined')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import',
+                message='Database interface not defined')
             return
         if sum([len(i.stack) for i in (self.ui.game_items,
                                        self.ui.repertoire_items,
                                        self.ui.partial_items,
                                        self.ui.selection_items,
                                        )]):
-            dialogues.showinfo(
-                'Import',
-                ''.join(('All game, repertoire, selection, and partial ',
-                         'position, items must be closed before starting ',
-                         'an import.',
-                         )))
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import',
+                message=''.join(
+                    ('All game, repertoire, selection, and partial ',
+                     'position, items must be closed before starting ',
+                     'an import.',
+                     )))
             return
         # Use askopenfilenames rather than askopenfilename with
         # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
@@ -844,7 +873,8 @@ class Chess(ChessException):
         #
         # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
         # the dialogue supports selection of a single file only.
-        gamefile = dialogues.askopenfilenames(
+        gamefile = tkinter.filedialog.askopenfilenames(
+            parent=self.get_toplevel(),
             title='Select file containing games to import',
             initialdir='~',
             filetypes=[('Portable Game Notation (chess)', '.pgn')])
@@ -871,7 +901,10 @@ class Chess(ChessException):
                  ))
         else:
             quitmsg = 'Confirm Quit'
-        dlg = dialogues.askquestion(title='Quit', message=quitmsg)
+        dlg = tkinter.messagebox.askquestion(
+            parent=self.get_toplevel(),
+            title='Quit',
+            message=quitmsg)
         if dlg == tkinter.messagebox.YES:
             if self.ui.uci:
                 self.ui.uci.remove_engines_and_menu_entries()
@@ -879,7 +912,7 @@ class Chess(ChessException):
                 self._close_recordsets()
                 self.opendatabase.close_database()
                 self.opendatabase = None
-                self.set_error_file_name(directory=None)
+                self._set_error_file_name(directory=None)
             self.root.destroy()
 
     def game_new_game(self):
@@ -986,26 +1019,30 @@ class Chess(ChessException):
     def position_show(self):
         """Show list of stored partial positions."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Show',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='No chess database open')
         elif self.ui.base_partials.is_visible():
-            dialogues.showinfo(
-                'Show',
-                'Partial positions already shown')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='Partial positions already shown')
         else:
             self.ui.show_partial_position_grid(self.opendatabase)
 
     def position_hide(self):
         """Hide list of stored partial positions."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Hide',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='No chess database open')
         elif not self.ui.base_partials.is_visible():
-            dialogues.showinfo(
-                'Hide',
-                'Partial positions already hidden')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='Partial positions already hidden')
         else:
             self.ui.hide_partial_position_grid()
 
@@ -1016,26 +1053,30 @@ class Chess(ChessException):
     def repertoire_show(self):
         """Show list of stored repertoire games (opening variations)."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Show',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='No chess database open')
         elif self.ui.base_repertoires.is_visible():
-            dialogues.showinfo(
-                'Show',
-                'Opening variations already shown')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='Opening variations already shown')
         else:
             self.ui.show_repertoire_grid(self.opendatabase)
 
     def repertoire_hide(self):
         """Hide list of stored repertoire games (opening variations)."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Hide',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='No chess database open')
         elif not self.ui.base_repertoires.is_visible():
-            dialogues.showinfo(
-                'Hide',
-                'Opening variations already hidden')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='Opening variations already hidden')
         else:
             self.ui.hide_repertoire_grid()
 
@@ -1155,14 +1196,16 @@ class Chess(ChessException):
     def database_delete(self):
         """Delete chess database."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Delete',
-                ''.join(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Delete',
+                message=''.join(
                     ('Delete will not delete a database unless it can be ',
                      'opened.\n\nOpen the database and then Delete it.',
                      )))
             return
-        dlg = dialogues.askquestion(
+        dlg = tkinter.messagebox.askquestion(
+            parent=self.get_toplevel(),
             title='Delete',
             message=''.join(
                 ('Please confirm that the chess database in\n\n',
@@ -1175,11 +1218,16 @@ class Chess(ChessException):
             # delete_database() call.  The close_database() call just before
             # setting opendatabase to None is removed.
             self._close_recordsets()
-            self.opendatabase.delete_database()
+            message = self.opendatabase.delete_database()
+            if message:
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
+                    title='Delete',
+                    message=message)
             self.root.wm_title(APPLICATION_NAME)
             self.ui.set_open_database_and_engine_classes()
             self.ui.hide_game_grid()
-            self.set_error_file_name(directory=None)
+            self._set_error_file_name(directory=None)
 
             message = ''.join(
                 ('The chess database in\n\n',
@@ -1187,11 +1235,13 @@ class Chess(ChessException):
                  '\n\nhas been deleted.',
                  ))
             self.opendatabase = None
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 title='Delete',
                 message=message)
         else:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
                 title='Delete',
                 message='The chess database has not been deleted',
                 )
@@ -1256,24 +1306,28 @@ class Chess(ChessException):
     def import_positions(self):
         """Import positions from text file."""
         if self.is_import_subprocess_active():
-            dialogues.showinfo(
-                'Import Positions',
-                'An import of PGN data is in progress')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import Positions',
+                message='An import of PGN data is in progress')
             return
-        dialogues.showinfo(
-            'Import Positions',
-            'Not implemented')
+        tkinter.messagebox.showinfo(
+            parent=self.get_toplevel(),
+            title='Import Positions',
+            message='Not implemented')
 
     def import_repertoires(self):
         """Import repertoires from PGN-like file."""
         if self.is_import_subprocess_active():
-            dialogues.showinfo(
-                'Import Repertoires',
-                'An import of PGN data is in progress')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import Repertoires',
+                message='An import of PGN data is in progress')
             return
-        dialogues.showinfo(
-            'Import Repertoires',
-            'Not implemented')
+        tkinter.messagebox.showinfo(
+            parent=self.get_toplevel(),
+            title='Import Repertoires',
+            message='Not implemented')
 
     def _database_import(self, pgnfiles):
         """Import games to open database."""
@@ -1283,9 +1337,10 @@ class Chess(ChessException):
             dptmultistepdu = self._dptmultistepdu,
             dptchunksize = self._dptchunksize)
         if usedu is None:
-            dialogues.showinfo(
-                'Import',
-                ''.join((
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Import',
+                message=''.join((
                     'Import\n\n',
                     '\n'.join([os.path.basename(p) for p in pgnfiles]),
                     '\n\ncancelled')))
@@ -1375,7 +1430,8 @@ class Chess(ChessException):
                     msg = 'was cancelled '
                 else:
                     msg = 'failed '
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
                     title='Import',
                     message=''.join(
                         ('The import ',
@@ -1392,7 +1448,8 @@ class Chess(ChessException):
                 #Succeeded, or failed with no backups
                 if returncode != 0:
                     #Failed with no backups
-                    dialogues.showinfo(
+                    tkinter.messagebox.showinfo(
+                        parent=self.get_toplevel(),
                         title='Import',
                         message=''.join(
                             ('The import failed.\n\nBackups were not taken ',
@@ -1609,7 +1666,7 @@ class Chess(ChessException):
         self.ui.set_open_database_and_engine_classes()
         self.ui.hide_game_grid()
 
-        self.set_error_file_name(directory=None)
+        self._set_error_file_name(directory=None)
 
     def _retry_import(self, files):
         """Open database and retry import with increased file sizes.
@@ -1675,26 +1732,30 @@ class Chess(ChessException):
     def index_show(self):
         """Show list of stored stored selection rules."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Show',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='No chess database open')
         elif self.ui.base_selections.is_visible():
-            dialogues.showinfo(
-                'Show',
-                'Selection rules already shown')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Show',
+                message='Selection rules already shown')
         else:
             self.ui.show_selection_rules_grid(self.opendatabase)
 
     def index_hide(self):
         """Hide list of stored selection rules."""
         if self.opendatabase is None:
-            dialogues.showinfo(
-                'Hide',
-                'No chess database open')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='No chess database open')
         elif not self.ui.base_selections.is_visible():
-            dialogues.showinfo(
-                'Hide',
-                'Selection rules already hidden')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title='Hide',
+                message='Selection rules already hidden')
         else:
             self.ui.hide_selection_rules_grid()
 
@@ -1722,6 +1783,13 @@ class Chess(ChessException):
 
         # Wrap to take account of self.ui.single_view
         self.ui.selection_items.active_item.takefocus_widget.focus_set()
+
+    def _set_error_file_name(self, directory=None):
+        """Set the exception report file name to filename."""
+        if directory is None:
+            Chess.set_error_file_name(None)
+        else:
+            Chess.set_error_file_name(os.path.join(directory, ERROR_LOG))
 
 
 class Statusbar(object):

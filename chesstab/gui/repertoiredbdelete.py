@@ -7,14 +7,15 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
-from .chessexception import ChessException
 from .repertoiredisplay import DialogueRepertoireDisplay
 
 
-class ChessDBdeleteRepertoire(ChessException, DataDelete):
+class ChessDBdeleteRepertoire(ExceptionHandler, DataDelete):
     
     """Dialog to delete a repertoire from database.
 

@@ -15,8 +15,7 @@ new toplevel widget.
 
 """
 import os.path
-
-from solentware_misc.workarounds import dialogues
+import tkinter.filedialog
 
 from ..core.constants import NAME_DELIMITER
 from ..core.engine import Engine
@@ -67,7 +66,8 @@ class EngineEdit(engine.Engine):
             filetypes = (('Chess Engines', '*.exe'),)
         else:
             filetypes = ()
-        filename = dialogues.askopenfilename(
+        filename = tkinter.filedialog.askopenfilename(
+            parent=self.panel.winfo_toplevel(),
             title='Browse Chess Engine',
             filetypes=filetypes,
             initialfile='',

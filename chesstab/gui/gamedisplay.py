@@ -33,22 +33,21 @@ class.
 import tkinter
 import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
-
 from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .game import Game
 from .gameedit import GameEdit
 from ..core.chessrecord import ChessDBrecordGameUpdate
 from .constants import STATUS_SEVEN_TAG_ROSTER_PLAYERS
-from .chessexception import ChessException
 from .eventspec import EventSpec
 from .display import Display
 
 
-class GameDisplay(ChessException, Display):
+class GameDisplay(ExceptionHandler, Display):
     
     """Manage UI interaction with database for particular displayed game.
 
@@ -263,7 +262,8 @@ class GameDisplay(ChessException, Display):
     def insert_game_database(self, event=None):
         """Add game to database on request from game display."""
         if self.ui.game_items.active_item is None:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game',
                 message='No active game to insert into database.')
             return
@@ -271,27 +271,32 @@ class GameDisplay(ChessException, Display):
         # This should see if game with same PGN Tags already exists,
         # after checking for database open, and offer option to insert anyway.
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game',
                 message='Cannot add game:\n\nNo database open.')
             return
         
         datasource = self.ui.base_games.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game',
                 message='Cannot add game:\n\Game list hidden.')
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Insert Game',
             message='Confirm request to add game to database'):
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game',
                 message='Add game to database abandonned.')
             return
         updater = self.game_updater(repr(self.score.get('1.0', tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game',
                 message=''.join(
                     ('The new game score contains at least one illegal move ',
@@ -306,7 +311,8 @@ class GameDisplay(ChessException, Display):
         updater.key.recno = None
         editor.put()
         tags = updater.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Insert Game',
             message=''.join(('Game "',
                              '  '.join(
@@ -552,31 +558,36 @@ class DatabaseGameDisplay(GameDisplay, Game, DataNotify):
     def delete_game_database(self, event=None):
         """Remove game from database on request from game display."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game',
                 message='Cannot delete game:\n\nNo database open.')
             return
         datasource = self.ui.base_games.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game',
                 message='Cannot delete game:\n\nGame list hidden.')
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game',
                 message='\n'.join((
                     'Cannot delete game:\n',
                     'Database has been closed since this copy displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game',
                 message='\n'.join((
                     'Cannot delete game:\n',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Delete Game',
             message='Confirm request to delete game from database'):
             return
@@ -597,7 +608,8 @@ class DatabaseGameDisplay(GameDisplay, Game, DataNotify):
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
         editor.delete()
         tags = original.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Delete Game',
             message=''.join(('Game "',
                              '  '.join(
@@ -749,31 +761,36 @@ class DatabaseGameEdit(DatabaseGameInsert):
     def update_game_database(self, event=None):
         """Modify existing game record."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message='Cannot edit game:\n\nNo database open.')
             return
         datasource = self.ui.base_games.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message='Cannot edit game:\n\nGame list hidden.')
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message='\n'.join((
                     'Cannot edit game:\n',
                     'Database has been closed since this copy displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message='\n'.join((
                     'Cannot edit game:\n',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Edit Game',
             message='Confirm request to edit game'):
             return
@@ -798,7 +815,8 @@ class DatabaseGameEdit(DatabaseGameInsert):
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
         if not updater.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message=''.join(
                     ('The edited game score contains at least one illegal ',
@@ -815,7 +833,8 @@ class DatabaseGameEdit(DatabaseGameInsert):
             if newkey:
                 self.ui.set_properties_on_all_game_grids(newkey)
         tags = original.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Edit Game',
             message=''.join(('Game "',
                              '  '.join(
@@ -824,7 +843,7 @@ class DatabaseGameEdit(DatabaseGameInsert):
                              '" amended on database.')))
 
 
-class GameDialogue(ChessException):
+class GameDialogue(ExceptionHandler):
     
     """Manage UI interaction with database for particular displayed game.
 

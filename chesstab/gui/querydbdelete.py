@@ -7,11 +7,12 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .querydisplay import DialogueQueryDisplay
 
 
-class ChessDBdeleteQuery(ChessException, DataDelete):
+class ChessDBdeleteQuery(ExceptionHandler, DataDelete):
     """Dialog to delete a game selection rule from database.
 
     The game selection rule is in it's own Toplevel widget.

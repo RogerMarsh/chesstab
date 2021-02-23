@@ -80,5 +80,5 @@ class ChessDatabase(database.Database, bsddb3_database.Database):
 
     def delete_database(self):
         """Close and delete the open chess database."""
-        super().delete_database((self.database_file,
-                                 self.dbenv.get_lg_dir().decode()))
+        return super().delete_database((self.database_file,
+                                        self.dbenv.get_lg_dir().decode()))

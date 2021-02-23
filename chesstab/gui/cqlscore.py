@@ -7,16 +7,16 @@
 """
 
 import tkinter
+import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from ..core.cqlstatement import CQLStatement
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
     
 
-class CQLScore(ChessException):
+class CQLScore(ExceptionHandler):
 
     """ChessQL statement widget built from Text and Scrollbar widgets.
     """
@@ -215,7 +215,8 @@ class CQLScore(ChessException):
                          str(exc),
                          ))
                 grid.datasource.get_cql_statement_games(None, None)
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='ChessQL Statement',
                     message=msg)
             except Exception as exc:
@@ -225,7 +226,8 @@ class CQLScore(ChessException):
                      str(exc),
                      ))
                 grid.datasource.get_cql_statement_games(None, None)
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='ChessQL Statement',
                     message=msg)
         grid.partial = self.get_partial_key_cql_statement()
@@ -237,16 +239,19 @@ class CQLScore(ChessException):
 
         if cqls.cql_error:
             if self.ui.database is None:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='ChessQL Statement Error',
                     message=cqls.cql_error.get_error_report())
             else:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='ChessQL Statement Error',
                     message=cqls.cql_error.add_error_report_to_message(
                         ('An empty game list will be displayed.')))
         elif grid.datasource.not_implemented:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='ChessQL Statement Not Implemented',
                 message=''.join(('These filters are not implemented and ',
                                  'are ignored:\n\n',

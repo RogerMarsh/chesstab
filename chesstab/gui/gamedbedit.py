@@ -6,20 +6,20 @@
 """
 
 import tkinter
+import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_misc.workarounds import dialogues
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
-from .chessexception import ChessException
 from .gamedisplay import DialogueGameDisplay, DialogueGameEdit
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 
 
-class ChessDBeditGame(ChessException, DataEdit):
+class ChessDBeditGame(ExceptionHandler, DataEdit):
     
     """Dialog to edit a game on, or insert a game into, database.
 
@@ -103,7 +103,8 @@ class ChessDBeditGame(ChessException, DataEdit):
         text = self.newview.get_score_error_escapes_removed()
         self.newobject.value.load(repr(text))
         if not self.newobject.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent=self.parent,
                 title='Edit Game',
                 message=''.join(
                     ('The edited game score contains at least one illegal ',

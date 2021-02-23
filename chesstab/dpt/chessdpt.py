@@ -7,6 +7,7 @@
 
 import os
 import shutil
+import tkinter.messagebox
 
 from dptdb.dptapi import (
     FILEDISP_OLD,
@@ -27,7 +28,6 @@ from solentware_base.core.constants import (
     DPT_SYS_FOLDER,
     SECONDARY,
     )
-from solentware_misc.workarounds import dialogues
 
 from ..core.filespec import (
     FileSpec,
@@ -169,7 +169,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 (os.path.basename(dbo.file),
                  fistat[dbo][1]))
              for dbo in self.table.values()])
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
             title='Open',
             message=''.join(
                 (APPLICATION_NAME,
@@ -190,7 +190,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         names = [self.sysfolder]
         for k, v in self.table.items():
             names.append(v.file)
-        super().delete_database(names)
+        return super().delete_database(names)
 
     def get_archive_names(self, files=()):
         """Return names and operating system files for archives and guards"""
@@ -244,7 +244,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
             # import failed because at least one file was too small.
             # The file size information is kept for calculating an increase
             # in file size before trying the import again.
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
                 title='Open',
                 message=''.join(
                     ('The import failed.\n\n',
@@ -266,7 +266,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 (os.path.basename(dbo.file),
                  fistat[dbo][1]))
              for dbo in self.table.values()])
-        action = dialogues.askyesno(
+        action = tkinter.messagebox.askyesno(
             title='Open',
             message=''.join(
                 (APPLICATION_NAME,
@@ -325,7 +325,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
             # import failed because at least one file was too small.
             # The file size information is kept for calculating an increase
             # in file size before trying the import again.
-            if dialogues.askyesno(
+            if tkinter.messagebox.askyesno(
                 title='Retry Import',
                 message=''.join(
                     ('The import failed because the games file was filled.\n\n',
@@ -346,7 +346,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 (os.path.basename(dbo.file),
                  fistat[dbo][1]))
              for dbo in self.table.values()])
-        action = dialogues.askyesno(
+        action = tkinter.messagebox.askyesno(
             title='Open',
             message=''.join(
                 (APPLICATION_NAME,

@@ -35,6 +35,8 @@ a superclass of game.Repertoire.
 
 import tkinter
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.constants import (
     TAG_FEN,
     SEVEN_TAG_ROSTER,
@@ -44,7 +46,6 @@ from pgn_read.core.constants import (
 from pgn_read.core.squares import Squares
 
 from ..core.pgn import GameDisplayMoves
-from .chessexception import ChessException
 from .constants import (
     LINE_COLOR,
     MOVE_COLOR,
@@ -90,7 +91,7 @@ from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
 
 
-class Score(ChessException):
+class Score(ExceptionHandler):
 
     """Chess score widget composed from Text and Scrollbar widgets.
     """

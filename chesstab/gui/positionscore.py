@@ -12,6 +12,8 @@ PositionScore
 
 import tkinter
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     FEN_WHITE_ACTIVE,
@@ -25,7 +27,6 @@ from pgn_read.core.parser import PGN
 from pgn_read.core.squares import Squares
 
 from ..core.pgn import GameDisplayMoves
-from .chessexception import ChessException
 from .constants import (
     LINE_COLOR,
     MOVE_COLOR,
@@ -67,7 +68,7 @@ from .constants import (
 
 # May need to make this a superclass of Tkinter.Text because DataRow method
 # make_row_widgets expects to be able to call Tkinter widget methods.
-class PositionScore(ChessException):
+class PositionScore(ExceptionHandler):
 
     """Chess game score widget composed from a Text widget.    
     """

@@ -80,4 +80,4 @@ class Engine(object):
         """Return True if run engine command line starts with existing file."""
         if not self._run_engine_string:
             return False
-        return os.path.isfile(self._run_engine_string)
+        return os.path.isfile(self._run_engine_string.split()[0])

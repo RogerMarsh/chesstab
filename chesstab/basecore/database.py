@@ -9,8 +9,6 @@ import os
 import bz2
 import shutil
 
-from solentware_misc.workarounds import dialogues
-
 from ..core.filespec import (
     NEWGAMES_FIELD_DEF,
     NEWGAMES_FIELD_VALUE,
@@ -35,32 +33,6 @@ class Database:
         """Return True to fit behaviour of dpt version of this method."""
         super().open_database(files=files)
         return True
-
-    def restore_dialogue(self, names=()):
-        """Restore a file containing games from a bz2 backup.
-
-        Intended to restore backups after an import fails.
-
-        """
-        exists = [os.path.basename(n)
-                  for n in names if os.path.exists('.'.join((n, 'bz2')))]
-        if not exists:
-            return False
-        return dialogues.askyesnocancel(
-            title='Save broken files and Restore backups',
-            message=''.join(
-                ('An Import has just failed.\n\nImport backups of the ',
-                 'following files exist.\n\n',
-                 '\n'.join(exists),
-                 '\n\nClick "Yes" to replace the probably broken files with ',
-                 'their backups and save the replaced files for examination ',
-                 'later.  The backups will then be deleted.\n\nClick "No" to ',
-                 'replace the probably broken files with their backups ',
-                 'without saving the replaced files for examination later.  ',
-                 'The backups will then be deleted.\n\nClick "Cancel" to ',
-                 'leave all files as they are for later action.',
-                 )),
-            )
 
     def dump_database(self, names=()):
         """Dump database in compressed files."""
@@ -123,15 +95,14 @@ class Database:
         if ERROR_LOG in listnames:
             homenames.add(os.path.join(self.home_directory, ERROR_LOG))
         if len(listnames - set(os.path.basename(h) for h in homenames)):
-            dialogues.showinfo(
-                title='Delete',
-                message=''.join(
-                    ('There is at least one file or folder in\n\n',
-                     self.home_directory,
-                     '\n\nwhich may not be part of the database.  These items ',
-                     'will not be deleted by ', APPLICATION_NAME, '.',
-                     ))
-                )
+            message = ''.join(
+                ('There is at least one file or folder in\n\n',
+                 self.home_directory,
+                 '\n\nwhich may not be part of the database.  These items ',
+                 'have not been deleted by ', APPLICATION_NAME, '.',
+                 ))
+        else:
+            message = None
         self.close_database()
         for h in homenames:
             if os.path.isdir(h):
@@ -142,6 +113,7 @@ class Database:
             os.rmdir(self.home_directory)
         except:
             pass
+        return message
 
     def get_archive_names(self, files=()):
         """Return names and operating system files for archives and guards"""

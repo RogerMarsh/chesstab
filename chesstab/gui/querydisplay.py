@@ -34,24 +34,24 @@ QueryDialogue class.
 import tkinter
 import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
 from solentware_base.core.where import WhereError
 
 from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from ..core.querystatement import QueryStatement
 from .query import Query
 from .queryedit import QueryEdit
 from ..core.chessrecord import ChessDBrecordQuery
-from .chessexception import ChessException
 from .eventspec import EventSpec
 from .display import Display
 from .. import APPLICATION_NAME
 
 
-class QueryDisplay(ChessException, Display):
+class QueryDisplay(ExceptionHandler, Display):
     
     """Manage UI interaction with database for displayed game selection rules.
 
@@ -219,7 +219,8 @@ class QueryDisplay(ChessException, Display):
     def insert_selection_rule_database(self, event=None):
         """Add game selection rule to database."""
         if self.ui.selection_items.active_item is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message='No active game selection rule to insert into database.')
             return
@@ -227,14 +228,16 @@ class QueryDisplay(ChessException, Display):
         # This should see if game selection rule with same name already exists,
         # after checking for database open, and offer option to insert anyway.
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message='Cannot add game selection rule:\n\nNo database open.')
             return
 
         datasource = self.ui.base_selections.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message='Cannot add game selection rule:\n\nRule list hidden.')
             return
@@ -244,7 +247,8 @@ class QueryDisplay(ChessException, Display):
         uvpqs = updater.value.process_query_statement(
             self.get_name_query_statement_text())
         if not len(updater.value.get_name_text()):
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message=''.join((
                     "The selection rule has no name.\n\nPlease enter it's ",
@@ -252,7 +256,8 @@ class QueryDisplay(ChessException, Display):
             return
         if not uvpqs:
             if not updater.value.where_error:
-                if tkinter.messagebox.YES != dialogues.askquestion(
+                if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                    parent = self.ui.get_toplevel(),
                     title='Insert Game Selection Rule',
                     message=''.join((
                         'Confirm request to add game selection rule named:\n\n',
@@ -261,12 +266,14 @@ class QueryDisplay(ChessException, Display):
                         'Note validation of the statement failed but no ',
                         'information is available.',
                         ))):
-                    dialogues.showinfo(
+                    tkinter.messagebox.showinfo(
+                        parent = self.ui.get_toplevel(),
                         title='Insert Game Selection Rule',
                         message=''.join(('Add game selection rule to ',
                                          'database abandonned.')))
                     return
-            elif tkinter.messagebox.YES != dialogues.askquestion(
+            elif tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message=''.join((
                     'Confirm request to add game selection rule named:\n\n',
@@ -274,18 +281,21 @@ class QueryDisplay(ChessException, Display):
                     '\n\nto database.\n\n',
                     updater.value.where_error.get_error_report(
                         self.ui.base_games.get_data_source())))):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Insert Game Selection Rule',
                     message=''.join(('Add game selection rule to ',
                                      'database abandonned.')))
                 return
-        elif tkinter.messagebox.YES != dialogues.askquestion(
+        elif tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Insert Game Selection Rule',
             message=''.join((
                 'Confirm request to add game selection rule named:\n\n',
                 updater.value.get_name_text(),
                 '\n\nto database.',))):
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Game Selection Rule',
                 message='Add game selection rule to database abandonned.')
             return
@@ -294,7 +304,8 @@ class QueryDisplay(ChessException, Display):
         updater.set_database(editor.get_data_source().dbhome)
         updater.key.recno = None#0
         editor.put()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Insert Game Selection Rule',
             message=''.join(('Game selection rule "',
                              updater.value.get_name_text(),
@@ -452,7 +463,8 @@ class QueryDisplay(ChessException, Display):
             self.query_statement.process_query_statement(
                 self.score.get('1.0', tkinter.END))
         except WhereError as exc:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title=' '.join(('Game Selection Rule Error')),
                 message=str(exc))
             return 'break'
@@ -567,20 +579,23 @@ class DatabaseQueryDisplay(QueryDisplay, Query, DataNotify):
     def delete_selection_rule_database(self, event=None):
         """Remove game selection rule from database."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game Selection Rule',
                 message=''.join(('Cannot delete game selection rule:\n\n',
                                  'No database open.')))
             return
         datasource = self.ui.base_selections.get_data_source()
         if datasource is None:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game Selection Rule',
                 message=''.join(('Cannot delete game selection rule:\n\n',
                                  'Rule list hidden.')))
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game Selection Rule',
                 message=''.join(('The game selection rule to delete has not ',
                                  'been given.\n\nProbably because database ',
@@ -588,13 +603,15 @@ class DatabaseQueryDisplay(QueryDisplay, Query, DataNotify):
                                  'was displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Game Selection Rule',
                 message='\n'.join((
                     'Cannot delete game selection rule.',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Delete Game Selection Rule',
             message='Confirm request to delete game selection rule.'):
             return
@@ -604,7 +621,8 @@ class DatabaseQueryDisplay(QueryDisplay, Query, DataNotify):
             if (s.get_name_text() != v.get_name_text() or
                 s.where_error != v.where_error or
                 s.get_query_statement_text() != v.get_query_statement_text()):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Delete Game Selection Rule',
                     message='\n'.join((
                         'Cannot delete game selection rule.',
@@ -615,7 +633,8 @@ class DatabaseQueryDisplay(QueryDisplay, Query, DataNotify):
         editor = RecordDelete(self.sourceobject)
         editor.set_data_source(datasource, editor.on_data_change)
         editor.delete()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Delete Game Selection Rule',
             message=''.join(('Game selection rule "',
                              self.sourceobject.value.get_name_text(),
@@ -790,18 +809,21 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
     def update_selection_rule_database(self, event=None):
         """Modify existing game selection rule record."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message='Cannot edit repertoire:\n\nNo database open.')
             return
         datasource = self.ui.base_selections.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message='Cannot edit game selection rule:\n\nRule list hidden.')
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message=''.join(('The game selection rule to edit has not ',
                                  'been given.\n\nProbably because database ',
@@ -809,7 +831,8 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
                                  'was displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message='\n'.join((
                     'Cannot edit game selection rule.',
@@ -830,7 +853,8 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
         uvpqs = updater.value.process_query_statement(
             self.get_name_query_statement_text())
         if not len(updater.value.get_name_text()):
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message=''.join((
                     "The selection rule has no name.\n\nPlease enter it's ",
@@ -838,7 +862,8 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
             return
         if not uvpqs:
             if not updater.value.where_error:
-                if tkinter.messagebox.YES != dialogues.askquestion(
+                if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                    parent = self.ui.get_toplevel(),
                     title='Edit Game Selection Rule',
                     message=''.join((
                         'Confirm request to edit game selection rule ',
@@ -848,12 +873,14 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
                         'Note validation of the statement failed but no ',
                         'information is available.',
                         ))):
-                    dialogues.showinfo(
+                    tkinter.messagebox.showinfo(
+                        parent = self.ui.get_toplevel(),
                         title='Edit Game Selection Rule',
                         message=''.join(('Edit game selection rule to ',
                                          'database abandonned.')))
                     return
-            elif tkinter.messagebox.YES != dialogues.askquestion(
+            elif tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message=''.join((
                     'Confirm request to edit game selection rule named:\n\n',
@@ -861,18 +888,21 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
                     '\n\nto database.\n\n',
                     updater.value.where_error.get_error_report(
                         self.ui.base_games.get_data_source())))):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
                     title='Edit Game Selection Rule',
                     message=''.join(('Edit game selection rule to ',
                                      'database abandonned.')))
                 return
-        elif tkinter.messagebox.YES != dialogues.askquestion(
+        elif tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Edit Game Selection Rule',
             message=''.join((
                 'Confirm request to edit game selection rule named:\n\n',
                 updater.value.get_name_text(),
                 '\n\non database.',))):
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game Selection Rule',
                 message='Edit game selection rule to database abandonned.')
             return
@@ -882,14 +912,15 @@ class DatabaseQueryEdit(DatabaseQueryInsert):
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno
         editor.edit()
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Edit Game Selection Rule',
             message=''.join(('Game selection rule "',
                              updater.value.get_name_text(),
                              '" amended on database.')))
 
 
-class QueryDialogue(ChessException):
+class QueryDialogue(ExceptionHandler):
     
     """Manage UI interaction with database for a displayed game selection rule.
 

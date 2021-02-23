@@ -6,10 +6,10 @@
 """
 
 import tkinter
+import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from .constants import (
     START_SELECTION_RULE_MARK,
     )
@@ -20,7 +20,7 @@ from .gamerow import make_ChessDBrowGame
 from ..core.chessrecord import ChessDBrecordGameTags
     
 
-class QueryText(ChessException):
+class QueryText(ExceptionHandler):
 
     """Game selection rule widget built from Text and Scrollbar widgets.
     """
@@ -194,9 +194,10 @@ class QueryText(ChessException):
         if qs.where_error:
             self.ui.base_games.datasource.get_selection_rule_games(None)
             self.ui.base_games.load_new_index()
-            dialogues.showerror(
-                'Display Game Selection Rule',
-                qs.where_error.get_error_report(grid.datasource),
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
+                title='Display Game Selection Rule',
+                message=qs.where_error.get_error_report(grid.datasource),
                 )
         elif qs.where:
             qs.where.evaluate(
@@ -216,11 +217,13 @@ class QueryText(ChessException):
         elif qs.get_query_statement_text():
             self.ui.base_games.load_new_index()
         #else:
-        #    dialogues.showinfo(
-        #        'Display Game Selection Rule',
-        #        ''.join(('Game list not changed because active query ',
-        #                 'has not yet been evaluated.',
-        #                 )))
+        #    tkinter.messagebox.showinfo(
+        #        parent = self.ui.get_toplevel(),
+        #        title='Display Game Selection Rule',
+        #        message=''.join(
+        #            ('Game list not changed because active query ',
+        #             'has not yet been evaluated.',
+        #             )))
 
         # Get rid of the 'Please wait ...' status text.
         self.ui.statusbar.set_status_text()

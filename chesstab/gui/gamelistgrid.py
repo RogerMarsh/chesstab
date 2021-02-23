@@ -5,9 +5,11 @@
 """Grids for listing details of games on chess database.
 """
 
-import tkinter
+import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
@@ -17,7 +19,6 @@ from ..core.chessrecord import (
     PLAYER_NAME_TAGS,
     re_normalize_player_name,
     )
-from .chessexception import ChessException
 from .gamerow import ChessDBrowGame
 from .positionrow import ChessDBrowPosition
 from .repertoirerow import ChessDBrowRepertoire
@@ -37,7 +38,7 @@ from .display import Display
 from ..core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
 
 
-class GameListGrid(ChessException, DataGrid, Display):
+class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     """A DataGrid for lists of chess games.
 
@@ -1106,6 +1107,7 @@ class TagRosterGrid(GameListGrid):
             super().set_selection(key)
         except KeyError:
             tkinter.messagebox.showinfo(
+                parent=self.parent,
                 title='Insert Game Workaround',
                 message=''.join(
                     ('All records have same name on this display.\n\nThe new ',
@@ -1481,6 +1483,7 @@ class RepertoireGrid(GameListGrid):
             super().set_selection(key)
         except KeyError:
             tkinter.messagebox.showinfo(
+                parent=self.parent,
                 title='Insert Repertoire Workaround',
                 message=''.join(
                     ('All records have same name on this display.\n\nThe new ',

@@ -7,11 +7,12 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .enginedisplay import DialogueEngineDisplay
 
 
-class ChessDBdeleteEngine(ChessException, DataDelete):
+class ChessDBdeleteEngine(ExceptionHandler, DataDelete):
     """Dialog to delete a chess engine definition from database.
 
     The chess engine definition is in it's own Toplevel widget.

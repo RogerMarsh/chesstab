@@ -7,14 +7,15 @@
 
 from solentware_grid.gui.datashow import DataShow
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
-from .chessexception import ChessException
 from .repertoiredisplay import DialogueRepertoireDisplay
 
 
-class ChessDBshowRepertoire(ChessException, DataShow):
+class ChessDBshowRepertoire(ExceptionHandler, DataShow):
     
     """Dialog to show a repertoire from database.
 

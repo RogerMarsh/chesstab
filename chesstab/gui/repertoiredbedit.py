@@ -6,20 +6,20 @@
 """
 
 import tkinter
+import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_misc.workarounds import dialogues
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
-from .chessexception import ChessException
 from .repertoiredisplay import DialogueRepertoireDisplay, DialogueRepertoireEdit
 from .constants import EMPTY_REPERTOIRE_GAME
 
 
-class ChessDBeditRepertoire(ChessException, DataEdit):
+class ChessDBeditRepertoire(ExceptionHandler, DataEdit):
     
     """Dialog to edit a repertoire on, or insert a repertoire into, database.
 
@@ -101,7 +101,8 @@ class ChessDBeditRepertoire(ChessException, DataEdit):
         text = self.newview.get_score_error_escapes_removed()
         self.newobject.value.load(repr(text))
         if not self.newobject.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent=self.parent,
                 title='Edit Repertoire',
                 message=''.join(
                     ('The edited repertoire contains at least one illegal ',

@@ -7,15 +7,14 @@
 
 import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
-
 from solentware_grid.gui.dataedit import DataEdit
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .querydisplay import DialogueQueryDisplay, DialogueQueryEdit
 
 
-class ChessDBeditQuery(ChessException, DataEdit):
+class ChessDBeditQuery(ExceptionHandler, DataEdit):
     """Dialog to edit a game selection rule on, or insert one into, database.
 
     The game selection rule is in it's own Toplevel widget.
@@ -83,14 +82,16 @@ class ChessDBeditQuery(ChessException, DataEdit):
         self.newobject.value.load(
             repr(self.newview.get_name_query_statement_text()))
         if not len(self.newobject.value.get_name_text()):
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title=self.__title,
                 message=''.join((
                     "The selection rule has no name.\n\nPlease enter it's ",
                     "name as the first line of text.'")))
             return False
         if self.newobject.value.where_error:
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent=self.parent,
                 title=self.__title,
                 message=''.join((
                     'Confirm request to update game selection rule named:\n\n',

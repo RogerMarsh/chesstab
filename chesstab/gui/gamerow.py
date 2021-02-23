@@ -7,9 +7,13 @@
 
 import tkinter
 
-from solentware_grid.gui.datarow import DataRow
-from solentware_grid.gui.datarow import GRID_COLUMNCONFIGURE, GRID_CONFIGURE
-from solentware_grid.gui.datarow import WIDGET_CONFIGURE, WIDGET, ROW
+from solentware_grid.gui.datarow import (
+    GRID_COLUMNCONFIGURE,
+    GRID_CONFIGURE,
+    WIDGET_CONFIGURE,
+    WIDGET,
+    ROW,
+    )
 
 from pgn_read.core.constants import (
     TAG_WHITE,
@@ -23,6 +27,7 @@ from pgn_read.core.constants import (
     DEFAULT_TAG_RESULT_VALUE,
     )
 
+from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordGameTags
 from .gamedbedit import ChessDBeditGame
 from .gamedbdelete import ChessDBdeleteGame

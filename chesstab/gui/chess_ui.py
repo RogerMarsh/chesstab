@@ -15,11 +15,13 @@ import os
 import tkinter
 import tkinter.ttk
 import tkinter.font
+import tkinter.messagebox
+import tkinter.filedialog
 import queue
 
-from solentware_misc.workarounds import dialogues
-
 from solentware_grid.core.dataclient import DataSource
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .gamerow import make_ChessDBrowGame
 from .positionrow import make_ChessDBrowPosition
@@ -58,7 +60,6 @@ from ..core.filespec import (
     RULE_FIELD_DEF,
     PARTIALPOSITION_NAME_FIELD_DEF,
     )
-from .chessexception import ChessException
 from .displayitems import DisplayItems
 from ..core.chessrecord import ChessDBrecordAnalysis
 from .querygrid import QueryGrid
@@ -69,7 +70,7 @@ class ChessUIError(Exception):
     pass
 
 
-class ChessUI(ChessException):
+class ChessUI(ExceptionHandler):
     
     """Define widgets which form the User Interface."""
 
@@ -355,7 +356,7 @@ class ChessUI(ChessException):
         #    self.uci.uci.set_analysis_queue(queue.Queue())
         #    self.process_uci_commands_from_engines_and_analysis_requests()
         #else:
-        #    dialogues.showinfo(
+        #    tkinter.messagebox.showinfo(
         #        'Chesstab Restriction',
         #        ' '.join(('Cannot create an interface for UCI engines:',
         #                  'this is expected if running under Wine.\n\n',
@@ -1406,14 +1407,18 @@ class ChessUI(ChessException):
             desc = 'Text'
         title = ' '.join(('Export', datatype, 'as', desc))
         if self.is_import_subprocess_active():
-            dialogues.showinfo(
-                title,
-                'An import of data is in progress')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message='An import of data is in progress')
             return
         if not self.database:
-            dialogues.showinfo(
-                title,
-                'Open the database from which the export is to be done.')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message=''.join(
+                    ('Open the database from which the export is to be done.',
+                     )))
             return
         return self._get_export_filename(datatype, pgn, title)
 
@@ -1432,22 +1437,28 @@ class ChessUI(ChessException):
         """Return folder name to contain export of database or None."""
         title = 'Export database as Text'
         if self.is_import_subprocess_active():
-            dialogues.showinfo(
-                title,
-                'An import of data is in progress')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message='An import of data is in progress')
             return
         if not self.database:
-            dialogues.showinfo(
-                title,
-                'Open the database from which the export is to be done.')
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message=''.join(
+                    ('Open the database from which the export is to be done.',
+                     )))
             return
-        filename = dialogues.askdirectory(
+        filename = tkinter.filedialog.askdirectory(
+            parent=self.get_toplevel(),
             title=title,
             initialdir='~')
         if not filename:
-            dialogues.showwarning(
+            tkinter.messagebox.showwarning(
+                parent=self.get_toplevel(),
                 title=title,
-                message=' '.join(('Database not exported')))
+                message='Database not exported')
             return
         bfn = os.path.basename(filename)
         fns = (
@@ -1455,7 +1466,8 @@ class ChessUI(ChessException):
             os.path.join(filename, ''.join((bfn, '_repertoires', '.txt'))),
             os.path.join(filename, ''.join((bfn, '_partials', '.txt'))),
             )
-        if not dialogues.askokcancel(
+        if not tkinter.messagebox.askokcancel(
+            parent=self.get_toplevel(),
             title=title,
             message=''.join(
                 ('The database will be exported to files:\n\n',
@@ -1466,9 +1478,10 @@ class ChessUI(ChessException):
             return
         for f in fns:
             if os.path.exists(f):
-                dialogues.showinfo(
-                    title,
-                    '\n'.join(
+                tkinter.messagebox.showinfo(
+                    parent=self.get_toplevel(),
+                    title=title,
+                    message='\n'.join(
                         ('Cannot export because file\n',
                          f,
                          '\nalready exists.\n',
@@ -1482,12 +1495,14 @@ class ChessUI(ChessException):
             extn = 'pgn'
         else:
             extn = 'txt'
-        filename = dialogues.asksaveasfilename(
+        filename = tkinter.filedialog.asksaveasfilename(
+            parent=self.get_toplevel(),
             title=title,
             defaultextension=''.join(('.', extn)),
             filetypes=((datatype, '.'.join(('*', extn))),))
         if not filename:
-            dialogues.showwarning(
+            tkinter.messagebox.showwarning(
+                parent=self.get_toplevel(),
                 title=title,
                 message=' '.join((datatype, 'file not saved')))
             return
@@ -1772,7 +1787,8 @@ class ChessUI(ChessException):
             self.base_games.fill_view()
         except KeyError:
             if '*' in t:
-                dialogues.showwarning(
+                tkinter.messagebox.showwarning(
+                    parent=self.get_toplevel(),
                     title='Filter Games',
                     message=''.join((
                         "Filter '", t, "' contains a '*': if the database ",

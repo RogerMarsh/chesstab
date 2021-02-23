@@ -7,14 +7,15 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
-from .chessexception import ChessException
 from .gamedisplay import DialogueGameDisplay
 
 
-class ChessDBdeleteGame(ChessException, DataDelete):
+class ChessDBdeleteGame(ExceptionHandler, DataDelete):
     
     """Dialog to delete a game from database.
 

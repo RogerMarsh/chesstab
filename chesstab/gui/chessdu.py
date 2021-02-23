@@ -11,18 +11,17 @@ import traceback
 import datetime
 import tkinter
 import tkinter.font
+import tkinter.messagebox
 import queue
 import time
 
-from solentware_misc.workarounds import dialogues
 from solentware_misc.api import callthreadqueue
-
 from solentware_misc.gui.tasklog import LogText
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
 from ..core.pgn import GameUpdateEstimate
-from .chessexception import ChessException
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
@@ -52,7 +51,7 @@ from .fonts import _get_default_font_actual
 _DATABASE_UPDATE_FACTOR = 5
 
 
-class ChessDeferredUpdate(ChessException):
+class ChessDeferredUpdate(ExceptionHandler):
     """Connect a chess database with User Interface for deferred update."""
 
     def __init__(
@@ -134,7 +133,7 @@ class ChessDeferredUpdate(ChessException):
         # The cnf is not needed under Microsoft Windows or unix-like OS.
         self.report = LogText(
             master=self.root,
-            wrap='word',
+            wrap=tkinter.WORD,
             undo=tkinter.FALSE,
             get_app=self,
             cnf=_get_default_font_actual(tkinter.Text))
@@ -147,8 +146,7 @@ class ChessDeferredUpdate(ChessException):
             self.buttonframe,
             self.try_command,
             self.try_event,
-            self.report,
-            tkinter)
+            self.report)
 
         self.report.tag_configure(
             'margin',
@@ -266,7 +264,8 @@ class ChessDeferredUpdate(ChessException):
         names, exists = self.database.get_archive_names(
             files=(GAMES_FILE_DEF,))
         if exists:
-            if not dialogues.askokcancel(
+            if not tkinter.messagebox.askokcancel(
+                parent=self.root,
                 title='Import Backup',
                 message=''.join(
                     ('Import backups of the following files already exist.\n\n',
@@ -285,7 +284,8 @@ class ChessDeferredUpdate(ChessException):
             self.report.append_text(
                 'These backups will replace the existing backups.',
                 timestamp=False)
-        elif not dialogues.askokcancel(
+        elif not tkinter.messagebox.askokcancel(
+            parent=self.root,
             title='Import Backup',
             message=''.join(
                 ('Please confirm the import is to be done with backups.',
@@ -313,7 +313,8 @@ class ChessDeferredUpdate(ChessException):
         names, exists = self.database.get_archive_names(
             files=(GAMES_FILE_DEF,))
         if exists:
-            if not dialogues.askokcancel(
+            if not tkinter.messagebox.askokcancel(
+                parent=self.root,
                 title='Import Backup',
                 message=''.join(
                     ('Import backups of the following files already exist.\n\n',
@@ -334,7 +335,8 @@ class ChessDeferredUpdate(ChessException):
                 'Existing backups will be deleted before doing the import.',
                 timestamp=False)
             self.report.append_text_only('')
-        elif not dialogues.askokcancel(
+        elif not tkinter.messagebox.askokcancel(
+            parent=self.root,
             title='Import Backup',
             message=''.join(
                 ('Please confirm the import is to be done without backups.',
@@ -509,7 +511,8 @@ class ChessDeferredUpdate(ChessException):
             self.report.append_text_only('')
         return bool(self.estimate_data)
 
-    # Override ChessException method as ChessUI class is not used
+    # Override ChessException method as ChessUI class is not used.
+    # May be wrong now solentware_misc ExceptionHandler is used.
     def get_error_file_name(self):
         """Return the exception report file name."""
         return os.path.join(sys.argv[1], ERROR_LOG)
@@ -519,7 +522,8 @@ class ChessDeferredUpdate(ChessException):
 
     def quit_after_import_started(self):
         """Quit process after import has started."""
-        if dialogues.askyesno(
+        if tkinter.messagebox.askyesno(
+            parent=self.root,
             title='Abandon Import',
             message=''.join(
                 ('The import has been started.\n\n',
@@ -536,7 +540,8 @@ class ChessDeferredUpdate(ChessException):
         and keypress.
 
         """
-        if dialogues.askyesno(
+        if tkinter.messagebox.askyesno(
+            parent=self.root,
             title='Quit Import',
             message=self._quit_message):
             self.root.destroy()

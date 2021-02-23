@@ -23,10 +23,10 @@ widget.
 """
 
 import tkinter
+import tkinter.messagebox
 import re
 
 from solentware_misc.workarounds.workarounds import text_count
-from solentware_misc.workarounds import dialogues
 
 from pgn_read.core.constants import (
     TAG_RESULT,
@@ -2468,7 +2468,8 @@ class GameEdit(Game):
                         (PGN_BISHOP+movetext[1:]).join(
                             self.edit_move_context[self.current])))
                 if amtc.is_movetext_valid():
-                    if dialogues.askyesno(
+                    if tkinter.messagebox.askyesno(
+                        parent = self.ui.get_toplevel(),
                         title='Bishop or Pawn Capture',
                         message=''.join(
                             ("Movetext '", movetext, "' would be a bishop ",

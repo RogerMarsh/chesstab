@@ -5,20 +5,21 @@
 """Grids for listing details of selection rules on chess database.
 """
 
-import tkinter
+import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.chessrecord import ChessDBrecordQuery
 from .querydisplay import DatabaseQueryDisplay, DatabaseQueryEdit
 from .queryrow import ChessDBrowQuery
-from .chessexception import ChessException
 from ..core import exporters
 from .eventspec import EventSpec, DummyEvent
 from .display import Display
 
 
-class QueryListGrid(ChessException, DataGrid, Display):
+class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
     """A DataGrid for lists of game selection rules.
 
@@ -663,6 +664,7 @@ class QueryGrid(QueryListGrid):
             super().set_selection(key)
         except KeyError:
             tkinter.messagebox.showinfo(
+                parent=self.parent,
                 title='Insert Selection Rule Workaround',
                 message=''.join(
                     ('All records have same name on this display.\n\nThe new ',

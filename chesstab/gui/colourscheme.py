@@ -9,13 +9,15 @@ import tkinter
 import tkinter.font
 
 from solentware_misc.gui.colourslider import ColourSlider
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
+from pgn_read.core.parser import PGN
+
 from . import constants, fonts, options
 from . import game, board
 
 
-class _ColourScheme(ChessException):
+class _ColourScheme(ExceptionHandler):
 
     """Widgets to select fonts and colours for chess board and game score.
 
@@ -312,7 +314,7 @@ class _ColourScheme(ChessException):
             self.game.score.focus_set()
             
         self.game.score.bind('<ButtonPress>', self.try_event(focus))
-        self.game.pgn.get_first_game(''.join((
+        gs = ''.join((
             '[Event"National Club: Gosport - Wood Green"]',
             '[Site"Gosport"]',
             '[Date"1989-05-07"]',
@@ -327,7 +329,8 @@ class _ColourScheme(ChessException):
             'Qe4Bf5Qh4Qd3(c2(g5)Nd2Qxa5Rxa5Rb1Nf1Rxf1Kxf1Bd3)g4Rb1Rxb1Qxb1Kg2',
             'Kd6Qxf6Kxd5Qxe5Kc6gxf5Qxf5Qe8Kc7Qe7Kc8Ne5c2Qxc5Kd8Qxd4Ke8Qe3Kf8',
             'Kg3Qc8Nd3Kg8f4Qc6Nc1Qa4Qb31-0',
-            '\n')))
+            '\n'))
+        self.game.collected_game = next(PGN().read_games(gs))
         self.game.set_game()
         self.game.get_top_widget().pack(fill=tkinter.BOTH, expand=1)
         self.game.get_top_widget().pack_propagate(False)

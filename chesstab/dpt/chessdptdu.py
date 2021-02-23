@@ -14,7 +14,8 @@ See www.dptoolkit.com for details of DPT
 
 import os
 import bz2
-
+import tkinter
+import tkinter.messagebox
 from io import StringIO
 
 from dptdb.dptapi import (
@@ -31,7 +32,6 @@ from solentware_base.core.constants import (
     DSIZE,
     TABLE_B_SIZE,
     )
-from solentware_misc.workarounds import dialogues
 
 from ..core.filespec import (
     FileSpec,
@@ -332,28 +332,27 @@ class ChessDatabaseDeferred:
                            master,
                            try_command_wrapper,
                            try_event_wrapper,
-                           widget,
-                           tkinter_module):
+                           widget):
         """Add button actions for DPT to Import dialogue.
 
         Increase data and index space available.
 
         """
-        index = tkinter_module.Button(
+        index = tkinter.Button(
             master=master,
             text='Increase Index',
             underline=13,
             command=try_command_wrapper(
                 self._increase_index, master))
-        index.pack(side=tkinter_module.RIGHT, padx=12)
+        index.pack(side=tkinter.RIGHT, padx=12)
         widget.bind('<Alt-x>', try_event_wrapper(self._increase_index))
-        data = tkinter_module.Button(
+        data = tkinter.Button(
             master=master,
             text='Increase Data',
             underline=9,
             command=try_command_wrapper(
                 self._increase_data, master))
-        data.pack(side=tkinter_module.RIGHT, padx=12)
+        data.pack(side=tkinter.RIGHT, padx=12)
         widget.bind('<Alt-d>', try_event_wrapper(self._increase_data))
 
     def _increase_data(self, event=None):
@@ -386,7 +385,7 @@ class ChessDatabaseDeferred:
                       '\n\nAt present it is better to do index increases ',
                       'first for this file, if you need to do any, because ',
                       'a new extent (fragment) would not be needed.'))
-            if dialogues.askyesno(
+            if tkinter.messagebox.askyesno(
                 title='Increase Data Size',
                 message=''.join(
                     (message,
@@ -434,7 +433,7 @@ class ChessDatabaseDeferred:
                       '\n\nAt present it is better to do data increases ',
                       'first for this file, if you need to do any, because ',
                       'a new extent (fragment) would not be needed.'))
-            if dialogues.askyesno(
+            if tkinter.messagebox.askyesno(
                 title='Increase Index Size',
                 message=''.join(
                     (message,
@@ -574,10 +573,8 @@ class ChessDatabase(ChessDatabaseDeferred, dptdu_database.Database):
 if __name__ == '__main__':
 
 
-    import tkinter
     import tkinter.ttk
     import tkinter.filedialog
-    import tkinter.messagebox
 
     root = tkinter.Tk()
     root.wm_title('Sample do_deferred_updates')

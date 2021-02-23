@@ -68,7 +68,7 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
         if chessdb:
             engines[chessdb.bsddb3_database.bsddb3] = chessdb.ChessDatabase
         if chessdpt:
-            engines[chessdpt.dpt_database.dptapi] = chessdpt.ChessDatabase
+            engines[chessdpt.dpt_database._dpt.dptapi] = chessdpt.ChessDatabase
         if chessndbm:
             engines[chessndbm.ndbm_database.dbm.ndbm] = chessndbm.ChessDatabase
         if chessgnu:

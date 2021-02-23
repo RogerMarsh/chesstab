@@ -5,20 +5,21 @@
 """Grids for lists of Chess Query Language (ChessQL) statements on database.
 """
 
-import tkinter
+import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.chessrecord import ChessDBrecordPartial
 from .cqldisplay import DatabaseCQLDisplay, DatabaseCQLEdit
 from .cqlrow import ChessDBrowCQL
-from .chessexception import ChessException
 from ..core import exporters
 from .eventspec import EventSpec, DummyEvent
 from .display import Display
 
 
-class CQLListGrid(ChessException, DataGrid, Display):
+class CQLListGrid(ExceptionHandler, DataGrid, Display):
 
     """A DataGrid for lists of ChessQL statements.
 

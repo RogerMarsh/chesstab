@@ -6,17 +6,17 @@
 """
 
 import tkinter
+import tkinter.messagebox
 from urllib.parse import urlsplit
 
-from solentware_misc.workarounds import dialogues
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from ..core.engine import Engine
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
     
 
-class EngineText(ChessException):
+class EngineText(ExceptionHandler):
 
     """Chess engine definition widget built from Text and Scrollbar widgets.
     """
@@ -160,18 +160,21 @@ class EngineText(ChessException):
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
         #if self.ui.uci.uci_drivers_reply is None:
-        #    dialogues.showinfo(
-        #        'Chesstab Restriction',
-        #        ' '.join(('Starting an UCI chess engine is not allowed because',
-        #                  'an interface cannot be created:',
-        #                  'this is expected if running under Wine.')))
+        #    tkinter.messagebox.showinfo(
+        #        parent=self.panel,
+        #        title='Chesstab Restriction',
+        #        message=' '.join(
+        #            ('Starting an UCI chess engine is not allowed because',
+        #             'an interface cannot be created:',
+        #             'this is expected if running under Wine.')))
         #    return
 
         url = urlsplit(self.definition.get_engine_command_text())
         try:
             url.port
         except ValueError as exc:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent=self.panel,
                 title=self.__title,
                 message=''.join(('The port in the chess engine definition is ',
                                  'invalid.\n\n',
@@ -182,7 +185,8 @@ class EngineText(ChessException):
                                  )))
             return
         if not self.definition.get_engine_command_text():
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.panel,
                 title='Run Engine',
                 message=''.join((
                     'The engine definition does not have a command to ',
@@ -190,7 +194,8 @@ class EngineText(ChessException):
                     )))
             return
         elif url.port or url.hostname:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.panel,
                 title='Run Engine',
                 message=''.join(
                     ('Neither hostname nor port may be given here.\n',
@@ -199,7 +204,8 @@ class EngineText(ChessException):
                      )))
             return
         elif not self.definition.is_run_engine_command():
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.panel,
                 title='Run Engine',
                 message=''.join((
                     'The engine definition command to run a chess engine ',

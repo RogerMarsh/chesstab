@@ -6,16 +6,16 @@
 
 import tkinter
 import tkinter.messagebox
-
-from solentware_misc.workarounds import dialogues
+import tkinter.filedialog
 
 from solentware_grid.core.dataclient import DataSource
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from uci_net.engine import (
     ReservedOptionNames,
     )
 
-from .chessexception import ChessException
 from ..core.uci import UCI as _UCI
 from .enginegrid import EngineGrid
 from .enginerow import make_ChessDBrowEngine
@@ -30,7 +30,7 @@ _freebsd_platform = sys.platform.startswith('freebsd')
 del sys
 
 
-class UCI(ChessException):
+class UCI(ExceptionHandler):
 
     def __init__(self, menu_engines, menu_commands):
 
@@ -135,7 +135,8 @@ class UCI(ChessException):
         for dmi in dead_menu_items:
             self.menu_engines.delete(dmi)
         for name, pid in still_alive:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.menu_commands,
                 title='Stop Engine',
                 message=''.join((
                     name,
@@ -148,7 +149,8 @@ class UCI(ChessException):
 
     def quit_all_engines(self):
         """Quit all started UCI compliant Chess Engines after confirmation."""
-        if dialogues.askquestion(
+        if tkinter.messagebox.askquestion(
+            parent=self.menu_commands,
             title='Engines',
             message='Confirm Quit All Engines.') == tkinter.messagebox.YES:
             self.remove_engines_and_menu_entries()
@@ -168,18 +170,21 @@ class UCI(ChessException):
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
         #if self.uci.uci_drivers_reply is None:
-        #    dialogues.showinfo(
-        #        'Chesstab Restriction',
-        #        ' '.join(('Starting an UCI chess engine is not allowed because',
-        #                  'an interface cannot be created:',
-        #                  'this is expected if running under Wine.')))
+        #    tkinter.messagebox.showinfo(
+        #        parent=self.menu_commands,
+        #        title='Chesstab Restriction',
+        #        message=' '.join(
+        #            ('Starting an UCI chess engine is not allowed because',
+        #             'an interface cannot be created:',
+        #             'this is expected if running under Wine.')))
         #    return
 
         if _win32_platform:
             filetypes = (('Chess Engines', '*.exe'),)
         else:
             filetypes = ()
-        filename = dialogues.askopenfilename(
+        filename = tkinter.filedialog.askopenfilename(
+            parent=self.menu_commands,
             title='Run Chess Engine',
             filetypes=filetypes,
             initialfile='',
@@ -192,14 +197,16 @@ class UCI(ChessException):
             if command == filename:
                 self.run_engine(filename)
             elif not command.startswith(filename):
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self._do_toplevel,
                     title='Start Engine',
                     message='Command must start with selected file name.',
                     )
             else:
                 command = command.replace(filename, '', 1)
                 if not command.startswith(' '):
-                    dialogues.showinfo(
+                    tkinter.messagebox.showinfo(
+                        parent=self._do_toplevel,
                         title='Start Engine',
                         message='Command must start with selected file name.',
                         )
@@ -223,7 +230,8 @@ class UCI(ChessException):
     def do_command(self, initial_value, callback, hint=None, wraplength=None):
             
         if self._do_toplevel is not None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.menu_commands,
                 title='Engine Command',
                 message=''.join((
                     'A command dialogue is already active:\n\n',
@@ -232,7 +240,8 @@ class UCI(ChessException):
                 )
             return
         self._command = initial_value.split(None, maxsplit=1)[0]
-        self._do_toplevel = tkinter.Toplevel()
+        self._do_toplevel = tkinter.Toplevel(
+            master=self.menu_engines.winfo_toplevel())
         if hint:
             if wraplength is None:
                 wraplength = 400
@@ -280,6 +289,7 @@ class UCI(ChessException):
             if label is not None:
                 if label[-1] == ui_name:
                     if tkinter.messagebox.askquestion(
+                        parent=self.menu_engines,
                         title='Quit Engine',
                         message=''.join(
                             ('Please confirm request to quit engine\n\n',
@@ -291,6 +301,7 @@ class UCI(ChessException):
                         self.menu_engines.delete(i)
                     else:
                         tkinter.messagebox.showinfo(
+                            parent=self.menu_engines,
                             title='Quit Engine',
                             message=''.join((
                                 ui_name,
@@ -306,6 +317,7 @@ class UCI(ChessException):
         command = self._contents.get()
         if command.split()[0] != self._command:
             if tkinter.messagebox.askquestion(
+                parent=self.menu_commands,
                 title='Send to Engine',
                 message=''.join(
                     ('Command is not the one used to start dialogue.\n\n',
@@ -322,6 +334,7 @@ class UCI(ChessException):
                 ei.to_driver_queue.put(command)
             except:
                 tkinter.messagebox.showinfo(
+                    parent=self.menu_commands,
                     title='Send to Engine',
                     message=''.join((
                         'Send command\n\n',
@@ -408,6 +421,7 @@ class UCI(ChessException):
     def set_ucinewgame_off(self):
         """Set to not use ucinewgame command when navigating games."""
         if tkinter.messagebox.askquestion(
+            parent=self.menu_commands,
             title='Ucinewgame OFF',
             message=''.join(
                 ('Turn use of ucinewgame command OFF when navigating in or ',
@@ -427,6 +441,7 @@ class UCI(ChessException):
     def set_ucinewgame_on(self):
         """Set to use ucinewgame command when navigating games."""
         if tkinter.messagebox.askquestion(
+            parent=self.menu_commands,
             title='Ucinewgame ON',
             message=''.join(
                 ('Turn use of ucinewgame command ON when navigating in or ',
@@ -446,7 +461,8 @@ class UCI(ChessException):
     def stop(self):
         """Send stop command to UCI compliant Chess Engines."""
 
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent=self.menu_commands,
             title='Stop Command',
             message='Stop not implemented.',
             )
@@ -454,7 +470,8 @@ class UCI(ChessException):
     def go_infinite(self):
         """Send go infinite command to UCI compliant Chess Engines."""
 
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent=self.menu_commands,
             title='Go Infinite Command',
             message='Go infinite not implemented.',
             )
@@ -462,7 +479,8 @@ class UCI(ChessException):
     def isready(self):
         """Send isready command to UCI compliant Chess Engines."""
 
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent=self.menu_commands,
             title='Isready Command',
             message='Isready not implemented.',
             )
@@ -477,7 +495,8 @@ class UCI(ChessException):
         # than the ChessTab process.
 
         if self._do_toplevel is not None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.menu_commands,
                 title='Engine Command',
                 message=''.join((
                     'A command dialogue is already active:\n\n',
@@ -495,7 +514,8 @@ class UCI(ChessException):
             self._do_toplevel = None
             
         self._spinbox = initial_value
-        self._do_toplevel = tkinter.Toplevel()
+        self._do_toplevel = tkinter.Toplevel(
+            master=self.menu_engines.winfo_toplevel())
         self._do_toplevel.bind('<Destroy>', destroy)
         if hint:
             if wraplength is None:
@@ -525,7 +545,8 @@ class UCI(ChessException):
     def show_engines(self):
         """Show Chess Engine Descriptions on database."""
         if self._show_engines_toplevel is not None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.menu_engines,
                 title='Show Engines',
                 message=''.join((
                     'A show engines dialogue is already active:\n\n',
@@ -539,7 +560,8 @@ class UCI(ChessException):
                 self._close_engine_grid()
             self._show_engines_toplevel = None
             
-        self._show_engines_toplevel = tkinter.Toplevel()
+        self._show_engines_toplevel = tkinter.Toplevel(
+            master=self.menu_engines.winfo_toplevel())
         self._show_engines_toplevel.wm_title('Chess Engines')
         self._show_engines_toplevel.bind('<Destroy>', destroy)
         self._close_engine_grid()
@@ -627,14 +649,16 @@ class UCI(ChessException):
             pending_counts.append((engine,
                                    sum([len(p) for p in pending.values()])))
         if not pending_counts:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent=self.menu_commands,
                 title='Position Queues',
                 message='There are no queues of positions for analysis.')
             return
         pce = []
         for e, pc in sorted(pending_counts):
             pce.append('\t'.join((str(pc), e)))
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent=self.menu_commands,
             title='Position Queues',
             message=''.join(('Number of positions queued for analysis by ',
                              'each engine are:\n\n',
@@ -643,6 +667,7 @@ class UCI(ChessException):
     def set_clear_hash_off(self):
         """Set to not clear hash tables before position go command sequence."""
         if tkinter.messagebox.askquestion(
+            parent=self.menu_commands,
             title='Clear Hash OFF',
             message=''.join(
                 ('Turn OFF clear hash tables before analysing a position?\n\n',
@@ -658,6 +683,7 @@ class UCI(ChessException):
     def set_clear_hash_on(self):
         """Set to clear hash tables before position go command sequence."""
         if tkinter.messagebox.askquestion(
+            parent=self.menu_commands,
             title='Clear Hash ON',
             message=''.join(
                 ('Turn ON clear hash tables before analysing a position?\n\n',

@@ -6,12 +6,12 @@
 """
 
 from solentware_grid.gui.datashow import DataShow
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from .cqldisplay import DialogueCQLDisplay
 
 
-class ChessDBshowCQL(ChessException, DataShow):
+class ChessDBshowCQL(ExceptionHandler, DataShow):
     """Dialog to show a ChessQL statement from database.
 
     The ChessQL statement is in it's own Toplevel widget.

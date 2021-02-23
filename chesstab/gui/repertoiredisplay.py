@@ -34,22 +34,21 @@ RepertoireDialogue class.
 import tkinter
 import tkinter.messagebox
 
-from solentware_misc.workarounds import dialogues
-
 from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
+
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.constants import TAG_OPENING
 from .game import Repertoire
 from .gameedit import RepertoireEdit
 from ..core.chessrecord import ChessDBrecordRepertoireUpdate
-from .chessexception import ChessException
 from .eventspec import EventSpec
 from .display import Display
 
 
-class RepertoireDisplay(ChessException, Display):
+class RepertoireDisplay(ExceptionHandler, Display):
     
     """Manage UI interaction with database for particular displayed repertoire.
 
@@ -269,7 +268,8 @@ class RepertoireDisplay(ChessException, Display):
     def insert_game_database(self, event=None):
         """Add repertoire to database on request from repertoire display."""
         if self.ui.repertoire_items.active_item is None:
-            dialogues.showerror(
+            tkinter.messagebox.showerror(
+                parent = self.ui.get_toplevel(),
                 title='Insert Repertoire',
                 message='No active repertoire to insert into database.')
             return
@@ -277,27 +277,32 @@ class RepertoireDisplay(ChessException, Display):
         # This should see if repertoire with same name already exists,
         # after checking for database open, and offer option to insert anyway.
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Repertoire',
                 message='Cannot add repertoire:\n\nNo database open.')
             return
 
         datasource = self.ui.base_repertoires.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Repertoire',
                 message='Cannot add repertoire:\n\nRepertoire list hidden.')
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Insert Repertoire',
             message='Confirm request to add repertoire to database'):
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Insert Repertoire',
                 message='Add repertoire to database abandonned.')
             return
         updater = self.game_updater(repr(self.score.get('1.0', tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Insert Repertoire',
                 message=''.join(
                     ('The new repertoire contains at least one illegal move ',
@@ -312,7 +317,8 @@ class RepertoireDisplay(ChessException, Display):
         updater.key.recno = None
         editor.put()
         tags = updater.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Insert Repertoire',
             message=''.join(('Repertoire "',
                              '  '.join([tags.get(k, '')
@@ -559,31 +565,36 @@ class DatabaseRepertoireDisplay(RepertoireDisplay, Repertoire, DataNotify):
     def delete_game_database(self, event=None):
         """Remove repertoire from database on request from display."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Repertoire',
                 message='Cannot delete repertoire:\n\nNo database open.')
             return
         datasource = self.ui.base_repertoires.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Repertoire',
                 message='Cannot delete repertoire:\n\nRepertoire list hidden.')
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Repertoire',
                 message='\n'.join((
                     'Cannot delete repertoire:\n',
                     'Database has been closed since this copy displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Delete Repertoire',
                 message='\n'.join((
                     'Cannot delete repertoire:\n',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Delete Repertoire',
             message='Confirm request to delete repertoire from database.'):
             return
@@ -601,7 +612,8 @@ class DatabaseRepertoireDisplay(RepertoireDisplay, Repertoire, DataNotify):
         editor.set_data_source(datasource, editor.on_data_change)
         editor.delete()
         tags = original.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Delete Repertoire',
             message=''.join(('Repertoire "',
                              '  '.join([tags.get(k, '')
@@ -757,31 +769,36 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
     def update_game_database(self, event=None):
         """Modify existing repertoire record."""
         if self.ui.database is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Repertoire',
                 message='Cannot edit repertoire:\n\nNo database open.')
             return
         datasource = self.ui.base_repertoires.get_data_source()
         if datasource is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Repertoire',
                 message='Cannot edit repertoire:\n\nRepertoire list hidden.')
             return
         if self.sourceobject is None:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Repertoire',
                 message='\n'.join((
                     'Cannot edit repertoire:\n',
                     'Database has been closed since this copy displayed.')))
             return
         if self.blockchange:
-            dialogues.showinfo(
+            tkinter.messagebox.showinfo(
+                parent = self.ui.get_toplevel(),
                 title='Edit Repertoire',
                 message='\n'.join((
                     'Cannot edit repertoire:\n',
                     'Record has been amended since this copy displayed.')))
             return
-        if tkinter.messagebox.YES != dialogues.askquestion(
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent = self.ui.get_toplevel(),
             title='Edit Repertoire',
             message='Confirm request to edit repertoire on database.'):
             return
@@ -804,7 +821,8 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
         if not updater.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent = self.ui.get_toplevel(),
                 title='Edit Game',
                 message=''.join(
                     ('The edited repertoire contains at least one illegal ',
@@ -821,7 +839,8 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
             if newkey:
                 self.ui.base_repertoires.set_properties(newkey)
         tags = original.value.collected_game._tags
-        dialogues.showinfo(
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
             title='Edit Repertoire',
             message=''.join(('Repertoire "',
                              '  '.join([tags.get(k, '')
@@ -829,7 +848,7 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
                              '" amended on database.')))
 
 
-class RepertoireDialogue(ChessException):
+class RepertoireDialogue(ExceptionHandler):
     
     """Manage UI interaction with database for particular displayed repertoire.
 

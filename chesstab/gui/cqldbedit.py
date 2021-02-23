@@ -5,16 +5,15 @@
 """Edit or insert dialogue for Chess Query Language (ChessQL) statement record.
 """
 import tkinter
-
-from solentware_misc.workarounds import dialogues
+import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .chessexception import ChessException
 from .cqldisplay import DialogueCQLDisplay, DialogueCQLEdit
 
 
-class ChessDBeditCQL(ChessException, DataEdit):
+class ChessDBeditCQL(ExceptionHandler, DataEdit):
     """Dialog to edit a ChessQL statement on, or insert one into, database.
 
     The ChessQL statement is in it's own Toplevel widget.
@@ -76,20 +75,23 @@ class ChessDBeditCQL(ChessException, DataEdit):
             repr(self.newview.get_name_cql_statement_text()))
         if not len(self.newobject.value.get_name_text()):
             if not self.newobject.value.cql_error:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent=self.parent,
                     title=self.__title,
                     message=''.join((
                         "The ChessQL statement has no name.\n\nPlease enter ",
                         "it's name as the first line of text.'")))
             else:
-                dialogues.showerror(
+                tkinter.messagebox.showerror(
+                    parent=self.parent,
                     title=self.__title,
                     message=''.join((
                         "The text does not contain a valid ChessQL ",
                         "statement. ")))
             return False
         elif self.newobject.value.cql_error:
-            if tkinter.messagebox.YES != dialogues.askquestion(
+            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+                parent=self.parent,
                 title=self.__title,
                 message=''.join((
                     'Confirm request to update ChessQL statement named:\n\n',
@@ -99,7 +101,8 @@ class ChessDBeditCQL(ChessException, DataEdit):
                 return False
         if self.ui.partial_items.active_item:
             if self.ui.partial_items.active_item.sourceobject is None:
-                dialogues.showinfo(
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
                     title=self.__title,
                     message=''.join((
                         "Cannot use this insert dialogue while the active ",

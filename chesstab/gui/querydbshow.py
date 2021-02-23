@@ -7,11 +7,12 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from .chessexception import ChessException
+from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
 from .querydisplay import DialogueQueryDisplay
 
 
-class ChessDBshowQuery(ChessException, DataShow):
+class ChessDBshowQuery(ExceptionHandler, DataShow):
     """Dialog to show a game selection rule from database.
 
     The game selection rule is in it's own Toplevel widget.
