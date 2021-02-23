@@ -40,6 +40,7 @@ from .constants import (
     START_COMMENT,
     ERROR_START_COMMENT,
     ESCAPE_END_COMMENT,
+    HIDE_END_COMMENT,
     END_COMMENT,
     SPECIAL_TAG_DATE,
     )
@@ -333,6 +334,26 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
     #    """
     #    return self.get_field_value(fieldname),
 
+    def load(self, value):
+        """Get game from value.
+
+        The exception is a hack introduced to cope with a couple of games
+        found in TWIC downloads which give the result as '1-0 ff' in the
+        Result tag, and append ' ff' to the movetext after the '1-0' Game
+        Termination Marker.  The 'ff' gets stored on ChessTab databases as
+        the game score for an invalid game score.
+
+        It is assumed other cases will need this trick, which seems to be
+        needed only when displaying a list of games and not when displaying
+        the full game score.
+
+        """
+        try:
+            super().load(value)
+        except StopIteration:
+            self.collected_game = next(self.read_games(
+                '{'+literal_eval(value)+'}*'))
+
 
 class ChessDBrecordGameTags(Record):
     
@@ -412,19 +433,39 @@ class ChessDBrecordGamePosition(Record):
 # place errors which need hiding should occur is when importing games to, or
 # updating games on, the database.
 class _GameUpdate(GameUpdate):
-    """Override the PGN error notification and recovery methods."""
+    """Override the PGN error notification and recovery methods.
 
+    Errors detected in PGN movetext are hidden by wrapping all tokens to end
+    of variation, which may be rest of game if error is in main line, in a
+    comment which starts and ends with a presumed unlikely character sequence.
+    The '}' in any '{}' comments which happen to get wrapped a changed to a
+    distinct presumed unlikely character sequence so the wrapped '}' tokens do
+    not terminate the wrapping comment.
+
+    """
     def pgn_error_notification(self):
-        """Insert a '{' before the token which causes a PGN error."""
-        self._text.append(START_COMMENT+ERROR_START_COMMENT)
+        """Insert error '{' before movetext token which causes PGN error."""
+        if self._movetext_offset is not None:
+            self._text.append(START_COMMENT+ERROR_START_COMMENT)
 
     def pgn_error_recovery(self):
-        """Insert a '}' before the token which ends the scope of a PGN error.
+        """Insert error '}' before token which ends the scope of a PGN error.
 
         This token will be a ')' or one of the game termination markers.
 
         """
-        self._text.append(ESCAPE_END_COMMENT+END_COMMENT)
+        if self._movetext_offset is not None:
+            self._text.append(ESCAPE_END_COMMENT+END_COMMENT)
+
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+        
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
 class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):

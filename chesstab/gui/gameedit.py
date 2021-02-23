@@ -52,6 +52,7 @@ from ..core.constants import (
     START_COMMENT,
     ERROR_START_COMMENT,
     ESCAPE_END_COMMENT,
+    HIDE_END_COMMENT,
     END_COMMENT,
     END_TAG,
     START_TAG,
@@ -3030,7 +3031,8 @@ class GameEdit(Game):
             candidates += 1
             tc[e] = tc[e].rstrip(END_COMMENT).rstrip(
                 ).rstrip(ESCAPE_END_COMMENT).lstrip(START_COMMENT).lstrip(
-                    ).lstrip(ERROR_START_COMMENT)
+                    ).lstrip(ERROR_START_COMMENT).replace(
+                        HIDE_END_COMMENT, END_COMMENT)
             mtc = next(parser.read_games(''.join(tc)))
             if mtc.state:
                 tc[e] = t[e]

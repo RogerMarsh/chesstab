@@ -55,7 +55,7 @@ from pgn_read.core.game import generate_fen_for_position
 
 from ..core.pgn import GameDisplayMoves, GameAnalysis
 from .board import Board
-from .score import Score, AnalysisScore
+from .score import Score, AnalysisScore, ScoreNoGameException
 from ..core import exporters
 from .constants import (
     ANALYSIS_INDENT_TAG,
@@ -325,7 +325,10 @@ class Game(Score):
         editing mode recovers the original score.
         
         """
-        super().set_game(starttoken=starttoken, reset_undo=reset_undo)
+        try:
+            super().set_game(starttoken=starttoken, reset_undo=reset_undo)
+        except ScoreNoGameException:
+            return
         self.score.tag_add(MOVETEXT_INDENT_TAG, '1.0', tkinter.END)
         self._analyse_position(*self.fen_tag_tuple_square_piece_map())
 

@@ -93,6 +93,7 @@ NON_MOVE = None
 # Error markers for PGN display.
 ERROR_START_COMMENT = 'Error::'
 ESCAPE_END_COMMENT = '::' + START_COMMENT + START_COMMENT + '::'
+HIDE_END_COMMENT = '::::' + START_COMMENT + START_COMMENT
 
 FEN_CONTEXT = (''.join((START_TAG, TAG_FEN, '"')),
                ''.join(('"', END_TAG, START_TAG, TAG_SETUP, '"',

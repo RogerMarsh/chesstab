@@ -64,6 +64,7 @@ from .displayitems import DisplayItems
 from ..core.chessrecord import ChessDBrecordAnalysis
 from .querygrid import QueryGrid
 from .queryrow import make_ChessDBrowQuery
+from .score import ScoreNoGameException
 
 
 class ChessUIError(Exception):
@@ -1518,7 +1519,10 @@ class ChessUI(ExceptionHandler):
             for g in games:
                 try:
                     if g.current is None:
-                        position = g.fen_tag_tuple_square_piece_map()
+                        try:
+                            position = g.fen_tag_tuple_square_piece_map()
+                        except ScoreNoGameException:
+                            continue
                     else:
                         position = g.tagpositionmap[g.current]
                     g.refresh_analysis_widget(g.get_analysis(*position))

@@ -7,7 +7,7 @@
 Game* classes replace PGN* classes in ChessTab version 4.3.
 
 """
-from pgn_read.core.game import Game
+from pgn_read.core.game import Game, GameIndicateCheck
 from pgn_read.core.squares import Squares
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
@@ -50,7 +50,7 @@ MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
     }
 
 
-class GameDisplayMoves(Game):
+class GameDisplayMoves(GameIndicateCheck):
     """Add structures to support display of PGN moves."""
 
     def __init__(self):
@@ -238,7 +238,10 @@ class GameTags(Game):
         if self._movetext_offset is None:
             self._movetext_offset = len(self._text)
         self._text.append(match.group())
-        self.repeat_board_state(self._position_deltas[-1])
+        try:
+            self.repeat_board_state(self._position_deltas[-1])
+        except IndexError:
+            self.add_board_state_none(None)
 
     def ignore_move_number(self, match):
         super().ignore_move_number(match)
@@ -269,7 +272,7 @@ class GameTags(Game):
 
         """
         if self._movetext_offset is None:
-            self._append_token_and_set_error(match)
+            self.append_token_and_set_error(match)
             return
         self.reset_board_state(None)
         self._ravstack.append(None)
@@ -285,14 +288,14 @@ class GameTags(Game):
 
         """
         if self._state is not None or self._movetext_offset is None:
-            self._append_token_and_set_error(match)
+            self.append_token_and_set_error(match)
             return
 
         if self._movetext_offset is None:
-            self._append_token_and_set_error(match)
+            self.append_token_and_set_error(match)
             return
         if len(self._ravstack) == 1:
-            self._append_token_and_set_error(match)
+            self.append_token_and_set_error(match)
             return
         del self._ravstack[-1]
         del self._state_stack[-1]
@@ -349,10 +352,10 @@ class GameTags(Game):
                 # Cannot call append_end_rav() method because it tests some
                 # conditions that should be true when errors are absent.
                 if self._movetext_offset is None:
-                    self._append_token_and_set_error(match)
+                    self.append_token_and_set_error(match)
                     return
                 if len(self._ravstack) == 1:
-                    self._append_token_and_set_error(match)
+                    self.append_token_and_set_error(match)
                     return
                 del self._ravstack[-1]
                 del self._state_stack[-1]
@@ -532,6 +535,11 @@ class GameUpdateEstimate(GameUpdate):
     def append_game_termination(self, match):
         self.end_char = match.end()
         super().append_game_termination(match)
+
+    def append_bad_tag_and_set_error(self, match):
+        if not len(self._tags):
+            self.start_char = match.start()
+        super().append_bad_tag_and_set_error(match)
 
 
 def get_position_string(description):

@@ -91,6 +91,16 @@ from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
 
 
+# The ScoreNoGameException is intended to catch cases where a file
+# claiming to be a PGN file contains text with little resemblance to
+# the PGN standard between a Game Termination Marker and a PGN Tag or
+# a move description like Ba4.
+# For example 'anytext0-1anytext[tagname"tagvalue"]anytext' or
+# 'anytext*anytextBa4anytext'.
+class ScoreNoGameException(Exception):
+    pass
+
+
 class Score(ExceptionHandler):
 
     """Chess score widget composed from Text and Scrollbar widgets.
@@ -406,7 +416,11 @@ class Score(ExceptionHandler):
         if there was no FEN tag.
 
         """
-        return {s: p for p, s in  self.collected_game._initial_position[0]}
+        try:
+            return {s: p for p, s in  self.collected_game._initial_position[0]}
+        except TypeError:
+            raise ScoreNoGameException(
+                'No initial position: probably text has no PGN elements')
         
     def fen_tag_tuple_square_piece_map(self):
         """Return FEN tag as tuple with pieces in square to piece mapping."""
@@ -425,7 +439,10 @@ class Score(ExceptionHandler):
 
         """
         if self.current is None:
-            self.board.set_board(self.fen_tag_square_piece_map())
+            try:
+                self.board.set_board(self.fen_tag_square_piece_map())
+            except ScoreNoGameException:
+                return False
             self.see_first_move()
         else:
             try:
@@ -451,7 +468,20 @@ class Score(ExceptionHandler):
         if not self._is_score_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
-        self.map_game()
+        try:
+            self.map_game()
+        except ScoreNoGameException:
+            self.score.insert(
+                tkinter.END,
+                ''.join(('The following text was probably found between two ',
+                         'games in a file expected to be in PGN format.\n\n')))
+            self.score.insert(tkinter.END, self.collected_game._text)
+            self.bind_for_viewmode()
+            if not self._is_score_editable:
+                self.score.configure(state=tkinter.DISABLED)
+            if reset_undo:
+                self.score.edit_reset()
+            raise
         self.bind_for_viewmode()
         if not self._is_score_editable:
             self.score.configure(state=tkinter.DISABLED)
@@ -1153,8 +1183,11 @@ class Score(ExceptionHandler):
         self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
         cg = self.collected_game
         spm = self._square_piece_map
-        for p, s in cg._initial_position[0]:
-            spm[s] = p
+        try:
+            for p, s in cg._initial_position[0]:
+                spm[s] = p
+        except TypeError:
+            raise ScoreNoGameException('Unable to map text to board')
         assert len(cg._text) == len(cg._position_deltas)
         tags_displayed = self.map_tags_display_order()
         for text, position in zip(cg._text, cg._position_deltas):
