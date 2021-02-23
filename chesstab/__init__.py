@@ -25,6 +25,10 @@ from solentware_base.core.constants import (
     DPT_MODULE,
     SQLITE3_MODULE,
     APSW_MODULE,
+    UNQLITE_MODULE,
+    VEDIS_MODULE,
+    GNU_MODULE,
+    NDBM_MODULE,
     )
 
 APPLICATION_NAME = 'ChessTab'
@@ -42,6 +46,18 @@ _SQLITE3CHESS = __name__ + '.sqlite.chesssqlite3'
 # apsw interface module name
 _APSWCHESS = __name__ + '.apsw.chessapsw'
 
+# unqlite interface module name
+_UNQLITECHESS = __name__ + '.unqlite.chessunqlite'
+
+# vedis interface module name
+_VEDISCHESS = __name__ + '.vedis.chessvedis'
+
+# dbm.gnu interface module name
+_GNUCHESS = __name__ + '.gnu.chessgnu'
+
+# dbm.ndbm interface module name
+_NDBMCHESS = __name__ + '.ndbm.chessndbm'
+
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {
     BSDDB_MODULE: _DBCHESS,
@@ -49,88 +65,84 @@ APPLICATION_DATABASE_MODULE = {
     SQLITE3_MODULE: _SQLITE3CHESS,
     APSW_MODULE: _APSWCHESS,
     DPT_MODULE: _DPTCHESS,
+    UNQLITE_MODULE: _UNQLITECHESS,
+    VEDIS_MODULE: _VEDISCHESS,
+    GNU_MODULE: _GNUCHESS,
+    NDBM_MODULE: _NDBMCHESS,
     }
 
-# Berkeley DB partial position dataset module name
-_DBPARTIALPOSITION = __name__ + '.basecore.cqlds'
+# Default partial position dataset module name
+_DEFAULTPARTIALPOSITION = __name__ + '.basecore.cqlds'
 
 # DPT partial position dataset module name
 _DPTPARTIALPOSITION = __name__ + '.dpt.cqlds'
 
-# sqlite3 partial position dataset module name
-_SQLITE3PARTIALPOSITION = __name__ + '.basecore.cqlds'
-
-# apsw partial position dataset module name
-_APSWPARTIALPOSITION = __name__ + '.basecore.cqlds'
-
 # Map database module names to partial position dataset module
 PARTIAL_POSITION_MODULE = {
-    BSDDB_MODULE: _DBPARTIALPOSITION,
-    BSDDB3_MODULE: _DBPARTIALPOSITION,
-    SQLITE3_MODULE: _SQLITE3PARTIALPOSITION,
-    APSW_MODULE: _APSWPARTIALPOSITION,
+    BSDDB_MODULE: _DEFAULTPARTIALPOSITION,
+    BSDDB3_MODULE: _DEFAULTPARTIALPOSITION,
+    SQLITE3_MODULE: _DEFAULTPARTIALPOSITION,
+    APSW_MODULE: _DEFAULTPARTIALPOSITION,
     DPT_MODULE: _DPTPARTIALPOSITION,
+    UNQLITE_MODULE: _DEFAULTPARTIALPOSITION,
+    VEDIS_MODULE: _DEFAULTPARTIALPOSITION,
+    GNU_MODULE: _DEFAULTPARTIALPOSITION,
+    NDBM_MODULE: _DEFAULTPARTIALPOSITION,
     }
 
-# Berkeley DB full position dataset module name
-_DBFULLPOSITION = __name__ + '.basecore.fullpositionds'
+# Default full position dataset module name
+_DEFAULTFULLPOSITION = __name__ + '.basecore.fullpositionds'
 
 # DPT full dataset module name
 _DPTFULLPOSITION = __name__ + '.dpt.fullpositionds'
 
-# sqlite3 full dataset module name
-_SQLITE3FULLPOSITION = __name__ + '.basecore.fullpositionds'
-
-# apsw full dataset module name
-_APSWFULLPOSITION = __name__ + '.basecore.fullpositionds'
-
 # Map database module names to full position dataset module
 FULL_POSITION_MODULE = {
-    BSDDB_MODULE: _DBFULLPOSITION,
-    BSDDB3_MODULE: _DBFULLPOSITION,
-    SQLITE3_MODULE: _SQLITE3FULLPOSITION,
-    APSW_MODULE: _APSWFULLPOSITION,
+    BSDDB_MODULE: _DEFAULTFULLPOSITION,
+    BSDDB3_MODULE: _DEFAULTFULLPOSITION,
+    SQLITE3_MODULE: _DEFAULTFULLPOSITION,
+    APSW_MODULE: _DEFAULTFULLPOSITION,
     DPT_MODULE: _DPTFULLPOSITION,
+    UNQLITE_MODULE: _DEFAULTFULLPOSITION,
+    VEDIS_MODULE: _DEFAULTFULLPOSITION,
+    GNU_MODULE: _DEFAULTFULLPOSITION,
+    NDBM_MODULE: _DEFAULTFULLPOSITION,
     }
 
-# Berkeley DB analysis dataset module name
-_DBANALYSIS = __name__ + '.basecore.analysisds'
+# Default analysis dataset module name
+_DEFAULTANALYSIS = __name__ + '.basecore.analysisds'
 
 # DPT analysis dataset module name
 _DPTANALYSIS = __name__ + '.dpt.analysisds'
 
-# sqlite3 analysis dataset module name
-_SQLITE3ANALYSIS = __name__ + '.basecore.analysisds'
-
-# apsw analysis dataset module name
-_APSWANALYSIS = __name__ + '.basecore.analysisds'
-
 # Map database module names to analysis dataset module
 ANALYSIS_MODULE = {
-    BSDDB_MODULE: _DBANALYSIS,
-    BSDDB3_MODULE: _DBANALYSIS,
-    SQLITE3_MODULE: _SQLITE3ANALYSIS,
-    APSW_MODULE: _APSWANALYSIS,
+    BSDDB_MODULE: _DEFAULTANALYSIS,
+    BSDDB3_MODULE: _DEFAULTANALYSIS,
+    SQLITE3_MODULE: _DEFAULTANALYSIS,
+    APSW_MODULE: _DEFAULTANALYSIS,
     DPT_MODULE: _DPTANALYSIS,
+    UNQLITE_MODULE: _DEFAULTANALYSIS,
+    VEDIS_MODULE: _DEFAULTANALYSIS,
+    GNU_MODULE: _DEFAULTANALYSIS,
+    NDBM_MODULE: _DEFAULTANALYSIS,
     }
 
-# Berkeley DB selection rules dataset module name
-_DBSELECTION = __name__ + '.basecore.selectionds'
+# Default selection rules dataset module name
+_DEFAULTSELECTION = __name__ + '.basecore.selectionds'
 
 # DPT selection rules dataset module name
 _DPTSELECTION = __name__ + '.dpt.selectionds'
 
-# sqlite3 selection rules dataset module name
-_SQLITE3SELECTION = __name__ + '.basecore.selectionds'
-
-# apsw selection rules dataset module name
-_APSWSELECTION = __name__ + '.basecore.selectionds'
-
 # Map database module names to selection rules dataset module
 SELECTION_MODULE = {
-    BSDDB_MODULE: _DBSELECTION,
-    BSDDB3_MODULE: _DBSELECTION,
-    SQLITE3_MODULE: _SQLITE3SELECTION,
-    APSW_MODULE: _APSWSELECTION,
+    BSDDB_MODULE: _DEFAULTSELECTION,
+    BSDDB3_MODULE: _DEFAULTSELECTION,
+    SQLITE3_MODULE: _DEFAULTSELECTION,
+    APSW_MODULE: _DEFAULTSELECTION,
     DPT_MODULE: _DPTSELECTION,
+    UNQLITE_MODULE: _DEFAULTSELECTION,
+    VEDIS_MODULE: _DEFAULTSELECTION,
+    GNU_MODULE: _DEFAULTSELECTION,
+    NDBM_MODULE: _DEFAULTSELECTION,
     }

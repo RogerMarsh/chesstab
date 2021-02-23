@@ -597,11 +597,20 @@ class Chess(ChessException):
             return
         _modulename = None
         _enginename = None
-        for e in modulequery.database_modules_in_default_preference_order():
+        for e in modulequery.DATABASE_MODULES_IN_DEFAULT_PREFERENCE_ORDER:
             if e in idm:
-                _enginename = e
-                _modulename = APPLICATION_DATABASE_MODULE[e]
-                break
+                if e in APPLICATION_DATABASE_MODULE:
+                    _enginename = e
+                    _modulename = APPLICATION_DATABASE_MODULE[e]
+                    break
+        if _modulename is None:
+            dialogues.showinfo(
+                message=''.join((
+                    'None of the available database engines can be used to ',
+                    'create a database.')),
+                title='New',
+                )
+            return
         if self._database_modulename != _modulename:
             if self._database_modulename is not None:
                 dialogues.showinfo(
@@ -677,7 +686,7 @@ class Chess(ChessException):
         ed = modulequery.modules_for_existing_databases(chessfolder, FileSpec())
         # A database module is chosen when creating the database
         # so there should be either only one entry in edt or None
-        if len(ed) == 0:
+        if not ed:
             dialogues.showinfo(
                 message=''.join((
                     'Chess database in ',
@@ -699,8 +708,19 @@ class Chess(ChessException):
             return
 
         idm = modulequery.installed_database_modules()
-        edt = ed[0].intersection(idm)
-        if len(edt) == 0:
+        _enginename = None
+        for  k, v in idm.items():
+            if v in ed[0]:
+                if _enginename:
+                    dialogues.showinfo(
+                        message=''.join((
+                            'Several modules able to open database in\n\n',
+                            os.path.basename(chessfolder),
+                            '\n\navailable.  Unable to choose.')),
+                        title='Open')
+                    return
+                _enginename = k
+        if _enginename is None:
             dialogues.showinfo(
                 message=''.join((
                     'No modules able to open database in\n\n',
@@ -709,15 +729,6 @@ class Chess(ChessException):
                 title='Open',
                 )
             return
-        elif len(ed) > 1:
-            dialogues.showinfo(
-                message=''.join((
-                    'Several modules able to open database in\n\n',
-                    os.path.basename(chessfolder),
-                    '\n\navailable.  Unable to choose.')),
-                title='Open')
-            return
-        _enginename = edt.pop()
         _modulename = APPLICATION_DATABASE_MODULE[_enginename]
         if self._database_modulename != _modulename:
             if self._database_modulename is not None:

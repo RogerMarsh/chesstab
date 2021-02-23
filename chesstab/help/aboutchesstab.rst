@@ -6,13 +6,13 @@ ChessTab - About
 ChessTab lists the games on a database and displays the scores of selected games.
 
 
-This is ChessTab-4.0.1
+This is ChessTab-4.1
 
 python setup.py install will have installed these packages:
 
-- solentware-base-4.0
+- solentware-base-4.1
 - chessql-1.2.1
-- chesstab-4.0.1
+- chesstab-4.1
 - pgn-read-1.3.1
 - solentware-grid-2.0
 - solentware-misc-1.2
