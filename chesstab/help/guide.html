@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="Docutils 0.13.1: http://docutils.sourceforge.net/" />
+<title>ChessTab - a database for chess games</title>
+<style type="text/css">
+
+/*
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 7952 2016-07-26 18:15:59Z milde $
+:Copyright: This stylesheet has been placed in the public domain.
+
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
+*/
+
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
+
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
+
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
+
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
+
+.hidden {
+  display: none }
+
+.subscript {
+  vertical-align: sub;
+  font-size: smaller }
+
+.superscript {
+  vertical-align: super;
+  font-size: smaller }
+
+a.toc-backref {
+  text-decoration: none ;
+  color: black }
+
+blockquote.epigraph {
+  margin: 2em 5em ; }
+
+dl.docutils dd {
+  margin-bottom: 0.5em }
+
+object[type="image/svg+xml"], object[type="application/x-shockwave-flash"] {
+  overflow: hidden;
+}
+
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
+
+div.admonition p.admonition-title, div.hint p.admonition-title,
+div.important p.admonition-title, div.note p.admonition-title,
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
+
+div.attention p.admonition-title, div.caution p.admonition-title,
+div.danger p.admonition-title, div.error p.admonition-title,
+div.warning p.admonition-title, .code .error {
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
+
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
+
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
+
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
+
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
+
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
+
+h1.title {
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left, table.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right, table.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+table.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.align-left {
+  text-align: left }
+
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: inherit }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+.align-top    {
+  vertical-align: top }
+
+.align-middle {
+  vertical-align: middle }
+
+.align-bottom {
+  vertical-align: bottom }
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
+
+pre.literal-block, pre.doctest-block, pre.math, pre.code {
+  margin-left: 2em ;
+  margin-right: 2em }
+
+pre.code .ln { color: grey; } /* line numbers */
+pre.code, code { background-color: #eeeeee }
+pre.code .comment, code .comment { color: #5C6576 }
+pre.code .keyword, code .keyword { color: #3B0D06; font-weight: bold }
+pre.code .literal.string, code .literal.string { color: #0C5404 }
+pre.code .name.builtin, code .name.builtin { color: #352B84 }
+pre.code .deleted, code .deleted { background-color: #DEB0A1}
+pre.code .inserted, code .inserted { background-color: #A3D289}
+
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
+
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+/* "booktabs" style (no vertical lines) */
+table.docutils.booktabs {
+  border: 0px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-collapse: collapse;
+}
+table.docutils.booktabs * {
+  border: 0px;
+}
+table.docutils.booktabs th {
+  border-bottom: thin solid;
+  text-align: left;
+}
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
+
+</style>
+</head>
+<body>
+<div class="document" id="chesstab-a-database-for-chess-games">
+<h1 class="title">ChessTab - a database for chess games</h1>
+
+<div class="contents topic" id="contents">
+<p class="topic-title first">Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#introduction" id="id1">Introduction</a></li>
+<li><a class="reference internal" href="#getting-started" id="id2">Getting started</a></li>
+<li><a class="reference internal" href="#top-level-navigation" id="id3">Top-level Navigation</a></li>
+<li><a class="reference internal" href="#keyboard-actions" id="id4">Keyboard Actions</a></li>
+<li><a class="reference internal" href="#popup-menus" id="id5">Popup Menus</a></li>
+<li><a class="reference internal" href="#playing-through-a-game" id="id6">Playing through a game</a></li>
+<li><a class="reference internal" href="#editing-a-game" id="id7">Editing a game</a></li>
+<li><a class="reference internal" href="#repertoires" id="id8">Repertoires</a></li>
+<li><a class="reference internal" href="#chessql-statements" id="id9">ChessQL statements</a></li>
+<li><a class="reference internal" href="#selection-rules" id="id10">Selection Rules</a></li>
+<li><a class="reference internal" href="#chess-engines" id="id11">Chess Engines</a></li>
+</ul>
+</div>
+<div class="section" id="introduction">
+<h1><a class="toc-backref" href="#id1">Introduction</a></h1>
+<p>A ChessTab database can contain games and repertoires.</p>
+<p>Games and repertoires can be imported from files, or typed in using the editing functions.</p>
+<p>When playing through a game or repertoire, a list of all games containing the current position is displayed.</p>
+<p>Games repertoires in the database can be edited or deleted.</p>
+<p>Selection and chessql queries, and instructions to run chess engines, can be typed in using the editing functions, and be edited or deleted later.</p>
+<p>Chess engines which support the Universal Chess Interface (<a class="reference external" href="http://www.shredderchess.com/div/uci.zip">UCI</a>) can be used to analysis positions in games and repertoires.  The analysis can be played through like a game or repertoire.</p>
+<p>When a chessql statement is displayed, the list of games matching the query is also displayed.</p>
+<p>Games can be output to Portable Game Notation (<a class="reference external" href="http://www6.chessclub/help/PGN-spec">PGN</a>) files in <a class="reference external" href="http://www6.chessclub/help/PGN-spec">Export Format</a>, <a class="reference external" href="http://www6.chessclub/help/PGN-spec">Reduced Export Format</a>, or an <a class="reference external" href="http://www6.chessclub/help/PGN-spec">import format</a> excluding comments and glyphs.</p>
+<p>Repertoires and chessql statements can be exported too.</p>
+</div>
+<div class="section" id="getting-started">
+<h1><a class="toc-backref" href="#id2">Getting started</a></h1>
+<p>Start the program.</p>
+<p>Open a game window using 'Game | New Game' and click with the pointer over the board or the adjacent empty PGN-like score.  Clicking on the analysis below the board has no effect at this point.</p>
+<p>The 'Tools' menu allows the appearance of the game window to be changed.  All game, repertoire, and partial position windows are affected by changes.</p>
+<p>Type some moves.  'e4e5nf3nc6lb5' for example (lower case el is a short cut for 'shift-B' for bishop).</p>
+<p>Mistakes such as 'e4e5nf3nc5lb5' will produce a green cursor covering 'Nc5Bb5', for example.  Keyboard actions have their usual meanings within the green cursor, allowing mistakes to be corrected.  This one is fixed by deleting '5Bb5' and typing '6lb5'; editing the mistyped '5' to '6' is not sufficient.</p>
+<p>Left and right button clicks on the board move the green cursor through the game score.  'drag and drop' on board does not move pieces (or do anything in fact).</p>
+<p>Left click on the game score moves the green cursor and adjusts the position on the board to fit it's new location.  The green cursor disappears if the click does not fit a game position and the initial position is put on the board,</p>
+<p>Right click on the game score displays a popup menu of actions with their keyboard equivalents.  The actions available depend on click location but may not be obvious at the top level popup menu.</p>
+<p>Chess engine analysis is added to the analysis by engines started using the dialogue presented by 'Engines | Start Engine'.  Click 'Open' on the dialogue with the chess engine program file selected; then press 'Return' in the command line dialogue presented to start the engine.  See chess engine documentation for details of any options required in the command line dialogue.</p>
+<p>The response from the chess engine will appear in analysis after an interval, short if the default depth (10) and number of variations (1) are being used.</p>
+<p>'Commands | Depth' and 'Commands | MultiPV' can be used to change the depth of analysis and the number of variations shown, assuming the chess engine allows these values to be changed.  New analysis from the chess engine will be displayed, when available, if these values are increased.</p>
+<p>'Alt + F8' toggles between navigating the analysis and the game score for the active game.  The pointer equivalent is on the popup menu.  Left and right button clicks on the board switch to fit.</p>
+<p>Create a database using 'Database | New'.</p>
+<p>Add plausible values to the PGN tags in the game and insert the game in the database.  Use 'Shift Left' and 'Shift Right' to get to the PGN tag data entry areas; but add the result using 'Ctrl +', 'Ctrl -', 'Ctrl =', or 'Ctrl *', to keep the PGN tag and the game end marker in step.</p>
+<p>Add the game to the database using the 'Insert' key or 'right button click | Database | Insert'.</p>
+<p>Import some games, from a PGN file, using 'Database | Import | Games'.  Click 'Open' on the dialogue with the PGN file selected.  Lines like 'Ready to proceed ...' or 'Finished ...' will appear in the following import dialogue when ChessTab is waiting for instructions (meaning click one of the buttons).</p>
+<p>Two lists of games are displayed when the import dialogue is dismissed.  The upper one is the list of all games in the database.  The lower is the list of games containing the position on the board: except that no games are listed if the green cursor is absent, usually because the start of game is displayed.  The lower list changes as the green cursor is moved.</p>
+<p>Select one or more games for display using 'right button click | Display' on the list of games.  The original game keeps the large board.</p>
+<p>Left click on one of the smaller boards or game scores to make that game get the large board. 'F7' and 'F8' will cycle round the displayed games.  The lower list changes to fit the position on the large board.</p>
+<p>This is a convenient place to stop the detailed description: otherwise everything would get described.</p>
+<p>The Position and Repertoire menus work a lot like the Game menu.</p>
+<p>The Selection menu allows the top list, of all games in the database, to be sorted and filtered by values of the <a class="reference external" href="http://www6.chessclub/help/PGN-spec">PGN Seven Tag Roster</a>.</p>
+<p>The Selection menu also allows selection rules to be stored on the database and used to choose the list of games displayed.  The rule &quot;White eq Body, Any&quot; is similar to &quot;Select | Index | White&quot; and giving &quot;Body, Any&quot; as the Filter; but &quot;White eq Body, Any or Black eq Body, Any&quot; selects all games played by &quot;Body, Any&quot;.</p>
+</div>
+<div class="section" id="top-level-navigation">
+<h1><a class="toc-backref" href="#id3">Top-level Navigation</a></h1>
+<p>Left click over an item, when it is not the active item, makes it the active item.  The keyboard equivalents are described here.</p>
+<p>F2              List of partial positions
+Alt + F2                Active partial position
+Shift + F2              List of games containing active partial position
+F3              List of game selection rules
+Alt + F3                Active game selection rule
+F6              List of repertoires
+Alt + F6                Active repertoire
+Shift + F6              List of games containing current position of active repertoire
+F7              Previous item like active item
+F8              Next item like active item
+F9              List of games in database
+Alt + F9                Active game
+Shift + F9              List of games containing current position of active game</p>
+<p>Alt + Fn and Shift + Fn act as Fn on their targets above: so Alt + F9 on the active game makes the list of games in database active (F9) for example.</p>
+</div>
+<div class="section" id="keyboard-actions">
+<h1><a class="toc-backref" href="#id4">Keyboard Actions</a></h1>
+<p>All keyboard actions are available as menu actions, either the menu bar at top
+of application or a popup menu activated by right click, except for typing text such as moves or comments.</p>
+</div>
+<div class="section" id="popup-menus">
+<h1><a class="toc-backref" href="#id5">Popup Menus</a></h1>
+<p>Right mouse click displays a popup menu of actions if appropriate.</p>
+<p>Over a game or repertoire board right mouse click displays the next position unless variations are available, when a popup menu will appear.</p>
+</div>
+<div class="section" id="playing-through-a-game">
+<h1><a class="toc-backref" href="#id6">Playing through a game</a></h1>
+<p>The Up and Down arrow keys are used to move backward and forward through a game score.  The equivalent pointer actions on the board are left click and right click.  Left click on a move in the game or analysis score makes the position after the move has been played appear on the board.</p>
+<p>If necessary the first left click makes the game active: clicking on one of the games with a smaller board will first make it the game with the big board as well.  Subsequent clicks move through the game.</p>
+</div>
+<div class="section" id="editing-a-game">
+<h1><a class="toc-backref" href="#id7">Editing a game</a></h1>
+<p>Call up the game with 'Ctrl F11' rather than 'F11'.</p>
+<p>Play through the game to the point where editing is to be done.</p>
+<p>For deletion of moves this means go to the last move of a variation or the game and repeat use of the Backspace key until the moves to be deleted have gone.</p>
+<p>For insertion of variations this means go to the move which shows the position at which the variation occurs and start typing moves.</p>
+<p>For comments this means go to the comment, position the cursor at the point in the comment to be edited, and start editing: the editing functions are quite limited, just delete and insert but no cut and paste and so forth.</p>
+<p>To insert a new comment, type 'Ctrl {' at the comment should appear after.</p>
+<p>To insert a new PGN Tag, type 'Ctrl [' at the PGN Tag the new tag should appear after.</p>
+<p>The full range of editing commands are listed under PGN in the popup menu seen by right click on the game or analysis.</p>
+</div>
+<div class="section" id="repertoires">
+<h1><a class="toc-backref" href="#id8">Repertoires</a></h1>
+<p>Repertoires are like games except they are associated with different lists of games; and the PGN Tag technique is used to name them but not the ones defined by the PGN standard.</p>
+</div>
+<div class="section" id="chessql-statements">
+<h1><a class="toc-backref" href="#id9">ChessQL statements</a></h1>
+<p>ChessQL statements can be stored by using the 'Position | Partial' menu item.  The editor is the simplest available.  But navigation is as close as possible to the way used in games and repertoires.</p>
+<p>ChessQL statements use the syntax of <a class="reference external" href="http://www.gadycosteff.com/">CQL version 5.1</a> but ChessTab does not emulate the behaviour of CQL.  It is simply a much better way of expressing partial position searches than used previously in ChessTab.  CQL's piece designators are sufficient to replace the old partial positions; and currently only piece designators are implemented and other CQL constructs are ignored.</p>
+<p>All ChessQL statements must start cql(...), and an example simplest one that does anything is 'cql() Pd5' meaning find all games containing a position with a white pawn on d5.</p>
+</div>
+<div class="section" id="selection-rules">
+<h1><a class="toc-backref" href="#id10">Selection Rules</a></h1>
+<p>The 'Select' menu allows the list of games on the database to by sorted by an index.  The 'Filter' option is then available and can be used to pick the range of games listed.</p>
+<p>Selection rules can be stored by using the 'Select | Rule' menu item.  The editor is the simplest available.  But navigation is as close as possible to the way used in games and repertoires.</p>
+</div>
+<div class="section" id="chess-engines">
+<h1><a class="toc-backref" href="#id11">Chess Engines</a></h1>
+<p>Chess engines can be started and stopped from the 'Engines' menu.</p>
+<p>Depth of analysis and number of variations reported are controlled using the 'Commands' menu.  Analysis stored on a database is never replaced by analysis to less depth or with less variations reported.</p>
+<p>The number of positions queued for analysis can be displayed by the 'Position Queues' menu item.  When the numbers reach 0 (zero) after analysis of a game or games has been requested, the analysis has been completed.</p>
+<p>The 'Engines | Start Engine' menu item opens a dialogue best described as &quot;similar to the 'Run...' option off the Start button on Microsoft Windows XP&quot;.</p>
+<p>The 'Engines | Show Engines' menu item displays a list of 'run chess engine' commands which have been stored on the database.</p>
+<p>Use the popup menu for an engine in the list displayed by 'Engines | Show Engines', or the 'Run Chess Engine' dialogue, to start the chess engine and have it talk to ChessTab.</p>
+<p>Currently Stockfish runs by browsing to the stockfish program file and set it going.  For others you may need to find out what options to add to the command line presented when the file is 'Open'ed in the 'Run Chess Engine' dialogue, or added to the list of engines displayed by 'Engines | Show Engines'.</p>
+<p>The engine must support the Universal Chess Interface (UCI) protocol.</p>
+<p>The interface is intended to get positions analyzed, not play games against an engine.</p>
+</div>
+</div>
+</body>
+</html>
