@@ -6,30 +6,21 @@
 
 Evaluate a node tree built by cql package using a chesstab database.
 
+The description of variables at CQL version 6.0.4 suggests any construct using
+variables cannot be evaluated by ChessTab because indicies are used rather than
+processing each game move-by-move.  The relevant passages are copied from CQL
+documentation as comments in the chessql.core.statement module.
+
 """
 import copy
 
+from chessql.core.cql import Token
 from chessql.core.constants import (
     RANGE_SEPARATOR,
     PIECE_NAMES,
     SQUARE_DESIGNATOR_SEPARATOR,
-    FLIPCOLOR,
-    ROTATE45,
-    FLIP,
-    FLIPDIHEDRAL,
-    FLIPHORIZONTAL,
-    FLIPVERTICAL,
-    ROTATE90,
-    SHIFT,
-    SHIFTHORIZONTAL,
-    SHIFTVERTICAL,
-    WTM,
-    BTM,
-    WHITE,
-    BLACK,
     FILE_NAMES,
     RANK_NAMES,
-    PIECE_DESIGNATOR_FILTER,
     )
 from chessql.core.node import Node
 from chessql.core.piecedesignator import PieceDesignator
@@ -44,15 +35,14 @@ class CQLNodeError(Exception):
 
 
 class CQLNode(Node):
-    """"""
+    """Extend ChessQL Node for ChessTab implementation of CQL statements.
+
+    data holds the components used to build a statement which can be
+    processed by the solentware_base.core where and find modules.
+
+    """
     
     def __init__(self, *a, **k):
-        """Extend for ChessTab implementation of CQL statements.
-
-        data holds the components used to build a statement which can be
-        processed by the solentware_base.core where and find modules.
-
-        """
         super().__init__(*a, **k)
 
         # May get rid of 'where' because components should not be needed again
@@ -83,15 +73,14 @@ class CQLNode(Node):
         for n in self.children:
             n.expand_child_piece_designators()
         if self.leaf:
-            if self.type == PIECE_DESIGNATOR_FILTER:
+            if self.tokendef is Token.PIECE_DESIGNATOR:
                 pd = PieceDesignator(self.leaf)
                 pd.parse()
                 pd.expand_piece_designator()
                 self.data = pd
 
     def get_shift_limits(self, ranklimits=None, filelimits=None):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             data.get_shift_limits(ranklimits, filelimits)
@@ -99,8 +88,7 @@ class CQLNode(Node):
             c.get_shift_limits(ranklimits=ranklimits, filelimits=filelimits)
 
     def shift(self, shiftfiles, shiftranks):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = data.get_squares()
@@ -116,8 +104,7 @@ class CQLNode(Node):
             c.shift(shiftfiles, shiftranks)
 
     def rotate(self, rotation):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_rotated_squares(
@@ -133,8 +120,7 @@ class CQLNode(Node):
             c.rotate(rotation)
 
     def reflect_horizontal(self):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_horizontally_reflected_squares(
@@ -150,8 +136,7 @@ class CQLNode(Node):
             c.reflect_horizontal()
 
     def reflect_vertical(self):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_vertically_reflected_squares(
@@ -167,8 +152,7 @@ class CQLNode(Node):
             c.reflect_vertical()
 
     def rotate_and_reflect_horizontal(self):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_rotated_squares(
@@ -184,8 +168,7 @@ class CQLNode(Node):
             c.rotate_and_reflect_horizontal()
 
     def rotate_and_reflect_vertical(self):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_rotated_squares(
@@ -201,8 +184,7 @@ class CQLNode(Node):
             c.rotate_and_reflect_vertical()
 
     def flip_color(self):
-        """"""
-        if self.type == 'piece_designator':
+        if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
             squares = _normalize_horizontally_reflected_squares(
@@ -215,17 +197,16 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(('[', ']'))
             self.leaf = pieces + squares
-        elif self.type == 'plain_filter':
+        elif self.name == 'plain_filter':
             if self.leaf in FSNode.FLIP_COLOR_TOMOVE:
                 self.leaf = FSNode.FLIP_COLOR_TOMOVE[self.leaf]
-        elif self.type in FSNode.FLIP_COLOR_FILTER:
-            self.type = FSNode.FLIP_COLOR_FILTER[self.type]
+        elif self.name in FSNode.FLIP_COLOR_FILTER:
+            self.name = FSNode.FLIP_COLOR_FILTER[self.name]
             return
         for c in self.children:
             c.flip_color()
 
     def __deepcopy__(self, memo):
-        """"""
         newcopy = super().__deepcopy__(memo)
         newcopy.data = None
         newcopy.where = None
@@ -281,11 +262,12 @@ class FSNode:
                                         PIECE_NAMES[12],
                                         PIECE_NAMES[14],
                                         )))}
-    FLIP_COLOR_TOMOVE = {WTM:BTM, BTM:WTM}
-    FLIP_COLOR_FILTER = {WHITE:BLACK, BLACK:WHITE}
+    FLIP_COLOR_TOMOVE = {Token.WTM.name:Token.BTM.name,
+                         Token.BTM.name:Token.WTM.name}
+    FLIP_COLOR_FILTER = {Token.WHITE.name:Token.BLACK.name,
+                         Token.BLACK.name:Token.WHITE.name}
 
     def __init__(self, node):
-        """"""
         self.node = node
         self.children = []
 
@@ -414,12 +396,11 @@ class FSNode:
 
         """
         for c in self.children:
-            r = self._transform.get(c.node.type, lambda s : None)(c)
+            r = self._transform.get(c.node.tokendef, lambda s : None)(c)
             if r:
                 return r
 
     def _flip(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) == FSNode.INITIAL_RANK_LIMITS and
             (filelow, filehigh) == FSNode.INITIAL_FILE_LIMITS):
@@ -436,12 +417,7 @@ class FSNode:
         for t in transforms:
             self.node.children.append(t.node)
 
-    def _flipdihedral(self):
-        """"""
-        self._flip()
-
     def _fliphorizontal(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) == FSNode.INITIAL_RANK_LIMITS and
             (filelow, filehigh) == FSNode.INITIAL_FILE_LIMITS):
@@ -451,7 +427,6 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _flipvertical(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) == FSNode.INITIAL_RANK_LIMITS and
             (filelow, filehigh) == FSNode.INITIAL_FILE_LIMITS):
@@ -461,7 +436,6 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _rotate90(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) == FSNode.INITIAL_RANK_LIMITS and
             (filelow, filehigh) == FSNode.INITIAL_FILE_LIMITS):
@@ -473,7 +447,6 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _rotate45(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) != FSNode.INITIAL_RANK_LIMITS or
             (filelow, filehigh) != FSNode.INITIAL_FILE_LIMITS):
@@ -503,12 +476,11 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _shift(self):
-        """"""
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
         if ((ranklow, rankhigh) == FSNode.INITIAL_RANK_LIMITS and
             (filelow, filehigh) == FSNode.INITIAL_FILE_LIMITS):
             # No shifts needed.
-            # Change self.node.type from 'shift' to '{' or leave alone so
+            # Change self.node.tokendef from 'shift' to '{' or leave alone so
             # meaning of self.node.range is clear?
             # Evaluation of query must treat this node as '{' rather than 'or'.
             # Is single child sufficient to decide this?
@@ -538,7 +510,6 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _shiftvertical(self):
-        """"""
         ranklimits = list(FSNode.INITIAL_RANK_LIMITS)
         self.node.get_shift_limits(ranklimits=ranklimits)
         if tuple(ranklimits) == FSNode.INITIAL_RANK_LIMITS:
@@ -546,7 +517,6 @@ class FSNode:
         self._shift_one_direction(ranklimits, RANK_NAMES, FILE_NAMES)
 
     def _shifthorizontal(self):
-        """"""
         filelimits = list(FSNode.INITIAL_FILE_LIMITS)
         self.node.get_shift_limits(filelimits=filelimits)
         if tuple(filelimits) == FSNode.INITIAL_FILE_LIMITS:
@@ -554,20 +524,18 @@ class FSNode:
         self._shift_one_direction(filelimits, FILE_NAMES, RANK_NAMES)
             
     _transform = {
-        FLIP : _flip,
-        FLIPDIHEDRAL : _flipdihedral,
-        FLIPHORIZONTAL : _fliphorizontal,
-        FLIPVERTICAL : _flipvertical,
-        ROTATE90 : _rotate90,
-        ROTATE45 : _rotate45,
-        FLIPCOLOR : _flipcolor,
-        SHIFT : _shift,
-        SHIFTHORIZONTAL : _shifthorizontal,
-        SHIFTVERTICAL : _shiftvertical,
+        Token.FLIP : _flip,
+        Token.FLIPHORIZONTAL : _fliphorizontal,
+        Token.FLIPVERTICAL : _flipvertical,
+        Token.ROTATE90 : _rotate90,
+        Token.ROTATE45 : _rotate45,
+        Token.FLIPCOLOR : _flipcolor,
+        Token.SHIFT : _shift,
+        Token.SHIFTHORIZONTAL : _shifthorizontal,
+        Token.SHIFTVERTICAL : _shiftvertical,
         }
 
     def _get_transform_limits(self):
-        """"""
         rl = list(FSNode.INITIAL_RANK_LIMITS)
         fl = list(FSNode.INITIAL_FILE_LIMITS)
         self.node.get_shift_limits(ranklimits=rl, filelimits=fl)
@@ -601,7 +569,6 @@ class FSNode:
             self.node.children.append(t.node)
 
     def _generate_shifted_filters(self, shiftfiles, shiftranks):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -609,7 +576,6 @@ class FSNode:
         return transforms
 
     def _generate_rotated_filters(self, rotation):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -617,7 +583,6 @@ class FSNode:
         return transforms
 
     def _generate_horizontal_reflection_filters(self):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -625,7 +590,6 @@ class FSNode:
         return transforms
 
     def _generate_vertical_reflection_filters(self):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -633,7 +597,6 @@ class FSNode:
         return transforms
 
     def _generate_rotate_90_horizontal_reflection_filters(self):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -641,7 +604,6 @@ class FSNode:
         return transforms
 
     def _generate_rotate_90_vertical_reflection_filters(self):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -649,7 +611,6 @@ class FSNode:
         return transforms
 
     def _generate_flipped_color_filters(self):
-        """"""
         transforms = []
         for c in self.children:
             transforms.append(copy.deepcopy(c))
@@ -657,16 +618,14 @@ class FSNode:
         return transforms
 
     def _trace(self, level=0):
-        """"""
         if self.leaf:
             print(level, self.leaf._token)
         for c in self.children:
-            print(level, self.node.type, id(self.node))
+            print(level, self.node.name, id(self.node))
             c._trace(level=level+1)
 
 
 def _normalize_rotated_squares(squares):
-    """"""
     ns = []
     for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
         s = list(s)
@@ -695,7 +654,6 @@ def _normalize_rotated_squares(squares):
 
 
 def _normalize_horizontally_reflected_squares(squares):
-    """"""
     ns = []
     for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
         if len(s) == 6 or len(s) == 4 and s[2] == RANGE_SEPARATOR:
@@ -707,7 +665,6 @@ def _normalize_horizontally_reflected_squares(squares):
 
 
 def _normalize_vertically_reflected_squares(squares):
-    """"""
     ns = []
     for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
         if len(s) == 6 or len(s) == 4 and s[1] == RANGE_SEPARATOR:

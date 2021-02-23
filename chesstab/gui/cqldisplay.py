@@ -245,7 +245,7 @@ class CQLDisplay(ChessException, Display):
                                  'Partial position list hidden.')))
             return
         updater = ChessDBrecordPartial()
-        uvr = updater.value.process_statement(
+        updater.value.process_statement(
             self.get_name_cql_statement_text())
         title = 'Insert ChessQL Statement'
         tname = title.replace('Insert ', '').replace('S', 's')
@@ -265,38 +265,24 @@ class CQLDisplay(ChessException, Display):
                 ' named:\n\n',
                 updater.value.get_name_text(),
                 '\n\nto database.\n\n'))]
-        if not uvr:
-            if not updater.value.cql_error:
-                message.append(
-                    ''.join((
-                        'Note validation of the statement failed but no ',
-                        'error information is available.',
-                        )))
-                if tkinter.messagebox.YES != dialogues.askquestion(
-                    title=title,
-                    message=''.join(message)):
-                    dialogues.showinfo(
-                        title=title,
-                        message=tname.join(('Add ',
-                                            ' to database abandonned.')))
-                    return
-            else:
-                message.append(updater.value.cql_error.get_error_report())
-                if tkinter.messagebox.YES != dialogues.askquestion(
-                    title=title,
-                    message=''.join(message)):
-                    dialogues.showinfo(
-                        title=title,
-                        message=tname.join(('Add ',
-                                            ' to database abandonned.')))
-                    return
-        else:
+        if not updater.value.cql_error:
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title=title,
                 message=''.join(message)):
                 dialogues.showinfo(
                     title=title,
-                    message=tname.join(('Add ', ' to database abandonned.')))
+                    message=tname.join(('Add ',
+                                        ' to database abandonned.')))
+                return
+        else:
+            message.append(updater.value.cql_error.get_error_report())
+            if tkinter.messagebox.YES != dialogues.askquestion(
+                title=title,
+                message=''.join(message)):
+                dialogues.showinfo(
+                    title=title,
+                    message=tname.join(('Add ',
+                                        ' to database abandonned.')))
                 return
         editor = RecordEdit(updater, None)
         editor.set_data_source(datasource, editor.on_data_change)
@@ -986,7 +972,7 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
         # Then original would not be used. Instead DataSource.new_row
         # gets record keyed by sourceobject and update is used to edit this.
         updater = ChessDBrecordPartial()
-        uvr = updater.value.process_statement(
+        updater.value.process_statement(
             self.get_name_cql_statement_text())
         title = 'Edit ChessQL Statement'
         tname = title.replace('Edit ', '').replace('S', 's')
@@ -1006,38 +992,24 @@ class DatabaseCQLEdit(DatabaseCQLInsert):
                 ' named:\n\n',
                 updater.value.get_name_text(),
                 '\n\non database.\n\n'))]
-        if not uvr:
-            if not updater.value.cql_error:
-                message.append(
-                    ''.join((
-                        'Note validation of the statement failed but no ',
-                        'error information is available.',
-                        )))
-                if tkinter.messagebox.YES != dialogues.askquestion(
-                    title=title,
-                    message=''.join(message)):
-                    dialogues.showinfo(
-                        title=title,
-                        message=tname.join(('Edit ',
-                                            ' on database abandonned.')))
-                    return
-            else:
-                message.append(updater.value.cql_error.get_error_report())
-                if tkinter.messagebox.YES != dialogues.askquestion(
-                    title=title,
-                    message=''.join(message)):
-                    dialogues.showinfo(
-                        title=title,
-                        message=tname.join(('Edit ',
-                                            ' on database abandonned.')))
-                    return
-        else:
+        if not updater.value.cql_error:
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title=title,
                 message=''.join(message)):
                 dialogues.showinfo(
                     title=title,
-                    message=tname.join(('Edit ', ' on database abandonned.')))
+                    message=tname.join(('Edit ',
+                                        ' on database abandonned.')))
+                return
+        else:
+            message.append(updater.value.cql_error.get_error_report())
+            if tkinter.messagebox.YES != dialogues.askquestion(
+                title=title,
+                message=''.join(message)):
+                dialogues.showinfo(
+                    title=title,
+                    message=tname.join(('Edit ',
+                                        ' on database abandonned.')))
                 return
         editor = RecordEdit(updater, original)
         editor.set_data_source(datasource, editor.on_data_change)

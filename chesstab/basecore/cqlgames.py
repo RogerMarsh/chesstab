@@ -15,9 +15,11 @@ from solentware_base.core.where import (
     EQ,
     OR,
     NOT,
+    AND,
     )
 
-from chessql.core import constants
+from chessql.core import cql
+from chessql.core.cql import Token
 from chessql.core.constants import (
     ALL_GAMES_MATCH_PIECE_DESIGNATORS,
     ANY_WHITE_PIECE_NAME,
@@ -25,6 +27,7 @@ from chessql.core.constants import (
     ALL_PIECES,
     WHITE_PIECE_NAMES,
     BLACK_PIECE_NAMES,
+    EMPTY_SQUARE_NAME,
     )
 
 from pgn_read.core.constants import (
@@ -45,28 +48,31 @@ from ..core.filespec import (
     )
 from ..core.chessrecord import ChessDBrecordGameUpdate
 
-AND_FILTERS = frozenset((constants.LEFT_BRACE_FILTER,
-                         'cql',
-                         ))
-OR_FILTERS = frozenset((constants.OR,
-                        constants.FLIP,
-                        constants.FLIPDIHEDRAL,
-                        constants.FLIPHORIZONTAL,
-                        constants.FLIPVERTICAL,
-                        constants.FLIPCOLOR,
-                        constants.NEXT_STAR,
-                        constants.PREVIOUS_STAR,
-                        constants.ROTATE45,
-                        constants.ROTATE90,
-                        constants.SHIFT,
-                        constants.SHIFTHORIZONTAL,
-                        constants.SHIFTVERTICAL,
-                        ))
-_filters = {constants.PIECE_DESIGNATOR_FILTER,
-            constants.ON,
-            constants.RAY,
-            }
-_SUPPORTED_FILTERS = frozenset(AND_FILTERS.union(OR_FILTERS.union(_filters)))
+# The immediate children of nodes with the names of these filters have 'and'
+# and 'or' applied to evaluate the node's answer.
+_AND_FILTERS = frozenset(
+    (Token.AND,
+     cql.LEFTBRACE_NUMBER,
+     cql.LEFTBRACE_POSITION,
+     cql.LEFTBRACE_SET,
+     cql.LEFTBRACE_LOGICAL,
+     Token.CQL,
+     ))
+_OR_FILTERS = frozenset(
+    (Token.OR,
+     Token.FLIP,
+     Token.FLIPHORIZONTAL,
+     Token.FLIPVERTICAL,
+     Token.FLIPCOLOR,
+     Token.ROTATE45,
+     Token.ROTATE90,
+     Token.SHIFT,
+     Token.SHIFTHORIZONTAL,
+     Token.SHIFTVERTICAL,
+     ))
+
+_filters = {Token.PIECE_DESIGNATOR, Token.RAY,}
+_SUPPORTED_FILTERS = frozenset(_AND_FILTERS.union(_OR_FILTERS.union(_filters)))
 del _filters
 
 
@@ -246,35 +252,33 @@ class ChessQLGames:
         designators.
 
         """
-        if filter_.type in AND_FILTERS:
+        if filter_.tokendef in _AND_FILTERS:
             pieces = set(initialpieces)
             for n in filter_.children:
-                if n.type == constants.PIECE_DESIGNATOR_FILTER:
+                if n.tokendef is Token.PIECE_DESIGNATOR:
                     pieces.intersection_update(
                         self.pieces_matching_piece_designator(n))
                     if not pieces:
                         return pieces
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 pieces.intersection_update(
                     self.pieces_matching_filter(n, pieces))
                 if not pieces:
                     return pieces
             return pieces
-        elif filter_.type in OR_FILTERS:
+        elif filter_.tokendef in _OR_FILTERS:
             pieces = set(ALL_PIECES)
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 pieces.union(
                     self.pieces_matching_filter(n, initialpieces))
             return pieces
         else:
-            if filter_.type == constants.PIECE_DESIGNATOR_FILTER:
+            if filter_.tokendef is Token.PIECE_DESIGNATOR:
                 return self.pieces_matching_piece_designator(filter_)
-            if filter_.type == constants.ON:
-                return self.pieces_matching_on_filter(filter_)
             return initialpieces
         
     def squares_matching_filter(self, filter_, initialsquares):
@@ -284,45 +288,43 @@ class ChessQLGames:
         designators.
 
         """
-        if filter_.type in AND_FILTERS:
+        if filter_.tokendef in _AND_FILTERS:
             squares = set(initialsquares)
             for n in filter_.children:
-                if n.type == constants.PIECE_DESIGNATOR_FILTER:
+                if n.tokendef is Token.PIECE_DESIGNATOR:
                     squares.intersection_update(
                         self.squares_matching_piece_designator(n))
                     if not squares:
                         return squares
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 squares.intersection_update(
                     self.squares_matching_filter(n, squares))
                 if not squares:
                     return squares
             return squares
-        elif filter_.type in OR_FILTERS:
+        elif filter_.tokendef in _OR_FILTERS:
             squares = set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER)
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 squares.union(
                     self.squares_matching_filter(n, initialsquares))
             return squares
         else:
-            if filter_.type == constants.PIECE_DESIGNATOR_FILTER:
+            if filter_.tokendef is Token.PIECE_DESIGNATOR:
                 return self.squares_matching_piece_designator(filter_)
-            if filter_.type == constants.ON:
-                return self.squares_matching_on_filter(filter_)
             return initialsquares
         
     def pieces_matching_piece_designator(self, filter_):
         """Return pieces matching a piece designator."""
 
-        if filter_.type != constants.PIECE_DESIGNATOR_FILTER:
+        if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(''.join(("'",
-                                             constants.PIECE_DESIGNATOR_FILTER,
+                                             Token.PIECE_DESIGNATOR.name,
                                              "' expected but '",
-                                             str(filter_.type),
+                                             str(filter_.name),
                                              "'received",
                                              )))
         pieces = set()
@@ -339,11 +341,11 @@ class ChessQLGames:
     def squares_matching_piece_designator(self, filter_):
         """Return squares matching a piece designator."""
 
-        if filter_.type != constants.PIECE_DESIGNATOR_FILTER:
+        if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(''.join(("'",
-                                             constants.PIECE_DESIGNATOR_FILTER,
+                                             Token.PIECE_DESIGNATOR.name,
                                              "' expected but '",
-                                             str(filter_.type),
+                                             str(filter_.name),
                                              "'received",
                                              )))
         squares = set()
@@ -353,50 +355,16 @@ class ChessQLGames:
             else:
                 squares.add(ps[1:])
         return squares
-        
-    def pieces_matching_on_filter(self, filter_):
-        """Return pieces matching an on filter."""
 
-        if filter_.type != constants.ON:
-            raise ChessQLGamesError(''.join(("'",
-                                             constants.ON,
-                                             "' expected but '",
-                                             str(filter_.type),
-                                             "'received",
-                                             )))
-        left = self.pieces_matching_filter(
-            filter_.children[0],
-            set(ALL_PIECES))
-        right = self.pieces_matching_filter(
-            filter_.children[1],
-            set(ALL_PIECES))
-        return left.intersection(right)
-        
-    def squares_matching_on_filter(self, filter_):
-        """Return squares matching an on filter."""
+    def is_filter_not_implemented(self, filter_):
+        """Return True if filter is not implemented, and False otherwise.
 
-        if filter_.type != constants.ON:
-            raise ChessQLGamesError(''.join(("'",
-                                             constants.ON,
-                                             "' expected but '",
-                                             str(filter_.type),
-                                             "'received",
-                                             )))
-        left = self.squares_matching_filter(
-            filter_.children[0],
-            set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER))
-        right = self.squares_matching_filter(
-            filter_.children[1],
-            set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER))
-        return left.intersection(right)
+        Filters which are not implemented are added to a list reported before
+        evaluating the statement to the extent possible.
 
-    # Incomprehensible!!!
-    def is_filter_implemented(self, filter_):
-        if filter_.type == constants.PLAIN_FILTER:
-            self.not_implemented.add(filter_.leaf)
-            return True
-        elif filter_.type not in _SUPPORTED_FILTERS:
-            self.not_implemented.add(filter_.type)
+        """
+        if filter_.tokendef not in _SUPPORTED_FILTERS:
+            self.not_implemented.add(filter_.tokendef.name)
             return True
         return False
         
@@ -404,11 +372,11 @@ class ChessQLGames:
         self, filter_, datasource, movenumber, variation):
         """Return games matching a piece designator."""
 
-        if filter_.type != constants.PIECE_DESIGNATOR_FILTER:
+        if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(''.join(("'",
-                                             constants.PIECE_DESIGNATOR_FILTER,
+                                             Token.PIECE_DESIGNATOR.name,
                                              "' expected but '",
-                                             str(filter_.type),
+                                             str(filter_.name),
                                              "'received",
                                              )))
         answer = self._evaluate_piece_designator(
@@ -425,27 +393,27 @@ class ChessQLGames:
         designators.
 
         """
-        if filter_.type in AND_FILTERS:
+        if filter_.tokendef in _AND_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
             games |= initialgames
             for n in filter_.children:
-                if n.type == constants.PIECE_DESIGNATOR_FILTER:
+                if n.tokendef is Token.PIECE_DESIGNATOR:
                     games &= self._games_matching_piece_designator(
                         n, games, movenumber, variation)
                     if not games.count_records():
                         return games
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 games &= self._games_matching_filter(
                     n, games, movenumber, variation)
                 if not games.count_records():
                     return games
             return games
-        elif filter_.type in OR_FILTERS:
+        elif filter_.tokendef in _OR_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
             for n in filter_.children:
-                if self.is_filter_implemented(n):
+                if self.is_filter_not_implemented(n):
                     continue
                 e = self._games_matching_filter(
                     n, initialgames, movenumber, variation)
@@ -453,67 +421,25 @@ class ChessQLGames:
                     n, initialgames, movenumber, variation)
             return games
         else:
-            if filter_.type == constants.PIECE_DESIGNATOR_FILTER:
+            if filter_.tokendef is Token.PIECE_DESIGNATOR:
                 return self._games_matching_piece_designator(
                     filter_, initialgames, movenumber, variation)
-            if filter_.type == constants.ON:
-                return self._games_matching_on_filter(
-                    filter_, initialgames, movenumber, variation)
-            if filter_.type == constants.RAY:
+            if filter_.tokendef is Token.RAY:
                 return self._games_matching_ray_filter(
                     filter_, initialgames, movenumber, variation)
             games = self.dbhome.recordlist_nil(self.dbset)
             games |= initialgames
             return games
         
-    def _games_matching_on_filter(
-        self, filter_, datasource, movenumber, variation):
-        """Return games matching an on filter."""
-
-        if filter_.type != constants.ON:
-            raise ChessQLGamesError(''.join(("'",
-                                             constants.ON,
-                                             "' expected but '",
-                                             str(filter_.type),
-                                             "'received",
-                                             )))
-        left = self.squares_matching_filter(
-            filter_.children[0],
-            set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER))
-        right = self.squares_matching_filter(
-            filter_.children[1],
-            set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER))
-        squares = left.intersection(right)
-        if not squares:
-            return self.dbhome.recordlist_nil(self.dbset)
-        left = self.pieces_matching_filter(
-            filter_.children[0],
-            set(constants.ALL_PIECES))
-        right = self.pieces_matching_filter(
-            filter_.children[1],
-            set(constants.ALL_PIECES))
-        pieces = left.intersection(right)
-        if not pieces:
-            return self.dbhome.recordlist_nil(self.dbset)
-        answer = self._evaluate_piece_designator(
-            movenumber,
-            variation,
-            {p + s for p in pieces for s in squares})
-        leftgames = self._games_matching_filter(
-            filter_.children[0], datasource, movenumber, variation)
-        rightgames = self._games_matching_filter(
-            filter_.children[1], datasource, movenumber, variation)
-        return leftgames & rightgames & answer
-        
     def _games_matching_ray_filter(
         self, filter_, datasource, movenumber, variation):
         """Return games matching a ray filter."""
 
-        if filter_.type != constants.RAY:
+        if filter_.tokendef is not Token.RAY:
             raise ChessQLGamesError(''.join(("'",
-                                             constants.RAY,
+                                             Token.RAY.name,
                                              "' expected but '",
-                                             str(filter_.type),
+                                             str(filter_.name),
                                              "'received",
                                              )))
         rf = RayFilter(filter_, movenumber, variation)
@@ -588,7 +514,7 @@ class ChessQLGames:
 
 
 def where_eq_piece_designator(move_number, variation_code, designator_set):
-    """.
+    """Return list of selection phrases to evaluate a piece designator.
 
     The fieldname PieceSquareMove is now unavoidably a bit confusing, where
     move refers to a token in the movetext when the piece is on the square.
@@ -609,23 +535,38 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
         if len(ps) == 1:
 
             # Rules of chess imply whole piece designator finds all games if
-            # any of 'A', 'a', 'K', 'k', and '.', are in designator set.
+            # any of 'A', 'a', 'K', 'k', and '_', are in designator set.
             if ps[0] in ALL_GAMES_MATCH_PIECE_DESIGNATORS:
                 return ' '.join(
                     (pmfield, EQ, ''.join((mns, variation_code, WKING))))
             
             pmds.add(''.join((mns, variation_code, ps[0])))
             continue
-        if ps[0] == constants.EMPTY_SQUARE_NAME:
+        if ps[0] == EMPTY_SQUARE_NAME:
             sq = ps[1:]
+
+            # 'not field eq value1 or value2' does not work, it should, but
+            # 'not field eq value1 and not field eq value2' does work.
+            #emptyds.add(' '.join(
+            #    (NOT,
+            #     smfield,
+            #     EQ,
+            #     ''.join((mns, variation_code, sq + ANY_WHITE_PIECE_NAME)),
+            #     OR,
+            #     ''.join((mns, variation_code, sq + ANY_BLACK_PIECE_NAME)),
+            #     )))
             emptyds.add(' '.join(
                 (NOT,
                  smfield,
                  EQ,
                  ''.join((mns, variation_code, sq + ANY_WHITE_PIECE_NAME)),
-                 OR,
+                 AND,
+                 NOT,
+                 smfield,
+                 EQ,
                  ''.join((mns, variation_code, sq + ANY_BLACK_PIECE_NAME)),
                  )))
+
             continue
         if ps[0] in anypiece:
             smds.add(''.join(

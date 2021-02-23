@@ -15,6 +15,7 @@ squares from which the rays are calculated.
 """
 from chessql.core import constants
 from chessql.core import piecedesignator
+from chessql.core.cql import Token
 
 from pgn_read.core.constants import MOVE_NUMBER_KEYS
 
@@ -117,10 +118,10 @@ class RayFilter:
 
     def __init__(self, filter_, move_number, variation_code):
         """"""
-        if filter_.type not in {constants.BETWEEN, constants.RAY}:
+        if filter_.tokendef not in {Token.BETWEEN, Token.RAY}:
             raise RayFilterError(
                 ''.join(("Filter '",
-                         filter_.type,
+                         filter_.name,
                          "' does not support rays.",
                          )))
 
@@ -128,29 +129,29 @@ class RayFilter:
         if len(filter_.children) != 1:
             raise RayFilterError(
                 ''.join(("Filter '",
-                         filter_.type,
+                         filter_.name,
                          "' format not correct.",
                          )))
-        if filter_.children[0].type != constants.LEFT_PARENTHESIS_FILTER:
+        if filter_.children[0].tokendef is not Token.LEFTPARENTHESIS:
             raise RayFilterError(
                 ''.join(("Filter '",
-                         filter_.type,
+                         filter_.name,
                          "' format not correct.",
                          )))
 
         self.move_number = move_number
         self.variation_code = variation_code
         raycomponents = []
-        psti = piecedesignator.PieceDesignator.piece_square_to_index
         mvi = move_number_str(move_number) + variation_code
         for c in filter_.children[0].children:
             designator_set = set()
             raycomponents.append(designator_set)
             stack = [c]
             while stack:
-                if stack[-1].type == constants.PIECE_DESIGNATOR_FILTER:
+                if stack[-1].tokendef is Token.PIECE_DESIGNATOR:
                     designator_set.update(
-                        psti(stack[-1].data.designator_set, mvi))
+                        piece_square_to_index(
+                            stack[-1].data.designator_set, mvi))
                     stack.pop()
                     continue
                 sp = stack.pop()
@@ -389,6 +390,58 @@ class RayFilter:
             else:
                 self.ray_games[start, final].replace_records(
                     finder.db.recordlist_nil(finder.dbset))
+
+
+# This function belong in, and has been moved to, a chesstab module.  It came
+# from chessql.core.piecedesignator.PieceDesignator, it was a staticmethod, but
+# chesstab has no subclass of of PieceDesignator (yet), and rayfilter is only
+# user at present.
+# The alternative definitions are retained at present.
+def piece_square_to_index(designator_set, index_prefix):
+    """Convert piece designator set values to index format: Qa4 to a4Q.
+
+    Assumed that having all index values for a square adjacent is better
+    than having index values for piece together, despite the need for
+    conversion.
+
+    """
+    ecs = piecedesignator.PieceDesignator._expand_composite_square
+    ds = set()
+    for ps in designator_set:
+        if len(ps) != 1:
+            ds.add(index_prefix + ps)
+        else:
+            ds.update({index_prefix + ps + s
+                       for s in ecs(
+                           FILE_NAMES[0],
+                           FILE_NAMES[-1],
+                           RANK_NAMES[0],
+                           RANK_NAMES[-1])})
+    return ds
+
+
+# If 'square piece' is better order than 'piece square'
+def piece_square_to_index(designator_set, index_prefix):
+    """Convert piece designator set values to index format: Qa4 to a4Q.
+
+    Assumed that having all index values for a square adjacent is better
+    than having index values for piece together, despite the need for
+    conversion.
+
+    """
+    ecs = piecedesignator.PieceDesignator._expand_composite_square
+    ds = set()
+    for ps in designator_set:
+        if len(ps) != 1:
+            ds.add(index_prefix + ps[1:] + ps[0])
+        else:
+            ds.update({index_prefix + s + ps
+                       for s in ecs(
+                           FILE_NAMES[0],
+                           FILE_NAMES[-1],
+                           RANK_NAMES[0],
+                           RANK_NAMES[-1])})
+    return ds
 
 
 def move_number_str(move_number):
