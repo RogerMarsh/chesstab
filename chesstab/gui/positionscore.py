@@ -29,6 +29,7 @@ from pgn_read.core.constants import (
     IFG_ANYTHING_ELSE,
     IFG_CHECK,
     IFG_ANNOTATION,
+    FULLSTOP,
 )
 from pgn_read.core.parser import (
     PGNDisplayMoves,
@@ -70,6 +71,7 @@ from .constants import (
     SPACE_SEP,
     NEWLINE_SEP,
     NULL_SEP,
+    FORCE_FULLMOVE_PER_LINE,
     )
 
 
@@ -77,53 +79,7 @@ from .constants import (
 # make_row_widgets expects to be able to call Tkinter widget methods.
 class PositionScore(ChessException):
 
-    """Chess game score widget composed from a Text widget.
-
-    Methods added:
-
-    bind_for_viewmode
-    clear_current_range
-    _clear_tag_maps
-    colour_score
-    destroy_widget
-    down_one_transposition
-    get_current_tag_and_mark_names
-    get_next_positiontag_name
-    get_position_tag_of_index
-    get_rav_tag_names
-    get_tag_and_mark_names
-    get_tags_display_order
-    get_top_widget
-    insert_token_into_text
-    is_currentmove_in_main_line
-    is_index_in_main_line
-    is_move_in_main_line
-    map_end_rav
-    map_game
-    map_move_after_error
-    map_move_error
-    map_move_text
-    map_non_move
-    map_start_rav
-    map_termination
-    on_map
-    process_score
-    see_first_move
-    set_current
-    set_current_range
-    set_game_board
-    set_game
-    set_move_tag
-    up_one_transposition
-
-    Methods overridden:
-
-    None
-    
-    Methods extended:
-
-    __init__
-    
+    """Chess game score widget composed from a Text widget.    
     """
 
     m_color = MOVE_COLOR
@@ -211,15 +167,12 @@ class PositionScore(ChessException):
         self.previousmovetags = dict()
 
     def colour_score(self, context=None):
-        """Wrapper for Tkinter.Text configure method for score attribute.
-
-        Can be used repeatedly once process_score has been called.
-
+        """Set tags on the displayedmovetext.
         """
         widget = self.score
         for t in ALTERNATIVE_MOVE_TAG, MOVE_TAG, VARIATION_TAG, LINE_TAG:
             widget.tag_remove(t, '1.0', tkinter.END)
-        prevposition, currposition, nextposition = context
+        prevposition, currposition, nextposition = self._context
         if currposition:
             current = self.positiontags.get(currposition[:2], ())
             for tn in current:
@@ -257,8 +210,14 @@ class PositionScore(ChessException):
         if text:
             self._clear_tag_maps()
             self.pgn.get_first_game(text)
-            self.set_game()
-            self.colour_score(context=context)
+            self._context = context
+            self._inhibit_force_newline_count = 0
+            try:
+                self.set_game()
+                self.colour_score()
+            finally:
+                del self._context
+                del self._inhibit_force_newline_count
         
     def get_top_widget(self):
         """Return topmost widget for game display.
@@ -293,6 +252,10 @@ class PositionScore(ChessException):
         if not bbox:
             return
         self.score.xview_scroll(bbox[0] - 3, 'pixels')
+        # 15 is a hack assuming a font and size.  It is the bbox[-1] value for
+        # text which looks correct from a print(bbox) statement.
+        if bbox[-1] != 15:
+            self.score.yview_scroll(15 - bbox[-1], 'pixels')
         bbox = self.score.bbox(index)
         if not bbox:
             return
@@ -503,12 +466,22 @@ class PositionScore(ChessException):
     def map_move_text(self, token, position):
         """Add token to game text. Set navigation tags. Return token range.
 
+        Ignore castling and en passant options when comparing positions.
+
         """
         widget = self.score
         positiontag = self.get_next_positiontag_name()
         self.positiontags.setdefault(position[:2], []).append(positiontag)
         self.positions[positiontag] = position[:2]
         self.fullpositions[positiontag] = position
+        if len(self.pgn.moves) > FORCE_FULLMOVE_PER_LINE:
+            if self._inhibit_force_newline_count:
+                self._inhibit_force_newline_count -= 1
+            elif position[:2] == self._context[2][:2]:
+                # An arbitrary number of half-moves to fill the widget.
+                self._inhibit_force_newline_count = 25
+            elif position[1]:
+                widget.insert(tkinter.INSERT, NEWLINE_SEP)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE:
             widget.tag_add(tag, start, end)

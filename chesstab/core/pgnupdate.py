@@ -213,7 +213,7 @@ def get_position_string(description):
     name or en passant or castling or whose move.
     
     """
-    board, side_to_move, castle_options, ep_square = description
+    board, side_to_move, castle_options, ep_square = description[:4]
     return (sum(SQUARE_BITS[e] for e, p in enumerate(board) if p
                 ).to_bytes(8, 'big').decode('iso-8859-1') +
             ''.join(p for p in board) +

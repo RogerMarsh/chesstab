@@ -196,3 +196,11 @@ NULL_SEP = ''               # separator used displaying moves and so on
 
 # mark the start of the selection rule, which is also end of rule's name.
 START_SELECTION_RULE_MARK = 'rulemark'
+
+# Force game score text widgets to display every fullmove, a white halfmove and
+# a black halfmove, on a new line if the total number of fullmoves including
+# variations exceeds this limit.  This is for performance reasons that become
+# noticeable at about 500 fullmoves.  Repertoire displays may often exceed this
+# limit.  The maximum length game, nearly 6000 fullmoves, takes more than an
+# hour to display, or do a navigation operation.
+FORCE_FULLMOVE_PER_LINE = 500

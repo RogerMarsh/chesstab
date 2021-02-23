@@ -2210,7 +2210,7 @@ class GameEdit(Game):
     def map_move_text(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_move_text(token, position),
+            super().map_move_text(token, position),
             self.get_current_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, INSERT_RAV),
             tag_position=False, # already tagged by superclass method
@@ -2221,8 +2221,7 @@ class GameEdit(Game):
     def map_start_rav(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         # need self._choicetag set by supersclass method
-        token_indicies = super(GameEdit, self).map_start_rav(
-            token, position)
+        token_indicies = super().map_start_rav(token, position)
         prior = self.get_prior_tag_for_choice(self._choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
@@ -2248,8 +2247,7 @@ class GameEdit(Game):
         self.add_move_to_editable_moves(
             self._start_latest_move, self._end_latest_move, self._vartag)
         # need self._choicetag set by supersclass method
-        token_indicies = super(GameEdit, self).map_end_rav(
-            token, position)
+        token_indicies = super().map_end_rav(token, position)
         prior = self.get_prior_tag_for_choice(self._choicetag)
         if self.score.tag_ranges(prior):
             tags = (self._ravtag, NAVIGATE_TOKEN, RAV_END_TAG, prior)
@@ -2285,7 +2283,7 @@ class GameEdit(Game):
             self.add_move_to_editable_moves(
                 self._start_latest_move, self._end_latest_move, self._vartag)
         positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_termination(token, position),
+            super().map_termination(token, position),
             self.get_tag_and_mark_names,
             #tag_start_to_end=(EDIT_RESULT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             tag_start_to_end=(EDIT_RESULT, ),
@@ -2296,7 +2294,7 @@ class GameEdit(Game):
     def _map_start_comment(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super(GameEdit, self).map_start_comment(token, position),
+            super().map_start_comment(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_COMMENT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
@@ -2317,7 +2315,7 @@ class GameEdit(Game):
     def _map_comment_to_eol(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super(GameEdit, self).map_comment_to_eol(token, position),
+            super().map_comment_to_eol(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_COMMENT_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
@@ -2372,7 +2370,7 @@ class GameEdit(Game):
     def _map_glyph(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super(GameEdit, self).map_glyph(token, position),
+            super().map_glyph(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_GLYPH, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
@@ -2448,7 +2446,7 @@ class GameEdit(Game):
         """Extend to tag token for single-step navigation and game editing."""
         # mark_for_edit is True while no EDIT_... tag is done?
         positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_non_move(token, position),
+            super().map_non_move(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )

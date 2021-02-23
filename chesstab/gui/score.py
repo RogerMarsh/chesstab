@@ -56,6 +56,8 @@ from pgn_read.core.constants import (
     IFG_ANNOTATION,
     IFG_ANYTHING_ELSE,
     SEVEN_TAG_ROSTER,
+    FULLSTOP,
+    WHITE_SIDE,
     )
 from pgn_read.core.parser import PGNDisplay
 
@@ -96,6 +98,7 @@ from .constants import (
     NEWLINE_SEP,
     NULL_SEP,
     STATUS_SEVEN_TAG_ROSTER_PLAYERS,
+    FORCE_FULLMOVE_PER_LINE,
     )
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
@@ -249,6 +252,14 @@ class Score(ChessException):
 
         # PGN parser instance to process PGN text.
         self.pgn = pgnclass()
+
+        # Used to force a newline before a black move in large games after a
+        # comment or RAV marker, or similar.
+        # map_move_text sets this True in all circumstances.
+        # The AnalysisScore subclass makes its own arrangements because the
+        # Score technique does not work, forced newlines are not needed, and
+        # only the first move gets numbered.
+        self._force_newline = False
 
     def add_navigation_to_viewmode_popup(self, **kwargs):
         '''Add 'Navigation' entry to movemode popup if not already present.'''
@@ -1177,6 +1188,19 @@ class Score(ChessException):
         widget = self.score
         positiontag = self.get_next_positiontag_name()
         self.positions[positiontag] = position
+        if len(self.pgn.moves) > FORCE_FULLMOVE_PER_LINE:
+            if position[1]:
+                widget.insert(tkinter.INSERT, NEWLINE_SEP)
+                self.insert_token_into_text(
+                    str(position[5]) + FULLSTOP, SPACE_SEP)
+            elif self._force_newline:
+                widget.insert(tkinter.INSERT, NEWLINE_SEP)
+                self.insert_token_into_text(
+                    ''.join((str(position[5] - 1),
+                             FULLSTOP,
+                             SPACE_SEP,
+                             FULLSTOP * 3)),
+                    SPACE_SEP)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
@@ -1198,6 +1222,7 @@ class Score(ChessException):
         self._start_latest_move = start
         self._end_latest_move = end
         self.create_previousmovetag(positiontag, start)
+        self._force_newline = False
         return start, end, sepend
 
     def map_start_rav(self, token, position):
@@ -1240,6 +1265,7 @@ class Score(ChessException):
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         self._next_move_is_choice = True
+        self._force_newline = True
         return start, end, sepend
 
     def map_end_rav(self, token, position):
@@ -1267,6 +1293,7 @@ class Score(ChessException):
         self.score.tag_add(BUILD_TAG, start, end)
         self._vartag, self._ravtag, self._token_position = self.varstack.pop()
         self._choicetag = self.choicestack.pop()
+        self._force_newline = True
         return start, end, sepend
 
     def map_tag_fen(self, token, position):
@@ -1282,6 +1309,7 @@ class Score(ChessException):
 
     def map_start_comment(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
+        self._force_newline = True
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_comment_to_eol(self, token, position):
@@ -1300,6 +1328,7 @@ class Score(ChessException):
         widget.insert(tkinter.INSERT, token)
         end = widget.index(tkinter.INSERT + ' -1 chars')
         widget.insert(tkinter.INSERT, NULL_SEP)
+        self._force_newline = True
         return start, end, widget.index(tkinter.INSERT)
 
     def map_integer(self, token, position):
@@ -1316,6 +1345,7 @@ class Score(ChessException):
 
     def map_start_reserved(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
+        self._force_newline = True
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_move_error(self, token, position):
@@ -2017,3 +2047,152 @@ class AnalysisScore(Score):
             self.score.see(self.score.tag_ranges(self.current)[0])
         self.set_game_list()
         return False
+
+    def map_game(self):
+        """Tag and mark the displayed text of position analysis.
+
+        The tags and marks are used for colouring and navigating the score.
+
+        """
+        dispatch_table = {
+            IFG_PIECE_SQUARE: self.map_move_text,
+            IFG_PAWN_SQUARE: self.map_move_text,
+            IFG_PIECE_CAPTURE_SQUARE: self.map_move_text,
+            IFG_PAWN_CAPTURE_SQUARE: self.map_move_text,
+            IFG_PIECE_CHOICE_SQUARE: self.map_move_text,
+            IFG_PAWN_PROMOTE_SQUARE: self.map_move_text,
+            IFG_CASTLES: self.map_move_text,
+            IFG_START_RAV: self.map_start_rav,
+            IFG_END_RAV: self.map_end_rav,
+            IFG_TERMINATION: self.map_termination,
+            IFG_COMMENT: self.map_start_comment,
+            IFG_COMMENT_TO_EOL: self.map_comment_to_eol,
+            IFG_NAG: self.map_glyph,
+            IFG_ANYTHING_ELSE: self.map_non_move,
+            IFG_CHECK: self.map_non_move,
+            IFG_ANNOTATION: self.map_non_move,
+            }
+
+        # With get_current_...() methods as well do not need self._vartag
+        # self._ravtag and self._choicetag state attributes.
+        self._vartag, self._ravtag = self.get_rav_tag_names()
+        self._choicetag = self.get_choice_tag_name()
+        self._gamevartag = self._vartag
+
+        self._start_latest_move = ''
+        self._end_latest_move = ''
+        self._next_move_is_choice = False
+        self._token_position = None
+        
+        self.score.mark_set(START_SCORE_MARK, '1.0')
+        self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
+        for token, position in self.pgn.moves:
+            for group in (IFG_PIECE_SQUARE,
+                          IFG_PAWN_SQUARE,
+                          IFG_PIECE_CAPTURE_SQUARE,
+                          IFG_PAWN_CAPTURE_SQUARE,
+                          IFG_PIECE_CHOICE_SQUARE,
+                          IFG_PAWN_PROMOTE_SQUARE,
+                          IFG_CASTLES,
+                          IFG_START_RAV,
+                          IFG_END_RAV,
+                          IFG_TERMINATION,
+                          IFG_COMMENT,
+                          IFG_COMMENT_TO_EOL,
+                          IFG_NAG,
+                          IFG_CHECK,
+                          IFG_ANNOTATION,
+                          IFG_ANYTHING_ELSE,
+                          ):
+                try:
+                    if token.group(group):
+                        try:
+                            dispatch_table[group](token.group(), position)
+                        except KeyError:
+                            self.map_tag_fen(None, position)
+                        break
+                except AttributeError:
+                    self.map_tag_fen(None, position)
+                    break
+
+                # If group == IFG_PIECE_SQUARE and len(token.group()) == 5 or
+                # group == IFG_PIECE_CAPTURE_SQUARE and len(token.group()) == 6
+                # assume movetext such as 'Qb2c3' meaning there are more than
+                # two queens able to move to 'c3' and the one om 'b2' does so.
+                # The PGN parser treats 'Qb2c3' as a special case after seeing
+                # 'Qb2' cannot be a move.
+                except IndexError:
+                    if ((len(token.group()) == 5 and
+                         group == IFG_PIECE_SQUARE) or
+                        (len(token.group()) == 6 and
+                         group == IFG_PIECE_CAPTURE_SQUARE)):
+                        try:
+                            dispatch_table[group](token.group(), position)
+                        except KeyError:
+                            self.map_tag_fen(None, position)
+                        break
+                    raise
+
+        self.build_nextmovetags()
+
+        # BUILD_TAG used to track moves and RAV markers during construction of
+        # text.  Subclasses setup and use NAVIGATE_TOKEN for post-construction
+        # comparisons of this, and other, kinds if necessary.  This class, and
+        # subclasses, do not need this information after construction.
+        # self.nextmovetags tracks the things BUILD_TAG is used for.  Maybe
+        # change technique to use it rather than BUILD_TAG.
+        self.score.tag_delete(BUILD_TAG)
+
+    # Copied from Score class above and hacked. 
+    def map_move_text(self, token, position):
+        """Add token to game text. Set navigation tags. Return token range.
+
+        self._start_latest_move and self._end_latest_move are set to range
+        occupied by token text so that variation tags can be constructed as
+        more moves are processed.
+
+        """
+        widget = self.score
+        positiontag = self.get_next_positiontag_name()
+        self.positions[positiontag] = position
+
+        # The only way found to get the move number at start of analysis.
+        # Direct use of self.score.insert(...), as in insert_token_into_text,
+        # or a separate call to insert_token_into_text(...), does not work:
+        # interaction with refresh_analysis_widget_from_database() in
+        # game.Game when building the text is assumed to be the cause.
+        if not len(self.varstack):
+            a, active_side, a, a, a, fullmove_number = position
+            del a
+            if active_side == WHITE_SIDE:
+                fullmove_number -= 1
+                fullmove_number = str(fullmove_number) + FULLSTOP * 3
+            else:
+                fullmove_number = str(fullmove_number) + FULLSTOP
+            start, end, sepend = self.insert_token_into_text(
+                ''.join((fullmove_number, SPACE_SEP, token)),
+                SPACE_SEP)
+        else:
+            start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+
+        for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
+            widget.tag_add(tag, start, end)
+        if self._vartag is self._gamevartag:
+            widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
+        widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
+        if self._next_move_is_choice:
+            widget.tag_add(ALL_CHOICES, start, end)
+
+            # A START_RAV is needed to define and set choicetag and set
+            # next_move_is_choice True.  There cannot be a START_RAV
+            # until a MOVE_TEXT has occured: from PGN grammar.
+            # So define and set choicetag then increment choice_number
+            # in 'type_ is START_RAV' processing rather than other way
+            # round, with initialization, to avoid tag name clutter.
+            widget.tag_add(self._choicetag, start, end)
+            self._next_move_is_choice = False
+
+        self._start_latest_move = start
+        self._end_latest_move = end
+        self.create_previousmovetag(positiontag, start)
+        return start, end, sepend

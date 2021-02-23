@@ -32,12 +32,10 @@ from pgn_read.core.constants import (
     )
 from pgn_read.core.parser import (
     PGNDisplay,
-    PGNDisplayMoves,
     PGNRepertoireDisplay,
     PGNRepertoireTags,
     PGNRepertoireUpdate,
     PGNTags,
-    PGNAnalysis,
     )
 
 from .pgnupdate import PGNUpdate
