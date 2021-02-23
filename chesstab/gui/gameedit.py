@@ -30,23 +30,33 @@ from solentware_misc.workarounds import dialogues
 
 from pgn_read.core.constants import (
     TAG_RESULT,
+    SEVEN_TAG_ROSTER,
+    TAG_FEN,
+    TAG_SETUP,
+    SETUP_VALUE_FEN_PRESENT,
+    FEN_BLACK_BISHOP,
+    PGN_BISHOP,
+    PGN_CAPTURE_MOVE,
+    )
+from pgn_read.core.parser import PGN
+from pgn_read.core.game import GameStrictPGN
+
+from ..core.constants import (
     WHITE_WIN,
     BLACK_WIN,
     DRAW,
     UNKNOWN_RESULT,
-    SEVEN_TAG_ROSTER_EXPORT_ORDER,
     REPERTOIRE_TAG_ORDER,
-    REPERTOIRE_GAME_TAGS,
     START_RAV,
     END_RAV,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
+    START_COMMENT,
     ERROR_START_COMMENT,
     ESCAPE_END_COMMENT,
     END_COMMENT,
+    END_TAG,
+    START_TAG,
     )
-from pgn_read.core.parser import PGNEdit, PGNMove, get_fen_string
-
+from ..core.pgn import GameDisplayMoves
 from .game import Game
 from .eventspec import EventSpec
 from .constants import (
@@ -184,6 +194,20 @@ _CHARACTERS_ALLOWED_IN_TOKEN = {
     MOVE_EDITED: _MOVECHARS,
     }
 
+# PGN validation wrapper for editing moves.
+_EDIT_MOVE_CONTEXT = (
+    ''.join((START_TAG, TAG_SETUP, '"', SETUP_VALUE_FEN_PRESENT, '"', END_TAG,
+             START_TAG, TAG_FEN, '"')),
+    ''.join(('"', END_TAG)),
+    )
+
+# Error wrapper detector.
+_error_wrapper_re = re.compile(
+    r''.join(
+        (r'(', START_COMMENT, r'\s*', ERROR_START_COMMENT, r'.*?',
+         ESCAPE_END_COMMENT, r'\s*', END_COMMENT, r')')),
+    flags=re.DOTALL)
+
 
 class GameEdit(Game):
     
@@ -207,11 +231,11 @@ class GameEdit(Game):
     # True means game score can be edited
     _is_score_editable = True
 
-    def __init__(self, pgnclass=PGNEdit, **ka):
+    def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
-        super(GameEdit, self).__init__(pgnclass=pgnclass, **ka)
+        super().__init__(gameclass=gameclass, **ka)
         self._allowed_chars_in_token = '' # or an iterable of characters
-        self.move_token_checker = dict()
+        self.edit_move_context = dict()
         self.menupopup_movemode_score_navigation = tkinter.Menu(
             master=self.viewmode_popup, tearoff=False)
         self.menupopup_movemode_pgn_insert = tkinter.Menu(
@@ -457,7 +481,7 @@ class GameEdit(Game):
 
     def bind_for_viewmode(self):
         """Set keyboard bindings for traversing moves."""
-        super(GameEdit, self).bind_for_viewmode()
+        super().bind_for_viewmode()
         # PGN move insertion
         if self.score.tag_ranges(EDIT_RESULT):
             self.score.bind(
@@ -539,7 +563,7 @@ class GameEdit(Game):
         invoked so those bindings do not need cancelling.
 
         """
-        super(GameEdit, self).bind_for_select_variation_mode()
+        super().bind_for_select_variation_mode()
         for sequence, function in (
             # PGN non-move symbol insertion
             (EventSpec.gameedit_insert_comment, ''),
@@ -646,7 +670,7 @@ class GameEdit(Game):
         set by bind_for_viewmode().
         
         """
-        super(GameEdit, self).bind_for_viewmode()
+        super().bind_for_viewmode()
         if self.score.tag_ranges(EDIT_RESULT):
             self.score.bind(EventSpec.gameedit_insert_rav[0],
                             self.try_event(self.insert_rav))
@@ -726,7 +750,7 @@ class GameEdit(Game):
         
         """
         # superclass game navigation
-        super(GameEdit, self).bind_for_viewmode()
+        super().bind_for_viewmode()
         if self.score.tag_ranges(EDIT_RESULT):
             self.score.bind(EventSpec.gameedit_insert_rav[0],
                             self.try_event(self.insert_rav))
@@ -851,8 +875,8 @@ class GameEdit(Game):
             return
 
     def map_game(self):
-        """Extend to set insertion cursor at start of moves"""
-        super(GameEdit, self).map_game()
+        """Extend to set insertion cursor at start of moves."""
+        super().map_game()
         # Is INSERT_TOKEN_MARK redundant now?
         self.score.mark_set(INSERT_TOKEN_MARK, START_SCORE_MARK)
         self.score.mark_set(tkinter.INSERT, INSERT_TOKEN_MARK)
@@ -1124,10 +1148,9 @@ class GameEdit(Game):
                 current = None
         else:
             current = self.select_prev_move_in_line()
-        self.move_token_checker[self.current] = PGNMove()
-        self.move_token_checker[self.current].set_position_fen(
-            fen=get_fen_string(self.positions[current]))
-        self.positions[self.current] = self.positions[current]
+        self.edit_move_context[
+            self.current] = self.create_edit_move_context(current)
+        self.tagpositionmap[self.current] = self.tagpositionmap[current]
         self.set_current()
         self.set_game_board()
         return self.delete_move_char_left(event)
@@ -1523,8 +1546,7 @@ class GameEdit(Game):
         start_tag = widget.index(tkinter.INSERT)
         # tag_symbols is, with tag having its Tk meaning,
         # ((<name tag suffix>, <range>), (<value tag suffix>, <range>))
-        tag_symbols = super(
-            GameEdit, self).add_pgntag_to_map(name, value)
+        tag_symbols = super().add_pgntag_to_map(name, value)
         widget.tag_add(PGN_TAG, start_tag, str(tkinter.INSERT) + '-1c')
         widget.mark_set(
             START_SCORE_MARK,
@@ -1544,13 +1566,12 @@ class GameEdit(Game):
 
         """
         self.score.tag_add(tag, start, end)
-        self.positions[tag] = self.fen_position
+        self.tagpositionmap[tag] = self.fen_tag_tuple_square_piece_map()
             
     def add_text_pgntag_or_pgnvalue(self, token, tagset=(), separator=' '):
         """Add PGN Tagname or Tagvalue to game. Return POSITION tagname."""
         start, end, sepend = super(
-            GameEdit, self).add_text_pgntag_or_pgnvalue(
-                token, separator=separator)
+            ).add_text_pgntag_or_pgnvalue(token, separator=separator)
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
         widget = self.score
         for tag in tagset:
@@ -1608,8 +1629,8 @@ class GameEdit(Game):
                 widget.tag_nextrange(ravtag, '1.0')[0])))
         else:
             widget.delete(tr[0], tr[1])
-        del self.move_token_checker[self.current]
-        del self.positions[self.current]
+        del self.edit_move_context[self.current]
+        del self.tagpositionmap[self.current]
         self.current = current
         if delete_rav:
             ci = widget.tag_nextrange(choice, '1.0')[0] 
@@ -1674,7 +1695,7 @@ class GameEdit(Game):
                         if widget.compare(tpr[0], '>', START_SCORE_MARK):
                             current = self.get_position_tag_of_index(tpr[0])
             widget.delete(*tr)
-            del self.positions[self.current]
+            del self.tagpositionmap[self.current]
             self.current = current
             self.set_current()
             self.set_game_board()
@@ -1868,7 +1889,7 @@ class GameEdit(Game):
 
     def go_to_move(self, index):
         """Extend, set keyboard bindings for new pointer location."""
-        if super(GameEdit, self).go_to_move(index):
+        if super().go_to_move(index):
             return
         return self.show_new_current(
             new_current=self.select_item_at_index(index))
@@ -1908,10 +1929,9 @@ class GameEdit(Game):
 
         self.get_next_positiontag_name()
         positiontag, tokentag, tokenmark = self.get_current_tag_and_mark_names()
-        self.positions[positiontag] = self.positions[self.current]
-        self.move_token_checker[positiontag] = PGNMove()
-        self.move_token_checker[positiontag].set_position_fen(
-            fen=get_fen_string(self.positions[positiontag]))
+        self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
+        self.edit_move_context[
+            positiontag] = self.create_edit_move_context(positiontag)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
         for tag in (
             positiontag,
@@ -1978,7 +1998,7 @@ class GameEdit(Game):
     def insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster sequence."""
         self.set_insertion_point_before_next_pgn_tag()
-        for t in SEVEN_TAG_ROSTER_EXPORT_ORDER:
+        for t in SEVEN_TAG_ROSTER:
             self.add_pgntag_to_map(t, '')
 
     def insert_empty_reserved(self):
@@ -2059,9 +2079,9 @@ class GameEdit(Game):
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
         vartag, ravtag = self.get_rav_tag_names()
         if prior:
-            self.positions[positiontag] = self.positions[self.current]
+            self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
         else:
-            self.positions[positiontag] = self.positions[None]
+            self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         widget.tag_add(tokentag, start, sepend)
         for tag in ravtag, positiontag, NAVIGATE_TOKEN:
             widget.tag_add(tag, start, end)
@@ -2082,10 +2102,9 @@ class GameEdit(Game):
     
         newmovetag = self.get_next_positiontag_name()
         positiontag, tokentag, tokenmark = self.get_current_tag_and_mark_names()
-        self.positions[positiontag] = self.positions[self.current]
-        self.move_token_checker[positiontag] = PGNMove()
-        self.move_token_checker[positiontag].set_position_fen(
-            fen=get_fen_string(self.positions[positiontag]))
+        self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
+        self.edit_move_context[
+            positiontag] = self.create_edit_move_context(positiontag)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
         for tag in (
             positiontag,
@@ -2116,7 +2135,7 @@ class GameEdit(Game):
 
         start, end, sepend = self.insert_token_into_text(')', SPACE_SEP)
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
-        self.positions[positiontag] = self.positions[
+        self.tagpositionmap[positiontag] = self.tagpositionmap[
             self.nextmovetags[current][0]]
         for tag in (
             self.get_rav_tag_for_rav_moves(variation),
@@ -2191,9 +2210,10 @@ class GameEdit(Game):
         # instead?
         return bool(self.score.tag_nextrange(NAVIGATE_MOVE, '1.0'))
 
+    # Do the add_* methods need position even though the map_* methods do not?
     def link_inserts_to_moves(self, positiontag, position):
         """Link inserted comments to moves for matching position display."""
-        self.positions[positiontag] = position
+        self.tagpositionmap[positiontag] = position
         if self.current:
             variation = self.get_variation_tag_of_index(
                 self.score.tag_ranges(self.current)[0])
@@ -2215,7 +2235,7 @@ class GameEdit(Game):
             tag_start_to_end=(NAVIGATE_TOKEN, INSERT_RAV),
             tag_position=False, # already tagged by superclass method
             )
-        self._token_position = self.positions[positiontag]
+        self._token_position = self.tagpositionmap[positiontag]
         return token_indicies
 
     def map_start_rav(self, token, position):
@@ -2225,11 +2245,11 @@ class GameEdit(Game):
         prior = self.get_prior_tag_for_choice(self._choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
-            self._token_position = self.positions[
+            self._token_position = self.tagpositionmap[
                 self.get_position_tag_of_index(prior_range[0])]
             tags = (self._ravtag, NAVIGATE_TOKEN, prior)
         else:
-            self._token_position = self.positions[None]
+            self._token_position = self.tagpositionmap[None]
             tags = (self._ravtag, NAVIGATE_TOKEN)
         positiontag, token_indicies = self.tag_token_for_editing(
             token_indicies,
@@ -2237,7 +2257,7 @@ class GameEdit(Game):
             tag_start_to_end=tags,
             mark_for_edit=False,
             )
-        self.positions[positiontag] = self._token_position
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
@@ -2260,62 +2280,52 @@ class GameEdit(Game):
             tag_start_to_end=tags,
             mark_for_edit=False,
             )
-        self.positions[positiontag] = self.positions[
+        self.tagpositionmap[positiontag] = self.tagpositionmap[
             self.get_position_tag_of_index(
                 self.score.tag_prevrange(self._vartag, tkinter.END)[0])]
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def map_tag_fen(self, token, position):
-        """Extend to set self._token_position to position.
-
-        set self._token_position to position.  This is the position displayed
-        for subsequent tokens until a move token changes the board position.
-
-        """
-        super(GameEdit, self).map_tag_fen(token, position)
-        self._token_position = position
-
-    def map_termination(self, token, position):
+    def map_termination(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         # last move in game is editable
         if self._start_latest_move:
             self.add_move_to_editable_moves(
                 self._start_latest_move, self._end_latest_move, self._vartag)
         positiontag, token_indicies = self.tag_token_for_editing(
-            super().map_termination(token, position),
+            super().map_termination(token),
             self.get_tag_and_mark_names,
             #tag_start_to_end=(EDIT_RESULT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             tag_start_to_end=(EDIT_RESULT, ),
             )
-        self.positions[positiontag] = self._token_position
+        self.tagpositionmap[positiontag] = self._token_position
         return token_indicies
 
-    def _map_start_comment(self, token, position):
+    def _map_start_comment(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super().map_start_comment(token, position),
+            super().map_start_comment(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_COMMENT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_start_comment(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_comment(token, position)
+        positiontag, token_indicies = self._map_start_comment(token)
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
-    def map_start_comment(self, token, position):
+    def map_start_comment(self, token):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_comment(token, position)
-        self.positions[positiontag] = self._token_position
+        positiontag, token_indicies = self._map_start_comment(token)
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_comment_to_eol(self, token, position):
+    def _map_comment_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super().map_comment_to_eol(token, position),
+            super().map_comment_to_eol(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_COMMENT_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
@@ -2323,21 +2333,21 @@ class GameEdit(Game):
 
     def add_comment_to_eol(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_comment_to_eol(token, position)
+        positiontag, token_indicies = self._map_comment_to_eol(token)
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
-    def map_comment_to_eol(self, token, position):
+    def map_comment_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_comment_to_eol(token, position)
-        self.positions[positiontag] = self._token_position
+        positiontag, token_indicies = self._map_comment_to_eol(token)
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_escape_to_eol(self, token, position):
+    def _map_escape_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super(GameEdit, self).map_escape_to_eol(token, position),
+            super().map_escape_to_eol(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_ESCAPE_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
@@ -2345,122 +2355,136 @@ class GameEdit(Game):
 
     def add_escape_to_eol(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_escape_to_eol(token, position)
+        positiontag, token_indicies = self._map_escape_to_eol(token)
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
-    def map_escape_to_eol(self, token, position):
+    def map_escape_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_escape_to_eol(token, position)
-        self.positions[positiontag] = self._token_position
+        positiontag, token_indicies = self._map_escape_to_eol(token)
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_integer(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_integer(token, position),
+            super().map_integer(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, ),
             mark_for_edit=False,
             )
-        self.positions[positiontag] = self.positions[None]
+        self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_glyph(self, token, position):
+    def _map_glyph(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super().map_glyph(token, position),
+            super().map_glyph(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_GLYPH, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_glyph(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_glyph(token, position)
+        positiontag, token_indicies = self._map_glyph(token)
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
-    def map_glyph(self, token, position):
+    def map_glyph(self, token):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_glyph(token, position)
-        self.positions[positiontag] = self._token_position
+        positiontag, token_indicies = self._map_glyph(token)
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_period(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_period(token, position),
+            super().map_period(token, position),
             self.get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, ),
             mark_for_edit=False,
             )
-        self.positions[positiontag] = self.positions[None]
+        self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_start_reserved(self, token, position):
+    def _map_start_reserved(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super(GameEdit, self).map_start_reserved(token, position),
+            super().map_start_reserved(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_RESERVED, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_start_reserved(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_reserved(token, position)
+        positiontag, token_indicies = self._map_start_reserved(token)
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
-    def map_start_reserved(self, token, position):
+    def map_start_reserved(self, token):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_reserved(token, position)
-        self.positions[positiontag] = self._token_position
+        positiontag, token_indicies = self._map_start_reserved(token)
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def map_move_error(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_move_error(token, position),
-            self.get_tag_and_mark_names,
-            tag_start_to_end=(
-                EDIT_MOVE_ERROR, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
-            )
-        self.positions[positiontag] = None
-        return token_indicies
-
-    def map_move_after_error(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self.tag_token_for_editing(
-            super(GameEdit, self).map_move_after_error(token, position),
-            self.get_tag_and_mark_names,
-            tag_start_to_end=(
-                EDIT_MOVE_ERROR, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
-            )
-        self.positions[positiontag] = None
-        return token_indicies
-
-    def map_non_move(self, token, position):
+    def map_non_move(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         # mark_for_edit is True while no EDIT_... tag is done?
         positiontag, token_indicies = self.tag_token_for_editing(
-            super().map_non_move(token, position),
+            super().map_non_move(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
-        self.positions[positiontag] = None
+        self.tagpositionmap[positiontag] = None
         return token_indicies
 
     def process_move(self):
-        """"""
+        """Splice a move being edited into the game score.
+
+        In English PGN piece and file designators are case insensitive except
+        for 'b' and 'B'.  Movetext like 'bxc4' and 'bxa4' could mean a pawn
+        move or a bishop move.
+
+        Typing 'B' means a bishop move and typing 'b' means a pawn move unless
+        the specified pawn move is illegal when it means a bishop move if that
+        is possible.  Where both pawn and bishop moves are legal a dialogue
+        prompting for a decision is given.
+
+        """
         widget = self.score
-        mtc = self.move_token_checker[self.current]
-        mtc.get_first_pgn_token(widget.get(*widget.tag_ranges(self.current)))
+        movetext = widget.get(*widget.tag_ranges(self.current))
+        mtc = next(
+            PGN(game_class=GameDisplayMoves).read_games(
+                movetext.join(self.edit_move_context[self.current])))
         if mtc.is_movetext_valid():
-            self.positions[self.current] = mtc.ravstack[0][1]
-            del self.move_token_checker[self.current]
+            bishopmove = False
+            if (movetext.startswith(FEN_BLACK_BISHOP+PGN_CAPTURE_MOVE) and
+                movetext[2] in 'ac' and movetext[3] not in '18'):
+                amtc = next(
+                    PGN(game_class=GameDisplayMoves).read_games(
+                        (PGN_BISHOP+movetext[1:]).join(
+                            self.edit_move_context[self.current])))
+                if amtc.is_movetext_valid():
+                    if dialogues.askyesno(
+                        title='Bishop or Pawn Capture',
+                        message=''.join(
+                            ("Movetext '", movetext, "' would be a bishop ",
+                             "move if 'b' were 'B'.\n\n",
+                             "Is it a bishop move?",
+                             ))):
+                        bishopmove = True
+                        mtc = amtc
+            self.tagpositionmap[self.current] = (
+                mtc._piece_placement_data.copy(),
+                mtc._active_color,
+                mtc._castling_availability,
+                mtc._en_passant_target_square,
+                mtc._halfmove_clock,
+                mtc._fullmove_number)
+            del self.edit_move_context[self.current]
             # remove from MOVE_EDITED tag and place on EDIT_MOVE tag
             # removed from EDIT_MOVE tag and placed on INSERT_RAV tag when
             # starting insert of next move.
@@ -2468,6 +2492,45 @@ class GameEdit(Game):
             vartag = self.get_variation_tag_of_index(start)
             widget.tag_add(EDIT_MOVE, start, end)
             widget.tag_remove(MOVE_EDITED, start, end)
+            if bishopmove:
+                widget.insert(widget.index(start) + '+1 char', PGN_BISHOP)
+                widget.delete(widget.index(start))
+            self.bind_for_movemode_on_exit_edit_symbol_mode()
+            self.set_current()
+            self.set_game_board()
+            return
+
+        # 'b' may have been typed meaning bishop, not pawn on b-file.
+        # If so the movetext must be at least 3 characters, or 4 characters
+        # for a capture.
+        if movetext[0] != FEN_BLACK_BISHOP:
+            return
+        if len(movetext) < 3:
+            return
+        if len(movetext) < 4 and movetext[1] == PGN_CAPTURE_MOVE:
+            return
+        mtc = next(
+            PGN(game_class=GameDisplayMoves).read_games(
+                (PGN_BISHOP+movetext[1:]).join(
+                    self.edit_move_context[self.current])))
+        if mtc.is_movetext_valid():
+            self.tagpositionmap[self.current] = (
+                mtc._piece_placement_data.copy(),
+                mtc._active_color,
+                mtc._castling_availability,
+                mtc._en_passant_target_square,
+                mtc._halfmove_clock,
+                mtc._fullmove_number)
+            del self.edit_move_context[self.current]
+            # remove from MOVE_EDITED tag and place on EDIT_MOVE tag
+            # removed from EDIT_MOVE tag and placed on INSERT_RAV tag when
+            # starting insert of next move.
+            start, end = self.score.tag_ranges(self.current)
+            vartag = self.get_variation_tag_of_index(start)
+            widget.tag_add(EDIT_MOVE, start, end)
+            widget.tag_remove(MOVE_EDITED, start, end)
+            widget.insert(widget.index(start) + '+1 char', PGN_BISHOP)
+            widget.delete(widget.index(start))
             self.bind_for_movemode_on_exit_edit_symbol_mode()
             self.set_current()
             self.set_game_board()
@@ -2944,21 +3007,43 @@ class GameEdit(Game):
         return True
 
     def get_score_error_escapes_removed(self):
-        """"""
+        """Unwrap valid PGN text wrapped by '{Error:  ::{{::}' comments.
+
+        The editor uses Game as the game_class argument to PGN but strict
+        adherence to PGN is enforced when unwrapping PGN text: GameStrictPGN
+        is the game_class argument to PGN.
+
+        """
         text = self.score.get('1.0', tkinter.END)
-        if ERROR_START_COMMENT in text:
-            if END_COMMENT in text:
-                text = text.split(END_COMMENT)
-                x = text.pop()
-                text[-1] += x
-                text = re.sub(''.join((r'\s*', r'\(\s*',
-                                       ERROR_START_COMMENT.strip(),
-                                       '\s*', r'\)\s*')),
-                              ' ',
-                              END_COMMENT.join(text))
-                text = text.replace(ERROR_START_COMMENT, ''
-                                    ).replace(ESCAPE_END_COMMENT, END_COMMENT)
-        return text
+        t = _error_wrapper_re.split(text)
+        if len(t) == 1:
+            return text
+        parser = PGN(game_class=GameStrictPGN)
+        mtc = next(parser.read_games(text))
+        if mtc.state:
+            return text
+        replacements = 0
+        candidates = 0
+        tc = t.copy()
+        for e in range(1, len(t), 2):
+            candidates += 1
+            tc[e] = tc[e].rstrip(END_COMMENT).rstrip(
+                ).rstrip(ESCAPE_END_COMMENT).lstrip(START_COMMENT).lstrip(
+                    ).lstrip(ERROR_START_COMMENT)
+            mtc = next(parser.read_games(''.join(tc)))
+            if mtc.state:
+                tc[e] = t[e]
+            else:
+                replacements += 1
+        if replacements == 0:
+            return text
+        return ''.join(tc)
+
+    def create_edit_move_context(self, tag):
+        return (
+            self.generate_fen_for_position(*self.tagpositionmap[tag]).join(
+                _EDIT_MOVE_CONTEXT),
+            UNKNOWN_RESULT)
 
 
 class RepertoireEdit(GameEdit):
@@ -2966,11 +3051,11 @@ class RepertoireEdit(GameEdit):
     """Display a repertoire with editing allowed.
     
     """
-    # Override methods referring to Seven Tag Roster
+    tags_displayed_last = REPERTOIRE_TAG_ORDER
 
-    def __init__(self, pgnclass=PGNEdit, **ka):
+    def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit repertoire score."""
-        super(RepertoireEdit, self).__init__(pgnclass=pgnclass, **ka)
+        super(RepertoireEdit, self).__init__(gameclass=gameclass, **ka)
         eapgn = EventSpec.export_archive_pgn_from_game
         self.viewmode_database_popup.delete(eapgn[1])
         self.menupopup_nonmove_database.delete(eapgn[1])
@@ -2979,17 +3064,6 @@ class RepertoireEdit(GameEdit):
             (eapgn, ''),
             ):
             self.score.bind(sequence[0], function)
-
-    def get_tags_display_order(self):
-        str_tags = []
-        other_tags = []
-        for t in self.pgn.collected_game[0]:
-            tn = t.group(IFG_TAG_SYMBOL)
-            if tn in REPERTOIRE_GAME_TAGS:
-                other_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-            else:
-                str_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-        return other_tags + str_tags
 
     def insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster sequence."""

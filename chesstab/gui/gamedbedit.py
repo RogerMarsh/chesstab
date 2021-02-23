@@ -11,6 +11,7 @@ from solentware_grid.gui.dataedit import DataEdit
 
 from solentware_misc.workarounds import dialogues
 
+from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from .chessexception import ChessException
@@ -31,7 +32,7 @@ class ChessDBeditGame(ChessException, DataEdit):
     def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
         """Extend and create dialogue widget to edit or insert chess game."""
         if oldobject:
-            tags = oldobject.value.collected_game[1]
+            tags = oldobject.value.collected_game._tags
             try:
                 title = '  '.join((
                     'Edit Game:',
@@ -51,16 +52,22 @@ class ChessDBeditGame(ChessException, DataEdit):
             showinitial.set_position_analysis_data_source()
             if ui is not None:
                 ui.games_and_repertoires_in_toplevels.add(showinitial)
-            showinitial.pgn.get_first_game(newobject.get_srvalue())
+            showinitial.collected_game = next(
+                PGN(game_class=showinitial.gameclass
+                    ).read_games(newobject.get_srvalue()))
             showinitial.set_game()
         newview = DialogueGameEdit(master=parent, ui=ui)
         newview.set_position_analysis_data_source()
         if ui is not None:
             ui.games_and_repertoires_in_toplevels.add(newview)
         if oldobject:
-            newview.pgn.get_first_game(newobject.get_srvalue())
+            newview.collected_game = next(
+                PGN(game_class=newview.gameclass
+                    ).read_games(oldobject.get_srvalue()))
         else:
-            newview.pgn.get_first_game(''.join((EMPTY_SEVEN_TAG_ROSTER, '*')))
+            newview.collected_game = next(
+                PGN(game_class=newview.gameclass
+                    ).read_games(''.join((EMPTY_SEVEN_TAG_ROSTER, '*'))))
         newview.set_game()
         super(ChessDBeditGame, self).__init__(
             newobject,
@@ -95,7 +102,7 @@ class ChessDBeditGame(ChessException, DataEdit):
             return False
         text = self.newview.get_score_error_escapes_removed()
         self.newobject.value.load(repr(text))
-        if not self.newobject.value.is_pgn_valid():
+        if not self.newobject.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Edit Game',
                 message=''.join(
@@ -107,12 +114,12 @@ class ChessDBeditGame(ChessException, DataEdit):
         return super(ChessDBeditGame, self).dialog_ok()
         
     def put(self):
-        """Mark partial position records for recalculation and return key"""
+        """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
         super(ChessDBeditGame, self).put()
 
     def edit(self):
-        """Mark partial position records for recalculation and return key"""
+        """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
         super(ChessDBeditGame, self).edit()
 

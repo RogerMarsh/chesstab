@@ -18,12 +18,15 @@ www.enpassant.dk/chess/fonteng.htm
 """
 
 from pgn_read.core.constants import (
-    SEVEN_TAG_ROSTER_EXPORT_ORDER,
+    SEVEN_TAG_ROSTER,
     TAG_WHITE,
     TAG_BLACK,
     TAG_RESULT,
     TAG_EVENT,
     TAG_DATE,
+    )
+
+from ..core.constants import (
     REPERTOIRE_TAG_ORDER,
     UNKNOWN_RESULT,
     )
@@ -176,9 +179,15 @@ START_POSITION_MARK = 'positionmark'
 ANALYSIS_INDENT_TAG = 'indent'
 # elide tag for PGN tags used in analysis score text widgets.
 ANALYSIS_PGN_TAGS_TAG = 'analysispgntags'
+# indentation tag for wrapped game movetext.
+MOVETEXT_INDENT_TAG = 'movetextindent'
+# elide tag for move numbers in game movetext.
+MOVETEXT_MOVENUMBER_TAG = 'movenumbertag'
+# indentation tag for first move after forced newline in game movetext.
+FORCED_INDENT_TAG = 'forcedindent'
 
 EMPTY_SEVEN_TAG_ROSTER = ''.join([r.join(('[', '""]'))
-                                  for r in SEVEN_TAG_ROSTER_EXPORT_ORDER])
+                                  for r in SEVEN_TAG_ROSTER])
 GRID_HEADER_SEVEN_TAG_ROSTER = frozenset(
     (TAG_WHITE, TAG_BLACK, TAG_RESULT, TAG_EVENT, TAG_DATE))
 STATUS_SEVEN_TAG_ROSTER_EVENT = (
@@ -203,4 +212,11 @@ START_SELECTION_RULE_MARK = 'rulemark'
 # noticeable at about 500 fullmoves.  Repertoire displays may often exceed this
 # limit.  The maximum length game, nearly 6000 fullmoves, takes more than an
 # hour to display, or do a navigation operation.
-FORCE_FULLMOVE_PER_LINE = 500
+# Force game score text widgets to split movetext into lines, by newline, every
+# few moves.  This is for performance reasons that become noticeable at about
+# 500 fullmoves.  Repertoire displays may often exceed this limit.  The maximum
+# length game, nearly 6000 fullmoves, takes more than an hour to display, or do
+# a navigation operation.
+# 20 seems reasonable because it does not spread moves out too much and allows
+# for move numbers to be inserted without generating too many extra tokens.
+FORCE_NEWLINE_AFTER_FULLMOVES = 20

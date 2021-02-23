@@ -9,7 +9,7 @@ import tkinter
 
 from solentware_grid.datagrid import DataGrid
 
-from pgn_read.core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
+from pgn_read.core.parser import PGN
 
 from ..core.chessrecord import (
     ChessDBrecordGameUpdate,
@@ -34,6 +34,7 @@ from ..core.filespec import POSITIONS_FIELD_DEF
 from ..core import exporters
 from .eventspec import EventSpec, DummyEvent
 from .display import Display
+from ..core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
 
 
 class GameListGrid(ChessException, DataGrid, Display):
@@ -98,7 +99,9 @@ class GameListGrid(ChessException, DataGrid, Display):
             itemgrid=self.ui.game_games,
             sourceobject=sourceobject)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(sourceobject.get_srvalue())
+        game.collected_game = next(
+            PGN(game_class=game.gameclass
+                ).read_games(sourceobject.get_srvalue()))
         return game
         
     def edit_selected_item(self, key):
@@ -129,7 +132,9 @@ class GameListGrid(ChessException, DataGrid, Display):
             itemgrid=self.ui.game_games,
             sourceobject=sourceobject)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(sourceobject.get_srvalue())
+        game.collected_game = next(
+            PGN(game_class=game.gameclass
+                ).read_games(sourceobject.get_srvalue()))
         return game
 
     def set_properties(self, key, dodefaultaction=True):
@@ -614,12 +619,15 @@ class PartialPositionGames(GameListGrid):
             return
         super(PartialPositionGames, self).on_data_change(instance)
 
+    # Before version 4.3 collected_game[2] was always empty, and at time of
+    # change it seemed wrong to include it even if occupied, so remove it from
+    # displayed text rather than devise a way of generating it.
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].value.collected_game[1]
+                t = self.objects[ss0].value.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     '  '.join([t.get(k, '')
                                for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]) +
@@ -684,10 +692,6 @@ class GamePositionGames(GameListGrid):
              EventSpec.export_rav_pgn_from_position_grid),
             (self.export_pgn,
              EventSpec.export_pgn_from_position_grid),
-            (self.up_one_transposition,
-             EventSpec.cycle_up_one_repeat_in_position_grid),
-            (self.down_one_transposition,
-             EventSpec.cycle_down_one_repeat_in_position_grid),
             ):
             self.menupopup.add_command(
                 label=accelerator[1],
@@ -745,8 +749,6 @@ class GamePositionGames(GameListGrid):
             (EventSpec.position_grid_to_active_selection_rule, ''),
             (EventSpec.display_game_from_position_grid, ''),
             (EventSpec.edit_game_from_position_grid, ''),
-            (EventSpec.cycle_up_one_repeat_in_position_grid, ''),
-            (EventSpec.cycle_down_one_repeat_in_position_grid, ''),
             (EventSpec.export_archive_pgn_from_position_grid, ''),
             (EventSpec.export_rav_pgn_from_position_grid, ''),
             (EventSpec.export_pgn_from_position_grid, ''),
@@ -787,10 +789,6 @@ class GamePositionGames(GameListGrid):
              self.display_game),
             (EventSpec.edit_game_from_position_grid,
              self.edit_game),
-            (EventSpec.cycle_up_one_repeat_in_position_grid,
-             self.up_one_transposition),
-            (EventSpec.cycle_down_one_repeat_in_position_grid,
-             self.down_one_transposition),
             (EventSpec.export_archive_pgn_from_position_grid,
              self.export_archive_pgn),
             (EventSpec.export_rav_pgn_from_position_grid,
@@ -844,27 +842,13 @@ class GamePositionGames(GameListGrid):
         # It may be on_data_change(None) should prevent GamePositionGames
         # being cleared on deleting game, but it does not.
         super(GamePositionGames, self).on_data_change(instance)
-
-    def down_one_transposition(self, event=None): # Hack for menu item
-        """Cycle forward one tranposition to position in selected game."""
-        if self.selection:
-            ss0 = self.selection[0]
-            if ss0 in self.objects:
-                self.objects[ss0].score.down_one_transposition()
-        
-    def up_one_transposition(self, event=None): # Hack for menu item
-        """Cycle backward one tranposition to position in selected game."""
-        if self.selection:
-            ss0 = self.selection[0]
-            if ss0 in self.objects:
-                self.objects[ss0].score.up_one_transposition()
         
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].value.collected_game[1]
+                t = self.objects[ss0].score.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     '  '.join([t.get(k, '')
                                for k in STATUS_SEVEN_TAG_ROSTER_EVENT]))
@@ -1077,15 +1061,11 @@ class TagRosterGrid(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].value.collected_game[1]
+                tags = self.objects[ss0].value.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     '  '.join(
                         [tags.get(k, '')
-                         for k in STATUS_SEVEN_TAG_ROSTER_SCORE] +
-                        [' '.join(
-                            [t.group()
-                             for t in self.objects[ss0].value.collected_game[2]
-                             if t])]))
+                         for k in STATUS_SEVEN_TAG_ROSTER_SCORE]))
         else:
             self.ui.statusbar.set_status_text('')
     
@@ -1305,15 +1285,11 @@ class RepertoireGrid(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].value.collected_game[1]
+                tags = self.objects[ss0].value.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     '  '.join(
                         [tags.get(k, '')
-                         for k in REPERTOIRE_TAG_ORDER] +
-                        [' '.join(
-                            [t.group()
-                             for t in self.objects[ss0].value.collected_game[2]
-                             if t])]))
+                         for k in REPERTOIRE_TAG_ORDER]))
         else:
             self.ui.statusbar.set_status_text('')
 
@@ -1381,7 +1357,9 @@ class RepertoireGrid(GameListGrid):
             itemgrid=self.ui.repertoire_games,
             sourceobject=sourceobject)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(sourceobject.get_srvalue())
+        game.collected_game = next(
+            PGN(game_class=game.gameclass
+                ).read_games(sourceobject.get_srvalue()))
         game.set_game()
         return game
         
@@ -1394,7 +1372,9 @@ class RepertoireGrid(GameListGrid):
             itemgrid=self.ui.repertoire_games,
             sourceobject=sourceobject)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(sourceobject.get_srvalue())
+        game.collected_game = next(
+            PGN(game_class=game.gameclass
+                ).read_games(sourceobject.get_srvalue()))
         game.set_game(reset_undo=True)
         return game
 
@@ -1538,10 +1518,6 @@ class RepertoirePositionGames(GameListGrid):
              EventSpec.export_rav_pgn_from_repertoire_game_grid),
             (self.export_pgn,
              EventSpec.export_pgn_from_repertoire_game_grid),
-            (self.up_one_transposition,
-             EventSpec.cycle_up_one_repeat_in_repertoire_game_grid),
-            (self.down_one_transposition,
-             EventSpec.cycle_down_one_repeat_in_repertoire_game_grid),
             ):
             self.menupopup.add_command(
                 label=accelerator[1],
@@ -1599,8 +1575,6 @@ class RepertoirePositionGames(GameListGrid):
             (EventSpec.repertoire_game_grid_to_active_selection_rule, ''),
             (EventSpec.display_game_from_repertoire_game_grid, ''),
             (EventSpec.edit_game_from_repertoire_game_grid, ''),
-            (EventSpec.cycle_up_one_repeat_in_repertoire_game_grid, ''),
-            (EventSpec.cycle_down_one_repeat_in_repertoire_game_grid, ''),
             (EventSpec.export_archive_pgn_from_repertoire_game_grid, ''),
             (EventSpec.export_rav_pgn_from_repertoire_game_grid, ''),
             (EventSpec.export_pgn_from_repertoire_game_grid, ''),
@@ -1641,10 +1615,6 @@ class RepertoirePositionGames(GameListGrid):
              self.display_game),
             (EventSpec.edit_game_from_repertoire_game_grid,
              self.edit_game),
-            (EventSpec.cycle_up_one_repeat_in_repertoire_game_grid,
-             self.up_one_transposition),
-            (EventSpec.cycle_down_one_repeat_in_repertoire_game_grid,
-             self.down_one_transposition),
             (EventSpec.export_archive_pgn_from_repertoire_game_grid,
              self.export_archive_pgn),
             (EventSpec.export_rav_pgn_from_repertoire_game_grid,
@@ -1696,27 +1666,13 @@ class RepertoirePositionGames(GameListGrid):
         if self.get_data_source() is None:
             return
         super(RepertoirePositionGames, self).on_data_change(instance)
-
-    def down_one_transposition(self, event=None): # Hack for menu item
-        """Cycle forward one tranposition to position in selected game."""
-        if self.selection:
-            ss0 = self.selection[0]
-            if ss0 in self.objects:
-                self.objects[ss0].score.down_one_transposition()
-        
-    def up_one_transposition(self, event=None): # Hack for menu item
-        """Cycle backward one tranposition to position in selected game."""
-        if self.selection:
-            ss0 = self.selection[0]
-            if ss0 in self.objects:
-                self.objects[ss0].score.up_one_transposition()
         
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].value.collected_game[1]
+                t = self.objects[ss0].score.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     '  '.join([t.get(k, '')
                                for k in STATUS_SEVEN_TAG_ROSTER_EVENT]))

@@ -11,8 +11,9 @@ from solentware_grid.gui.dataedit import DataEdit
 
 from solentware_misc.workarounds import dialogues
 
-from pgn_read.core.constants import TAG_OPENING
+from pgn_read.core.parser import PGN
 
+from ..core.constants import TAG_OPENING
 from .chessexception import ChessException
 from .repertoiredisplay import DialogueRepertoireDisplay, DialogueRepertoireEdit
 from .constants import EMPTY_REPERTOIRE_GAME
@@ -34,7 +35,7 @@ class ChessDBeditRepertoire(ChessException, DataEdit):
             try:
                 title = '  '.join((
                     'Edit Repertoire:',
-                    oldobject.value.collected_game[1][TAG_OPENING],
+                    oldobject.value.collected_game._tags[TAG_OPENING],
                     ))
             except TypeError:
                 title = 'Edit Repertoire - name unknown or invalid'
@@ -48,18 +49,23 @@ class ChessDBeditRepertoire(ChessException, DataEdit):
             showinitial.set_position_analysis_data_source()
             if ui is not None:
                 ui.games_and_repertoires_in_toplevels.add(showinitial)
-            showinitial.pgn.get_first_game(newobject.get_srvalue())
+            showinitial.collected_game = next(
+                PGN(game_class=showinitial.gameclass
+                    ).read_games(newobject.get_srvalue()))
             showinitial.set_game()
         newview = DialogueRepertoireEdit(master=parent, ui=ui)
         newview.set_position_analysis_data_source()
         if ui is not None:
             ui.games_and_repertoires_in_toplevels.add(newview)
         if oldobject:
-            newview.pgn.get_first_game(newobject.get_srvalue())
+            newview.collected_game = next(
+                PGN(game_class=newview.gameclass
+                    ).read_games(newobject.get_srvalue()))
             oldobject.value.set_game_source('No opening name')
         else:
-            newview.pgn.get_first_game(
-                ''.join((EMPTY_REPERTOIRE_GAME, '*')))
+            newview.collected_game = next(
+                PGN(game_class=newview.gameclass
+                    ).read_games(''.join((EMPTY_REPERTOIRE_GAME, '*'))))
         newview.set_game()
         super(ChessDBeditRepertoire, self).__init__(
             newobject,
@@ -94,8 +100,7 @@ class ChessDBeditRepertoire(ChessException, DataEdit):
             return False
         text = self.newview.get_score_error_escapes_removed()
         self.newobject.value.load(repr(text))
-        if not self.newobject.value.is_pgn_valid():
-            print('epertoiredbedit dialog_ok')
+        if not self.newobject.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Edit Repertoire',
                 message=''.join(

@@ -37,30 +37,13 @@ import tkinter
 
 from pgn_read.core.constants import (
     TAG_FEN,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
-    IFG_PIECE_SQUARE,
-    IFG_PAWN_SQUARE,
-    IFG_PIECE_CAPTURE_SQUARE,
-    IFG_PAWN_CAPTURE_SQUARE,
-    IFG_PIECE_CHOICE_SQUARE,
-    IFG_PAWN_PROMOTE_SQUARE,
-    IFG_CASTLES,
-    IFG_START_RAV,
-    IFG_END_RAV,
-    IFG_TERMINATION,
-    IFG_COMMENT,
-    IFG_COMMENT_TO_EOL,
-    IFG_NAG,
-    IFG_CHECK,
-    IFG_ANNOTATION,
-    IFG_ANYTHING_ELSE,
     SEVEN_TAG_ROSTER,
-    FULLSTOP,
-    WHITE_SIDE,
+    FEN_WHITE_ACTIVE,
+    PGN_DOT,
     )
-from pgn_read.core.parser import PGNDisplay
+from pgn_read.core.squares import Squares
 
+from ..core.pgn import GameDisplayMoves
 from .chessexception import ChessException
 from .constants import (
     LINE_COLOR,
@@ -98,11 +81,13 @@ from .constants import (
     NEWLINE_SEP,
     NULL_SEP,
     STATUS_SEVEN_TAG_ROSTER_PLAYERS,
-    FORCE_FULLMOVE_PER_LINE,
+    FORCE_NEWLINE_AFTER_FULLMOVES,
+    FORCED_INDENT_TAG,
+    MOVETEXT_MOVENUMBER_TAG,
     )
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
-from ..core.pgnupdate import get_position_string
+from ..core.pgn import get_position_string
 
 
 class Score(ChessException):
@@ -120,13 +105,15 @@ class Score(ChessException):
     # True means game score can be edited
     _is_score_editable = False
 
+    tags_displayed_last = SEVEN_TAG_ROSTER
+
     def __init__(
         self,
         panel,
         board,
         tags_variations_comments_font=None,
         moves_played_in_game_font=None,
-        pgnclass=PGNDisplay,
+        gameclass=GameDisplayMoves,
         ui=None,
         items_manager=None,
         itemgrid=None,
@@ -135,7 +122,7 @@ class Score(ChessException):
 
         tags_variations_comments_font - font for tags variations and comments
         moves_played_in_game_font - font for move played in game
-        pgnclass - the PGN parser class used to create the PGN data structure
+        gameclass - Game subclass for data structure created by PGN class
         ui - the container for game list and game display widgets.
 
         Create Frame in toplevel and add Canvas and Text.
@@ -245,17 +232,22 @@ class Score(ChessException):
         self.choice_number = 0
         self.choicestack = []
         self.position_number = 0
-        self.positions = dict()
+        self.tagpositionmap = dict()
         self.previousmovetags = dict()
         self.nextmovetags = dict()
-        self.fen_position = None
 
-        # PGN parser instance to process PGN text.
-        self.pgn = pgnclass()
+        # PGN parser creates a gameclass instance for game data structure and
+        # binds it to collected_game attribute.
+        self.gameclass = gameclass
+        self.collected_game = None
 
-        # Used to force a newline before a black move in large games after a
-        # comment or RAV marker, or similar.
-        # map_move_text sets this True in all circumstances.
+        # Used to force a newline before a white move in large games after a
+        # after FORCE_NEWLINE_AFTER_FULLMOVES black moves have been added to
+        # a line.
+        # map_game uses self._force_newline as a fullmove number clock which
+        # is reset after comments, the start or end of recursive annotation
+        # variations, escaped lines '\n%...\n', and reserved '<...>'
+        # sequences.  In each case a newline is added before the next token.
         # The AnalysisScore subclass makes its own arrangements because the
         # Score technique does not work, forced newlines are not needed, and
         # only the first move gets numbered.
@@ -406,6 +398,21 @@ class Score(ChessException):
         else:
             self.see_first_move()
         
+    def fen_tag_square_piece_map(self):
+        """Return square to piece mapping for position in game's FEN tag.
+
+        The position was assumed to be the standard initial position of a game
+        if there was no FEN tag.
+
+        """
+        return {s: p for p, s in  self.collected_game._initial_position[0]}
+        
+    def fen_tag_tuple_square_piece_map(self):
+        """Return FEN tag as tuple with pieces in square to piece mapping."""
+        ip = self.collected_game._initial_position
+        return (self.fen_tag_square_piece_map(),
+                ip[1], ip[2], ip[3], ip[4], ip[5])
+        
     def set_game_board(self):
         """Show position after highlighted move and return True if it exists.
 
@@ -417,13 +424,13 @@ class Score(ChessException):
 
         """
         if self.current is None:
-            self.board.set_board(self.fen_position[0])
+            self.board.set_board(self.fen_tag_square_piece_map())
             self.see_first_move()
         else:
             try:
-                self.board.set_board(self.positions[self.current][0])
+                self.board.set_board(self.tagpositionmap[self.current][0])
             except TypeError:
-                self.board.set_board(self.fen_position[0])
+                self.board.set_board(self.fen_tag_square_piece_map())
                 self.score.see(self.score.tag_ranges(self.current)[0])
                 return
             self.score.see(self.score.tag_ranges(self.current)[0])
@@ -449,7 +456,7 @@ class Score(ChessException):
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
             self.score.edit_reset()
-        self.board.set_board(self.fen_position[0])
+        self.board.set_board(self.fen_tag_square_piece_map())
         
     def show_first_in_game(self, event=None):
         """Display initial position of game score (usually start of game)."""
@@ -849,19 +856,20 @@ class Score(ChessException):
         # values in the 'set partial key' route for the the grid which is
         # one call.
         try:
-            prevpos = self.positions[self.previousmovetags[self.current][0]]
+            prevpos = self.tagpositionmap[
+                self.previousmovetags[self.current][0]]
         except KeyError:
 
             # The result at the end of an editable game score for example
             prevpos = None
 
-        currpos = self.positions[self.current]
+        currpos = self.tagpositionmap[self.current]
         np = self.nextmovetags.get(self.current)
         if np is None:
             nextpos = None
         else:
             try:
-                nextpos = self.positions[np[0]]
+                nextpos = self.tagpositionmap[np[0]]
             except KeyError:
                 nextpos = None
         return (prevpos, currpos, nextpos)
@@ -869,16 +877,16 @@ class Score(ChessException):
     def get_position_for_current(self):
         """Return position associated with the current range."""
         if self.current is None:
-            return self.positions[None]
+            return self.tagpositionmap[None]
         return self.get_position_for_text_index(
             self.score.tag_ranges(self.current)[0])
 
     def get_position_for_text_index(self, index):
         """Return position associated with index in game score text widget."""
-        positions = self.positions
+        tagpositionmap = self.tagpositionmap
         for tag in self.score.tag_names(index):
-            if tag in positions:
-                return positions[tag]
+            if tag in tagpositionmap:
+                return tagpositionmap[tag]
 
     def get_position_key(self):
         """Return position key string for position associated with current."""
@@ -886,7 +894,7 @@ class Score(ChessException):
 
             # Hack.  get_position_for_current returns None on next/prev token
             # navigation at end of imported game with errors when editing.
-            return get_position_string(self.get_position_for_current())
+            return get_position_string(*self.get_position_for_current())
 
         except:
             return False
@@ -906,15 +914,36 @@ class Score(ChessException):
         return None
 
     def get_tags_display_order(self):
-        str_tags = []
-        other_tags = []
-        for t in self.pgn.collected_game[0]:
-            tn = t.group(IFG_TAG_SYMBOL)
-            if tn not in SEVEN_TAG_ROSTER:
-                other_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-            else:
-                str_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-        return other_tags + str_tags
+        """Return tags in alphabetic order modified by self.tags_displayed_last.
+
+        last=None means do not display the tags: assume tags will be displayed
+        in the order they appear in the PGN text.
+
+        Return None if last is None, and list of '(tag, value)'s otherwise.
+
+        last modifies the order PGN tags are displayed.  Normally the Seven
+        Tag Roster appears first in a PGN game score followed by other tags
+        in alphabetic order.  Tags not in last are displayed in alphabetic
+        order followed by the tags in last.  If last is None the PGN tags are
+        displayed in the order they appear in the PGN game score.
+
+        The intention is to display the important tags adjacent to the game
+        score.  Thus if last is the Seven Tag Roster these tags are displayed
+        after the other tags, rather than appearing before the other tags as
+        in a PGN file.
+        """
+        last = self.tags_displayed_last
+        if last is None:
+            return None
+        tag_values = []
+        tags = self.collected_game._tags
+        for tv in sorted(tags.items()):
+            if tv[0] not in last:
+                tag_values.append(tv)
+        for t in last:
+            if t in tags:
+                tag_values.append((t, tags[t]))
+        return tag_values
     
     def get_colouring_variation_tag_of_index(self, index):
         """Return Tk tag name if index is in a varsep tag.
@@ -1082,30 +1111,30 @@ class Score(ChessException):
     from a POSITION tag name.
 
     '''
+
+    def _set_square_piece_map(self, position):
+        assert len(position) == 1
+        spm = self._square_piece_map
+        spm.clear()
+        for p, s in position[0][0]:
+            spm[s] = p
+
+    def _modify_square_piece_map(self, position):
+        assert len(position) == 2
+        spm = self._square_piece_map
+        for s, p in position[0][0]:
+            del spm[s]
+        for s, p in position[1][0]:
+            spm[s] = p
+
+    # Attempt to re-design map_game method to fit new pgn_read package.
     def map_game(self):
         """Tag and mark the displayed text of game score.
 
         The tags and marks are used for colouring and navigating the score.
 
         """
-        dispatch_table = {
-            IFG_PIECE_SQUARE: self.map_move_text,
-            IFG_PAWN_SQUARE: self.map_move_text,
-            IFG_PIECE_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PAWN_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PIECE_CHOICE_SQUARE: self.map_move_text,
-            IFG_PAWN_PROMOTE_SQUARE: self.map_move_text,
-            IFG_CASTLES: self.map_move_text,
-            IFG_START_RAV: self.map_start_rav,
-            IFG_END_RAV: self.map_end_rav,
-            IFG_TERMINATION: self.map_termination,
-            IFG_COMMENT: self.map_start_comment,
-            IFG_COMMENT_TO_EOL: self.map_comment_to_eol,
-            IFG_NAG: self.map_glyph,
-            IFG_ANYTHING_ELSE: self.map_non_move,
-            IFG_CHECK: self.map_non_move,
-            IFG_ANNOTATION: self.map_non_move,
-            }
+        self._force_newline = 0
 
         # With get_current_...() methods as well do not need self._vartag
         # self._ravtag and self._choicetag state attributes.
@@ -1117,55 +1146,46 @@ class Score(ChessException):
         self._end_latest_move = ''
         self._next_move_is_choice = False
         self._token_position = None
+        self._square_piece_map = {}
         
         self.score.mark_set(START_SCORE_MARK, '1.0')
         self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
-        for token, position in self.pgn.moves:
-            for group in (IFG_PIECE_SQUARE,
-                          IFG_PAWN_SQUARE,
-                          IFG_PIECE_CAPTURE_SQUARE,
-                          IFG_PAWN_CAPTURE_SQUARE,
-                          IFG_PIECE_CHOICE_SQUARE,
-                          IFG_PAWN_PROMOTE_SQUARE,
-                          IFG_CASTLES,
-                          IFG_START_RAV,
-                          IFG_END_RAV,
-                          IFG_TERMINATION,
-                          IFG_COMMENT,
-                          IFG_COMMENT_TO_EOL,
-                          IFG_NAG,
-                          IFG_CHECK,
-                          IFG_ANNOTATION,
-                          IFG_ANYTHING_ELSE,
-                          ):
-                try:
-                    if token.group(group):
-                        try:
-                            dispatch_table[group](token.group(), position)
-                        except KeyError:
-                            self.map_tag_fen(None, position)
-                        break
-                except AttributeError:
-                    self.map_tag_fen(None, position)
-                    break
+        cg = self.collected_game
+        spm = self._square_piece_map
+        for p, s in cg._initial_position[0]:
+            spm[s] = p
+        assert len(cg._text) == len(cg._position_deltas)
+        tags_displayed = self.map_tags_display_order()
+        for text, position in zip(cg._text, cg._position_deltas):
+            t0 = text[0]
+            if t0 in 'abcdefghKQRBNkqrnO':
+                self.map_move_text(text, position)
+            elif t0 == '[':
+                if not tags_displayed:
+                    self.map_tag(text)
+            elif t0 == '{':
+                self.map_start_comment(text)
+            elif t0 == '(':
+                self.map_start_rav(text, position)
+            elif t0 == ')':
+                self.map_end_rav(text, position)
+            elif t0 in '10*':
+                self.map_termination(text)
+            elif t0 == ';':
+                self.map_comment_to_eol(text)
+            elif t0 == '$':
+                self.map_glyph(text)
 
-                # If group == IFG_PIECE_SQUARE and len(token.group()) == 5 or
-                # group == IFG_PIECE_CAPTURE_SQUARE and len(token.group()) == 6
-                # assume movetext such as 'Qb2c3' meaning there are more than
-                # two queens able to move to 'c3' and the one om 'b2' does so.
-                # The PGN parser treats 'Qb2c3' as a special case after seeing
-                # 'Qb2' cannot be a move.
-                except IndexError:
-                    if ((len(token.group()) == 5 and
-                         group == IFG_PIECE_SQUARE) or
-                        (len(token.group()) == 6 and
-                         group == IFG_PIECE_CAPTURE_SQUARE)):
-                        try:
-                            dispatch_table[group](token.group(), position)
-                        except KeyError:
-                            self.map_tag_fen(None, position)
-                        break
-                    raise
+            # Currently ignored if present in PGN input.
+            elif t0 == '%':
+                self.map_non_move(text)
+
+            # Currently ignored if present in PGN input.
+            elif t0 == '<':
+                self.map_non_move(text)
+
+            else:
+                self.map_non_move(text)
 
         self.build_nextmovetags()
 
@@ -1185,23 +1205,31 @@ class Score(ChessException):
         more moves are processed.
 
         """
+        self._modify_square_piece_map(position)
         widget = self.score
         positiontag = self.get_next_positiontag_name()
-        self.positions[positiontag] = position
-        if len(self.pgn.moves) > FORCE_FULLMOVE_PER_LINE:
-            if position[1]:
-                widget.insert(tkinter.INSERT, NEWLINE_SEP)
-                self.insert_token_into_text(
-                    str(position[5]) + FULLSTOP, SPACE_SEP)
-            elif self._force_newline:
-                widget.insert(tkinter.INSERT, NEWLINE_SEP)
-                self.insert_token_into_text(
-                    ''.join((str(position[5] - 1),
-                             FULLSTOP,
-                             SPACE_SEP,
-                             FULLSTOP * 3)),
-                    SPACE_SEP)
+        p1 = position[1]
+        self.tagpositionmap[
+            positiontag] = (self._square_piece_map.copy(),) + p1[1:]
+        fwa = p1[1] == FEN_WHITE_ACTIVE
+        if not fwa:
+            self._force_newline += 1
+        if self._force_newline > FORCE_NEWLINE_AFTER_FULLMOVES:
+            widget.insert(tkinter.INSERT, NEWLINE_SEP)
+            self._force_newline = 1
+        if not fwa:
+            start, end, sepend = self.insert_token_into_text(
+                str(p1[5])+'.', SPACE_SEP)
+            widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+            if self._force_newline == 1:
+                widget.tag_add(FORCED_INDENT_TAG, start, end)
+        elif self._next_move_is_choice:
+            start, end, sepend = self.insert_token_into_text(
+                str(position[0][5])+'...', SPACE_SEP)
+            widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+        if self._force_newline == 1:
+            widget.tag_add(FORCED_INDENT_TAG, start, end)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
         if self._vartag is self._gamevartag:
@@ -1222,11 +1250,10 @@ class Score(ChessException):
         self._start_latest_move = start
         self._end_latest_move = end
         self.create_previousmovetag(positiontag, start)
-        self._force_newline = False
         return start, end, sepend
 
     def map_start_rav(self, token, position):
-        """Add token to game text. position is ignored. Return range and prior.
+        """Add token to game text.  Return range and prior.
 
         Variation tags are set for guiding move navigation. self._vartag
         self._ravtag self._token_position and self._choicetag are placed on
@@ -1234,7 +1261,10 @@ class Score(ChessException):
         self._next_move_is_choice is set True indicating that the next move
         is the default selection when choosing a variation.
 
+        The _square_piece_map is reset from position.
+
         """
+        self._set_square_piece_map(position)
         widget = self.score
         if not widget.tag_nextrange(
             ALL_CHOICES, self._start_latest_move, self._end_latest_move):
@@ -1262,20 +1292,23 @@ class Score(ChessException):
         self.varstack.append((self._vartag, self._ravtag, self._token_position))
         self.choicestack.append(self._choicetag)
         self._vartag, self._ravtag = self.get_rav_tag_names()
+        widget.insert(tkinter.INSERT, NEWLINE_SEP)
+        self._force_newline = 0
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         self._next_move_is_choice = True
-        self._force_newline = True
         return start, end, sepend
 
     def map_end_rav(self, token, position):
-        """Add token to game text. position is ignored. Return token range.
+        """Add token to game text.  Return token range.
 
         Variation tags are set for guiding move navigation. self._vartag
         self._ravtag self._token_position and self._choicetag are restored
         from the stack for restoration at the end of the variation.
         self._start_latest_move is set to the move which the first move of
         the variation replaced.
+
+        The _square_piece_map is reset from position.
 
         """
         # ValueError exception has happened if and only if opening an invalid
@@ -1289,53 +1322,67 @@ class Score(ChessException):
         except ValueError:
             return tkinter.END, tkinter.END, tkinter.END
         
+        self._set_square_piece_map(position)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
         self._vartag, self._ravtag, self._token_position = self.varstack.pop()
         self._choicetag = self.choicestack.pop()
-        self._force_newline = True
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, sepend
 
-    def map_tag_fen(self, token, position):
-        """Add PGN Tags to game text and set tags to display start position."""
-        self.fen_position = position
-        for tag, value in self.get_tags_display_order():
-            self.add_pgntag_to_map(tag, value)
-        self.positions[None] = position
+    def map_tag(self, token):
+        """Add PGN Tag to game text."""
+        t, v = token[1:-1].split('"', 1)
+        v = v[:-1]
+        self.add_pgntag_to_map(t, v)
 
-    def map_termination(self, token, position):
+    def map_tags_display_order(self):
+        """Add PGN Tags to game text."""
+        tag_values = self.get_tags_display_order()
+        self.tagpositionmap[None] = self.fen_tag_tuple_square_piece_map()
+        if tag_values is None:
+            return False
+        for tv in tag_values:
+            self.add_pgntag_to_map(*tv)
+        return True
+
+    def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
+        self.score.insert(tkinter.INSERT, NEWLINE_SEP)
         return self.insert_token_into_text(token, NEWLINE_SEP)
 
-    def map_start_comment(self, token, position):
+    def map_start_comment(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self._force_newline = True
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self.score.insert(tkinter.INSERT, NEWLINE_SEP)
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_comment_to_eol(self, token, position):
+    def map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
+        widget.insert(tkinter.INSERT, NEWLINE_SEP)
         start = widget.index(tkinter.INSERT)
-        widget.insert(tkinter.INSERT, token)
-        end = widget.index(tkinter.INSERT + ' -1 chars')
-        widget.insert(tkinter.INSERT, NULL_SEP)
+        widget.insert(tkinter.INSERT, token[:-1])#token)
+        end = widget.index(tkinter.INSERT)# + ' -1 chars')
+        #widget.insert(tkinter.INSERT, NULL_SEP)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, widget.index(tkinter.INSERT)
 
-    def map_escape_to_eol(self, token, position):
+    def map_escape_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
         start = widget.index(tkinter.INSERT)
-        widget.insert(tkinter.INSERT, token)
-        end = widget.index(tkinter.INSERT + ' -1 chars')
-        widget.insert(tkinter.INSERT, NULL_SEP)
-        self._force_newline = True
+        widget.insert(tkinter.INSERT, token[:-1])
+        end = widget.index(tkinter.INSERT)# + ' -1 chars')
+        #widget.insert(tkinter.INSERT, NULL_SEP)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, widget.index(tkinter.INSERT)
 
     def map_integer(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_glyph(self, token, position):
+    def map_glyph(self, token):
         """Add token to game text. position is ignored. Return token range."""
         return self.insert_token_into_text(token, SPACE_SEP)
 
@@ -1343,20 +1390,12 @@ class Score(ChessException):
         """Add token to game text. position is ignored. Return token range."""
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_start_reserved(self, token, position):
+    def map_start_reserved(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self._force_newline = True
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_move_error(self, token, position):
-        """Add token to game text. position is ignored. Return token range."""
-        return self.insert_token_into_text(token, SPACE_SEP)
-
-    def map_move_after_error(self, token, position):
-        """Add token to game text. position is ignored. Return token range."""
-        return self.insert_token_into_text(token, SPACE_SEP)
-
-    def map_non_move(self, token, position):
+    def map_non_move(self, token):
         """Add token to game text. position is ignored. Return token range."""
         return self.insert_token_into_text(token, SPACE_SEP)
 
@@ -1537,7 +1576,7 @@ class Score(ChessException):
 
     def set_statusbar_text(self):
         """Set status bar to display player name PGN Tags."""
-        tags = self.pgn.collected_game[1]
+        tags = self.collected_game._tags
         self.ui.statusbar.set_status_text(
             '  '.join(
                 [tags.get(k, '')
@@ -1894,30 +1933,18 @@ class AnalysisScore(Score):
 
     """Chess position analysis widget, a customised Score widget.
 
-    Methods added:
+    The move number of the move made in the game score is given, but move
+    numbers are not shown for the analysis from chess engines.  Each variation
+    has it's own line, possibly wrapped depending on widget width, so newlines
+    are not inserted as a defence against slow response times for very long
+    wrapped lines which would occur for depth arguments in excess of 500
+    passed to chess engines.
 
-    clear_score
-
-    Methods overridden:
-
-    go_to_token
-    map_end_rav
-    popup_viewmode_menu
-    popup_variation_menu
-    set_game_board
-    set_score
-    
-    Methods extended:
-
-    None
-
-    Notes:
-
-    The Score widget is set up once from a PGN widget, and may be edited move
-    by move on instruction from a controlling widget.
+    The Score widget is set up once from a gui.Game widget, and may be edited
+    move by move on instruction from that widget.
 
     This class provides one method to clear that part of the state derived from
-    a pgn Parser instance, and overrides one method to allow for analysis of
+    a pgn_read.Game instance, and overrides one method to allow for analysis of
     the final position in the game or a variation.
 
     Recursive analysis (of a position in the analysis) is not supported.
@@ -1945,33 +1972,9 @@ class AnalysisScore(Score):
         self.choice_number = 0
         self.choicestack = []
         self.position_number = 0
-        self.positions = dict()
+        self.tagpositionmap = dict()
         self.previousmovetags = dict()
         self.nextmovetags = dict()
-        self.fen_position = None
-
-    def map_end_rav(self, token, position):
-        """Add token to game text. position is ignored. Return token range.
-
-        Variation tags are set for guiding move navigation. self._vartag
-        self._ravtag self._token_position and self._choicetag are restored
-        from the stack for restoration at the end of the variation.
-        self._start_latest_move is set to the move which the first move of
-        the variation replaced.
-
-        """
-        try:
-            (self._start_latest_move,
-             self._end_latest_move) = self.score.tag_prevrange(
-                 ALL_CHOICES, tkinter.END)
-        except:
-            (self._start_latest_move,
-             self._end_latest_move) = (tkinter.END, tkinter.END)
-        start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
-        self.score.tag_add(BUILD_TAG, start, end)
-        self._vartag, self._ravtag, self._token_position = self.varstack.pop()
-        self._choicetag = self.choicestack.pop()
-        return start, end, sepend
 
     def go_to_token(self, event=None):
         """Set position and highlighting for token under pointer"""
@@ -2005,7 +2008,7 @@ class AnalysisScore(Score):
                 return 'break'
         self.selectmode_popup.tk_popup(*self.score.winfo_pointerxy())
         
-    def set_score(self, starttoken=None, reset_undo=False):
+    def set_score(self, analysis_text, reset_undo=False):
         """Display the game as moves.
 
         starttoken is the move played to reach the position displayed and this
@@ -2018,12 +2021,30 @@ class AnalysisScore(Score):
         if not self._is_score_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
-        self.map_game()
+
+        # An attempt to insert an illegal move into a game score will cause
+        # an exception when parsing the engine.  Expected to happen when
+        # editing or inserting a game and the move before an incomplete move
+        # becomes the current move.
+        # Illegal moves are wrapped in '{Error::  ::{{::}' comments by the
+        # game updater: like '--' moves found in some PGN files which do not
+        # follow the standard strictly.
+        try:
+            self.map_game()
+        except TypeError:
+            self.score.insert(
+                tkinter.END,
+                ''.join(('The analysis is attached to an illegal move, ',
+                         'likely while editing or inserting a game.\n\nIt ',
+                         'is displayed but cannot be played through.\n\n')))
+            self.score.insert(tkinter.END, analysis_text)
+
         self.bind_for_viewmode()
         if not self._is_score_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
             self.score.edit_reset()
+        self.analysis_text = analysis_text
         
     def set_game_board(self):
         """Show position after highlighted move and return False.
@@ -2035,115 +2056,25 @@ class AnalysisScore(Score):
 
         """
         if self.current is None:
-            self.board.set_board(self.fen_position[0])
+
+            # Arises as a consequence of avoiding the exception caught in
+            # map_game.
+            try:
+                self.board.set_board(self.fen_tag_square_piece_map())
+            except TypeError:
+                return False
+
             self.see_first_move()
         else:
             try:
-                self.board.set_board(self.positions[self.current][0])
+                self.board.set_board(self.tagpositionmap[self.current][0])
             except TypeError:
-                self.board.set_board(self.fen_position[0])
+                self.board.set_board(self.fen_tag_square_piece_map())
                 self.score.see(self.score.tag_ranges(self.current)[0])
                 return False
             self.score.see(self.score.tag_ranges(self.current)[0])
-        self.set_game_list()
         return False
 
-    def map_game(self):
-        """Tag and mark the displayed text of position analysis.
-
-        The tags and marks are used for colouring and navigating the score.
-
-        """
-        dispatch_table = {
-            IFG_PIECE_SQUARE: self.map_move_text,
-            IFG_PAWN_SQUARE: self.map_move_text,
-            IFG_PIECE_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PAWN_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PIECE_CHOICE_SQUARE: self.map_move_text,
-            IFG_PAWN_PROMOTE_SQUARE: self.map_move_text,
-            IFG_CASTLES: self.map_move_text,
-            IFG_START_RAV: self.map_start_rav,
-            IFG_END_RAV: self.map_end_rav,
-            IFG_TERMINATION: self.map_termination,
-            IFG_COMMENT: self.map_start_comment,
-            IFG_COMMENT_TO_EOL: self.map_comment_to_eol,
-            IFG_NAG: self.map_glyph,
-            IFG_ANYTHING_ELSE: self.map_non_move,
-            IFG_CHECK: self.map_non_move,
-            IFG_ANNOTATION: self.map_non_move,
-            }
-
-        # With get_current_...() methods as well do not need self._vartag
-        # self._ravtag and self._choicetag state attributes.
-        self._vartag, self._ravtag = self.get_rav_tag_names()
-        self._choicetag = self.get_choice_tag_name()
-        self._gamevartag = self._vartag
-
-        self._start_latest_move = ''
-        self._end_latest_move = ''
-        self._next_move_is_choice = False
-        self._token_position = None
-        
-        self.score.mark_set(START_SCORE_MARK, '1.0')
-        self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
-        for token, position in self.pgn.moves:
-            for group in (IFG_PIECE_SQUARE,
-                          IFG_PAWN_SQUARE,
-                          IFG_PIECE_CAPTURE_SQUARE,
-                          IFG_PAWN_CAPTURE_SQUARE,
-                          IFG_PIECE_CHOICE_SQUARE,
-                          IFG_PAWN_PROMOTE_SQUARE,
-                          IFG_CASTLES,
-                          IFG_START_RAV,
-                          IFG_END_RAV,
-                          IFG_TERMINATION,
-                          IFG_COMMENT,
-                          IFG_COMMENT_TO_EOL,
-                          IFG_NAG,
-                          IFG_CHECK,
-                          IFG_ANNOTATION,
-                          IFG_ANYTHING_ELSE,
-                          ):
-                try:
-                    if token.group(group):
-                        try:
-                            dispatch_table[group](token.group(), position)
-                        except KeyError:
-                            self.map_tag_fen(None, position)
-                        break
-                except AttributeError:
-                    self.map_tag_fen(None, position)
-                    break
-
-                # If group == IFG_PIECE_SQUARE and len(token.group()) == 5 or
-                # group == IFG_PIECE_CAPTURE_SQUARE and len(token.group()) == 6
-                # assume movetext such as 'Qb2c3' meaning there are more than
-                # two queens able to move to 'c3' and the one om 'b2' does so.
-                # The PGN parser treats 'Qb2c3' as a special case after seeing
-                # 'Qb2' cannot be a move.
-                except IndexError:
-                    if ((len(token.group()) == 5 and
-                         group == IFG_PIECE_SQUARE) or
-                        (len(token.group()) == 6 and
-                         group == IFG_PIECE_CAPTURE_SQUARE)):
-                        try:
-                            dispatch_table[group](token.group(), position)
-                        except KeyError:
-                            self.map_tag_fen(None, position)
-                        break
-                    raise
-
-        self.build_nextmovetags()
-
-        # BUILD_TAG used to track moves and RAV markers during construction of
-        # text.  Subclasses setup and use NAVIGATE_TOKEN for post-construction
-        # comparisons of this, and other, kinds if necessary.  This class, and
-        # subclasses, do not need this information after construction.
-        # self.nextmovetags tracks the things BUILD_TAG is used for.  Maybe
-        # change technique to use it rather than BUILD_TAG.
-        self.score.tag_delete(BUILD_TAG)
-
-    # Copied from Score class above and hacked. 
     def map_move_text(self, token, position):
         """Add token to game text. Set navigation tags. Return token range.
 
@@ -2152,9 +2083,11 @@ class AnalysisScore(Score):
         more moves are processed.
 
         """
+        self._modify_square_piece_map(position)
         widget = self.score
         positiontag = self.get_next_positiontag_name()
-        self.positions[positiontag] = position
+        self.tagpositionmap[
+            positiontag] = (self._square_piece_map.copy(),) + position[1][1:]
 
         # The only way found to get the move number at start of analysis.
         # Direct use of self.score.insert(...), as in insert_token_into_text,
@@ -2162,13 +2095,12 @@ class AnalysisScore(Score):
         # interaction with refresh_analysis_widget_from_database() in
         # game.Game when building the text is assumed to be the cause.
         if not len(self.varstack):
-            a, active_side, a, a, a, fullmove_number = position
+            a, active_side, a, a, a, fullmove_number = position[0]
             del a
-            if active_side == WHITE_SIDE:
-                fullmove_number -= 1
-                fullmove_number = str(fullmove_number) + FULLSTOP * 3
+            if active_side == FEN_WHITE_ACTIVE:
+                fullmove_number = str(fullmove_number) + PGN_DOT
             else:
-                fullmove_number = str(fullmove_number) + FULLSTOP
+                fullmove_number = str(fullmove_number) + PGN_DOT * 3
             start, end, sepend = self.insert_token_into_text(
                 ''.join((fullmove_number, SPACE_SEP, token)),
                 SPACE_SEP)
@@ -2196,3 +2128,88 @@ class AnalysisScore(Score):
         self._end_latest_move = end
         self.create_previousmovetag(positiontag, start)
         return start, end, sepend
+
+    def map_start_rav(self, token, position):
+        """Add token to game text.  Return range and prior.
+
+        Variation tags are set for guiding move navigation. self._vartag
+        self._ravtag self._token_position and self._choicetag are placed on
+        a stack for restoration at the end of the variation.
+        self._next_move_is_choice is set True indicating that the next move
+        is the default selection when choosing a variation.
+
+        The _square_piece_map is reset from position.
+
+        """
+        self._set_square_piece_map(position)
+        widget = self.score
+        if not widget.tag_nextrange(
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move):
+
+            # start_latest_move will be the second move, at earliest,
+            # in current variation except if it is the first move in
+            # the game.  Thus the move before start_latest_move using
+            # tag_prevrange() can be tagged as the move creating the
+            # position in which the choice of moves occurs.
+            self._choicetag = self.get_choice_tag_name()
+            widget.tag_add(
+                ''.join((SELECTION, str(self.choice_number))),
+                self._start_latest_move,
+                self._end_latest_move)
+            prior = self.get_range_for_prior_move_before_insert()
+            if prior:
+                widget.tag_add(
+                    ''.join((PRIOR_MOVE, str(self.choice_number))),
+                    *prior)
+
+        widget.tag_add(
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move)
+        widget.tag_add(
+            self._choicetag, self._start_latest_move, self._end_latest_move)
+        self.varstack.append((self._vartag, self._ravtag, self._token_position))
+        self.choicestack.append(self._choicetag)
+        self._vartag, self._ravtag = self.get_rav_tag_names()
+        start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+        widget.tag_add(BUILD_TAG, start, end)
+        self._next_move_is_choice = True
+        return start, end, sepend
+
+    def map_end_rav(self, token, position):
+        """Add token to game text. position is ignored. Return token range.
+
+        Variation tags are set for guiding move navigation. self._vartag
+        self._ravtag self._token_position and self._choicetag are restored
+        from the stack for restoration at the end of the variation.
+        self._start_latest_move is set to the move which the first move of
+        the variation replaced.
+
+        """
+        try:
+            (self._start_latest_move,
+             self._end_latest_move) = self.score.tag_prevrange(
+                 ALL_CHOICES, tkinter.END)
+        except:
+            (self._start_latest_move,
+             self._end_latest_move) = (tkinter.END, tkinter.END)
+        start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
+        self.score.tag_add(BUILD_TAG, start, end)
+        self._vartag, self._ravtag, self._token_position = self.varstack.pop()
+        self._choicetag = self.choicestack.pop()
+        return start, end, sepend
+
+    def map_start_comment(self, token):
+        """Add token to game text. position is ignored. Return token range."""
+        return self.insert_token_into_text(token, SPACE_SEP)
+
+    def map_comment_to_eol(self, token):
+        """Add token to game text. position is ignored. Return token range."""
+        widget = self.score
+        start = widget.index(tkinter.INSERT)
+        widget.insert(tkinter.INSERT, token)
+        end = widget.index(tkinter.INSERT + ' -1 chars')
+        widget.insert(tkinter.INSERT, NULL_SEP)
+        return start, end, widget.index(tkinter.INSERT)
+
+    def map_termination(self, token):
+        """Add token to game text. position is ignored. Return token range."""
+        return self.insert_token_into_text(token, NEWLINE_SEP)

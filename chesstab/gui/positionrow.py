@@ -4,18 +4,15 @@
 
 """Create widgets to display tag roster details of games matching a position.
 """
+# Put transposition moves in column 0 rather than column 4.
+# Display just the moves played in, and to reach, the position.
 
 import tkinter
+from ast import literal_eval
 
 from solentware_grid.gui.datarow import DataRow, NULL_COLOUR
 from solentware_grid.gui.datarow import GRID_COLUMNCONFIGURE, GRID_CONFIGURE
 from solentware_grid.gui.datarow import WIDGET_CONFIGURE, WIDGET, ROW
-
-from pgn_read.core.constants import (
-    TAG_WHITE,
-    TAG_BLACK,
-    TAG_RESULT,
-    )
 
 from . import constants
 from ..core.chessrecord import ChessDBrecordGamePosition
@@ -36,27 +33,11 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
     """
     header_specification = [
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=''),
+         WIDGET_CONFIGURE: dict(
+             text='Transposition', anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='name'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text='Players'),
-         GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=0, uniform='result', minsize=80),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=''),
-         GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='name'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text='Score'),
-         GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=4, uniform='move', minsize=160),
+         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='move'),
          ROW: 0,
          },
         ]
@@ -73,31 +54,15 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         self.set_database(database)
         self.score = None
         self.row_specification = [
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(font=constants.LISTS_OF_GAMES_FONT),
-             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(font=constants.LISTS_OF_GAMES_FONT),
-             GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(font=constants.LISTS_OF_GAMES_FONT),
-             GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
-             ROW: 0,
-             },
             {WIDGET: tkinter.Text,
              WIDGET_CONFIGURE: dict(
                  height=0,
                  relief=tkinter.FLAT,
                  font=constants.LISTS_OF_GAMES_FONT,
-                 background=NULL_COLOUR,
                  wrap=tkinter.NONE,
                  borderwidth=2, # hack to fill cell to row height from labels
                  ),
-             GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
+             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
              ROW: 0,
              },
             ]
@@ -141,15 +106,10 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         Create textitems argument for ChessDBrowPosition instance.
 
         """
-        self.row_specification[3][WIDGET_CONFIGURE]['context'] = context
-        tags = self.value.collected_game[1]
-        lasttag = self.value.collected_game[0][-1]
+        self.row_specification[0][WIDGET_CONFIGURE]['context'] = context
         return super(ChessDBrowPosition, self).grid_row(
             textitems=(
-                tags.get(TAG_WHITE, '?'),
-                tags.get(TAG_RESULT, '?'),
-                tags.get(TAG_BLACK, '?'),
-                lasttag.string[lasttag.end():],
+                literal_eval(self.srvalue),
                 ),
             **kargs)
 
@@ -192,6 +152,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
             if self.score is None:
                 self.score = PositionScore(widget, ui=self.ui, **kw)
             self.score.process_score(text=text, context=context)
+        kw['width'] = self.score.score.count('1.0', tkinter.END, 'chars')[0]
         widget.configure(cnf=cnf, **kw)
 
 

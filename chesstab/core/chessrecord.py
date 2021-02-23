@@ -16,29 +16,33 @@ import re
 from solentware_base.core.record import KeyData, Value, ValueText, Record
 from solentware_base.core.segmentsize import SegmentSize
 
+from pgn_read.core.parser import PGN
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
+    TAG_DATE,
+    TAG_WHITE,
+    TAG_BLACK,
+    )
+
+from .pgn import (
+    GameDisplayMoves,
+    GameRepertoireDisplayMoves,
+    GameRepertoireTags,
+    GameRepertoireUpdate,
+    GameTags,
+    GameUpdate,
+    )
+from .constants import (
     START_RAV,
     END_RAV,
     NON_MOVE,
     TAG_OPENING,
-    TAG_DATE,
-    SPECIAL_TAG_DATE,
-    TAG_WHITE,
-    TAG_BLACK,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
+    START_COMMENT,
     ERROR_START_COMMENT,
+    ESCAPE_END_COMMENT,
+    END_COMMENT,
+    SPECIAL_TAG_DATE,
     )
-from pgn_read.core.parser import (
-    PGNDisplay,
-    PGNRepertoireDisplay,
-    PGNRepertoireTags,
-    PGNRepertoireUpdate,
-    PGNTags,
-    )
-
-from .pgnupdate import PGNUpdate
 from .cqlstatement import CQLStatement
 from .filespec import (
     POSITIONS_FIELD_DEF,
@@ -91,6 +95,10 @@ class ChessDBvaluePGN(Value):
     
     """Methods common to all chess PGN data classes.
     """
+
+    def __init__(self):
+        super().__init__()
+        self.collected_game = None
     
     @staticmethod
     def encode_move_number(key):
@@ -100,23 +108,14 @@ class ChessDBvaluePGN(Value):
 
     def load(self, value):
         """Get game from value."""
-        self.get_first_game(literal_eval(value))
+        self.collected_game = next(self.read_games(literal_eval(value)))
 
     def pack_value(self):
         """Return PGN text for game."""
-        return repr(
-            ''.join((''.join([''.join(('[',
-                                       t.group(IFG_TAG_SYMBOL),
-                                       '"',
-                                       t.group(IFG_TAG_STRING_VALUE),
-                                       '"]'))
-                              for t in self.collected_game[0]]),
-                     ''.join([t.group() for t in self.collected_game[2]]),
-                     ''.join([t for t in self.collected_game[3]]),
-                     )))
+        return repr(''.join(self.collected_game._text))
         
 
-class ChessDBvalueGame(PGNDisplay, ChessDBvaluePGN):
+class ChessDBvalueGame(PGN, ChessDBvaluePGN):
     
     """Chess game data.
 
@@ -124,15 +123,15 @@ class ChessDBvalueGame(PGNDisplay, ChessDBvaluePGN):
 
     """
 
-    def __init__(self):
+    def __init__(self, game_class=GameDisplayMoves):
         """Extend with game source and move number encoder placeholders."""
-        super(ChessDBvalueGame, self).__init__()
+        super().__init__(game_class=game_class)
 
     def pack(self):
         """Return PGN text and indexes for game."""
         v = super(ChessDBvalueGame, self).pack()
         index = v[1]
-        tags = self.collected_game[1]
+        tags = self.collected_game._tags
         for field in tags:
             if field in PLAYER_NAME_TAGS:
 
@@ -200,7 +199,7 @@ class ChessDBrecordGame(Record):
         
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game[1].
+        except the positions are held in self.value.collected_game._tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -211,8 +210,9 @@ class ChessDBrecordGame(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            elif dbname in self.value.collected_game[1]:
-                return [(self.value.collected_game[1][dbname], self.key.pack())]
+            elif dbname in self.value.collected_game._tags:
+                return [(self.value.collected_game._tags[dbname],
+                         self.key.pack())]
             else:
                 return []
         if partial == None:
@@ -284,7 +284,7 @@ class ChessDBrecordGameText(Record):
         return int.from_bytes(skey, byteorder='big')
         
     def delete_record(self, database, dbset):
-        """Delete record not allowed using ChessDBrecordGamePosition class.
+        """Delete record not allowed using ChessDBrecordGameText class.
 
         Process the game using a ChessDBrecordGameUpdate instance
 
@@ -292,7 +292,7 @@ class ChessDBrecordGameText(Record):
         raise ChessRecordError
 
     def edit_record(self, database, dbset, dbname, newrecord):
-        """Edit record not allowed using ChessDBrecordGamePosition class.
+        """Edit record not allowed using ChessDBrecordGameText class.
 
         Process the game using a ChessDBrecordGameUpdate instance
 
@@ -300,7 +300,7 @@ class ChessDBrecordGameText(Record):
         raise ChessRecordError
         
     def put_record(self, database, dbset):
-        """Put record not allowed using ChessDBrecordGamePosition class.
+        """Put record not allowed using ChessDBrecordGameText class.
 
         Process the game using a ChessDBrecordGameUpdate instance
 
@@ -308,14 +308,14 @@ class ChessDBrecordGameText(Record):
         raise ChessRecordError
 
 
-class ChessDBvalueGameTags(PGNTags, ChessDBvalueGame):
+class ChessDBvalueGameTags(ChessDBvalueGame):
     
     """Chess game data excluding PGN movetext but including PGN Tags.
     """
 
     def __init__(self):
         """Extend with game source and move number encoder placeholders."""
-        super(ChessDBvalueGameTags, self).__init__()
+        super().__init__(game_class=GameTags)
 
     def get_field_value(self, fieldname, occurrence=0):
         """Return value of a field occurrence, the first by default.
@@ -323,7 +323,7 @@ class ChessDBvalueGameTags(PGNTags, ChessDBvalueGame):
         Added to support Find and Where classes.
 
         """
-        return self.collected_game[1].get(fieldname, None)
+        return self.collected_game._tags.get(fieldname, None)
 
     #def get_field_values(self, fieldname):
     #    """Return tuple of field values for fieldname.
@@ -361,7 +361,7 @@ class ChessDBrecordGamePosition(Record):
         """Extend with move number encode and decode methods"""
         super(ChessDBrecordGamePosition, self).__init__(
             ChessDBkeyGame,
-            ChessDBvalueGameTags)
+            ValueText)
 
     def clone(self):
         """Return copy of ChessDBrecordGamePosition instance.
@@ -407,7 +407,27 @@ class ChessDBrecordGamePosition(Record):
         raise ChessRecordError
 
 
-class ChessDBvaluePGNUpdate(PGNUpdate, ChessDBvaluePGN):
+# An alternative is to put this in .core.pgn as 'class _Game(Game) and base
+# the other classes on _Game rather than Game.  Done here because the only
+# place errors which need hiding should occur is when importing games to, or
+# updating games on, the database.
+class _GameUpdate(GameUpdate):
+    """Override the PGN error notification and recovery methods."""
+
+    def pgn_error_notification(self):
+        """Insert a '{' before the token which causes a PGN error."""
+        self._text.append(START_COMMENT+ERROR_START_COMMENT)
+
+    def pgn_error_recovery(self):
+        """Insert a '}' before the token which ends the scope of a PGN error.
+
+        This token will be a ')' or one of the game termination markers.
+
+        """
+        self._text.append(ESCAPE_END_COMMENT+END_COMMENT)
+
+
+class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
     
     """Chess game data with position, piece location, and PGN Tag, indexes."""
     
@@ -415,39 +435,57 @@ class ChessDBvaluePGNUpdate(PGNUpdate, ChessDBvaluePGN):
     # identical for a considerable time.
     # Decided that PGNUpdate should remain in pgn.core.parser because that code
     # generates data while this code updates a database.
+    # Now moved to .core.pgn.GameUpdate.
     # ChessDBvalueGameImport had this comment:
     # Implication of original is encode_move_number not supported and load in
     # ChessDBvaluePGN superclass is used.
 
     def __init__(self):
         """Extend with game source and move number encoder placeholders."""
-        super().__init__()
+        super().__init__(game_class=_GameUpdate)
         self.gamesource = None
 
+    # Perhaps ChessDBvaluePGNUpdate should follow example of ChessDBvalueGame
+    # in handling Seven Tag Roster, and just use 'try ... except ...' for
+    # bulk imports in ChessDBrecordGameImport, where Seven Tag Roster should
+    # be present.  This would need a subclass of ChessDBvaluePGNUpdate to hold
+    # the version of pack() below.
     def pack(self):
         """Return PGN text and indexes for game."""
         v = super().pack()
         index = v[1]
         cg = self.collected_game
         if self.do_full_indexing():
-            tags = cg[1]
+            tags = cg._tags
             for field in SEVEN_TAG_ROSTER:
                 if field in PLAYER_NAME_TAGS:
 
                     # PGN specification states colon is used to separate player
                     # names in consultation games.
-                    index[field
-                          ] = [' '.join(re_normalize_player_name.findall(tf))
-                               for tf in tags[field].split(':')]
+                    try:
+                        index[field] = [
+                            ' '.join(re_normalize_player_name.findall(tf))
+                            for tf in tags[field].split(':')]
+                    except KeyError:
+                        if field in tags:
+                            raise
 
                 else:
-                    index[field] = [tags[field]]
-            index[POSITIONS_FIELD_DEF] = cg[4]
-            index[PIECESQUAREMOVE_FIELD_DEF] = cg[5]
-            index[PIECEMOVE_FIELD_DEF] = cg[6]
-            index[SQUAREMOVE_FIELD_DEF] = cg[7]
-            index[PGN_DATE_FIELD_DEF] = [
-                tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)]
+                    try:
+                        index[field] = [tags[field]]
+                    except KeyError:
+                        if field in tags:
+                            raise
+            index[POSITIONS_FIELD_DEF] = cg.positionkeys
+            index[PIECESQUAREMOVE_FIELD_DEF] = cg.piecesquaremovekeys
+            index[PIECEMOVE_FIELD_DEF] = cg.piecemovekeys
+            index[SQUAREMOVE_FIELD_DEF] = cg.squaremovekeys
+            try:
+                index[PGN_DATE_FIELD_DEF] = [
+                    tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)]
+            except KeyError:
+                if TAG_DATE in tags:
+                    raise
         else:
             index[SOURCE_FIELD_DEF] = [self.gamesource]
         return v
@@ -464,13 +502,15 @@ class ChessDBvaluePGNUpdate(PGNUpdate, ChessDBvaluePGN):
         """
         return self.gamesource is None
 
+    # Before ChessTab 4.3 could test the string attribute of any re.match
+    # object for PGN text.  The match objects are not available in version
+    # 4.3 and later.  At 4.3 the test was done only for the value attribute
+    # of a record, so it is possible to test against the srvalue attribute
+    # of the record instance.
     def is_error_comment_present(self):
-        """Return True if an {Error: ...} comment is in the PGN text.
-
-        The string attribute of any re.match object for PGN text will do to
-        get the answer.
-        """
-        return ERROR_START_COMMENT in self.collected_game[2][0].string
+        """Return True if an {Error: ...} comment is in the PGN text."""
+        return START_COMMENT + ERROR_START_COMMENT in ''.join(
+            self.collected_game._text)
     
 
 class ChessDBrecordGameUpdate(Record):
@@ -511,7 +551,7 @@ class ChessDBrecordGameUpdate(Record):
         
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game[1].
+        except the positions are held in self.value.collected_game._tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -522,8 +562,9 @@ class ChessDBrecordGameUpdate(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            elif dbname in self.value.collected_game[1]:
-                return [(self.value.collected_game[1][dbname], self.key.pack())]
+            elif dbname in self.value.collected_game._tags:
+                return [(self.value.collected_game._tags[dbname],
+                         self.key.pack())]
             else:
                 return []
         if partial == None:
@@ -593,12 +634,11 @@ class ChessDBrecordGameImport(Record):
         db_segment_size = SegmentSize.db_segment_size
         value = self.value
         count = 0
-        for d in value.read_games(
-            source,
-            housekeepinghook=database.deferred_update_housekeeping):
+        for collected_game in value.read_games(source):
             value.set_game_source(
-                sourcename if not value.is_pgn_valid() else None)
-            self.key.recno = None#0
+                sourcename if not collected_game.is_pgn_valid() else None)
+            self.key.recno = None
+            value.collected_game = collected_game
             self.put_record(self.database, GAMES_FILE_DEF)
             if reporter is not None:
                 if not count:
@@ -611,6 +651,7 @@ class ChessDBrecordGameImport(Record):
                                        str(self.key.recno),
                                        'offset',
                                        str(self.key.recno - base))))
+                    database.deferred_update_housekeeping()
         if reporter is not None:
             reporter('Extraction from ' + sourcename + ' done')
             reporter('', timestamp=False)
@@ -704,52 +745,49 @@ class ChessDBrecordPartial(Record):
         
 
 # Not quite sure what customization needed yet
-class ChessDBvalueRepertoire(PGNRepertoireDisplay, Value):
+class ChessDBvalueRepertoire(PGN, Value):
     
     """Repertoire data using custom non-standard tags in PGN format.
     """
 
-    def __init__(self):
+    def __init__(self, game_class=GameRepertoireDisplayMoves):
         """Extend with game source and move number encoder placeholders."""
-        super(ChessDBvalueRepertoire, self).__init__()
+        super().__init__(game_class=game_class)
+        self.collected_game = None
 
     def load(self, value):
         """Get game from value."""
-        self.get_first_game(literal_eval(value))
+        self.collected_game = next(self.read_games(literal_eval(value)))
 
 
 # Not quite sure what customization needed yet
-class ChessDBvalueRepertoireTags(PGNRepertoireTags, ChessDBvalueRepertoire):
+class ChessDBvalueRepertoireTags(ChessDBvalueRepertoire):
     
     """Repertoire data using custom non-standard tags in PGN format.
     """
 
     def __init__(self):
         """Extend with game source and move number encoder placeholders."""
-        super(ChessDBvalueRepertoireTags, self).__init__()
-
-    def load(self, value):
-        """Get game from value."""
-        self.get_first_game(literal_eval(value))
+        super().__init__(game_class=GameRepertoireTags)
 
 
 # Not quite sure what customization needed yet
-class ChessDBvalueRepertoireUpdate(PGNRepertoireUpdate, ChessDBvaluePGN):
+class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
     
     """Repertoire data using custom non-standard tags in PGN format.
     """
 
     def __init__(self):
         """Extend with game source and move number encoder placeholders."""
-        super(ChessDBvalueRepertoireUpdate, self).__init__()
+        super().__init__(game_class=GameRepertoireUpdate)
         self.gamesource = None
 
     def pack(self):
         """Return PGN text and indexes for game."""
         v = super(ChessDBvalueRepertoireUpdate, self).pack()
         index = v[1]
-        tags = self.collected_game[1]
-        if self.is_pgn_valid():
+        tags = self.collected_game._tags
+        if self.collected_game.is_pgn_valid():
             index[TAG_OPENING] = [tags[TAG_OPENING]]
         elif tags[TAG_OPENING]:
             index[TAG_OPENING] = [tags[TAG_OPENING]]
@@ -808,7 +846,7 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
         
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game[1].
+        except the positions are held in self.value.collected_game._tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -818,8 +856,8 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
         dbname = datasource.dbname
         if dbname == REPERTOIRE_FILE_DEF:
             return [(self.key.recno, self.srvalue)]
-        elif dbname in self.value.collected_game[1]:
-            return [(self.value.collected_game[1][dbname], self.key.pack())]
+        elif dbname in self.value.collected_game._tags:
+            return [(self.value.collected_game._tags[dbname], self.key.pack())]
         else:
             return []
         

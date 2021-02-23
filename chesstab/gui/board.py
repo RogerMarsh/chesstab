@@ -34,42 +34,43 @@ import tkinter
 import tkinter.font
 
 from pgn_read.core.constants import (
-    NOPIECE,
-    WKING,
-    WQUEEN,
-    WROOK,
-    WBISHOP,
-    WKNIGHT,
-    WPAWN,
-    BKING,
-    BQUEEN,
-    BROOK,
-    BBISHOP,
-    BKNIGHT,
-    BPAWN,
-    WPIECES,
-    BPIECES,
+    FEN_WHITE_KING,
+    FEN_WHITE_QUEEN,
+    FEN_WHITE_ROOK,
+    FEN_WHITE_BISHOP,
+    FEN_WHITE_KNIGHT,
+    FEN_WHITE_PAWN,
+    FEN_BLACK_KING,
+    FEN_BLACK_QUEEN,
+    FEN_BLACK_ROOK,
+    FEN_BLACK_BISHOP,
+    FEN_BLACK_KNIGHT,
+    FEN_BLACK_PAWN,
+    FEN_WHITE_PIECES,
+    FEN_BLACK_PIECES,
     )
+from pgn_read.core.squares import Squares
 
 from .chessexception import ChessException
 from . import constants
+from ..core.constants import NOPIECE
 
 # Characters are black pieces on light square in the four Chess fonts, Cases
 # Lucena Merida and Motif, by Armando H Marroquin.
 # Fonts were downloaded from www.enpassant.dk/chess/fonteng.htm
 _pieces = {NOPIECE:'',
-           WKING:'l',
-           WQUEEN:'w',
-           WROOK:'t',
-           WBISHOP:'v',
-           WKNIGHT:'m',
-           WPAWN:'o',
-           BKING:'l',
-           BQUEEN:'w',
-           BROOK:'t',
-           BBISHOP:'v',
-           BKNIGHT:'m',
-           BPAWN:'o'}
+           FEN_WHITE_KING:'l',
+           FEN_WHITE_QUEEN:'w',
+           FEN_WHITE_ROOK:'t',
+           FEN_WHITE_BISHOP:'v',
+           FEN_WHITE_KNIGHT:'m',
+           FEN_WHITE_PAWN:'o',
+           FEN_BLACK_KING:'l',
+           FEN_BLACK_QUEEN:'w',
+           FEN_BLACK_ROOK:'t',
+           FEN_BLACK_BISHOP:'v',
+           FEN_BLACK_KNIGHT:'m',
+           FEN_BLACK_PAWN:'o'}
 
 
 class Board(ChessException):
@@ -154,9 +155,9 @@ class Board(ChessException):
         """Set font size to match board size and redraw pieces."""
         for i in self.squares:
             p = self.squares[i]
-            if p in WPIECES:
+            if p in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
-            elif p in BPIECES:
+            elif p in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
             elif p == NOPIECE:
                 if i % 2 == 0:
@@ -193,9 +194,9 @@ class Board(ChessException):
         sq = self.squares
         occupied = list(sq.keys())
         sq.clear()
-        for e, p in enumerate(board):
-            if p != NOPIECE:
-                sq[e] = p
+        squares = Squares.squares
+        for s, p in board.items():
+            sq[squares[s].number] = p.name
         for s in occupied:
             if s not in sq:
                 sq[s] = NOPIECE
@@ -252,9 +253,9 @@ class PartialBoard(Board):
         for i in self.squares:
             font = self.font
             p = self.squares[i]
-            if p in WPIECES:
+            if p in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
-            elif p in BPIECES:
+            elif p in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
             elif p == NOPIECE:
                 if i % 2 == 0:

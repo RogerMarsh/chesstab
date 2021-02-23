@@ -7,6 +7,7 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
+from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from .chessexception import ChessException
@@ -29,9 +30,11 @@ class ChessDBdeleteGame(ChessException, DataDelete):
         oldview.set_position_analysis_data_source()
         if ui is not None:
             ui.games_and_repertoires_in_toplevels.add(oldview)
-        oldview.pgn.get_first_game(oldobject.get_srvalue())
+        oldview.collected_game = next(
+            PGN(game_class=oldview.gameclass
+                ).read_games(oldobject.get_srvalue()))
         oldview.set_game()
-        tags = oldobject.value.collected_game[1]
+        tags = oldobject.value.collected_game._tags
         try:
             tt = '  '.join((
                 'Delete Game:',

@@ -48,20 +48,12 @@ new toplevel widget to allow deletion of games or repertoires from a database.
 import tkinter
 
 from pgn_read.core.constants import (
-    REPERTOIRE_GAME_TAGS,
     TAG_FEN,
-    UNKNOWN_RESULT,
-    END_TAG,
-    START_TAG,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
     )
-from pgn_read.core.parser import (
-    PGNDisplay,
-    PGNAnalysis,
-    get_fen_string,
-    )
+from pgn_read.core.parser import PGN
+from pgn_read.core.game import generate_fen_for_position
 
+from ..core.pgn import GameDisplayMoves, GameAnalysis
 from .board import Board
 from .score import Score, AnalysisScore
 from ..core import exporters
@@ -69,10 +61,21 @@ from .constants import (
     ANALYSIS_INDENT_TAG,
     ANALYSIS_PGN_TAGS_TAG,
     POSITION,
+    MOVETEXT_INDENT_TAG,
+    FORCED_INDENT_TAG,
+    MOVETEXT_MOVENUMBER_TAG,
     )
 from .eventspec import EventSpec
 from ..core.filespec import ANALYSIS_FILE_DEF
 from ..core.analysis import Analysis
+from ..core.constants import (
+    REPERTOIRE_GAME_TAGS,
+    UNKNOWN_RESULT,
+    END_TAG,
+    START_TAG,
+    BOARDSIDE,
+    NOPIECE,
+    )
 
 
 class Game(Score):
@@ -90,7 +93,7 @@ class Game(Score):
         tags_variations_comments_font=None,
         moves_played_in_game_font=None,
         boardfont=None,
-        pgnclass=PGNDisplay,
+        gameclass=GameDisplayMoves,
         ui=None,
         items_manager=None,
         itemgrid=None,
@@ -101,7 +104,7 @@ class Game(Score):
         tags_variations_comments_font - font for tags variations and comments
         moves_played_in_game_font - font for move played in game
         boardfont - font for pieces on board showing current position
-        pgnclass - the PGN parser class used to create the PGN data structure
+        gameclass - Game subclass for data structure created by PGN class
         ui - the container for game list and game display widgets.
 
         Create Frame in toplevel and add Canvas and Text.
@@ -125,7 +128,7 @@ class Game(Score):
             board,
             tags_variations_comments_font=tags_variations_comments_font,
             moves_played_in_game_font=moves_played_in_game_font,
-            pgnclass=pgnclass,
+            gameclass=gameclass,
             ui=ui,
             items_manager=items_manager,
             itemgrid=itemgrid,
@@ -136,11 +139,15 @@ class Game(Score):
             board,
             tags_variations_comments_font=tags_variations_comments_font,
             moves_played_in_game_font=moves_played_in_game_font,
-            pgnclass=PGNAnalysis,
+            gameclass=GameAnalysis,
             ui=ui,
             items_manager=items_manager,
             itemgrid=itemgrid,
             **ka)
+        self.score.tag_configure(FORCED_INDENT_TAG, lmargin1=20)
+        self.score.tag_configure(MOVETEXT_INDENT_TAG, lmargin2=20)
+        self.score.tag_configure(
+            MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
         self.analysis.score.configure(wrap=tkinter.WORD)
         self.analysis.score.tag_configure(ANALYSIS_INDENT_TAG, lmargin2=80)
         self.analysis.score.tag_configure(
@@ -265,9 +272,9 @@ class Game(Score):
         self.configure_game_widget()
         self.see_current_move()
         
-    def _analyse_position(self, position):
+    def _analyse_position(self, *position):
         """"""
-        pa = self.get_analysis(position)
+        pa = self.get_analysis(*position)
         self.refresh_analysis_widget_from_database(pa)
         if self.game_analysis_in_progress:
             if not self.ui.uci.uci.is_positions_pending_empty():
@@ -303,10 +310,10 @@ class Game(Score):
         if not super().set_game_board():
             return
         if self.current is None:
-            position = self.fen_position
+            position = self.fen_tag_tuple_square_piece_map()
         else:
-            position = self.positions[self.current]
-        self._analyse_position(position)
+            position = self.tagpositionmap[self.current]
+        self._analyse_position(*position)
         
     def set_game(self, starttoken=None, reset_undo=False):
         """Delegate to superclass method and queue analysis request to engines.
@@ -319,7 +326,8 @@ class Game(Score):
         
         """
         super().set_game(starttoken=starttoken, reset_undo=reset_undo)
-        self._analyse_position(self.fen_position)
+        self.score.tag_add(MOVETEXT_INDENT_TAG, '1.0', tkinter.END)
+        self._analyse_position(*self.fen_tag_tuple_square_piece_map())
 
     def analyse_game(self):
         """Analyse all positions in game using all active engines."""
@@ -327,8 +335,8 @@ class Game(Score):
         sas = self.analysis.score
         sga = self.get_analysis
         self.game_analysis_in_progress = True
-        for v in self.positions.values():
-            pa = sga(v)
+        for v in self.tagpositionmap.values():
+            pa = sga(*v)
             pa.variations.clear()
 
             # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3
@@ -422,6 +430,15 @@ class Game(Score):
             s.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.TRUE)
         self.see_current_move()
 
+    def toggle_game_move_numbers(self):
+        """Toggle display of move numbers in game score widgets."""
+        s = self.score
+        if int(s.tag_cget(MOVETEXT_MOVENUMBER_TAG, 'elide')):
+            s.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
+        else:
+            s.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.TRUE)
+        self.see_current_move()
+
     def refresh_analysis_widget_from_engine(self, analysis):
         """Refresh game widget with updated chess engine analysis."""
         u = self.ui.uci.uci
@@ -442,24 +459,25 @@ class Game(Score):
                                      END_TAG.join('"\n'))))
             new_text = ''.join(new_text) 
         a = self.analysis
-        pgn = a.pgn
         if new_text == a.analysis_text:
             return
 
         # Assume TypeError exception happens because analysis is being shown
         # for a position which is checkmate or stalemate.
         try:
-            pgn.get_first_game(new_text)
+            a.collected_game = next(
+                PGN(game_class=a.gameclass
+                    ).read_games(new_text))
         except TypeError:
             pass
 
         # Assume analysis movetext problems occur only if editing moves.
-        if not pgn.is_movetext_valid():
+        #if not pgn.is_movetext_valid():
+        if not a.collected_game.is_movetext_valid():
             return
         
         a.clear_score()
-        a.set_score()
-        a.analysis_text = new_text
+        a.set_score(new_text)
         try:
             fmog = a.select_first_move_of_game()
         except tkinter.TclError:
@@ -488,20 +506,20 @@ class Game(Score):
             new_text == self.analysis_text
 
         a = self.analysis
-        pgn = a.pgn
         if new_text == a.analysis_text:
             return
 
         # Assume TypeError exception happens because analysis is being shown
         # for a position which is checkmate or stalemate.
         try:
-            pgn.get_first_game(new_text)
+            a.collected_game = next(
+                PGN(game_class=a.gameclass
+                    ).read_games(new_text))
         except TypeError:
             pass
         
         a.clear_score()
-        a.set_score()
-        a.analysis_text = new_text
+        a.set_score(new_text)
         try:
             fmog = a.select_first_move_of_game()
         except tkinter.TclError:
@@ -645,13 +663,19 @@ class Game(Score):
             return
         self.analysis_data_source = self.ui.make_position_analysis_data_source()
         
-    def get_analysis(self, position):
+    def get_analysis(self, *a):
         """Return database analysis for position or empty position Analysis."""
         if self.analysis_data_source:
             return self.analysis_data_source.get_position_analysis(
-                get_fen_string(position))
+                self.generate_fen_for_position(*a))
         else:
-            return Analysis(position=get_fen_string(position))
+            return Analysis(position=self.generate_fen_for_position(*a))
+
+    @staticmethod
+    def generate_fen_for_position(squares, *a):
+        for s, p in squares.items():
+            p.set_square(s)
+        return generate_fen_for_position(squares.values(), *a)
 
 
 class Repertoire(Game):
@@ -660,26 +684,17 @@ class Repertoire(Game):
     """
     # Override methods referring to Seven Tag Roster
 
-    def __init__(self, pgnclass=PGNDisplay, **ka):
+    tags_displayed_last = REPERTOIRE_GAME_TAGS
+
+    def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend to display repertoire game.
 
-        pgnclass - the PGN parser class used to create the PGN data structure
+        gameclass - Game subclass for data structure created by PGN class
 
         """
-        super(Repertoire, self).__init__(pgnclass=pgnclass, **ka)
+        super(Repertoire, self).__init__(gameclass=gameclass, **ka)
         self.viewmode_database_popup.delete(
             EventSpec.export_archive_pgn_from_game[1])
-
-    def get_tags_display_order(self):
-        str_tags = []
-        other_tags = []
-        for t in self.pgn.collected_game[0]:
-            tn = t.group(IFG_TAG_SYMBOL)
-            if tn in REPERTOIRE_GAME_TAGS:
-                other_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-            else:
-                str_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-        return other_tags + str_tags
         
     def bind_for_viewmode(self):
         """Set keyboard bindings and popup menu for traversing moves."""

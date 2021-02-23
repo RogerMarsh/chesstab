@@ -30,17 +30,13 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
 
     header_specification = [
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text='Description'),
+         WIDGET_CONFIGURE: dict(
+             text='Description', anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='pp'),
          ROW: 0,
          },
-        #{WIDGET: tkinter.Label,
-        # WIDGET_CONFIGURE: dict(text='Rule'),
-        # GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-        # GRID_COLUMNCONFIGURE: dict(weight=1, uniform='pp'),
-        # ROW: 0,
-        # },
         ]
 
     def __init__(self, database=None, ui=None):
@@ -55,15 +51,14 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         self.set_database(database)
         self.row_specification = [
             {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(font=constants.LISTS_OF_GAMES_FONT),
+             WIDGET_CONFIGURE: dict(
+                 anchor=tkinter.W,
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
              ROW: 0,
              },
-            #{WIDGET: tkinter.Label,
-            # WIDGET_CONFIGURE: dict(font=constants.LISTS_OF_GAMES_FONT),
-            # GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-            # ROW: 0,
-            # },
             ]
         
     def show_row(self, dialog, oldobject):

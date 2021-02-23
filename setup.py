@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     setup(
         name='chesstab',
-        version='4.2',
+        version='4.3',
         description='Database for chess games',
         author='Roger Marsh',
         author_email='roger.marsh@solentware.co.uk',
@@ -44,7 +44,7 @@ if __name__ == '__main__':
             'solentware-base==4.1.2',
             'chessql==2.0',
             'solentware-grid==2.0',
-            'pgn-read==1.3.2',
+            'pgn-read==2.0',
             'solentware-misc==1.2',
             'uci-net==1.2',
             ],
@@ -52,7 +52,7 @@ if __name__ == '__main__':
             'http://solentware.co.uk/files/solentware-base-4.1.2.tar.gz',
             'http://solentware.co.uk/files/chessql-2.0.tar.gz',
             'http://solentware.co.uk/files/solentware-grid-2.0.tar.gz',
-            'http://solentware.co.uk/files/pgn-read-1.3.2.tar.gz',
+            'http://solentware.co.uk/files/pgn-read-2.0.tar.gz',
             'http://solentware.co.uk/files/solentware-misc-1.2.tar.gz',
             'http://solentware.co.uk/files/uci-net-1.2.tar.gz',
             ],

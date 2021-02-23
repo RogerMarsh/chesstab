@@ -7,8 +7,9 @@
 
 import os
 
-from pgn_read.core.parser import (PGNDisplay, PGNRepertoireDisplay)
+from pgn_read.core.parser import PGN
 
+from .pgn import GameDisplayMoves, GameRepertoireDisplayMoves
 from . import chessrecord, filespec
 from .cqlstatement import CQLStatement
 
@@ -54,10 +55,12 @@ def export_games_as_pgn(database, filename):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
                     gamesout.write(gfd[2])
+                    gamesout.write('\n')
                     gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
@@ -65,14 +68,17 @@ def export_games_as_pgn(database, filename):
                 rr.load_record(g)
             except StopIteration:
                 break
-            if rr.value.is_pgn_valid():
-                games_for_date.append(rr.value.get_export_pgn_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games_for_date.append(
+                    rr.value.collected_game.get_export_pgn_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
             gamesout.write(gfd[2])
+            gamesout.write('\n')
             gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -97,10 +103,12 @@ def export_games_as_rav_pgn(database, filename):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
                     gamesout.write(gfd[2])
+                    gamesout.write('\n')
                     gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
@@ -108,14 +116,17 @@ def export_games_as_rav_pgn(database, filename):
                 rr.load_record(g)
             except StopIteration:
                 break
-            if rr.value.is_pgn_valid():
-                games_for_date.append(rr.value.get_export_pgn_rav_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games_for_date.append(
+                    rr.value.collected_game.get_export_pgn_rav_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
             gamesout.write(gfd[2])
+            gamesout.write('\n')
             gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -137,9 +148,10 @@ def export_games_as_archive_pgn(database, filename):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
-                    gamesout.write(''.join(gfd[1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
+                    gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
@@ -147,13 +159,15 @@ def export_games_as_archive_pgn(database, filename):
                 rr.load_record(g)
             except StopIteration:
                 break
-            if rr.value.is_pgn_valid():
-                games_for_date.append(rr.value.get_archive_pgn_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games_for_date.append(
+                    rr.value.collected_game.get_archive_pgn_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
-            gamesout.write(''.join(gfd[1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
+            gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -175,8 +189,9 @@ def export_repertoires_as_pgn(database, filename):
         r = cursor.first()
         while r:
             rr.load_record(r)
-            if rr.value.is_pgn_valid():
-                gamesout.write(rr.value.get_export_repertoire_text())
+            if rr.value.collected_game.is_pgn_valid():
+                gamesout.write(
+                    rr.value.collected_game.get_export_repertoire_text())
             r = cursor.next()
     finally:
         cursor.close()
@@ -199,8 +214,9 @@ def export_repertoires_as_rav_pgn(database, filename):
         r = cursor.first()
         while r:
             rr.load_record(r)
-            if rr.value.is_pgn_valid():
-                gamesout.write(rr.value.get_export_repertoire_rav_text())
+            if rr.value.collected_game.is_pgn_valid():
+                gamesout.write(
+                    rr.value.collected_game.get_export_repertoire_rav_text())
             r = cursor.next()
     finally:
         cursor.close()
@@ -273,8 +289,8 @@ def export_grid_games_as_pgn(grid, filename):
             rr.load_record(
                 database.get_primary_record(filespec.GAMES_FILE_DEF,
                                             b[0 if primary else 1]))
-            if rr.value.is_pgn_valid():
-                games.append(rr.value.get_export_pgn_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games.append(rr.value.collected_game.get_export_pgn_elements())
     elif grid.partial:
         cursor = grid.get_cursor()
         try:
@@ -290,8 +306,9 @@ def export_grid_games_as_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_export_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_export_pgn_elements())
                 r = cursor.next()
         finally:
             cursor.close()
@@ -305,17 +322,20 @@ def export_grid_games_as_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_export_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_export_pgn_elements())
         finally:
             cursor.close()
     gamesout = open(filename, 'w')
     try:
         for g in sorted(games):
-            gamesout.write(''.join(g[0][1]))
-            gamesout.write(''.join(g[0][-1]))
-            gamesout.write(''.join(g[2]))
-            gamesout.write(''.join(g[1]))
+            gamesout.write(g[0])
+            gamesout.write('\n')
+            gamesout.write(g[2])
+            gamesout.write('\n')
+            gamesout.write(g[1])
+            gamesout.write('\n\n')
     finally:
         gamesout.close()
     return
@@ -342,8 +362,9 @@ def export_grid_games_as_rav_pgn(grid, filename):
             rr.load_record(
                 database.get_primary_record(filespec.GAMES_FILE_DEF,
                                             b[0 if primary else 1]))
-            if rr.value.is_pgn_valid():
-                games.append(rr.value.get_export_pgn_rav_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games.append(
+                    rr.value.collected_game.get_export_pgn_rav_elements())
     elif grid.partial:
         cursor = grid.get_cursor()
         try:
@@ -359,8 +380,9 @@ def export_grid_games_as_rav_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_export_pgn_rav_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_export_pgn_rav_elements())
                 r = cursor.next()
         finally:
             cursor.close()
@@ -374,17 +396,20 @@ def export_grid_games_as_rav_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_export_pgn_rav_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_export_pgn_rav_elements())
         finally:
             cursor.close()
     gamesout = open(filename, 'w')
     try:
         for g in sorted(games):
-            gamesout.write(''.join(g[0][1]))
-            gamesout.write(''.join(g[0][-1]))
-            gamesout.write(''.join(g[2]))
-            gamesout.write(''.join(g[1]))
+            gamesout.write(g[0])
+            gamesout.write('\n')
+            gamesout.write(g[2])
+            gamesout.write('\n')
+            gamesout.write(g[1])
+            gamesout.write('\n\n')
     finally:
         gamesout.close()
     return
@@ -410,8 +435,8 @@ def export_grid_games_as_archive_pgn(grid, filename):
             rr.load_record(
                 database.get_primary_record(filespec.GAMES_FILE_DEF,
                                             b[0 if primary else 1]))
-            if rr.value.is_pgn_valid():
-                games.append(rr.value.get_archive_pgn_elements())
+            if rr.value.collected_game.is_pgn_valid():
+                games.append(rr.value.collected_game.get_archive_pgn_elements())
     elif grid.partial:
         cursor = grid.get_cursor()
         try:
@@ -427,8 +452,9 @@ def export_grid_games_as_archive_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_archive_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_archive_pgn_elements())
                 r = cursor.next()
         finally:
             cursor.close()
@@ -442,16 +468,18 @@ def export_grid_games_as_archive_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(filespec.GAMES_FILE_DEF,
                                                 r[0 if primary else 1]))
-                if rr.value.is_pgn_valid():
-                    games.append(rr.value.get_archive_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games.append(
+                        rr.value.collected_game.get_archive_pgn_elements())
         finally:
             cursor.close()
     gamesout = open(filename, 'w')
     try:
         for g in sorted(games):
-            gamesout.write(''.join(g[0][1]))
-            gamesout.write(''.join(g[0][-1]))
-            gamesout.write(''.join(g[1]))
+            gamesout.write(g[0])
+            gamesout.write('\n')
+            gamesout.write(g[1])
+            gamesout.write('\n\n')
     finally:
         gamesout.close()
     return
@@ -477,8 +505,9 @@ def export_grid_repertoires_as_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(
                         filespec.REPERTOIRE_FILE_DEF, b[0]))
-                if rr.value.is_pgn_valid():
-                    gamesout.write(rr.value.get_export_repertoire_text())
+                if rr.value.collected_game.is_pgn_valid():
+                    gamesout.write(
+                        rr.value.collected_game.get_export_repertoire_text())
             gamesout = open(filename, 'w')
         finally:
             gamesout.close()
@@ -508,8 +537,10 @@ def export_grid_repertoires_as_rav_pgn(grid, filename):
                 rr.load_record(
                     database.get_primary_record(
                         filespec.REPERTOIRE_FILE_DEF, b[0]))
-                if rr.value.is_pgn_valid():
-                    gamesout.write(rr.value.get_export_repertoire_rav_text())
+                if rr.value.collected_game.is_pgn_valid():
+                    gamesout.write(
+                        rr.value.collected_game.get_export_repertoire_rav_text(
+                            ))
             gamesout = open(filename, 'w')
         finally:
             gamesout.close()
@@ -576,23 +607,28 @@ def export_partial_games_as_pgn(database, filename, partialset):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
                     gamesout.write(gfd[2])
+                    gamesout.write('\n')
                     gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             if partialset[r[1]]:
                 g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
                 rr.load_record(g)
-                if rr.value.is_pgn_valid():
-                    games_for_date.append(rr.value.get_export_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games_for_date.append(
+                        rr.value.collected_game.get_export_pgn_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
             gamesout.write(gfd[2])
+            gamesout.write('\n')
             gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -615,24 +651,28 @@ def export_partial_games_as_rav_pgn(database, filename, partialset):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
                     gamesout.write(gfd[2])
+                    gamesout.write('\n')
                     gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             if partialset[r[1]]:
                 g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
                 rr.load_record(g)
-                if rr.value.is_pgn_valid():
+                if rr.value.collected_game.is_pgn_valid():
                     games_for_date.append(
-                        rr.value.get_export_pgn_rav_elements())
+                        rr.value.collected_game.get_export_pgn_rav_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
             gamesout.write(gfd[2])
+            gamesout.write('\n')
             gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -655,21 +695,24 @@ def export_partial_games_as_archive_pgn(database, filename, partialset):
         while r:
             if r[0] != prev_date:
                 for gfd in sorted(games_for_date):
-                    gamesout.write(''.join(gfd[0][1]))
-                    gamesout.write(''.join(gfd[0][-1]))
-                    gamesout.write(''.join(gfd[1]))
+                    gamesout.write(gfd[0])
+                    gamesout.write('\n')
+                    gamesout.write(gfd[1])
+                    gamesout.write('\n\n')
                 prev_date = r[0]
                 games_for_date = []
             if partialset[r[1]]:
                 g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
                 rr.load_record(g)
-                if rr.value.is_pgn_valid():
-                    games_for_date.append(rr.value.get_archive_pgn_elements())
+                if rr.value.collected_game.is_pgn_valid():
+                    games_for_date.append(
+                        rr.value.collected_game.get_archive_pgn_elements())
             r = cursor.next()
         for gfd in sorted(games_for_date):
-            gamesout.write(''.join(gfd[0][1]))
-            gamesout.write(''.join(gfd[0][-1]))
-            gamesout.write(''.join(gfd[1]))
+            gamesout.write(gfd[0])
+            gamesout.write('\n')
+            gamesout.write(gfd[1])
+            gamesout.write('\n\n')
     finally:
         cursor.close()
         gamesout.close()
@@ -679,16 +722,16 @@ def export_single_game_as_archive_pgn(game, filename):
     """Export game to PGN file in reduced export format."""
     if filename is None:
         return
-    pgn = PGNDisplay()
-    pgn.get_first_game(game)
-    if not pgn.is_pgn_valid():
+    collected_game = next(PGN(game_class=GameDisplayMoves).read_games(game))
+    if not collected_game.is_pgn_valid():
         return
-    g = pgn.get_archive_pgn_elements()
+    g = collected_game.get_archive_pgn_elements()
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(''.join(g[0][1]))
-        gamesout.write(''.join(g[0][-1]))
+        gamesout.write(g[0])
+        gamesout.write('\n')
         gamesout.write(g[1])
+        gamesout.write('\n\n')
     finally:
         gamesout.close()
 
@@ -698,17 +741,18 @@ def export_single_game_as_pgn(game, filename):
     excluding recersive annotation variations."""
     if filename is None:
         return
-    pgn = PGNDisplay()
-    pgn.get_first_game(game)
-    if not pgn.is_pgn_valid():
+    collected_game = next(PGN(game_class=GameDisplayMoves).read_games(game))
+    if not collected_game.is_pgn_valid():
         return
-    g = pgn.get_export_pgn_elements()
+    g = collected_game.get_export_pgn_elements()
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(''.join(g[0][1]))
-        gamesout.write(''.join(g[0][-1]))
+        gamesout.write(g[0])
+        gamesout.write('\n')
         gamesout.write(g[2])
+        gamesout.write('\n')
         gamesout.write(g[1])
+        gamesout.write('\n\n')
     finally:
         gamesout.close()
 
@@ -718,17 +762,18 @@ def export_single_game_as_rav_pgn(game, filename):
     variations."""
     if filename is None:
         return
-    pgn = PGNDisplay()
-    pgn.get_first_game(game)
-    if not pgn.is_pgn_valid():
+    collected_game = next(PGN(game_class=GameDisplayMoves).read_games(game))
+    if not collected_game.is_pgn_valid():
         return
-    g = pgn.get_export_pgn_rav_elements()
+    g = collected_game.get_export_pgn_rav_elements()
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(''.join(g[0][1]))
-        gamesout.write(''.join(g[0][-1]))
+        gamesout.write(g[0])
+        gamesout.write('\n')
         gamesout.write(g[2])
+        gamesout.write('\n')
         gamesout.write(g[1])
+        gamesout.write('\n\n')
     finally:
         gamesout.close()
 
@@ -737,13 +782,13 @@ def export_single_repertoire_as_pgn(repertoire, filename):
     """Export repertoire like PGN to textfile."""
     if filename is None:
         return
-    pgn = PGNRepertoireDisplay()
-    pgn.get_first_game(repertoire)
-    if not pgn.is_pgn_valid():
+    collected_game = next(
+        PGN(game_class=GameRepertoireDisplayMoves).read_games(repertoire))
+    if not collected_game.is_pgn_valid():
         return
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(pgn.get_export_repertoire_text())
+        gamesout.write(collected_game.get_export_repertoire_text())
     finally:
         gamesout.close()
 
@@ -752,13 +797,13 @@ def export_single_repertoire_as_rav_pgn(repertoire, filename):
     """Export repertoire like RAV PGN to textfile."""
     if filename is None:
         return
-    pgn = PGNRepertoireDisplay()
-    pgn.get_first_game(repertoire)
-    if not pgn.is_pgn_valid():
+    collected_game = next(
+        PGN(game_class=GameRepertoireDisplayMoves).read_games(repertoire))
+    if not collected_game.is_pgn_valid():
         return
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(pgn.get_export_repertoire_rav_text())
+        gamesout.write(collected_game.get_export_repertoire_rav_text())
     finally:
         gamesout.close()
 
@@ -767,12 +812,12 @@ def export_single_position(partialposition, filename):
     """Export CQL statement to textfile."""
     if filename is None:
         return
-    pgn = CQLStatement()
-    pgn.process_statement(partialposition)
-    if not pgn.is_statement():
+    sp = CQLStatement()
+    sp.process_statement(partialposition)
+    if not sp.is_statement():
         return
     gamesout = open(filename, 'w')
     try:
-        gamesout.write(pgn.get_name_position_text())
+        gamesout.write(sp.get_name_position_text())
     finally:
         gamesout.close()

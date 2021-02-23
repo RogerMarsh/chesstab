@@ -290,7 +290,7 @@ class GameDisplay(ChessException, Display):
                 message='Add game to database abandonned.')
             return
         updater = self.game_updater(repr(self.score.get('1.0', tkinter.END)))
-        if not updater.value.is_pgn_valid():
+        if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Insert Game',
                 message=''.join(
@@ -303,9 +303,9 @@ class GameDisplay(ChessException, Display):
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        updater.key.recno = None#0
+        updater.key.recno = None
         editor.put()
-        tags = updater.value.collected_game[1]
+        tags = updater.value.collected_game._tags
         dialogues.showinfo(
             title='Insert Game',
             message=''.join(('Game "',
@@ -389,9 +389,9 @@ class GameDisplay(ChessException, Display):
             self.analysis.clear_current_range()
             self.analysis.clear_moves_played_in_variation_colouring_tag()
             if cuigs.current is None:
-                cuigs.board.set_board(cuigs.fen_position[0])
+                cuigs.board.set_board(cuigs.fen_tag_square_piece_map())
             else:
-                cuigs.board.set_board(cuigs.positions[cuigs.current][0])
+                cuigs.board.set_board(cuigs.tagpositionmap[cuigs.current][0])
             cuigs.set_game_list()
             cuigs.analysis.bind_score_pointer_for_board_navigation(False)
             cuigs.bind_score_pointer_for_board_navigation(True)
@@ -536,7 +536,7 @@ class DatabaseGameDisplay(GameDisplay, Game, DataNotify):
         self.__bind_on()
 
     def __bind_on(self):
-        """Common to bind_on() and initialize_bindings()"""
+        """Common to bind_on() and initialize_bindings()."""
         for sequence, function in (
             (EventSpec.databasegamedisplay_insert,
              self.insert_game_database),
@@ -596,7 +596,7 @@ class DatabaseGameDisplay(GameDisplay, Game, DataNotify):
         editor.set_data_source(datasource, editor.on_data_change)
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
         editor.delete()
-        tags = original.value.collected_game[1]
+        tags = original.value.collected_game._tags
         dialogues.showinfo(
             title='Delete Game',
             message=''.join(('Game "',
@@ -684,7 +684,7 @@ class DatabaseGameInsert(GameDisplay, GameEdit, DataNotify):
         self.__bind_on()
 
     def __bind_on(self):
-        """Common to bind_on() and initialize_bindings()"""
+        """Common to bind_on() and initialize_bindings()."""
         for sequence, function in (
             (EventSpec.databasegameedit_insert, self.insert_game_database),
             (EventSpec.databasegameedit_dismiss, self.delete_item_view),
@@ -738,7 +738,7 @@ class DatabaseGameEdit(DatabaseGameInsert):
         self.__bind_on()
 
     def __bind_on(self):
-        """Common to bind_on() and initialize_bindings()"""
+        """Common to bind_on() and initialize_bindings()."""
         for sequence, function in (
             (EventSpec.databasegameedit_update, self.update_game_database),
             ):
@@ -797,7 +797,7 @@ class DatabaseGameEdit(DatabaseGameInsert):
         editor = RecordEdit(updater, original)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
-        if not updater.value.is_pgn_valid():
+        if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Edit Game',
                 message=''.join(
@@ -814,7 +814,7 @@ class DatabaseGameEdit(DatabaseGameInsert):
             newkey = self.ui.game_items.adjust_edited_item(updater)
             if newkey:
                 self.ui.set_properties_on_all_game_grids(newkey)
-        tags = original.value.collected_game[1]
+        tags = original.value.collected_game._tags
         dialogues.showinfo(
             title='Edit Game',
             message=''.join(('Game "',
@@ -884,9 +884,9 @@ class GameDialogue(ChessException):
         self.analysis.clear_current_range()
         self.analysis.clear_moves_played_in_variation_colouring_tag()
         if self.current is None:
-            self.board.set_board(self.fen_position[0])
+            self.board.set_board(self.fen_tag_square_piece_map())
         else:
-            self.board.set_board(self.positions[self.current][0])
+            self.board.set_board(self.tagpositionmap[self.current][0])
         self.set_game_list()
         self.analysis.bind_score_pointer_for_board_navigation(False)
         self.bind_score_pointer_for_board_navigation(True)

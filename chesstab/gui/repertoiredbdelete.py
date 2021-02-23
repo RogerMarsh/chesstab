@@ -7,8 +7,9 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from pgn_read.core.constants import TAG_OPENING
+from pgn_read.core.parser import PGN
 
+from ..core.constants import TAG_OPENING
 from .chessexception import ChessException
 from .repertoiredisplay import DialogueRepertoireDisplay
 
@@ -29,13 +30,15 @@ class ChessDBdeleteRepertoire(ChessException, DataDelete):
         oldview.set_position_analysis_data_source()
         if ui is not None:
             ui.games_and_repertoires_in_toplevels.add(oldview)
-        oldview.pgn.get_first_game(oldobject.get_srvalue())
+        oldview.collected_game = next(
+            PGN(game_class=oldview.gameclass
+                ).read_games(oldobject.get_srvalue()))
         oldobject.value.set_game_source('No opening name')
         oldview.set_game()
         try:
             tt = '  '.join((
                 'Delete Repertoire:',
-                oldobject.value.collected_game[1][TAG_OPENING],
+                oldobject.value.collected_game._tags[TAG_OPENING],
                 ))
         except TypeError:
             tt = 'Delete Repertoire - name unknown or invalid'

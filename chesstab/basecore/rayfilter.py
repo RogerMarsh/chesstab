@@ -9,16 +9,12 @@ Examples of ray filters are 'ray ( Q n k )' and 'ray ( Q[a4,c3] n kh1-8 )'.
 RayFilter expands the list of square descriptions into the particular rays,
 horizontal, vertical, and diagonal, which need to be evaluated.
 
-pgn_read.core.constants.GAPS provides the lists of squares between pairs of
-squares from which the rays are calculated.
-
 """
 from chessql.core import constants
 from chessql.core import piecedesignator
 from chessql.core.cql import Token
 
-from pgn_read.core.constants import MOVE_NUMBER_KEYS
-
+from ..core.constants import MOVE_NUMBER_KEYS
 from ..core import filespec
 
 # Longest line is eight squares.  Two end points give a maximum of six internal

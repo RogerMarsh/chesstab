@@ -8,15 +8,21 @@
 import sys
 
 from pgn_read.core.constants import (
-    TAG_FEN,
+    FEN_WHITE_ACTIVE,
+    FEN_BLACK_ACTIVE,
+    )
+
+from .constants import (
     UNKNOWN_RESULT,
-    END_TAG,
-    START_TAG,
     START_RAV,
     END_RAV,
     START_COMMENT,
     END_COMMENT,
+    START_EOL_COMMENT,
+    FEN_CONTEXT,
     )
+
+_EOL_COMMENT_CONTEXT = (START_EOL_COMMENT, '\n')
 
 
 class Analysis(object):
@@ -27,7 +33,7 @@ class Analysis(object):
     """
 
     def __init__(self, position=None):
-        """"""
+        """Note position to be analysed."""
         super().__init__()
 
         # Position encoded as index value for position index.
@@ -57,6 +63,8 @@ class Analysis(object):
         for k, v in var.items():
             var[k] = [None] * len(v)
 
+    # Rewrite of pgn_read in 2020 forced inclusion of SetUp tag in analysis
+    # PGN text: probably best to find a way of avoiding this.
     def translate_analysis_to_pgn(self, move_played=''):
         """Translate UCI chess engine variation output to PGN."""
 
@@ -68,8 +76,8 @@ class Analysis(object):
             move_played = ''.join(
                 (move_played,
                  ' ;Move played',
-                 ' by white' if to_move == 'w' else
-                 ' by black' if to_move == 'b' else
+                 ' by white' if to_move == FEN_WHITE_ACTIVE else
+                 ' by black' if to_move == FEN_BLACK_ACTIVE else
                  '',
                  '\n'))
         variations = self.variations
@@ -106,7 +114,7 @@ class Analysis(object):
 
             # Keep going as normal for non-str engine_name (should not happen).
             #new_text.append(engine_name.join((';', '\n')))
-            new_text.append(str(engine_name).join((';', '\n')))
+            new_text.append(str(engine_name).join(_EOL_COMMENT_CONTEXT))
 
             depth, multipv = [str(s) for s in scale[engine_name]]
             lines = [''.join((' '.join((START_COMMENT,
@@ -122,25 +130,23 @@ class Analysis(object):
             if not move_played:
                 move_played = ''.join(
                     (analysis[0][1].split()[0],
-                     ' ;First variation',
-                     ', white to move' if to_move == 'w' else
-                     ', black to move' if to_move == 'b' else
-                     '',
-                     '\n'))
+                     ' ',
+                     ''.join((
+                         'First variation',
+                         ', white to move' if to_move == FEN_WHITE_ACTIVE else
+                         ', black to move' if to_move == FEN_BLACK_ACTIVE else
+                         '')).join(_EOL_COMMENT_CONTEXT),
+                     ))
         new_text.append(UNKNOWN_RESULT)
         if move_played:
             new_text.insert(0, move_played)
-            new_text.insert(0,
-                            ''.join(
-                                (START_TAG, TAG_FEN, '"',
-                                 self.position,
-                                 END_TAG.join('"\n'))))
+            new_text.insert(0, self.position.join(FEN_CONTEXT))
         return ''.join(new_text)
 
     def _evalution_score(self, val, to_move):
         """Normalize to white advantage is positive and black negative."""
         try:
             return '{:+.2f}'.format(
-                (int(val) if to_move != 'b' else -int(val)) / 100)
+                (int(val) if to_move != FEN_BLACK_ACTIVE else -int(val)) / 100)
         except:
             return '?.??'

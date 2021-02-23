@@ -106,10 +106,6 @@ class EventSpec(object):
         '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
     export_pgn_from_position_grid = (
         '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-    cycle_up_one_repeat_in_position_grid = (
-        '<Shift-KeyPress-Up>', 'Previous Transposition', 'Shift Up')
-    cycle_down_one_repeat_in_position_grid = (
-        '<Shift-KeyPress-Down>', 'Next Transposition', 'Shift Down')
 
     # TagRosterGrid
     game_grid_to_repertoire_grid = (

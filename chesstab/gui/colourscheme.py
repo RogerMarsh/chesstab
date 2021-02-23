@@ -10,8 +10,6 @@ import tkinter.font
 
 from solentware_misc.gui.colourslider import ColourSlider
 
-from pgn_read.core.parser import PGNDisplay
-
 from .chessexception import ChessException
 from . import constants, fonts, options
 from . import game, board

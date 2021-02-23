@@ -31,11 +31,13 @@ from chessql.core.constants import (
     )
 
 from pgn_read.core.constants import (
-    MAP_PGN_SQUARE_NAME_TO_FEN_ORDER,
-    MOVE_NUMBER_KEYS,
-    WKING,
+    FEN_WHITE_KING,
     )
+from pgn_read.core.squares import Squares
 
+from ..core.constants import (
+    MOVE_NUMBER_KEYS,
+    )
 from .rayfilter import RayFilter, move_number_str
 from ..core.filespec import (
     PIECESQUAREMOVE_FIELD_DEF,
@@ -245,6 +247,10 @@ class ChessQLGames:
         # Hand the list of games over to the user interface.
         self.set_recordset(games)
         
+    # Not called anywhere.
+    # Introduced at revision 3755 as part of 'on' filter implementation which
+    # has been, at least temporarely, removed.
+    # Called _pieces_matching_filter then.
     def pieces_matching_filter(self, filter_, initialpieces):
         """Return squares matching filters in CQL statement.
 
@@ -273,14 +279,23 @@ class ChessQLGames:
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
                     continue
+
+                # This cannot be correct given pieces initialisation, or
+                # more likely pieces initialisation is not correct too.
+                # However pieces_matching_filter is not called anywhere!
                 pieces.union(
                     self.pieces_matching_filter(n, initialpieces))
+
             return pieces
         else:
             if filter_.tokendef is Token.PIECE_DESIGNATOR:
                 return self.pieces_matching_piece_designator(filter_)
             return initialpieces
         
+    # Not called anywhere.
+    # Introduced at revision 3755 as part of 'on' filter implementation which
+    # has been, at least temporarely, removed.
+    # Called _squares_matching_filter then.
     def squares_matching_filter(self, filter_, initialsquares):
         """Return squares matching filters in CQL statement.
 
@@ -305,12 +320,17 @@ class ChessQLGames:
                     return squares
             return squares
         elif filter_.tokendef in _OR_FILTERS:
-            squares = set(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER)
+            squares = set(Squares.squares)
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
                     continue
+
+                # This cannot be correct given squares initialisation, or
+                # more likely squares initialisation is not correct too.
+                # However squares_matching_filter is not called anywhere!
                 squares.union(
                     self.squares_matching_filter(n, initialsquares))
+
             return squares
         else:
             if filter_.tokendef is Token.PIECE_DESIGNATOR:
@@ -351,7 +371,7 @@ class ChessQLGames:
         squares = set()
         for ps in filter_.data.designator_set:
             if len(ps) == 1:
-                squares.update(MAP_PGN_SQUARE_NAME_TO_FEN_ORDER)
+                squares.update(Squares.squares)
             else:
                 squares.add(ps[1:])
         return squares
@@ -538,7 +558,8 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
             # any of 'A', 'a', 'K', 'k', and '_', are in designator set.
             if ps[0] in ALL_GAMES_MATCH_PIECE_DESIGNATORS:
                 return ' '.join(
-                    (pmfield, EQ, ''.join((mns, variation_code, WKING))))
+                    (pmfield, EQ, ''.join((mns, variation_code,
+                                           FEN_WHITE_KING))))
             
             pmds.add(''.join((mns, variation_code, ps[0])))
             continue

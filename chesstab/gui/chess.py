@@ -34,6 +34,8 @@ from solentware_base import modulequery, do_deferred_updates
 from solentware_misc.api import callthreadqueue
 from solentware_misc.gui.textentry import get_text_modal
 
+from pgn_read.core.parser import PGN
+
 from .gamerow import make_ChessDBrowGame
 from .cqlrow import make_ChessDBrowCQL
 from .repertoirerow import make_ChessDBrowRepertoire
@@ -370,7 +372,7 @@ class Chess(ChessException):
                 command=self.try_command(self.repertoire_hide, menu5))
             menu5.add_separator()
 
-            menu6 = tkinter.Menu(menubar, name='fonts', tearoff=False)
+            menu6 = tkinter.Menu(menubar, name='tools', tearoff=False)
             menus.append(menu6)
             menubar.add_cascade(label='Tools', menu=menu6, underline=0)
             menu6.add_separator()
@@ -404,6 +406,11 @@ class Chess(ChessException):
                 label='Show Game Scrollbars',
                 underline=2,
                 command=self.try_command(self.show_scrollbars, menu6))
+            menu6.add_separator()
+            menu6.add_command(
+                label='Toggle Game Move Numbers',
+                underline=12,
+                command=self.try_command(self.toggle_game_move_numbers, menu6))
             menu6.add_separator()
             menu6.add_command(
                 label='Toggle Analysis Fen',
@@ -907,9 +914,9 @@ class Chess(ChessException):
             items_manager=self.ui.game_items,
             itemgrid=self.ui.game_games)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(
+        game.collected_game = next(PGN(game_class=game.gameclass).read_games(
             ''.join((constants.EMPTY_SEVEN_TAG_ROSTER,
-                     constants.UNKNOWN_RESULT)))
+                     constants.UNKNOWN_RESULT))))
         game.set_game()
         self.ui.add_game_to_display(game)
         try:
@@ -956,9 +963,9 @@ class Chess(ChessException):
             items_manager=self.ui.repertoire_items,
             itemgrid=self.ui.repertoire_games)
         game.set_position_analysis_data_source()
-        game.pgn.get_first_game(
+        game.collected_game = next(PGN(game_class=game.gameclass).read_games(
             ''.join((constants.EMPTY_REPERTOIRE_GAME,
-                     constants.UNKNOWN_RESULT)))
+                     constants.UNKNOWN_RESULT))))
         game.set_game()
         self.ui.add_repertoire_to_display(game)
         try:
@@ -1117,6 +1124,21 @@ class Chess(ChessException):
             for g in games:
                 try:
                     g.toggle_analysis_fen()
+                except tkinter.TclError:
+                    exceptions.append((g, games))
+        for g, games in exceptions:
+            games.remove(g)
+
+    def toggle_game_move_numbers(self):
+        """Toggle display of move numbers in game score widgets."""
+        exceptions = []
+        for games in (self.ui.game_items.order,
+                      self.ui.repertoire_items.order,
+                      self.ui.games_and_repertoires_in_toplevels,
+                      ):
+            for g in games:
+                try:
+                    g.toggle_game_move_numbers()
                 except tkinter.TclError:
                     exceptions.append((g, games))
         for g, games in exceptions:

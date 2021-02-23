@@ -14,27 +14,17 @@ import tkinter
 
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
-    IFG_PIECE_SQUARE,
-    IFG_PAWN_SQUARE,
-    IFG_PIECE_CAPTURE_SQUARE,
-    IFG_PAWN_CAPTURE_SQUARE,
-    IFG_PIECE_CHOICE_SQUARE,
-    IFG_PAWN_PROMOTE_SQUARE,
-    IFG_CASTLES,
-    IFG_START_RAV,
-    IFG_END_RAV,
-    IFG_TERMINATION,
-    IFG_ANYTHING_ELSE,
-    IFG_CHECK,
-    IFG_ANNOTATION,
-    FULLSTOP,
-)
-from pgn_read.core.parser import (
-    PGNDisplayMoves,
+    FEN_WHITE_ACTIVE,
+    DEFAULT_TAG_RESULT_VALUE,
+    DEFAULT_TAG_VALUE,
+    TAG_WHITE,
+    TAG_BLACK,
+    TAG_RESULT,
     )
+from pgn_read.core.parser import PGN
+from pgn_read.core.squares import Squares
 
+from ..core.pgn import GameDisplayMoves
 from .chessexception import ChessException
 from .constants import (
     LINE_COLOR,
@@ -71,7 +61,7 @@ from .constants import (
     SPACE_SEP,
     NEWLINE_SEP,
     NULL_SEP,
-    FORCE_FULLMOVE_PER_LINE,
+    MOVETEXT_MOVENUMBER_TAG,
     )
 
 
@@ -87,6 +77,8 @@ class PositionScore(ChessException):
     v_color = VARIATION_COLOR
     tags_variations_comments_font = TAGS_VARIATIONS_COMMENTS_FONT
     moves_played_in_game_font = MOVES_PLAYED_IN_GAME_FONT
+
+    tags_displayed_last = SEVEN_TAG_ROSTER
 
     def __init__(
         self,
@@ -116,6 +108,7 @@ class PositionScore(ChessException):
             self.moves_played_in_game_font = moves_played_in_game_font
         # Use widget argument rather than create one here like similar classes.
         self.score = widget
+        widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
         widget.tag_configure(
             MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font)
         # Order is MOVE_TAG ALTERNATIVE_MOVE_TAG VARIATION_TAG so that correct
@@ -128,7 +121,11 @@ class PositionScore(ChessException):
         # None implies initial position and is deliberately not a valid Tk tag.
         self.current = None # Tk tag of current move
         self._clear_tag_maps()
-        self.pgn = PGNDisplayMoves()
+        self.collected_game = None
+        # map_game uses self._force_movenumber to insert movenumber before
+        # black moves after start and end of recursive annotation variation
+        # markers.
+        self._force_movenumber = False
         
     def bind_for_viewmode(self):
         """Set keyboard bindings for traversing moves."""
@@ -143,7 +140,7 @@ class PositionScore(ChessException):
         a Map event occurs.
 
         """
-        self.set_game_board()
+        pass
 
     def _clear_tag_maps(self):
         """Clear mappings of tags and positions.
@@ -151,73 +148,28 @@ class PositionScore(ChessException):
         Instances of PositionScore are reused as games are navigated and not
         necessarely for the game already in the instance.
         
-        Tags are cross-referenced using the position of the pieces and side to
-        move to pick which moves to colour but the en passant and castling
-        flags may be used to pick the colours used.  Hence the positions and
-        fullpositions attributes.
-
         """
+        # Mappings tagpositionmap, fullpositions, positiontags, and recently
+        # added varmovetags, are removed because the compare_two_positions()
+        # method and _context attributes seems to be able to do the job.
+        # Probably including taking account of castling and en-passant options
+        # if required.
         self.rav_number = 0
         self.varstack = []
         self.position_number = 0
-        self.positions = dict()
-        self.fullpositions = dict()
-        self.positiontags = dict()
-        self.nextmovetags = dict()
-        self.previousmovetags = dict()
-
-    def colour_score(self, context=None):
-        """Set tags on the displayedmovetext.
-        """
-        widget = self.score
-        for t in ALTERNATIVE_MOVE_TAG, MOVE_TAG, VARIATION_TAG, LINE_TAG:
-            widget.tag_remove(t, '1.0', tkinter.END)
-        prevposition, currposition, nextposition = self._context
-        if currposition:
-            current = self.positiontags.get(currposition[:2], ())
-            for tn in current:
-                widget.tag_add(
-                    LINE_TAG,
-                    *widget.tag_ranges(tn))
-                prevtag = self.previousmovetags[tn]
-                if prevtag is not None:
-                    try:
-                        # prevposition may be None if errors in imported games
-                        if self.positions[prevtag] != prevposition[:2]:
-                            widget.tag_add(
-                                VARIATION_TAG,
-                                *widget.tag_ranges(tn))
-                    except TypeError:
-                        pass
-                if nextposition:
-                    nexttag = self.nextmovetags.get(tn)
-                    if nexttag is not None:
-                        for nt in nexttag:
-                            if self.positions[nt] != nextposition[:2]:
-                                widget.tag_add(
-                                    ALTERNATIVE_MOVE_TAG,
-                                    *widget.tag_ranges(nt))
-            if len(current):
-                self.current = current[0]
-            else:
-                self.current = None
-        else:
-            self.current = None
-        #self.set_game_board()
         
     def process_score(self, text=None, context=None):
         """Wrapper for Tkinter.Text configure method for score attribute"""
         if text:
             self._clear_tag_maps()
-            self.pgn.get_first_game(text)
+            self.collected_game = next(
+                PGN(game_class=GameDisplayMoves
+                    ).read_games(text))
             self._context = context
-            self._inhibit_force_newline_count = 0
             try:
                 self.set_game()
-                self.colour_score()
             finally:
                 del self._context
-                del self._inhibit_force_newline_count
         
     def get_top_widget(self):
         """Return topmost widget for game display.
@@ -229,43 +181,6 @@ class PositionScore(ChessException):
     def destroy_widget(self):
         """Destroy the widget displaying game."""
         self.score.destroy()
-
-    def see_first_move(self):
-        """Make first move visible on navigation to initial position.
-
-        Current move is always made visible but no current move defined
-        for initial position.
-        """
-        self.score.see(START_SCORE_MARK)
-        
-    def set_game_board(self):
-        """Set board to show position after highlighted move."""
-        # Use see or see_first_move to get the current move visible and then
-        # adjust it's position to left edge of widget by xview_scroll taking
-        # borders into account
-        if self.current is None:
-            self.see_first_move()
-            return
-        index = self.score.tag_ranges(self.current)[0]
-        self.score.see(index)
-        bbox = self.score.bbox(index)
-        if not bbox:
-            return
-        self.score.xview_scroll(bbox[0] - 3, 'pixels')
-        # 15 is a hack assuming a font and size.  It is the bbox[-1] value for
-        # text which looks correct from a print(bbox) statement.
-        if bbox[-1] != 15:
-            self.score.yview_scroll(15 - bbox[-1], 'pixels')
-        bbox = self.score.bbox(index)
-        if not bbox:
-            return
-        if bbox[0] != 3:
-            index = self.score.index(str(index) + '-1c')
-            # Adjust colouring or font or style of leading text to indicate
-            # that scrolling was not possible (because there is not enough
-            # text to right to be scrolled into widget).
-            # May need to do similar when existing display is resized.
-            # Perhaps simplest is pad to right with spaces.
         
     def set_game(self, starttoken=None, reset_undo=False):
         """Display the game as board and moves.
@@ -289,16 +204,36 @@ class PositionScore(ChessException):
             self.score.tag_remove(MOVE_TAG, tr[0], tr[1])
 
     def get_tags_display_order(self):
-        """Return text of PGN Tags in defined display order."""
-        str_tags = []
-        other_tags = []
-        for t in self.pgn.collected_game[0]:
-            tn = t.group(IFG_TAG_SYMBOL)
-            if tn not in SEVEN_TAG_ROSTER:
-                other_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-            else:
-                str_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-        return other_tags + str_tags
+        """Return tags in alphabetic order modified by self.tags_displayed_last.
+
+        last=None means do not display the tags: assume tags will be displayed
+        in the order they appear in the PGN text.
+
+        Return None if last is None, and list of '(tag, value)'s otherwise.
+
+        last modifies the order PGN tags are displayed.  Normally the Seven
+        Tag Roster appears first in a PGN game score followed by other tags
+        in alphabetic order.  Tags not in last are displayed in alphabetic
+        order followed by the tags in last.  If last is None the PGN tags are
+        displayed in the order they appear in the PGN game score.
+
+        The intention is to display the important tags adjacent to the game
+        score.  Thus if last is the Seven Tag Roster these tags are displayed
+        after the other tags, rather than appearing before the other tags as
+        in a PGN file.
+        """
+        last = self.tags_displayed_last
+        if last is None:
+            return None
+        tag_values = []
+        tags = self.collected_game._tags
+        for tv in sorted(tags.items()):
+            if tv[0] not in last:
+                tag_values.append(tv)
+        for t in last:
+            if t in tags:
+                tag_values.append((t, tags[t]))
+        return tag_values
     
     def get_rav_tag_names(self):
         """Return suffixed RAV_MOVES and RAV_TAG tag names.
@@ -390,72 +325,61 @@ class PositionScore(ChessException):
     from a POSITION tag name.
 
     '''
+
+    def _set_square_piece_map(self, position):
+        assert len(position) == 1
+        spm = self._square_piece_map
+        spm.clear()
+        for p, s in position[0][0]:
+            spm[s] = p
+
+    def _modify_square_piece_map(self, position):
+        assert len(position) == 2
+        spm = self._square_piece_map
+        for s, p in position[0][0]:
+            del spm[s]
+        for s, p in position[1][0]:
+            spm[s] = p
+
+    # Attempt to re-design map_game method to fit new pgn_read package.
     def map_game(self):
         """Tag and mark the displayed text of game score.
 
         The tags and marks are used for colouring and navigating the score.
 
         """
-        dispatch_table = {
-            IFG_PIECE_SQUARE: self.map_move_text,
-            IFG_PAWN_SQUARE: self.map_move_text,
-            IFG_PIECE_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PAWN_CAPTURE_SQUARE: self.map_move_text,
-            IFG_PIECE_CHOICE_SQUARE: self.map_move_text,
-            IFG_PAWN_PROMOTE_SQUARE: self.map_move_text,
-            IFG_CASTLES: self.map_move_text,
-            IFG_START_RAV: self.map_start_rav,
-            IFG_END_RAV: self.map_end_rav,
-            IFG_TERMINATION: self.map_termination,
-            IFG_ANYTHING_ELSE: self.map_non_move,
-            IFG_CHECK: self.map_non_move,
-            IFG_ANNOTATION: self.map_non_move,
-            }
+        self._force_movenumber = True
 
         # With get_current_...() methods as well do not need self._vartag
         # state attributes.
         self._vartag = self.get_rav_tag_names()
         self._gamevartag = self._vartag
+
+        self._square_piece_map = {}
         
-        for token, position in self.pgn.moves:
-            for group in (IFG_PIECE_SQUARE,
-                          IFG_PAWN_SQUARE,
-                          IFG_PIECE_CAPTURE_SQUARE,
-                          IFG_PAWN_CAPTURE_SQUARE,
-                          IFG_PIECE_CHOICE_SQUARE,
-                          IFG_PAWN_PROMOTE_SQUARE,
-                          IFG_CASTLES,
-                          IFG_START_RAV,
-                          IFG_END_RAV,
-                          IFG_TERMINATION,
-                          ):
-                try:
-                    if token.group(group):
-                        dispatch_table[group](token.group(), position)
-                        break
-                except AttributeError:
-                    group = None
-                    break
-                except KeyError:
-                    break
-
-                # If group == IFG_PIECE_SQUARE and len(token.group()) == 5 or
-                # group == IFG_PIECE_CAPTURE_SQUARE and len(token.group()) == 6
-                # assume movetext such as 'Qb2c3' meaning there are more than
-                # two queens able to move to 'c3' and the one om 'b2' does so.
-                # The PGN parser treats 'Qb2c3' as a special case after seeing
-                # 'Qb2' cannot be a move.
-                except IndexError:
-                    if ((len(token.group()) == 5 and
-                         group == IFG_PIECE_SQUARE) or
-                        (len(token.group()) == 6 and
-                         group == IFG_PIECE_CAPTURE_SQUARE)):
-                        dispatch_table[group](token.group(), position)
-                        break
-                    raise
-
-        for k, v in self.previousmovetags.items():
-            self.nextmovetags.setdefault(v, []).append(k)
+        cg = self.collected_game
+        spm = self._square_piece_map
+        for p, s in cg._initial_position[0]:
+            spm[s] = p
+        assert len(cg._text) == len(cg._position_deltas)
+        for text, delta in zip(cg._text, cg._position_deltas):
+            t0 = text[0]
+            if t0 in 'abcdefghKQRBNkqrnO':
+                self.map_move_text(text, delta)
+            elif t0 == '(':
+                self.map_start_rav(text, delta)
+            elif t0 == ')':
+                self.map_end_rav(text, delta)
+            elif t0 in '10*':
+                self.map_termination(text)
+            else:
+                self.map_non_move(text)
+        self.insert_token_into_text(
+            cg._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP)
+        self.insert_token_into_text(
+            cg._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP)
+        self.insert_token_into_text(
+            cg._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP)
 
         tr = self.score.tag_nextrange(NAVIGATE_MOVE, '1.0')
         if tr:
@@ -463,45 +387,94 @@ class PositionScore(ChessException):
         else:
             self.score.mark_set(START_SCORE_MARK, '1.0')
 
-    def map_move_text(self, token, position):
-        """Add token to game text. Set navigation tags. Return token range.
+    def compare_two_positions(self, one, two):
+        """Return True if positions one and two are same, otherwise False.
 
         Ignore castling and en passant options when comparing positions.
 
+        The move on which the positions occur is not relevant so full move
+        number and half move clock are ignored.
+
         """
+        # At end of game or variation either one or two will be None, depending
+        # on argument order.
+        # Exception return must be False because True causes too much display.
+        try:
+            if one[1] != two[1]:
+                return False
+        except TypeError:
+            if one is None or two is None:
+                return False
+            raise
+        if set(one[0]) != set(two[0]):
+            return False
+        two0 = two[0]
+        for s, p in one[0].items():
+            if p.name != two0[s].name:
+                return False
+        return True
+
+    def map_move_text(self, token, delta):
+        """Add token to game text and modify game position by delta"""
+        prevcontext, currcontext, nextcontext = self._context
+
+        # Does position in which move is played match the previous or current
+        # position in self._context?
+        prev_position = (self._square_piece_map.copy(),) + delta[0][1:]
+        prev_match_prevcontext = self.compare_two_positions(
+            prev_position, prevcontext)
+        prev_match_currcontext = self.compare_two_positions(
+            prev_position, currcontext)
+
+        self._modify_square_piece_map(delta)
+
+        # Does position after move is played match the current or next
+        # position in self._context?
+        curr_position = (self._square_piece_map.copy(),) + delta[1][1:]
+        curr_match_currcontext = self.compare_two_positions(
+            curr_position, currcontext)
+        next_match_nextcontext = self.compare_two_positions(
+            curr_position, nextcontext)
+
+        if not (prev_match_prevcontext or prev_match_currcontext or
+                curr_match_currcontext or next_match_nextcontext):
+            return
         widget = self.score
+        if delta[1][1] != FEN_WHITE_ACTIVE:
+            start, end, sepend = self.insert_token_into_text(
+                str(delta[1][5])+'.', SPACE_SEP)
+            widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+        elif self._force_movenumber:
+            start, end, sepend = self.insert_token_into_text(
+                str(delta[0][5])+'...', SPACE_SEP)
+            widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+        self._force_movenumber = False
         positiontag = self.get_next_positiontag_name()
-        self.positiontags.setdefault(position[:2], []).append(positiontag)
-        self.positions[positiontag] = position[:2]
-        self.fullpositions[positiontag] = position
-        if len(self.pgn.moves) > FORCE_FULLMOVE_PER_LINE:
-            if self._inhibit_force_newline_count:
-                self._inhibit_force_newline_count -= 1
-            elif position[:2] == self._context[2][:2]:
-                # An arbitrary number of half-moves to fill the widget.
-                self._inhibit_force_newline_count = 25
-            elif position[1]:
-                widget.insert(tkinter.INSERT, NEWLINE_SEP)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE:
             widget.tag_add(tag, start, end)
         if self._vartag is self._gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
+        if not (prev_match_prevcontext or prev_match_currcontext):
+            # token is move to reach position and different from context
+            widget.tag_add(VARIATION_TAG, start, end)
+            pass
+        if not (curr_match_currcontext or next_match_nextcontext):
+            # token is move out of position and  different from context
+            widget.tag_add(ALTERNATIVE_MOVE_TAG, start, end)
+            pass
         tr = widget.tag_prevrange(self._vartag, start)
         if not tr:
             varstack = list(self.varstack)
             while varstack:
                 var = varstack.pop()
-                tr = widget.tag_prevrange(
-                    var, widget.tag_prevrange(var, start)[0])
+                tpr = widget.tag_prevrange(var, start)
+                if not tpr:
+                    break
+                tr = widget.tag_prevrange(var, tpr[0])
                 if tr:
                     break
-        if tr:
-            self.previousmovetags[positiontag] = self.get_position_tag_of_index(
-                tr[0])
-        else:
-            self.previousmovetags[positiontag] = None
 
     def map_start_rav(self, token, position):
         """Add token to game text. position is ignored. Return range and prior.
@@ -511,10 +484,12 @@ class PositionScore(ChessException):
         a stack for restoration at the end of the variation.
 
         """
+        self._set_square_piece_map(position)
         widget = self.score
         self.varstack.append(self._vartag)
         self._vartag = self.get_rav_tag_names()
         self.insert_token_into_text(token, SPACE_SEP)
+        self._force_movenumber = True
 
     def map_end_rav(self, token, position):
         """Add token to game text. position is ignored. Return token range.
@@ -524,24 +499,19 @@ class PositionScore(ChessException):
         from the stack for restoration at the end of the variation.
 
         """
+        self._set_square_piece_map(position)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         self._vartag = self.varstack.pop()
+        self._force_movenumber = True
 
-    def map_termination(self, token, position):
+    def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self.insert_token_into_text(token, SPACE_SEP)
+        if self.collected_game._tags.get(TAG_RESULT) != token:
+            self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_move_error(self, token, position):
+    def map_non_move(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self.insert_token_into_text(token, SPACE_SEP)
-
-    def map_move_after_error(self, token, position):
-        """Add token to game text. position is ignored. Return token range."""
-        self.insert_token_into_text(token, SPACE_SEP)
-
-    def map_non_move(self, token, position):
-        """Add token to game text. position is ignored. Return token range."""
-        self.insert_token_into_text(token, SPACE_SEP)
+        #self.insert_token_into_text(token, SPACE_SEP)
 
     def set_current(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.
@@ -587,29 +557,3 @@ class PositionScore(ChessException):
 
         """
         self.score.tag_add(MOVE_TAG, start, end)
-
-    def down_one_transposition(self):
-        """Cycle forward one tranposition to position in selected game."""
-        tr = self.score.tag_nextrange(
-            LINE_TAG, self.score.tag_ranges(self.current)[-1])
-        if not tr:
-            tr = self.score.tag_nextrange(LINE_TAG, '1.0')
-        if tr:
-            self.current = self.get_position_tag_of_index(tr[0])
-        else:
-            self.current = None
-        if self.score.winfo_ismapped():
-            self.set_game_board()
-        
-    def up_one_transposition(self):
-        """Cycle backward one tranposition to position in selected game."""
-        tr = self.score.tag_prevrange(
-            LINE_TAG, self.score.tag_ranges(self.current)[0])
-        if not tr:
-            tr = self.score.tag_prevrange(LINE_TAG, tkinter.END)
-        if tr:
-            self.current = self.get_position_tag_of_index(tr[0])
-        else:
-            self.current = None
-        if self.score.winfo_ismapped():
-            self.set_game_board()

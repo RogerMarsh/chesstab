@@ -17,8 +17,10 @@ from pgn_read.core.constants import (
     TAG_RESULT,
     TAG_EVENT,
     TAG_DATE,
-    IFG_TAG_SYMBOL,
-    IFG_TAG_STRING_VALUE,
+    SEVEN_TAG_ROSTER,
+    DEFAULT_TAG_VALUE,
+    DEFAULT_TAG_DATE_VALUE,
+    DEFAULT_TAG_RESULT_VALUE,
     )
 
 from ..core.chessrecord import ChessDBrecordGameTags
@@ -38,39 +40,51 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
     """
     header_specification = [
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=TAG_WHITE, anchor=tkinter.W),
+         WIDGET_CONFIGURE: dict(
+             text=TAG_WHITE, anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='player'),
          ROW: 0,
          },
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=TAG_RESULT, anchor=tkinter.CENTER),
+         WIDGET_CONFIGURE: dict(
+             text=TAG_RESULT, anchor=tkinter.CENTER, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='score'),
          ROW: 0,
          },
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=TAG_BLACK, anchor=tkinter.W),
+         WIDGET_CONFIGURE: dict(
+             text=TAG_BLACK, anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='player'),
          ROW: 0,
          },
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=TAG_EVENT, anchor=tkinter.W),
+         WIDGET_CONFIGURE: dict(
+             text=TAG_EVENT, anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='event'),
          ROW: 0,
          },
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text=TAG_DATE, anchor=tkinter.W),
+         WIDGET_CONFIGURE: dict(
+             text=TAG_DATE, anchor=tkinter.W, padx=0, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
          GRID_COLUMNCONFIGURE: dict(weight=1, uniform='date'),
          ROW: 0,
          },
         {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(text='Tags'),
+         WIDGET_CONFIGURE: dict(
+             text='Tags', anchor=tkinter.W, padx=10, pady=1,
+             font='TkDefaultFont'),
          GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=4, uniform='tags', minsize=160),
+         GRID_COLUMNCONFIGURE: dict(weight=4, uniform='tags'),
          ROW: 0,
          },
         ]
@@ -89,46 +103,54 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
             {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
                  anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT),
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
              ROW: 0,
              },
             {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
                  anchor=tkinter.CENTER,
-                 font=constants.LISTS_OF_GAMES_FONT),
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
              ROW: 0,
              },
             {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
                  anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT),
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
              ROW: 0,
              },
             {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
                  anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT),
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
              ROW: 0,
              },
             {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
                  anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT),
+                 font=constants.LISTS_OF_GAMES_FONT,
+                 pady=1,
+                 padx=0),
              GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
              ROW: 0,
              },
-            {WIDGET: tkinter.Text,
+            {WIDGET: tkinter.Label,
              WIDGET_CONFIGURE: dict(
-                 height=0,
-                 relief=tkinter.FLAT,
+                 anchor=tkinter.W,
                  font=constants.LISTS_OF_GAMES_FONT,
-                 wrap=tkinter.NONE,
-                 borderwidth=2, # hack to fill cell to row height from labels
-                 ),
+                 pady=1,
+                 padx=10),
              GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
              ROW: 0,
              },
@@ -173,41 +195,31 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         Create textitems argument for ChessDBrowGame instance.
 
         """
-        tags = self.value.collected_game[1]
+        tags = self.value.collected_game._tags
         return super(ChessDBrowGame, self).grid_row(
             textitems=(
-                tags.get(TAG_WHITE, '?'),
-                tags.get(TAG_RESULT, '?'),
-                tags.get(TAG_BLACK, '?'),
-                tags.get(TAG_EVENT, '?'),
-                tags.get(TAG_DATE, '????.??.??'),
-                self.value,
+                tags.get(TAG_WHITE, DEFAULT_TAG_VALUE),
+                tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE),
+                tags.get(TAG_BLACK, DEFAULT_TAG_VALUE),
+                tags.get(TAG_EVENT, DEFAULT_TAG_VALUE),
+                tags.get(TAG_DATE, DEFAULT_TAG_DATE_VALUE),
+                '  '.join(
+                    [''.join((tag, ' "', value, '"'))
+                     for tag, value
+                     in self.get_tags_display_order(self.value)]),
                 ),
             **kargs)
-
-    def populate_widget(self, widget, cnf=None, text=None, context=None, **kw):
-        """Wrapper for Tkinter.Text configure method for score attribute"""
-        if isinstance(widget, tkinter.Label):
-            super(ChessDBrowGame, self).populate_widget(widget, text=text, **kw)
-            return
-        widget.configure(cnf=cnf, **kw)
-        widget.configure(state=tkinter.NORMAL)
-        widget.delete('1.0', tkinter.END)
-        widget.insert(
-            tkinter.END,
-            '  '.join([''.join((tag, ' "', value, '"'))
-                       for tag, value in self.get_tags_display_order(text)]))
-        widget.configure(state=tkinter.DISABLED)
         
     def get_tags_display_order(self, pgn):
         str_tags = []
         other_tags = []
-        for t in pgn.collected_game[0]:
-            tn = t.group(IFG_TAG_SYMBOL)
-            if tn not in constants.SEVEN_TAG_ROSTER_EXPORT_ORDER:
-                other_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
-            elif tn not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
-                str_tags.append((tn, t.group(IFG_TAG_STRING_VALUE)))
+        tags = self.value.collected_game._tags
+        for t in SEVEN_TAG_ROSTER:
+            if t not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
+                str_tags.append((t, tags.get(t, DEFAULT_TAG_VALUE)))
+        for t, v in sorted(tags.items()):
+            if t not in SEVEN_TAG_ROSTER:
+                other_tags.append((t, v))
         return str_tags + other_tags
 
     def set_background_on_display(self, widgets):

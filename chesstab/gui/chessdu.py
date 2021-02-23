@@ -19,7 +19,9 @@ from solentware_misc.api import callthreadqueue
 
 from solentware_misc.gui.tasklog import LogText
 
-from ..core.pgnupdate import PGNUpdate
+from pgn_read.core.parser import PGN
+
+from ..core.pgn import GameUpdateEstimate
 from .chessexception import ChessException
 from .. import (
     ERROR_LOG,
@@ -348,7 +350,7 @@ class ChessDeferredUpdate(ChessException):
         """Estimate import size from the first sample games in import files."""
         self.estimate_data = False
         text_file_size = sum([os.path.getsize(pp) for pp in sys.argv[2:]])
-        reader = PGNUpdate()
+        reader = PGN(game_class=GameUpdateEstimate)
         errorcount = 0
         totallen = 0
         totalerrorlen = 0
@@ -365,28 +367,24 @@ class ChessDeferredUpdate(ChessException):
                 break
             source = open(pp, 'r', encoding='iso-8859-1')
             try:
-                for d in reader.read_games(source):
+                for rcg in reader.read_games(source):
                     if gamecount + errorcount >= self.sample:
                         estimate = True
                         break
-                    rcg = reader.collected_game
-                    taglen = sum([len(t.group()) for t in rcg[0]])
-                    if len(rcg[2]):
-                        rawtokenlen = rcg[2][-1].end() - rcg[2][0].start()
+                    if len(rcg._text):
+                        rawtokenlen = rcg.end_char - rcg.start_char
                     else:
                         rawtokenlen = 0
-                    if len(rcg[3]):
+                    if rcg.state is not None:
                         errorcount += 1
-                        errorlen = sum([len(t) for t in rcg[3]])
-                        totalerrorlen += rawtokenlen + errorlen + taglen
+                        totalerrorlen += rawtokenlen
                     else:
-                        errorlen = 0
                         gamecount += 1
-                        totalgamelen += rawtokenlen + taglen
-                        positioncount += len(reader.positions)
-                        piecesquaremovecount += len(reader.piecesquaremoves)
-                        piecemovecount += len(reader.piecemoves)
-                    totallen += rawtokenlen + errorlen + taglen
+                        totalgamelen += rawtokenlen
+                        positioncount += len(rcg.positionkeys)
+                        piecesquaremovecount += len(rcg.piecesquaremovekeys)
+                        piecemovecount += len(rcg.piecemovekeys)
+                    totallen += rawtokenlen
             finally:
                 source.close()
         time_end = time.monotonic()

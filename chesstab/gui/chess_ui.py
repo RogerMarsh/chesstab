@@ -1502,10 +1502,11 @@ class ChessUI(ChessException):
                       ):
             for g in games:
                 try:
-                    g.refresh_analysis_widget(
-                        g.get_analysis(
-                            g.positions[g.current]
-                            if g.current else g.fen_position))
+                    if g.current is None:
+                        position = g.fen_tag_tuple_square_piece_map()
+                    else:
+                        position = g.tagpositionmap[g.current]
+                    g.refresh_analysis_widget(g.get_analysis(*position))
                 except tkinter.TclError:
                     exceptions.append((g, games))
         for g, games in exceptions:

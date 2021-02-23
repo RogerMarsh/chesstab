@@ -40,8 +40,7 @@ from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
 
-from pgn_read.core.constants import TAG_OPENING
-
+from ..core.constants import TAG_OPENING
 from .game import Repertoire
 from .gameedit import RepertoireEdit
 from ..core.chessrecord import ChessDBrecordRepertoireUpdate
@@ -297,8 +296,7 @@ class RepertoireDisplay(ChessException, Display):
                 message='Add repertoire to database abandonned.')
             return
         updater = self.game_updater(repr(self.score.get('1.0', tkinter.END)))
-        if not updater.value.is_pgn_valid():
-            print('repertoiredisplay insert_game_database')
+        if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Insert Repertoire',
                 message=''.join(
@@ -311,9 +309,9 @@ class RepertoireDisplay(ChessException, Display):
         editor = RecordEdit(updater, None)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
-        updater.key.recno = None#0
+        updater.key.recno = None
         editor.put()
-        tags = updater.value.collected_game[1]
+        tags = updater.value.collected_game._tags
         dialogues.showinfo(
             title='Insert Repertoire',
             message=''.join(('Repertoire "',
@@ -391,9 +389,9 @@ class RepertoireDisplay(ChessException, Display):
             self.analysis.clear_current_range()
             self.analysis.clear_moves_played_in_variation_colouring_tag()
             if cuirs.current is None:
-                cuirs.board.set_board(cuirs.fen_position[0])
+                cuirs.board.set_board(cuirs.fen_tag_square_piece_map())
             else:
-                cuirs.board.set_board(cuirs.positions[cuirs.current][0])
+                cuirs.board.set_board(cuirs.tagpositionmap[cuirs.current][0])
             cuirs.set_game_list()
             cuirs.analysis.bind_score_pointer_for_board_navigation(False)
             cuirs.bind_score_pointer_for_board_navigation(True)
@@ -602,7 +600,7 @@ class DatabaseRepertoireDisplay(RepertoireDisplay, Repertoire, DataNotify):
         editor = RecordDelete(original)
         editor.set_data_source(datasource, editor.on_data_change)
         editor.delete()
-        tags = original.value.collected_game[1]
+        tags = original.value.collected_game._tags
         dialogues.showinfo(
             title='Delete Repertoire',
             message=''.join(('Repertoire "',
@@ -805,8 +803,7 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
         editor = RecordEdit(updater, original)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
-        if not updater.value.is_pgn_valid():
-            print('repertoiredisplay update_game_database')
+        if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != dialogues.askquestion(
                 title='Edit Game',
                 message=''.join(
@@ -823,7 +820,7 @@ class DatabaseRepertoireEdit(DatabaseRepertoireInsert):
             newkey = self.ui.repertoire_items.adjust_edited_item(updater)
             if newkey:
                 self.ui.base_repertoires.set_properties(newkey)
-        tags = original.value.collected_game[1]
+        tags = original.value.collected_game._tags
         dialogues.showinfo(
             title='Edit Repertoire',
             message=''.join(('Repertoire "',
@@ -892,9 +889,9 @@ class RepertoireDialogue(ChessException):
         self.analysis.clear_current_range()
         self.analysis.clear_moves_played_in_variation_colouring_tag()
         if self.current is None:
-            self.board.set_board(self.fen_position[0])
+            self.board.set_board(self.fen_tag_square_piece_map())
         else:
-            self.board.set_board(self.positions[self.current][0])
+            self.board.set_board(self.tagpositionmap[self.current][0])
         self.set_game_list()
         self.analysis.bind_score_pointer_for_board_navigation(False)
         self.bind_score_pointer_for_board_navigation(True)
