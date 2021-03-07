@@ -15,6 +15,16 @@ class ToplevelText:
     
     """
     binding_labels = ()
+        
+    # Without this, right-click, Shift F10, and Ctrl F10, in CQL* and Query*
+    # toplevels cause AttributeError exceptions.  This just causes a null
+    # popup menu to be posted: perhaps difficult to notice.  Maybe a reason to
+    # show something is needed.
+    # The Engine* classes do not have this problem, perhaps because of the
+    # 'Run Engine' option or the absence of the 'main display' options.
+    # The Game* and Repertoire* classes have reason for a popup here.
+    def create_widget_navigation_submenu_for_popup(self, popup):
+        pass
 
 
 class _ToplevelText:
