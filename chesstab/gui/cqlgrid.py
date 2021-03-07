@@ -12,7 +12,7 @@ from solentware_grid.datagrid import DataGrid
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.chessrecord import ChessDBrecordPartial
-from .cqldisplay import DatabaseCQLDisplay, DatabaseCQLEdit
+from .cqldisplay import CQLDisplay, CQLDisplayEdit
 from .cqlrow import ChessDBrowCQL
 from ..core import exporters
 from .eventspec import EventSpec, DummyEvent
@@ -41,29 +41,32 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         self.hsbar.configure(takefocus=tkinter.FALSE)
         self.vsbar.configure(takefocus=tkinter.FALSE)
         self.ui = ui
-        for sequence, function in (
+        self.set_event_bindings_frame((
             (EventSpec.tab_traverse_forward,
              self.traverse_forward),
             (EventSpec.tab_traverse_backward,
              self.traverse_backward),
             (EventSpec.tab_traverse_round,
              self.traverse_round),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.frame.bind(sequence[0], function)
+
+            # Remove entries when binding implemented in solentware_grid.
+            (EventSpec.score_enable_F10_popupmenu_at_top_left,
+             self.show_grid_or_row_popup_menu_at_top_left_by_keypress),
+            (EventSpec.score_enable_F10_popupmenu_at_pointer,
+             self.show_grid_or_row_popup_menu_at_pointer_by_keypress),
+
+            ))
 
     def display_selected_item(self, key):
-        '''Create DatabaseCQLDisplay for ChessQL statement.'''
+        '''Create CQLDisplay for ChessQL statement.'''
         selected = self.get_visible_record(key)
         if selected is None:
             return None
         # Should the Frame containing board and position be created here and
-        # passed to DatabaseCQLDisplay. (Needs 'import Tkinter' above.)
+        # passed to CQLDisplay. (Needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
-        # DatabaseCQLDisplay is to be put.
+        # CQLDisplay is to be put.
         selection = self.make_display_widget(selected)
-        #selection.set_cql_statement(reset_undo=True)
         self.ui.add_partial_position_to_display(selection)
         self.ui.partial_items.increment_object_count(key)
         self.ui.partial_items.set_itemmap(selection, key)
@@ -71,8 +74,8 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         return selection
 
     def make_display_widget(self, sourceobject):
-        """Return a DatabaseCQLDisplay for sourceobject."""
-        selection = DatabaseCQLDisplay(
+        """Return a CQLDisplay for sourceobject."""
+        selection = CQLDisplay(
             master=self.ui.view_partials_pw,
             ui=self.ui,
             items_manager=self.ui.partial_items,
@@ -84,16 +87,15 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         return selection
         
     def edit_selected_item(self, key):
-        '''Create a DatabaseCQLEdit for ChessQL statement.'''
+        '''Create a CQLDisplayEdit for ChessQL statement.'''
         selected = self.get_visible_record(key)
         if selected is None:
             return None
         # Should the Frame containing board and position be created here and
-        # passed to DatabaseCQLEdit. (Which needs 'import Tkinter' above.)
+        # passed to CQLDisplayEdit. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
-        # DatabaseCQLEdit is to be put.
+        # CQLDisplayEdit is to be put.
         selection = self.make_edit_widget(selected)
-        #selection.set_cql_statement(reset_undo=True)
         self.ui.add_partial_position_to_display(selection)
         self.ui.partial_items.increment_object_count(key)
         self.ui.partial_items.set_itemmap(selection, key)
@@ -101,8 +103,8 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         return selection
         
     def make_edit_widget(self, sourceobject):
-        """Return a DatabaseCQLEdit for sourceobject."""
-        selection = DatabaseCQLEdit(
+        """Return a CQLDisplayEdit for sourceobject."""
+        selection = CQLDisplayEdit(
             master=self.ui.view_partials_pw,
             ui=self.ui,
             items_manager=self.ui.partial_items,
@@ -220,7 +222,7 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         
     def create_edit_dialog(
         self, instance, newobject, oldobject, showinitial, modal, title=''):
-        """Extend to do chess initialization"""
+        """Grading%20Correction1.doc"""
         for x in (newobject, oldobject):
             if x:
                 x.load_record((instance.key.pack(), instance.srvalue))
@@ -308,29 +310,38 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         if self.get_database() is not None:
             super().on_data_change(instance)
 
-    def add_navigation_to_popup(self):
-        '''Add 'Navigation' entry to popup menu if not already present.'''
+    def set_popup_bindings(self, popup, bindings=()):
+        for accelerator, function in bindings:
+            popup.add_command(
+                label=accelerator[1],
+                command=self.try_command(function, popup),
+                accelerator=accelerator[2])
 
+    def add_cascade_menu_to_popup(self, index, popup, bindings=None):
+        '''Add cascade_menu, and bindings, to popup if not already present.
+
+        The index is used as the label on the popup menu when visible.
+
+        The bindings are not applied if cascade_menu is alreay in popup menu.
+
+        '''
         # Cannot see a way of asking 'Does entry exist?' other than:
         try:
-            self.menupopup.index('Navigation')
+            popup.index(index)
         except:
-            self.menupopup_navigation = tkinter.Menu(
-                master=self.menupopup, tearoff=False)
-            self.menupopup.add_cascade(
-                label='Navigation', menu=self.menupopup_navigation)
-
-    def add_navigation_to_popup_no_row(self):
-        '''Add 'Navigation' entry to popup menu if not already present.'''
-
-        # Cannot see a way of asking 'Does entry exist?' other than:
-        try:
-            self.menupopupnorow.index('Navigation')
-        except:
-            self.menupopup_navigation_no_row = tkinter.Menu(
-                master=self.menupopupnorow, tearoff=False)
-            self.menupopupnorow.add_cascade(
-                label='Navigation', menu=self.menupopup_navigation_no_row)
+            cascade_menu = tkinter.Menu(master=popup, tearoff=False)
+            popup.add_cascade(label=index, menu=cascade_menu)
+            if bindings is None:
+                return
+            self.set_popup_bindings(cascade_menu, bindings)
+        
+    def set_event_bindings_frame(self, bindings=(), switch=True):
+        """Set bindings if switch is True or unset the bindings."""
+        ste = self.try_event
+        for sequence, function in bindings:
+            self.frame.bind(
+                sequence[0],
+                ste(function) if switch and function else '')
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
@@ -369,7 +380,7 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
 
     def export_partial(self, event=None):
         """Export selected partial position definitions."""
-        exporters.export_grid_positions(
+        exporters.export_selected_positions(
             self,
             self.ui.get_export_filename('Partial Positions', pgn=False))
 
@@ -389,12 +400,26 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
     def get_top_widget(self):
         """Return topmost widget for game display.
 
-        The topmost widget is put in a container widget in some way
+        The topmost widget is put in a container widget in some way.
 
         """
         # Superclass DataGrid.get_frame() method returns the relevant widget.
         # Name, get_top_widget, is compatible with Game and Partial names.
         return self.get_frame()
+
+    def get_visible_selected_key(self):
+        """Return selected key if it is visible and display dialogue if not.
+
+        Getting the key is delegated to superclass.
+
+        """
+        key = super().get_visible_selected_key()
+        if key is None:
+            tkinter.messagebox.showinfo(
+                parent=self.parent,
+                title='Display Item',
+                message='No record selected or selected record is not visible')
+        return key
         
 
 class CQLGrid(CQLListGrid):
@@ -411,71 +436,68 @@ class CQLGrid(CQLListGrid):
         super().__init__(ui.partials_pw, ui)
         self.make_header(ChessDBrowCQL.header_specification)
         self.__bind_on()
-        for function, accelerator in (
-            (self.display_cql_statement_from_popup,
-             EventSpec.display_partial_from_partial_grid),
-            (self.edit_cql_statement_from_popup,
-             EventSpec.edit_partial_from_partial_grid),
-            (self.export_partial,
-             EventSpec.export_from_partial_grid),
-            ):
-            self.menupopup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, self.menupopup),
-                accelerator=accelerator[2])
-        self.add_navigation_to_popup()
-        self.add_navigation_to_popup_no_row()
-        for function, accelerator in (
-            (self.set_focus_position_grid,
-             EventSpec.partial_grid_to_position_grid),
-            (self.set_focus_gamepanel_item_command,
-             EventSpec.partial_grid_to_active_game),
-            (self.set_focus_game_grid,
-             EventSpec.partial_grid_to_game_grid),
-            (self.set_focus_repertoire_grid,
-             EventSpec.partial_grid_to_repertoire_grid),
-            (self.set_focus_repertoirepanel_item_command,
-             EventSpec.partial_grid_to_active_repertoire),
-            (self.set_focus_repertoire_game_grid,
-             EventSpec.partial_grid_to_repertoire_game_grid),
-            (self.set_focus_partialpanel_item_command,
-             EventSpec.partial_grid_to_active_partial),
-            (self.set_focus_partial_game_grid,
-             EventSpec.partial_grid_to_partial_game_grid),
-            (self.set_focus_selection_rule_grid,
-             EventSpec.partial_grid_to_selection_rule_grid),
-            (self.set_focus_selectionpanel_item_command,
-             EventSpec.partial_grid_to_active_selection_rule),
-            ):
-            for m in (self.menupopup_navigation,
-                      self.menupopup_navigation_no_row):
-                m.add_command(
-                    label=accelerator[1],
-                    command=self.try_command(function, m),
-                    accelerator=accelerator[2])
+        self.set_popup_bindings(self.menupopup, (
+            (EventSpec.display_record_from_grid,
+             self.display_cql_statement_from_popup),
+            (EventSpec.edit_record_from_grid,
+             self.edit_cql_statement_from_popup),
+            (EventSpec.export_from_partial_grid,
+             self.export_partial),
+            ))
+        bindings = (
+            (EventSpec.navigate_to_position_grid,
+             self.set_focus_position_grid),
+            (EventSpec.navigate_to_active_game,
+             self.set_focus_gamepanel_item_command),
+            (EventSpec.navigate_to_game_grid,
+             self.set_focus_game_grid),
+            (EventSpec.navigate_to_repertoire_grid,
+             self.set_focus_repertoire_grid),
+            (EventSpec.navigate_to_active_repertoire,
+             self.set_focus_repertoirepanel_item_command),
+            (EventSpec.navigate_to_repertoire_game_grid,
+             self.set_focus_repertoire_game_grid),
+            (EventSpec.navigate_to_active_partial,
+             self.set_focus_partialpanel_item_command),
+            (EventSpec.navigate_to_partial_game_grid,
+             self.set_focus_partial_game_grid),
+            (EventSpec.navigate_to_selection_rule_grid,
+             self.set_focus_selection_rule_grid),
+            (EventSpec.navigate_to_active_selection_rule,
+             self.set_focus_selectionpanel_item_command),
+            (EventSpec.tab_traverse_backward,
+             self.traverse_backward),
+            (EventSpec.tab_traverse_forward,
+             self.traverse_forward),
+            )
+        self.add_cascade_menu_to_popup(
+            'Navigation',
+            self.menupopup,
+            bindings)
+        self.add_cascade_menu_to_popup(
+            'Navigation',
+            self.menupopupnorow,
+            bindings)
 
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        for sequence, function in (
-            (EventSpec.partial_grid_to_active_partial, ''),
-            (EventSpec.partial_grid_to_partial_game_grid, ''),
-            (EventSpec.partial_grid_to_repertoire_grid, ''),
-            (EventSpec.partial_grid_to_active_repertoire, ''),
-            (EventSpec.partial_grid_to_repertoire_game_grid, ''),
-            (EventSpec.partial_grid_to_position_grid, ''),
-            (EventSpec.partial_grid_to_active_game,
+        self.set_event_bindings_frame((
+            (EventSpec.navigate_to_active_partial, ''),
+            (EventSpec.navigate_to_partial_game_grid, ''),
+            (EventSpec.navigate_to_repertoire_grid, ''),
+            (EventSpec.navigate_to_active_repertoire, ''),
+            (EventSpec.navigate_to_repertoire_game_grid, ''),
+            (EventSpec.navigate_to_position_grid, ''),
+            (EventSpec.navigate_to_active_game,
              self.set_focus_gamepanel_item),
-            (EventSpec.partial_grid_to_game_grid, ''),
-            (EventSpec.partial_grid_to_selection_rule_grid, ''),
-            (EventSpec.partial_grid_to_active_selection_rule, ''),
-            (EventSpec.display_partial_from_partial_grid, ''),
-            (EventSpec.edit_partial_from_partial_grid, ''),
+            (EventSpec.navigate_to_game_grid, ''),
+            (EventSpec.navigate_to_selection_rule_grid, ''),
+            (EventSpec.navigate_to_active_selection_rule, ''),
+            (EventSpec.display_record_from_grid, ''),
+            (EventSpec.edit_record_from_grid, ''),
             (EventSpec.export_from_partial_grid, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.frame.bind(sequence[0], function)
+            ))
 
     def bind_on(self):
         """Enable all bindings."""
@@ -484,44 +506,43 @@ class CQLGrid(CQLListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        for sequence, function in (
-            (EventSpec.partial_grid_to_active_partial,
+        self.set_event_bindings_frame((
+            (EventSpec.navigate_to_active_partial,
              self.set_focus_partialpanel_item),
-            (EventSpec.partial_grid_to_partial_game_grid,
+            (EventSpec.navigate_to_partial_game_grid,
              self.set_focus_partial_game_grid),
-            (EventSpec.partial_grid_to_repertoire_grid,
+            (EventSpec.navigate_to_repertoire_grid,
              self.set_focus_repertoire_grid),
-            (EventSpec.partial_grid_to_active_repertoire,
+            (EventSpec.navigate_to_active_repertoire,
              self.set_focus_repertoirepanel_item),
-            (EventSpec.partial_grid_to_repertoire_game_grid,
+            (EventSpec.navigate_to_repertoire_game_grid,
              self.set_focus_repertoire_game_grid),
-            (EventSpec.partial_grid_to_position_grid,
+            (EventSpec.navigate_to_position_grid,
              self.set_focus_position_grid),
-            (EventSpec.partial_grid_to_active_game,
+            (EventSpec.navigate_to_active_game,
              self.set_focus_gamepanel_item),
-            (EventSpec.partial_grid_to_game_grid,
+            (EventSpec.navigate_to_game_grid,
              self.set_focus_game_grid),
-            (EventSpec.partial_grid_to_selection_rule_grid,
+            (EventSpec.navigate_to_selection_rule_grid,
              self.set_focus_selection_rule_grid),
-            (EventSpec.partial_grid_to_active_selection_rule,
+            (EventSpec.navigate_to_active_selection_rule,
              self.set_focus_selectionpanel_item),
-            (EventSpec.display_partial_from_partial_grid,
+            (EventSpec.display_record_from_grid,
              self.display_cql_statement),
-            (EventSpec.edit_partial_from_partial_grid,
+            (EventSpec.edit_record_from_grid,
              self.edit_cql_statement),
             (EventSpec.export_from_partial_grid,
              self.export_partial),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.frame.bind(sequence[0], function)
+            ))
 
     def display_cql_statement(self, event=None):
         """Display ChessQL statement and cancel selection.
 
-        Call _display_cql_statement after idle tasks to allow message display
+        Call _display_cql_statement after idle tasks to allow message display.
 
         """
+        if not self.get_visible_selected_key():
+            return
         self._set_find_cql_statement_name_games(self.selection[0])
         self.frame.after_idle(
             self.try_command(self._display_cql_statement, self.frame))
@@ -529,7 +550,7 @@ class CQLGrid(CQLListGrid):
     def display_cql_statement_from_popup(self, event=None):
         """Display ChessQL statement selected by pointer.
 
-        Call _display_cql_statement after idle tasks to allow message display
+        Call _display_cql_statement after idle tasks to allow message display.
 
         """
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
@@ -557,9 +578,11 @@ class CQLGrid(CQLListGrid):
     def edit_cql_statement(self, event=None):
         """Display ChessQL statement allow editing and cancel selection.
 
-        Call _edit_cql_statement after idle tasks to allow message display
+        Call _edit_cql_statement after idle tasks to allow message display.
 
         """
+        if not self.get_visible_selected_key():
+            return
         self._set_find_cql_statement_name_games(self.selection[0])
         self.frame.after_idle(
             self.try_command(self._edit_cql_statement, self.frame))
@@ -567,7 +590,7 @@ class CQLGrid(CQLListGrid):
     def edit_cql_statement_from_popup(self, event=None):
         """Display ChessQL statement with editing allowed selected by pointer.
 
-        Call _edit_cql_statement after idle tasks to allow message display
+        Call _edit_cql_statement after idle tasks to allow message display.
 
         """
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
@@ -627,15 +650,15 @@ class CQLGrid(CQLListGrid):
         return str(self.get_frame()) in self.ui.partials_pw.panes()
 
     def make_display_widget(self, sourceobject):
-        """Return a DatabaseCQLDisplay for sourceobject."""
+        """Return a CQLDisplay for sourceobject."""
         selection = super().make_display_widget(sourceobject)
-        selection.set_cql_statement(reset_undo=True)
+        selection.set_and_tag_item_text()
         return selection
         
     def make_edit_widget(self, sourceobject):
-        """Return a DatabaseCQLEdit for sourceobject."""
+        """Return a CQLDisplayEdit for sourceobject."""
         selection = super().make_edit_widget(sourceobject)
-        selection.set_cql_statement(reset_undo=True)
+        selection.set_and_tag_item_text(reset_undo=True)
         return selection
 
     def focus_set_frame(self, event=None):

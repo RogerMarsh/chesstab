@@ -138,11 +138,11 @@ class DisplayItems(object):
         # stack[-1] is always the active item.
         return index == len(stack)
 
-    def delete_item_counters(self, panel):
+    def delete_item_counters(self, item):
         """Delete panel, decrement counters, and return grid key for reset."""
-        s = self.panel_object_map.get(panel, None)
+        s = self.panel_object_map.get(item.panel, None)
         if s:
-            del self.panel_object_map[panel]
+            del self.panel_object_map[item.panel]
         if s in self.object_panel_count:
             self.object_panel_count[s] -= 1
             if self.object_panel_count[s] == 0:
@@ -236,7 +236,7 @@ class DisplayItems(object):
         if losefocus is not gainfocus:
             stack.append(stack.pop(stack.index(gainfocus)))
             losefocus.bind_for_widget_navigation()
-        gainfocus._bind_for_board_navigation()
+        gainfocus.bind_for_item_navigation()
         gainfocus.takefocus_widget.focus_set()
         if gainfocus.ui.single_view:
             gainfocus.ui.show_just_panedwindow_with_focus(
@@ -303,6 +303,16 @@ class DisplayItems(object):
 class DisplayItemsStub(object):
     
     """Stub manager for set of displayed widgets.
+
+    Tk Frames, each containing an item and usually called a panel in ChessTab,
+    can be displayed in a container with the convention the active item is the
+    [-1] element of self.stack.  self.panel_object_map maps panel to item.
+
+    The item can be displayed in a tk Toplevel with no other items.  The
+    is_mapped_panel method and active_item property return values meaning the
+    item is always the active item and no other item can be available to be
+    active.
+
     """
 
     def __init__(self):

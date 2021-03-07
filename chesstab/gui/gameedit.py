@@ -2,14 +2,13 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Edit a chess game score and put current position on a board.
+"""Widget to edit a chess game score and put current position on a board.
 
-The GameEdit class displays a game of chess and allows editing.
+The GameEdit class displays a game of chess and allows editing.  It is a
+subclass of game.Game.
 
 The RepertoireEdit class displays PGN text representing an opening repertoire
-and allows editing.
-
-These classes have the game.Game class as a superclass.
+and allows editing.  It is a subclass of GameEdit.
 
 These classes do not allow deletion of games from a database.
 
@@ -57,7 +56,8 @@ from ..core.constants import (
     END_TAG,
     START_TAG,
     )
-from ..core.pgn import GameDisplayMoves
+from ..core.pgn import GameDisplayMoves, GameRepertoireDisplayMoves
+from .score import NonTagBind
 from .game import Game
 from .eventspec import EventSpec
 from .constants import (
@@ -90,7 +90,6 @@ from .constants import (
     START_SCORE_MARK,
     NAVIGATE_COMMENT,
     TOKEN_MARK,
-    INSERT_TOKEN_MARK,
     START_EDIT_MARK,
     END_EDIT_MARK,
     PGN_TAG,
@@ -99,6 +98,7 @@ from .constants import (
     RAV_END_TAG,
     TERMINATION_TAG,
     SPACE_SEP,
+    RAV_START_TAG,
     )
 from ..core import exporters
 
@@ -160,6 +160,8 @@ _ALL_PRINTABLE = ''.join(
      ''.join([chr(i) for i in range(160, 192)]), # string data but discouraged
      ''.join([chr(i) for i in range(192, 256)]), # string data
      ))
+# allowed in ';comments\n' and '%escaped lines\n' 
+_ALL_PRINTABLE_AND_NEWLINE = ''.join(('\n', _ALL_PRINTABLE))
 # allowed in {comments}
 _ALL_PRINTABLE_AND_NEWLINE_WITHOUT_BRACERIGHT = ''.join(
     ('\n', _ALL_PRINTABLE)).replace('}', '')
@@ -187,8 +189,8 @@ _CHARACTERS_ALLOWED_IN_TOKEN = {
     EDIT_PGN_TAG_VALUE: _ALL_PRINTABLE_WITHOUT_QUOTEDBL,
     EDIT_COMMENT: _ALL_PRINTABLE_AND_NEWLINE_WITHOUT_BRACERIGHT,
     EDIT_RESERVED: _ALL_PRINTABLE_AND_NEWLINE_WITHOUT_GREATER,
-    EDIT_COMMENT_EOL: _ALL_PRINTABLE,
-    EDIT_ESCAPE_EOL: _ALL_PRINTABLE,
+    EDIT_COMMENT_EOL: _ALL_PRINTABLE_AND_NEWLINE,
+    EDIT_ESCAPE_EOL: _ALL_PRINTABLE_AND_NEWLINE,
     EDIT_MOVE_ERROR: _MOVECHARS,
     EDIT_MOVE: _MOVECHARS,
     INSERT_RAV: _MOVECHARS,
@@ -214,260 +216,79 @@ class GameEdit(Game):
     
     """Display a game with editing allowed.
 
+    gameclass is passed to the superclass as the gameclass argument.  It
+    defaults to GameDisplayMoves.
+
     Two PGN objects are available to a GameEdit instance: one provided
     by the creator of the instance used to display the game (from Game
-    a base class of DatabaseGameDisplay); the other inherited directly from PGN
+    a base class of GameDisplay); the other inherited directly from PGN
     which is used for editing. This class provides methods to handle single
     moves complementing the game facing methods in PGN.
     
+    Attribute _is_score_editable is True meaning the statement can be edited.
+
+    Attribute _most_recent_bindings is set to indicate the initial set of
+    event bindings.  Instances will override this as required.
+
     """
     # get_first_game() does not care whether self.score.get() returns
-    # string or unicode but self.set_game() does a string.translate() so the
-    # get_first_game(x) calls must be get_first_game(x.encode()).
+    # string or unicode but self.set_and_tag_item_text() does a
+    # string.translate() so the get_first_game(x) calls must be
+    # get_first_game(x.encode()).
     # ( encode() was introduced for compatibility with Python 2.5 but )
     # ( as this app now uses the hide attribute of paned windows from )
     # ( Tk 8.5 which is not available on Python 2.5 maybe convert to  )
     # ( unicode for Python 3.n compatibility and drop encode().       )
 
-    # True means game score can be edited
+    # True means game score can be edited.
     _is_score_editable = True
+
+    # Indicate the most recent set of bindings applied to score attribute.
+    # There will be some implied bindings to the board attribute, but board is
+    # shared with the analysis.score attribute so this indicator does not
+    # imply anything about the board bindings.  Assumed that switching between
+    # game and analysis will put the binding right.
+    # Values are Tk tag names or members of NonTagBind enumeration.
+    _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
         super().__init__(gameclass=gameclass, **ka)
-        self._allowed_chars_in_token = '' # or an iterable of characters
+
+        # Do another way to avoid reliance on classes being in same module.
+        subclass_RepertoireEdit = issubclass(self.__class__, RepertoireEdit)
+
+        self._allowed_chars_in_token = '' # or an iterable of characters.
         self.edit_move_context = dict()
-        self.menupopup_movemode_score_navigation = tkinter.Menu(
-            master=self.viewmode_popup, tearoff=False)
-        self.menupopup_movemode_pgn_insert = tkinter.Menu(
-            master=self.viewmode_popup, tearoff=False)
-        # selectmode_popup is same as display game version
-        # viewmode_popup has pointer actions to add non-move PGN constructs
-        # to game. Direct typing is allowed only in error situations.
-        # Additional popup menus are defined for non-move PGN contexts.
-        self.viewmode_popup.insert_cascade(
-            'Database',
-            label='Navigate Score',
-            menu=self.menupopup_movemode_score_navigation)
-        self.viewmode_popup.insert_cascade(
-            'Database',
-            label='PGN',
-            menu=self.menupopup_movemode_pgn_insert)
-        for function, accelerator in (
-            # Non-move navigation
-            (self.show_prev_token,
-             EventSpec.gameedit_show_previous_token),
-            (self.show_next_token,
-             EventSpec.gameedit_show_next_token),
-            (self.show_first_token,
-             EventSpec.gameedit_show_first_token),
-            (self.show_last_token,
-             EventSpec.gameedit_show_last_token),
-            (self.show_first_comment,
-             EventSpec.gameedit_show_first_comment),
-            (self.show_last_comment,
-             EventSpec.gameedit_show_last_comment),
-            (self.show_prev_comment,
-             EventSpec.gameedit_show_previous_comment),
-            (self.show_next_comment,
-             EventSpec.gameedit_show_next_comment),
-            (self.to_prev_pgn_tag,
-             EventSpec.gameedit_to_previous_pgn_tag),
-            (self.to_next_pgn_tag,
-             EventSpec.gameedit_to_next_pgn_tag),
-            ):
-            self.menupopup_movemode_score_navigation.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_movemode_score_navigation),
-                accelerator=accelerator[2])
-        for function, accelerator in (
-            # PGN constructs
-            (self.insert_comment,
-             EventSpec.gameedit_insert_comment),
-            (self.insert_reserved,
-             EventSpec.gameedit_insert_reserved),
-            (self.insert_comment_to_eol,
-             EventSpec.gameedit_insert_comment_to_eol),
-            (self.insert_escape_to_eol,
-             EventSpec.gameedit_insert_escape_to_eol),
-            (self.insert_glyph,
-             EventSpec.gameedit_insert_glyph),
-            (self.insert_result_win,
-             EventSpec.gameedit_insert_white_win),
-            (self.insert_result_draw,
-             EventSpec.gameedit_insert_draw),
-            (self.insert_result_loss,
-             EventSpec.gameedit_insert_black_win),
-            (self.insert_result_termination,
-             EventSpec.gameedit_insert_other_result),
-            (self.insert_castle_queenside_command,
-             EventSpec.gameedit_insert_castle_queenside),
-            ):
-            self.menupopup_movemode_pgn_insert.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_movemode_pgn_insert),
-                accelerator=accelerator[2])
-        # Define popup menu for non-move contexts which are not PGN Tags.
-        self.menupopup_nonmove = tkinter.Menu(
-            master=self.score, tearoff=False)
-        self.menupopup_nonmove_score_navigation = tkinter.Menu(
-            master=self.menupopup_nonmove, tearoff=False)
-        self.menupopup_nonmove_database = tkinter.Menu(
-            master=self.menupopup_nonmove, tearoff=False)
-        for function, accelerator in (
-            # superclass game navigation
-            (self.bind_and_show_next_in_line,
-             EventSpec.gameedit_bind_and_show_next_in_line),
-            (self.bind_and_show_next_in_var,
-             EventSpec.gameedit_bind_and_show_next_in_variation),
-            (self.bind_and_show_prev_in_line,
-             EventSpec.gameedit_bind_and_show_previous_in_line),
-            (self.bind_and_show_prev_in_var,
-             EventSpec.gameedit_bind_and_show_previous_in_variation),
-            (self.bind_and_show_first_in_game,
-             EventSpec.gameedit_bind_and_show_first_in_game),
-            (self.bind_and_show_last_in_game,
-             EventSpec.gameedit_bind_and_show_last_in_game),
-            (self.bind_and_show_first_in_line,
-             EventSpec.gameedit_bind_and_show_first_in_line),
-            (self.bind_and_show_last_in_line,
-             EventSpec.gameedit_bind_and_show_last_in_line),
-            ):
-            self.menupopup_nonmove.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, self.menupopup_nonmove),
-                accelerator=accelerator[2])
-        self.menupopup_nonmove.add_cascade(
-            label='Navigate Score',
-            menu=self.menupopup_nonmove_score_navigation)
-        self.menupopup_nonmove.add_cascade(
-            label='Database',
-            menu=self.menupopup_nonmove_database)
-        for function, accelerator in (
-            # PGN tag navigation
-            (self.bind_and_to_prev_pgn_tag,
-             EventSpec.gameedit_bind_and_to_previous_pgn_tag),
-            (self.bind_and_to_next_pgn_tag,
-             EventSpec.gameedit_bind_and_to_next_pgn_tag),
-            ):
-            self.menupopup_nonmove_score_navigation.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_nonmove_score_navigation),
-                accelerator=accelerator[2])
-        for function, accelerator in (
-            # Export options
-            (self.export_archive_pgn,
-             EventSpec.export_archive_pgn_from_game),
-            (self.export_rav_pgn,
-             EventSpec.export_rav_pgn_from_game),
-            (self.export_pgn,
-             EventSpec.export_pgn_from_game),
-            ):
-            self.menupopup_nonmove_database.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_nonmove_database),
-                accelerator=accelerator[2])
-        # Define popup menu for PGN Tag context.
-        self.menupopup_pgntagmode = tkinter.Menu(
-            master=self.score, tearoff=False)
-        self.menupopup_pgntag_score_navigation = tkinter.Menu(
-            master=self.menupopup_pgntagmode, tearoff=False)
-        self.menupopup_pgntag_pgn_insert = tkinter.Menu(
-            master=self.menupopup_pgntagmode, tearoff=False)
-        self.menupopup_pgntag_database = tkinter.Menu(
-            master=self.menupopup_pgntagmode, tearoff=False)
-        for function, accelerator in (
-            # superclass game navigation
-            (self.non_move_show_next_in_line,
-             EventSpec.gameedit_non_move_show_next_in_line),
-            (self.non_move_show_next_in_variation,
-             EventSpec.gameedit_non_move_show_next_in_variation),
-            (self.non_move_show_prev_in_line,
-             EventSpec.gameedit_non_move_show_previous_in_line),
-            (self.non_move_show_prev_in_variation,
-             EventSpec.gameedit_non_move_show_previous_in_variation),
-            (self.non_move_show_first_in_game,
-             EventSpec.gameedit_non_move_show_first_in_game),
-            (self.non_move_show_last_in_game,
-             EventSpec.gameedit_non_move_show_last_in_game),
-            (self.non_move_show_first_in_line,
-             EventSpec.gameedit_non_move_show_first_in_line),
-            (self.non_move_show_last_in_line,
-             EventSpec.gameedit_non_move_show_last_in_line),
-            ):
-            self.menupopup_pgntagmode.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, self.menupopup_pgntagmode),
-                accelerator=accelerator[2])
-        self.menupopup_pgntagmode.add_cascade(
-            label='Navigate Score',
-            menu=self.menupopup_pgntag_score_navigation)
-        self.menupopup_pgntagmode.add_cascade(
-            label='PGN',
-            menu=self.menupopup_pgntag_pgn_insert)
-        self.menupopup_pgntagmode.add_cascade(
-            label='Database',
-            menu=self.menupopup_pgntag_database)
-        for function, accelerator in (
-            # Non-move navigation
-            (self.show_prev_token,
-             EventSpec.gameedit_show_previous_token),
-            (self.show_next_token,
-             EventSpec.gameedit_show_next_token),
-            (self.show_first_token,
-             EventSpec.gameedit_show_first_token),
-            (self.show_last_token,
-             EventSpec.gameedit_show_last_token),
-            (self.show_first_comment,
-             EventSpec.gameedit_show_first_comment),
-            (self.show_last_comment,
-             EventSpec.gameedit_show_last_comment),
-            (self.show_prev_comment,
-             EventSpec.gameedit_show_previous_comment),
-            (self.show_next_comment,
-             EventSpec.gameedit_show_next_comment),
-            (self.to_prev_pgn_tag,
-             EventSpec.gameedit_to_previous_pgn_tag),
-            (self.to_next_pgn_tag,
-             EventSpec.gameedit_to_next_pgn_tag),
-            ):
-            self.menupopup_pgntag_score_navigation.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_pgntag_score_navigation),
-                accelerator=accelerator[2])
-        for function, accelerator in (
-            # PGN constructs
-            (self.insert_pgn_tag,
-             EventSpec.gameedit_insert_pgn_tag),
-            (self.insert_pgn_seven_tag_roster,
-             EventSpec.gameedit_insert_pgn_seven_tag_roster),
-            (self.delete_empty_pgn_tag,
-             EventSpec.gameedit_delete_empty_pgn_tag),
-            ):
-            self.menupopup_pgntag_pgn_insert.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_pgntag_pgn_insert),
-                accelerator=accelerator[2])
-        for function, accelerator in (
-            # Export options
-            (self.export_archive_pgn,
-             EventSpec.export_archive_pgn_from_game),
-            (self.export_rav_pgn,
-             EventSpec.export_rav_pgn_from_game),
-            (self.export_pgn,
-             EventSpec.export_pgn_from_game),
-            ):
-            self.menupopup_pgntag_database.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.menupopup_pgntag_database),
-                accelerator=accelerator[2])
+
+        # Define popup menu for comment tokens.
+        self.comment_popup = None
+
+        # Define popup menu for PGN tag tokens.
+        self.pgn_tag_popup = None
+
+        # Define popup menu for Game Termination token.
+        self.game_termination_popup = None
+
+        # Define popup menu for '(' start RAV (recursive annotation variation)
+        # tokens.
+        self.start_rav_popup = None
+
+        # Define popup menu for ')' end RAV (recursive annotation variation)
+        # tokens.
+        self.end_rav_popup = None
+
+        # Define popup menu for '$' NAG (numeric annotation glyph) tokens.
+        self.nag_popup = None
+
+        # Define popup menu for ';...\n' comment to end of line tokens.
+        self.comment_to_end_of_line_popup = None
+
+        # Define popup menu for '\n%...\n' escape whole line tokens.
+        self.escape_whole_line_popup = None
+
+        # Define popup menu for '<...>' reserved tokens.
+        self.reserved_popup = None
 
     def add_char_to_token(self, event):
         """"""
@@ -480,347 +301,320 @@ class GameEdit(Game):
             self.process_move()
         return 'break'
 
-    def bind_for_viewmode(self):
-        """Set keyboard bindings for traversing moves."""
-        super().bind_for_viewmode()
-        # PGN move insertion
+    def set_active_bindings(self, switch=True):
+        """Delegate to toggle other relevant bindings and toggle bindings for
+        inserting moves and traversing all tokens.
+
+        Moves, including RAVs can only be inserted if the game termination
+        marker is present.
+
+        """
+        super().set_active_bindings(switch=switch)
         if self.score.tag_ranges(EDIT_RESULT):
-            self.score.bind(
-                EventSpec.gameedit_insert_rav[0],
-                self.try_event(self.insert_rav))
-            self.score.bind(
-                EventSpec.gameedit_insert_rav_castle_queenside[0],
-                self.try_event(self.insert_rav_castle_queenside))
-        for sequence, function in (
-            # PGN non-move symbol insertion
-            (EventSpec.gameedit_insert_comment,
-             self.insert_comment),
-            (EventSpec.gameedit_insert_reserved,
-             self.insert_reserved),
-            (EventSpec.gameedit_insert_comment_to_eol,
-             self.insert_comment_to_eol),
-            (EventSpec.gameedit_insert_escape_to_eol,
-             self.insert_escape_to_eol),
-            (EventSpec.gameedit_insert_glyph,
-             self.insert_glyph),
-            (EventSpec.gameedit_insert_pgn_tag,
-             self.insert_pgn_tag),
-            (EventSpec.gameedit_insert_pgn_seven_tag_roster,
-             self.insert_pgn_seven_tag_roster),
-            (EventSpec.gameedit_insert_white_win,
-             self.insert_result_event),
-            (EventSpec.gameedit_insert_draw,
-             self.insert_result_event),
-            (EventSpec.gameedit_insert_black_win,
-             self.insert_result_event),
-            (EventSpec.gameedit_insert_other_result,
-             self.insert_result_event),
-            # Token navigation ignoring token purpose (can reach all tokens)
-            (EventSpec.gameedit_show_previous_token,
-             self.show_prev_token),
-            (EventSpec.gameedit_show_next_token,
-             self.show_next_token),
-            (EventSpec.gameedit_show_first_token,
-             self.show_first_token),
-            (EventSpec.gameedit_show_last_token,
-             self.show_last_token),
-            # Comment navigation
-            (EventSpec.gameedit_show_first_comment,
-             self.show_first_comment),
-            (EventSpec.gameedit_show_last_comment,
-             self.show_last_comment),
-            (EventSpec.gameedit_show_previous_comment,
-             self.show_prev_comment),
-            (EventSpec.gameedit_show_next_comment,
-             self.show_next_comment),
-            # PGN tag navigation
-            (EventSpec.gameedit_to_previous_pgn_tag,
-             self.to_prev_pgn_tag),
-            (EventSpec.gameedit_to_next_pgn_tag,
-             self.to_next_pgn_tag),
-            # PGN tag deletion
-            (EventSpec.gameedit_delete_empty_pgn_tag, ''),
-            # Character editing
-            (EventSpec.gameedit_set_insert_previous_line_in_token, ''),
-            (EventSpec.gameedit_set_insert_previous_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_next_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_next_line_in_token, ''),
-            (EventSpec.gameedit_set_insert_first_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_last_char_in_token, ''),
-            (EventSpec.gameedit_delete_move_char_left_shift, ''),
-            (EventSpec.gameedit_delete_move_char_right_shift, ''),
-            (EventSpec.gameedit_delete_move_char_left, ''),
-            (EventSpec.gameedit_delete_move_char_right, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+            self.set_keypress_binding(
+                function=self.insert_rav,
+                bindings=(EventSpec.gameedit_insert_rav,),
+                switch=switch)
+            self.set_event_bindings_score((
+                (EventSpec.gameedit_insert_castle_queenside,
+                 self.insert_rav_castle_queenside),
+                ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_insert_pgn_in_movetext_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
 
-    def bind_for_select_variation_mode(self):
-        """Set keyboard bindings for selecting a variation.
+    def set_select_variation_bindings(self, switch=True):
+        """Switch bindings for selecting a variation on or off."""
+        super().set_select_variation_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self.get_insert_pgn_in_movetext_events(), switch=False)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=False)
 
-        Cancel all the bindings for editing and navigating a game.  Character
-        editing is not enabled in the situations where select variation can be
-        invoked so those bindings do not need cancelling.
+    # Renamed from 'bind_for_edit_symbol_mode' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Shared by most 'bind_for_*' methods handling non-move tokens.
+    def set_edit_symbol_mode_bindings(self,
+                                      switch=True,
+                                      include_ooo=False,
+                                      include_tags=False,
+                                      include_movetext=True,
+                                      popup_top_left=None,
+                                      popup_pointer=None):
+        """Set or unset bindings for editing symbols depending on switch.
+
+        Defaults for include_ooo, include_tags, and include_movetext, are for
+        non-move tokens in the movetext area of the PGN game score.
+
+        include_ooo refers to the popup menu option and Ctrl-o option to insert
+        O-O-O in the game score when both O-O and O-O-O are legal moves.
+
+        include_tags refers to the popup menu options, and keystrokes, to add
+        or delete empty PGN tags in the PGN tag area.
+
+        include_movetext refers to the popup menu options, and keystrokes, to
+        add empty non-move constructs in the movetext area.
+
+        popup_top_left is expected to be a function to post a popup menu at
+        top left of widget with focus by Shift F10.  Default is no popup which
+        causes menubar to activate.
+
+        popup_pointer is expected to be a function to post a popup menu at the
+        pointer location by Control F10 or right click.  Default is no popup
+        which means Control F10 causes menubar to activate.
 
         """
-        super().bind_for_select_variation_mode()
-        for sequence, function in (
-            # PGN non-move symbol insertion
-            (EventSpec.gameedit_insert_comment, ''),
-            (EventSpec.gameedit_insert_reserved, ''),
-            (EventSpec.gameedit_insert_comment_to_eol, ''),
-            (EventSpec.gameedit_insert_escape_to_eol, ''),
-            (EventSpec.gameedit_insert_glyph, ''),
-            (EventSpec.gameedit_insert_pgn_tag, ''),
-            (EventSpec.gameedit_insert_pgn_seven_tag_roster, ''),
-            (EventSpec.gameedit_insert_white_win, ''),
-            (EventSpec.gameedit_insert_draw, ''),
-            (EventSpec.gameedit_insert_black_win, ''),
-            (EventSpec.gameedit_insert_other_result, ''),
-            (EventSpec.gameedit_insert_castle_queenside, ''),
-            # Token navigation ignoring token purpose (can reach all tokens)
-            (EventSpec.gameedit_show_previous_token, ''),
-            (EventSpec.gameedit_show_next_token, ''),
-            (EventSpec.gameedit_show_first_token, ''),
-            (EventSpec.gameedit_show_last_token, ''),
-            # Comment navigation
-            (EventSpec.gameedit_show_first_comment, ''),
-            (EventSpec.gameedit_show_last_comment, ''),
-            (EventSpec.gameedit_show_previous_comment, ''),
-            (EventSpec.gameedit_show_next_comment, ''),
-            # PGN tag navigation
-            (EventSpec.gameedit_to_previous_pgn_tag, ''),
-            (EventSpec.gameedit_to_next_pgn_tag, ''),
-            # PGN tag deletion
-            (EventSpec.gameedit_delete_empty_pgn_tag, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
-
-    def bind_for_edit_symbol_mode(self):
-        """Set keyboard bindings for editing symbols.
-
-        The bindings set in superclass method bind_for_viewmode are replaced by
-        versions that cancel character edit bindings, restore the superclass
-        bindings, and do the action.  The same is done for the PGN tag bindings
-        set in bind_for_viewmode in this class.  The other bindings set in this
-        class are kept because they allow character editing.
-
-        """
-        for sequence, function in (
-            # superclass game navigation
-            (EventSpec.gameedit_bind_and_show_previous_in_line,
-             self.bind_and_show_prev_in_line),
-            (EventSpec.gameedit_bind_and_show_previous_in_variation,
-             self.bind_and_show_prev_in_var),
-            (EventSpec.gameedit_bind_and_show_next_in_line,
-             self.bind_and_show_next_in_line),
-            (EventSpec.gameedit_bind_and_show_next_in_variation,
-             self.bind_and_show_next_in_var),
-            (EventSpec.gameedit_bind_and_show_first_in_line,
-             self.bind_and_show_first_in_line),
-            (EventSpec.gameedit_bind_and_show_last_in_line,
-             self.bind_and_show_last_in_line),
-            (EventSpec.gameedit_bind_and_show_first_in_game,
-             self.bind_and_show_first_in_game),
-            (EventSpec.gameedit_bind_and_show_last_in_game,
-             self.bind_and_show_last_in_game),
-            # PGN tag navigation
-            (EventSpec.gameedit_bind_and_to_previous_pgn_tag,
-             self.bind_and_to_prev_pgn_tag),
-            (EventSpec.gameedit_bind_and_to_next_pgn_tag,
-             self.bind_and_to_next_pgn_tag),
-            # PGN tag deletion
-            (EventSpec.gameedit_delete_empty_pgn_tag,
-             self.delete_empty_pgn_tag),
-            # Character editing
-            (EventSpec.gameedit_delete_token_char_left,
-             self.delete_token_char_left),
-            (EventSpec.gameedit_delete_token_char_right,
-             self.delete_token_char_right),
-            (EventSpec.gameedit_delete_char_left,
-             self.delete_char_left),
-            (EventSpec.gameedit_delete_char_right,
-             self.delete_char_right),
-            (EventSpec.gameedit_set_insert_previous_line_in_token,
-             self.set_insert_prev_line_in_token),
-            (EventSpec.gameedit_set_insert_previous_char_in_token,
-             self.set_insert_prev_char_in_token),
-            (EventSpec.gameedit_set_insert_next_char_in_token,
-             self.set_insert_next_char_in_token),
-            (EventSpec.gameedit_set_insert_next_line_in_token,
-             self.set_insert_next_line_in_token),
-            (EventSpec.gameedit_set_insert_first_char_in_token,
-             self.set_insert_first_char_in_token),
-            (EventSpec.gameedit_set_insert_last_char_in_token,
-             self.set_insert_last_char_in_token),
+        self.set_event_bindings_score(
+            self.get_navigate_score_from_non_move_events(), switch=switch)
+        if include_movetext:
+            self.set_event_bindings_score(
+                self.get_insert_pgn_in_movetext_events(), switch=switch)
+        if include_tags:
+            self.set_event_bindings_score(
+                self.get_insert_pgn_in_tags_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_set_insert_in_token_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_delete_char_in_token_events(), switch=switch)
+        self.set_event_bindings_score((
             (EventSpec.gameedit_add_char_to_token,
              self.add_char_to_token),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+            ), switch=switch)
+        if include_ooo:
+            self.set_event_bindings_score((
+                (EventSpec.gameedit_insert_castle_queenside,
+                 self.insert_castle_queenside_command),
+                ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_button_events(popup_pointer),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_F10_popup_events(popup_top_left, popup_pointer),
+            switch=switch)
         # Allowed characters defined in set_token_context() call
-
-    def bind_for_movemode_on_exit_edit_symbol_mode(self):
-        """Set keyboard bindings for editing symbols.
-
-        The bindings set by bind_for_edit_symbol_mode() are replaced with those
-        set by bind_for_viewmode().
         
-        """
-        super().bind_for_viewmode()
-        if self.score.tag_ranges(EDIT_RESULT):
-            self.score.bind(EventSpec.gameedit_insert_rav[0],
-                            self.try_event(self.insert_rav))
-            self.score.bind(EventSpec.gameedit_insert_rav_castle_queenside[0],
-                            self.try_event(self.insert_rav_castle_queenside))
-        for sequence, function in (
-            # PGN tag navigation
-            (EventSpec.gameedit_to_previous_pgn_tag, self.to_prev_pgn_tag),
-            (EventSpec.gameedit_to_next_pgn_tag, self.to_next_pgn_tag),
-            # PGN tag deletion
-            (EventSpec.gameedit_delete_empty_pgn_tag, ''),
-            # Character editing
-            (EventSpec.gameedit_delete_token_char_left, ''),
-            (EventSpec.gameedit_delete_token_char_right, ''),
-            (EventSpec.gameedit_delete_char_left, ''),
-            (EventSpec.gameedit_delete_char_right, ''),
-            (EventSpec.gameedit_set_insert_previous_line_in_token, ''),
-            (EventSpec.gameedit_set_insert_previous_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_next_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_next_line_in_token, ''),
-            (EventSpec.gameedit_set_insert_first_char_in_token, ''),
-            (EventSpec.gameedit_set_insert_last_char_in_token, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
-
-    def bind_for_non_move_navigation(self):
-        """Set keyboard bindings for non-editable non-move tokens.
-
-        The bindings set in superclass method bind_for_viewmode are replaced by
-        versions that restore the superclass bindings, and do the action.
-
-        """
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', ''),
-            ('<ButtonPress-3>', self.try_event(self.popup_nonmove_menu)),
-            ):
-            self.score.bind(sequence, function)
-
-        # This event rather than one of the others binding to '<KeyPress>':
-        # gameedit_add_move_char_to_token, gameedit_insert_move, or
-        # gameedit_insert_rav.
-        # (Is the intent to cancel an action or wipe the slate clean.)
-        self.score.bind(EventSpec.gameedit_add_char_to_token[0],
-                        lambda e: 'break')
-
-        for sequence, function in (
-            # superclass game navigation
-            (EventSpec.gameedit_non_move_show_previous_in_variation,
-             self.non_move_show_prev_in_variation),
-            (EventSpec.gameedit_non_move_show_previous_in_line,
-             self.non_move_show_prev_in_line),
-            (EventSpec.gameedit_non_move_show_next_in_line,
-             self.non_move_show_next_in_line),
-            (EventSpec.gameedit_non_move_show_next_in_variation,
-             self.non_move_show_next_in_variation),
-            (EventSpec.gameedit_non_move_show_first_in_line,
-             self.non_move_show_first_in_line),
-            (EventSpec.gameedit_non_move_show_last_in_line,
-             self.non_move_show_last_in_line),
-            (EventSpec.gameedit_non_move_show_first_in_game,
-             self.non_move_show_first_in_game),
-            (EventSpec.gameedit_non_move_show_last_in_game,
-             self.non_move_show_last_in_game),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
-
-    def bind_for_movemode_on_exit_non_move_navigation(self):
-        """Set keyboard bindings for move navigation.
-
-        The <...> bindings set by bind_for_non_move_navigation() are replaced
-        with those set by bind_for_viewmode().
+    def bind_for_edit_glyph(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_GLYPH
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_nag_menu_at_top_left,
+            popup_pointer=self.post_nag_menu)
         
-        """
-        # superclass game navigation
-        super().bind_for_viewmode()
-        if self.score.tag_ranges(EDIT_RESULT):
-            self.score.bind(EventSpec.gameedit_insert_rav[0],
-                            self.try_event(self.insert_rav))
-            self.score.bind(EventSpec.gameedit_insert_rav_castle_queenside[0],
-                            self.try_event(self.insert_rav_castle_queenside))
-
-    def bind_for_edit_edited_move(self):
-        """Set keyboard bindings for editing symbols when editing a move.
-
-        The standard insert and delete character bindings are replaced.
-
-        """
-        self.bind_for_edit_symbol_mode()
-        for sequence, function in (
-            (EventSpec.gameedit_delete_move_char_left_shift,
-             self.delete_move_char_left),
-            (EventSpec.gameedit_delete_move_char_right_shift,
-             self.delete_move_char_right),
-            (EventSpec.gameedit_delete_move_char_left,
-             self.delete_move_char_left),
-            (EventSpec.gameedit_delete_move_char_right,
-             self.delete_move_char_right),
-            (EventSpec.gameedit_add_move_char_to_token,
-             self.add_move_char_to_token),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
-
-    def bind_for_insert_or_edit_move(self):
-        """Set keyboard bindings to start insert or edit move."""
-        for sequence, function in (
+    def bind_for_edit_game_termination(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_RESULT
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            include_movetext=False,
+            popup_top_left=self.post_game_termination_menu_at_top_left,
+            popup_pointer=self.post_game_termination_menu)
+        
+    def bind_for_edit_pgn_tag_name(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_PGN_TAG_NAME
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            include_tags=True,
+            include_movetext=False,
+            popup_top_left=self.post_pgn_tag_menu_at_top_left,
+            popup_pointer=self.post_pgn_tag_menu)
+        
+    def bind_for_edit_pgn_tag_value(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_PGN_TAG_VALUE
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            include_tags=True,
+            include_movetext=False,
+            popup_top_left=self.post_pgn_tag_menu_at_top_left,
+            popup_pointer=self.post_pgn_tag_menu)
+        
+    def bind_for_edit_comment(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_COMMENT
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_comment_menu_at_top_left,
+            popup_pointer=self.post_comment_menu)
+        
+    def bind_for_edit_reserved(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_RESERVED
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_reserved_menu_at_top_left,
+            popup_pointer=self.post_reserved_menu)
+        
+    def bind_for_edit_comment_eol(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_COMMENT_EOL
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_comment_to_end_of_line_menu_at_top_left,
+            popup_pointer=self.post_comment_to_end_of_line_menu)
+        
+    def bind_for_edit_escape_eol(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_ESCAPE_EOL
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_escape_whole_line_menu_at_top_left,
+            popup_pointer=self.post_escape_whole_line_menu)
+        
+    def bind_for_edit_move_error(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_MOVE_ERROR
+        self.set_edit_symbol_mode_bindings(switch=switch)
+        
+    def bind_for_edit_move(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = EDIT_MOVE
+        super().set_active_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self.get_insert_pgn_in_movetext_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
+        self.set_event_bindings_score((
             (EventSpec.gameedit_insert_move, self.insert_move),
             (EventSpec.gameedit_edit_move, self.edit_move),
             (EventSpec.gameedit_insert_castle_queenside,
              self.insert_move_castle_queenside),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+            ), switch=switch)
         
-    def bind_for_insert_rav_no_edit_move(self):
-        """Set keyboard bindings to insert variations with no move editing."""
-        for sequence, function in (
-            (EventSpec.gameedit_insert_rav, self.insert_rav),
-            (EventSpec.gameedit_insert_rav_castle_queenside,
-             self.insert_rav_castle_queenside),
-            (EventSpec.gameedit_delete_move_char_left_shift, ''),
-            (EventSpec.gameedit_delete_move_char_right_shift, ''),
-            (EventSpec.gameedit_delete_move_char_left, ''),
-            (EventSpec.gameedit_delete_move_char_right, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+    def bind_for_insert_rav(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = INSERT_RAV
+        self.set_active_bindings(switch=switch)
         
-    def bind_for_no_token_editing(self):
-        """"""
-        self.score.bind(EventSpec.gameedit_add_move_char_to_token,
-                        lambda e: 'break')
-        for sequence, function in (
-            (EventSpec.gameedit_delete_move_char_left_shift, ''),
-            (EventSpec.gameedit_delete_move_char_right_shift, ''),
-            (EventSpec.gameedit_delete_move_char_left, ''),
-            (EventSpec.gameedit_delete_move_char_right, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+    def bind_for_move_edited(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = MOVE_EDITED
+        super().set_active_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self.get_insert_pgn_in_movetext_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_delete_char_in_move_events(), switch=switch)
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_add_move_char_to_token,
+             self.add_move_char_to_token),
+            ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_button_events(self.post_move_menu), switch=switch)
+        
+    # Should self.set_edit_symbol_mode_bindings() be used?
+    def bind_for_rav_start(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = RAV_START_TAG
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_start_rav_menu_at_top_left,
+            popup_pointer=self.post_start_rav_menu)
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_add_char_to_token,
+             self.press_break),
+            ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_from_non_move_events(), switch=switch)
+        
+    # Should self.set_edit_symbol_mode_bindings() be used?
+    def bind_for_rav_end(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = RAV_END_TAG
+        self.set_edit_symbol_mode_bindings(
+            switch=switch,
+            popup_top_left=self.post_end_rav_menu_at_top_left,
+            popup_pointer=self.post_end_rav_menu)
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_add_char_to_token,
+             self.press_break),
+            ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_from_non_move_events(), switch=switch)
+        
+    def bind_for_no_current_token(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.NO_CURRENT_TOKEN
+        self.set_event_bindings_score(
+            self.get_button_events(self.post_comment_menu), switch=switch)
+        
+    def bind_for_unrecognised_edit_token(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.DEFAULT_BINDINGS
+        self.set_event_bindings_score((
+            (EventSpec.alt_buttonpress_1, ''),
+            (EventSpec.buttonpress_1, ''),
+            (EventSpec.buttonpress_3, self.post_comment_menu),
+            ), switch=switch)
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_add_char_to_token,
+             self.press_break),
+            ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_from_non_move_events(), switch=switch)
+        
+    def bind_for_initial_state(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
+        
+    def bind_for_no_editable_tags(self, switch=True):
+        pass
+        
+    def bind_for_current_without_tags(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.CURRENT_NO_TAGS
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_add_move_char_to_token, self.press_break),
+            (EventSpec.gameedit_insert_castle_queenside, self.press_break),
+            ), switch=switch)
+        self.set_event_bindings_score(
+            self.get_delete_char_in_move_events(), False)
+        
+    # Dispatch dictionary for token binding selection.
+    # Keys are the possible values of self._most_recent_bindings.
+    token_bind_method = {
+        EDIT_GLYPH: bind_for_edit_glyph,
+        EDIT_RESULT: bind_for_edit_game_termination,
+        EDIT_PGN_TAG_NAME: bind_for_edit_pgn_tag_name,
+        EDIT_PGN_TAG_VALUE: bind_for_edit_pgn_tag_value,
+        EDIT_COMMENT: bind_for_edit_comment,
+        EDIT_RESERVED: bind_for_edit_reserved,
+        EDIT_COMMENT_EOL: bind_for_edit_comment_eol,
+        EDIT_ESCAPE_EOL: bind_for_edit_escape_eol,
+        EDIT_MOVE_ERROR: bind_for_edit_move_error,
+        EDIT_MOVE: bind_for_edit_move,
+        INSERT_RAV: bind_for_insert_rav,
+        MOVE_EDITED: bind_for_move_edited,
+        RAV_END_TAG: bind_for_rav_end,
+        RAV_START_TAG: bind_for_rav_start,
+        NonTagBind.NO_CURRENT_TOKEN: bind_for_no_current_token,
+        NonTagBind.DEFAULT_BINDINGS: bind_for_unrecognised_edit_token,
+        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
+        NonTagBind.NO_EDITABLE_TAGS: bind_for_no_editable_tags,
+        NonTagBind.CURRENT_NO_TAGS: bind_for_current_without_tags,
+        NonTagBind.SELECT_VARIATION: Game.bind_for_select_variation,
+        }
 
     def delete_char_right(self, event):
         """"""
@@ -878,14 +672,13 @@ class GameEdit(Game):
     def map_game(self):
         """Extend to set insertion cursor at start of moves."""
         super().map_game()
-        # Is INSERT_TOKEN_MARK redundant now?
-        self.score.mark_set(INSERT_TOKEN_MARK, START_SCORE_MARK)
-        self.score.mark_set(tkinter.INSERT, INSERT_TOKEN_MARK)
+        # Is INSERT_TOKEN_MARK redundant now?  Let's see.
+        self.score.mark_set(tkinter.INSERT, START_SCORE_MARK)
 
     def insert_comment(self, event=None):
         """Insert comment in game score after current."""
         if self.current:
-            if not self.is_movetext_insertion_allowed():
+            if not self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_comment()
         return self.show_next_comment()
@@ -893,7 +686,7 @@ class GameEdit(Game):
     def insert_comment_to_eol(self, event=None):
         """Insert comment to eol in game score after current."""
         if self.current:
-            if not self.is_movetext_insertion_allowed():
+            if not self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_comment_to_eol()
         return self.show_next_comment()
@@ -901,7 +694,7 @@ class GameEdit(Game):
     def insert_escape_to_eol(self, event=None):
         """Insert escape to eol in game score after current."""
         if self.current:
-            if not self.is_movetext_insertion_allowed():
+            if not self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_escape_to_eol()
         return self.show_next_comment()
@@ -909,7 +702,7 @@ class GameEdit(Game):
     def insert_glyph(self, event=None):
         """Insert glyph in game score after current."""
         if self.current:
-            if not self.is_movetext_insertion_allowed():
+            if not self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_glyph()
         return self.show_next_comment()
@@ -917,7 +710,7 @@ class GameEdit(Game):
     def insert_pgn_tag(self, event=None):
         """Insert a single empty pgn tag in game score after current."""
         if self.current:
-            if not self.is_pgn_tag_insertion_allowed():
+            if self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_pgn_tag()
         if self.current:
@@ -933,7 +726,7 @@ class GameEdit(Game):
     def insert_pgn_seven_tag_roster(self, event=None):
         """Insert an empty pgn seven tag roster in game score after current."""
         if self.current:
-            if not self.is_pgn_tag_insertion_allowed():
+            if self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_pgn_seven_tag_roster()
         if self.current:
@@ -951,7 +744,7 @@ class GameEdit(Game):
         # To catch insertion when no moves, even incomplete or illegal, exist.
         # Perhaps it is better to put this test in bind_...() methods.  Hope
         # that will not add too many states for one rare case.
-        if not self.is_rav_insertion_allowed():
+        if not self.is_at_least_one_move_in_movetext():
             return self.insert_move(event)
         if not event.char:
             return 'break'
@@ -978,7 +771,7 @@ class GameEdit(Game):
         # To catch insertion when no moves, even incomplete or illegal, exist.
         # Perhaps it is better to put this test in bind_...() methods.  Hope
         # that will not add too many states for one rare case.
-        if not self.is_rav_insertion_allowed():
+        if not self.is_at_least_one_move_in_movetext():
             return self.insert_move_castle_queenside(event)
         if not event.char:
             return 'break'
@@ -1015,7 +808,7 @@ class GameEdit(Game):
             self.score.delete(*ner)
         return 'break'
 
-    def insert_result_draw(self):
+    def insert_result_draw(self, event=None):
         """Set 1/2-1/2 as the game termination sequence and PGN Result Tag."""
         self.insert_result(DRAW)
 
@@ -1023,29 +816,29 @@ class GameEdit(Game):
         """Insert or edit the game termination sequence and PGN Result Tag."""
         self.insert_result(_TERMINATION_MAP.get(event.keysym))
 
-    def insert_result_loss(self):
+    def insert_result_loss(self, event=None):
         """Set 0-1 as the game termination sequence and PGN Result Tag."""
         self.insert_result(BLACK_WIN)
 
-    def insert_result_termination(self):
+    def insert_result_termination(self, event=None):
         """Set * as the game termination sequence and PGN Result Tag."""
         self.insert_result(UNKNOWN_RESULT)
 
-    def insert_result_win(self):
+    def insert_result_win(self, event=None):
         """Set 1-0 as the game termination sequence and PGN Result Tag."""
         self.insert_result(WHITE_WIN)
         
     def insert_reserved(self, event=None):
         """Insert reserved in game score after current."""
         if self.current:
-            if not self.is_movetext_insertion_allowed():
+            if not self.is_current_in_movetext():
                 return 'break'
         self.insert_empty_reserved()
         return self.show_next_comment()
 
     def insert_castle_queenside_command(self):
         """Insert or edit the O-O-O movetext."""
-        ria = self.is_rav_insertion_allowed()
+        ria = self.is_at_least_one_move_in_movetext()
         c = self.score.tag_ranges(self.current)
 
         # Is current move last move in game?
@@ -1183,78 +976,41 @@ class GameEdit(Game):
         self.process_move()
         return 'break'
 
-    def setup_non_move_navigation(self, tagnames, tagranges):
-        """"""
-        self.bind_for_non_move_navigation()
-        
-    def setup_no_editing(self):
-        """"""
-        self.bind_for_no_token_editing()
-
-    def non_move_show_first_in_game(self, event=None):
-        """Display initial position of line containing current move."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_first_in_game(event)
-
-    def non_move_show_first_in_line(self, event=None):
-        """Display initial position of line containing current move."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_first_in_line(event)
-
-    def non_move_show_last_in_game(self, event=None):
-        """Display final position of game."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_last_in_game(event)
-        
-    def non_move_show_last_in_line(self, event=None):
-        """Display final position of line containing current move."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_last_in_line(event)
-        
-    def non_move_show_next_in_line(self, event=None):
-        """Display next position of selected line."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_next_in_line(event)
-
-    def non_move_show_next_in_variation(self, event=None):
-        """Display choices if these exist or next position of selected line."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        return self.show_next_in_variation(event)
-        
-    def non_move_show_prev_in_line(self, event=None):
-        """Display previous position of selected line."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        # self.set_current() already called
-        self.set_game_board()
-        return 'break'
-        
-    def non_move_show_prev_in_variation(self, event=None):
-        """Display choices in previous position of selected line."""
-        self.bind_for_movemode_on_exit_non_move_navigation()
-        self.set_nearest_move_to_token_as_currentmove()
-        # self.set_current() already called
-        self.set_game_board()
-        return 'break'
-
+    # One set of bindings is needed for each self._most_recent_bindings value
+    # tested.  That means one method to do the binding and one popup menu for
+    # each set of bindings.
+    # Take opportunity to rename self.veiwmode_popup as self.move_popup with
+    # additional menus: but not yet as too many non-gameedit modules need
+    # modifying.  It is inherited from Score.  self.selectmode_popup, also
+    # inherited from Score, will be renamed select_move_popup.
+    # self.inactive_popup seems ok.
+    # self.viewmode_comment_popup and self.viewmode_pgntag_popup can just drop
+    # viewmode_ from their names.  The only references outside gameedit are in
+    # gamedisplay and repertoiredisplay, four in all.  Ok to do now.
+    # The event handler to post pgn_tag_popup menu is renamed post_pgn_tag_menu.
+    # Two new ones, start_rav_popup and end_rav_popup, are needed.  It may be
+    # best to have one each for all the editable tokens, in particular escaped
+    # line and comment to end of line, to cope with the slight variation in
+    # editing rules.
+    # The bind_for_move() call must be replaced because it may, probably
+    # will, occur when not in select variation state.
     def set_current(self):
-        """Extend to set edit and navigation bindings for current token.
+        """Override to set edit and navigation bindings for current token.
 
-        All characters have one tag which indicates the edit rules that apply
-        to the token containing the character.  For RAV markers it is the
-        absence of such a tag that indicates the rule.  Default is no editing.
+        All significant characters except RAV markers have one tag which
+        indicates the edit rules that apply to the token containing the
+        character.  The absence of such a tag indicates the character may be a
+        RAV marker.  Default is no editing.
+
+        RAV markers are used to adjust the insertion point for a new RAV,
+        compared with insertion when a move is the current token, but
+        cannot be edited.
 
         """
         # This method and those called adjust bindings so do not call context
         # independent binding setup methods after this method for an event.
-        # May add RAV markers to _EDIT_TAGS eventually
-        # Editing token possible only if no moves in game score
+        # May add RAV markers to _EDIT_TAGS eventually.
+        # Editing token possible only if no moves in game score.
         tagranges = self.set_current_range()
         if tagranges:
             tagnames = self.score.tag_names(tagranges[0])
@@ -1262,40 +1018,62 @@ class GameEdit(Game):
                 tns = set(tagnames)
                 tn = tns.intersection(_EDIT_TAGS)
                 if tn:
+
                     # Hack to deal with PGN Tag Value tagging while these items
                     # are tagged by EDIT_PGN_TAG_VALUE and EDIT_PGN_TAG_NAME
                     tnn = tn.pop()
                     if EDIT_PGN_TAG_VALUE in tn:
                         tnn = EDIT_PGN_TAG_VALUE
+
+                    # Could replace 'not self.is_current_in_movetext()' with
+                    # 'PGN_TAG in tns', but a 'self.is_current_in_movetext()'
+                    # just before the 'else' clause becomes wise.
+                    # Maybe explicit tests for all the EDIT_* tags (Tk sense)
+                    # is best.
                     self.set_token_context(tagnames, tagranges, tnn)
-                    if self.is_movetext_insertion_allowed():
-                        self.score.bind(
-                            '<ButtonPress-3>',
-                            self.try_event(self.popup_viewmode_menu)),
-                    else:
-                        self.score.bind(
-                            '<ButtonPress-3>',
-                            self.try_event(self.popup_pgn_tag_menu)),
-                    return
-                elif NAVIGATE_MOVE not in tns:
-                    self.setup_non_move_navigation(tagnames, tagranges)
-            self.score.mark_set(INSERT_TOKEN_MARK, tagranges[1])
-            self.score.mark_set(tkinter.INSERT, INSERT_TOKEN_MARK)
-            self.set_move_tag(*tagranges)
-            if self.is_movetext_insertion_allowed():
-                self.score.bind(
-                    '<ButtonPress-3>',
-                    self.try_event(self.popup_viewmode_menu)),
-            else:
-                self.score.bind(
-                    '<ButtonPress-3>',
-                    self.try_event(self.popup_pgn_tag_menu)),
+
+                # The '(' and ')' around a RAV are the only things that matched
+                # for original 'else' clause.  The 'else' is retained for
+                # unexpected cases, and the RAV_START_TAG and RAV_END_TAG
+                # clauses are introduced to support alternate placement of
+                # inserted RAVs.  (Code for each clause will be put in methods
+                # for tidiness.)
+                # (That code was wrapped in chain of methods used here only,
+                # and protected by a test based on false assumption.)
+                elif RAV_END_TAG in tns:
+                    if self._most_recent_bindings != RAV_END_TAG:
+                        self.token_bind_method[RAV_END_TAG](self)
+                    self.score.mark_set(tkinter.INSERT, tagranges[1])
+                    self.set_move_tag(*tagranges)
+                elif RAV_START_TAG in tns:
+                    if self._most_recent_bindings != RAV_START_TAG:
+                        self.token_bind_method[RAV_START_TAG](self)
+                    self.score.mark_set(tkinter.INSERT, tagranges[1])
+                    self.set_move_tag(*tagranges)
+                else:
+                    if (self._most_recent_bindings !=
+                        NonTagBind.DEFAULT_BINDINGS):
+                        self.token_bind_method[
+                            NonTagBind.DEFAULT_BINDINGS](self)
+                    self.score.mark_set(tkinter.INSERT, tagranges[1])
+                    self.set_move_tag(*tagranges)
+
+                return
         elif self.current is None:
-            self.score.mark_set(INSERT_TOKEN_MARK, START_SCORE_MARK)
-            self.score.mark_set(tkinter.INSERT, INSERT_TOKEN_MARK)
-            self.bind_for_viewmode()
+            if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+                self.token_bind_method[NonTagBind.NO_EDITABLE_TAGS](self)
+            self.score.mark_set(tkinter.INSERT, START_SCORE_MARK)
+
+            # Must be replaced because it's assumptions may not be true.
+            if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+                self.bind_for_move()
+
             return
-        self.setup_no_editing()
+
+        # Disable editing.  (This was wrapped in a method used here only.)
+        # (Just the popup menu route to block now: after reorganising menus.)
+        if self._most_recent_bindings != NonTagBind.CURRENT_NO_TAGS:
+            self.token_bind_method[NonTagBind.CURRENT_NO_TAGS](self)
 
     def set_insert_first_char_in_token(self, event):
         """"""
@@ -1339,6 +1117,15 @@ class GameEdit(Game):
         self.apply_colouring_to_variation_back_to_main_line()
         # Set colouring of moves. This is either correct as stands (Alt-Left
         # for example) or base for modification (Alt-Right for example).
+        
+    def show_move_or_item(self, new_item=None):
+        """Display new item if not None."""
+        if not new_item:
+            return 'break'
+        tr = self.score.tag_ranges(new_item)
+        if NAVIGATE_MOVE in self.score.tag_names(tr[0]):
+            return self.go_to_move(tr[0])
+        return self.show_item(new_item=new_item)
     
     def show_first_comment(self, event=None):
         """Display first comment in game score."""
@@ -1360,19 +1147,35 @@ class GameEdit(Game):
         """Display first token in game score (usually first PGN Tag)."""
         if self.current is None:
             return 'break'
-        return self.show_item(new_item=self.select_first_token_in_game())
+        return self.show_move_or_item(
+            new_item=self.select_first_token_in_game())
         
     def show_last_token(self, event=None):
         """Display last token in game score (usually termination, 1-0 etc)."""
-        return self.show_item(new_item=self.select_last_token_in_game())
+        return self.show_move_or_item(
+            new_item=self.select_last_token_in_game())
         
     def show_next_token(self, event=None):
-        """Display next token in game score (ignore rav structure of game)."""
-        return self.show_item(new_item=self.select_next_token_in_game())
+        """Display next token in game score (ignore rav structure of game).
+
+        Return 'break' so Tk selection is not modified or set.  This event is
+        fired by Shift Right.
+
+        """
+        self.show_move_or_item(
+            new_item=self.select_next_token_in_game())
+        return 'break'
         
     def show_prev_token(self, event=None):
-        """Display prev token in game score (ignore rav structure of game)."""
-        return self.show_item(new_item=self.select_prev_token_in_game())
+        """Display prev token in game score (ignore rav structure of game).
+
+        Return 'break' so Tk selection is not modified or set.  This event is
+        fired by Shift Left.
+
+        """
+        self.show_move_or_item(
+            new_item=self.select_prev_token_in_game())
+        return 'break'
         
     def show_next_pgn_tag_field_name(self, event=None):
         """Display next pgn tag field name."""
@@ -1399,10 +1202,11 @@ class GameEdit(Game):
         #self.set_current() # sets Tkinter.INSERT to wrong position
 
         # Hack in case arriving from last move in line
-        self.score.bind(EventSpec.gameedit_insert_move, lambda e: 'break')
-        self.score.bind(EventSpec.gameedit_edit_move, '')
-        self.score.bind(EventSpec.gameedit_insert_castle_queenside,
-                        lambda e: 'break')
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_insert_move, self.press_break),
+            (EventSpec.gameedit_edit_move, self.press_break),
+            (EventSpec.gameedit_insert_castle_queenside, self.press_break),
+            ))
 
         self.clear_current_range()
         self.set_game_board()
@@ -1426,98 +1230,100 @@ class GameEdit(Game):
         #self.set_current() # sets Tkinter.INSERT to wrong position
 
         # Hack in case arriving from last move in line
-        self.score.bind(EventSpec.gameedit_insert_move, lambda e: 'break')
-        self.score.bind(EventSpec.gameedit_edit_move, '')
-        self.score.bind(EventSpec.gameedit_insert_castle_queenside,
-                        lambda e: 'break')
+        self.set_event_bindings_score((
+            (EventSpec.gameedit_insert_move, self.press_break),
+            (EventSpec.gameedit_edit_move, self.press_break),
+            (EventSpec.gameedit_insert_castle_queenside, self.press_break),
+            ))
 
         self.clear_current_range()
         self.set_game_board()
         self.score.see(tkinter.INSERT)
         return 'break'
         
-    def bind_and_show_first_in_line(self, event=None):
+    # Renamed from 'bind_and_show_first_in_line' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_first_in_line which does same thing.
+    def show_first_in_line_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_first_in_line(event)
 
-    def bind_and_show_first_in_game(self, event=None):
+    # Renamed from 'bind_and_show_first_in_game' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_first_in_game which does same thing.
+    def show_first_in_game_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_first_in_game(event)
 
-    def bind_and_show_last_in_line(self, event=None):
+    # Renamed from 'bind_and_show_last_in_line' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_last_in_line which does same thing.
+    def show_last_in_line_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_last_in_line(event)
 
-    def bind_and_show_last_in_game(self, event=None):
+    # Renamed from 'bind_and_show_last_in_game' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_last_in_game which does same thing.
+    def show_last_in_game_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_last_in_game(event)
 
-    def bind_and_show_next_in_line(self, event=None):
+    # Renamed from 'bind_and_show_next_in_line' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_next_in_line which does same thing.
+    def show_next_in_line_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_next_in_line(event)
 
-    def bind_and_show_next_in_var(self, event=None):
+    # Renamed from 'bind_and_show_next_in_var' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_next_in_variation which does same thing.
+    def show_next_in_variation_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_next_in_variation(event)
 
-    def bind_and_show_prev_in_var(self, event=None):
+    # Renamed from 'bind_and_show_prev_in_var' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_prev_in_variation which does same thing.
+    def show_prev_in_variation_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
-        # self.set_current() already called
+
+        # self.set_current() already called but return is not via a method
+        # which will call self.set_game_board().
         self.set_game_board()
         return 'break'
 
-    def bind_and_show_prev_in_line(self, event=None):
+    # Renamed from 'bind_and_show_prev_in_line' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    # Replaces non_move_show_prev_in_line which does same thing.
+    def show_prev_in_line_from_non_move_token(self, event=None):
         """"""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         self.set_nearest_move_to_token_as_currentmove()
-        # self.set_current() already called
+
+        # self.set_current() already called but return is not via a method
+        # which will call self.set_game_board().
         self.set_game_board()
         return 'break'
 
-    def bind_and_to_prev_pgn_tag(self, event=None):
+    # Renamed from 'bind_and_to_prev_pgn_tag' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    def set_edit_bindings_and_to_prev_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at previous PGN tag."""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         return self.to_prev_pgn_tag()
         
-    def bind_and_to_next_pgn_tag(self, event=None):
+    # Renamed from 'bind_and_to_next_pgn_tag' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    def set_edit_bindings_and_to_next_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at next PGN tag."""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
         return self.to_prev_pgn_tag() # to start of current PGN tag if in one
-        
-    def _edit_current_move(self, event):
-        """Edit current move from character in event."""
-        self.bind_for_movemode_on_exit_edit_symbol_mode()
-        return self.show_first_in_line()
-        
-    # dispatch dictionary for token binding selection
-    token_bind_method = {
-        EDIT_GLYPH: bind_for_edit_symbol_mode,
-        EDIT_RESULT: bind_for_edit_symbol_mode,
-        EDIT_PGN_TAG_NAME: bind_for_edit_symbol_mode,
-        EDIT_PGN_TAG_VALUE: bind_for_edit_symbol_mode,
-        EDIT_COMMENT: bind_for_edit_symbol_mode,
-        EDIT_RESERVED: bind_for_edit_symbol_mode,
-        EDIT_COMMENT_EOL: bind_for_edit_symbol_mode,
-        EDIT_ESCAPE_EOL: bind_for_edit_symbol_mode,
-        EDIT_MOVE_ERROR: bind_for_edit_symbol_mode,
-        EDIT_MOVE: bind_for_insert_or_edit_move,
-        INSERT_RAV: bind_for_insert_rav_no_edit_move,
-        MOVE_EDITED: bind_for_edit_edited_move,
-        }
 
     def add_move_to_editable_moves(self, start, end, variation):
         """Remove editable move in current line and add move at start end.
@@ -1645,7 +1451,6 @@ class GameEdit(Game):
                 widget.tag_delete(
                     choice, prior, self.get_selection_tag_for_prior(prior))
             self.clear_choice_colouring_tag()
-            self.bind_for_movemode_on_exit_edit_symbol_mode()
             self.set_current()
             self.apply_colouring_to_variation_back_to_main_line()
         elif self.current is None:
@@ -1656,7 +1461,6 @@ class GameEdit(Game):
             widget.tag_remove(INSERT_RAV, start, end)
             if widget.tag_ranges(LINE_TAG):
                 widget.tag_add(LINE_END_TAG, end, end)
-            self.bind_for_movemode_on_exit_edit_symbol_mode()
             self.set_current()
         self.set_game_board()
 
@@ -1891,9 +1695,11 @@ class GameEdit(Game):
     def go_to_move(self, index):
         """Extend, set keyboard bindings for new pointer location."""
         if super().go_to_move(index):
-            return
-        return self.show_new_current(
-            new_current=self.select_item_at_index(index))
+            return True
+        new_current = self.select_item_at_index(index)
+        if new_current is None:
+            return 'break'
+        return self.show_new_current(new_current)
 
     def insert_empty_move_after_currentmove(self, event_char):
         """Insert empty NAVIGATE_MOVE range after current move.
@@ -2084,7 +1890,7 @@ class GameEdit(Game):
         else:
             self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         widget.tag_add(tokentag, start, sepend)
-        for tag in ravtag, positiontag, NAVIGATE_TOKEN:
+        for tag in ravtag, positiontag, NAVIGATE_TOKEN, RAV_START_TAG:
             widget.tag_add(tag, start, end)
         # Insert is surrounded by tagged colourvariation text unlike add at end.
         # This breaks the sequence so rest of inserts in this method do not get
@@ -2191,21 +1997,26 @@ class GameEdit(Game):
             '==',
             widget.tag_ranges(variation)[0])
 
-    def is_movetext_insertion_allowed(self):
+    # Renamed from is_movetext_insertion_allowed because it is possible to
+    # assume it means 'moves can be inserted' but NOT other things allowed in
+    # movetext.  (This had bad, but nearly always non-fatal, consequences in
+    # set_current method!)
+    # The docstring says what the method does.
+    # PGN has two areas: tags and movetext.
+    # The method is_pgn_tag_insertion_allowed is therefore removed and calls
+    # replaced by is_current_in_movetext calls.
+    def is_current_in_movetext(self):
         """Return True if current is not before start of movetext"""
         return bool(self.score.compare(
             START_SCORE_MARK,
             '<=',
             self.score.tag_ranges(self.current)[0]))
 
-    def is_pgn_tag_insertion_allowed(self):
-        """Return True if current is before start of movetext"""
-        return bool(self.score.compare(
-            START_SCORE_MARK,
-            '>',
-            self.score.tag_ranges(self.current)[0]))
-
-    def is_rav_insertion_allowed(self):
+    # Renamed from is_rav_insertion_allowed to fit docstring better, which is
+    # what the method does.
+    # If current is last move in game or variation a new move is appended, but
+    # a RAV is inserted elsewhere if allowed (not decided by this method).
+    def is_at_least_one_move_in_movetext(self):
         """Return True if at least one move exists in game score."""
         # To be decided if at least one legal move exists.  Check EDIT_MOVE
         # instead?
@@ -2248,10 +2059,10 @@ class GameEdit(Game):
         if prior_range:
             self._token_position = self.tagpositionmap[
                 self.get_position_tag_of_index(prior_range[0])]
-            tags = (self._ravtag, NAVIGATE_TOKEN, prior)
+            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_START_TAG, prior)
         else:
             self._token_position = self.tagpositionmap[None]
-            tags = (self._ravtag, NAVIGATE_TOKEN)
+            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_START_TAG)
         positiontag, token_indicies = self.tag_token_for_editing(
             token_indicies,
             self.get_tag_and_mark_names,
@@ -2497,7 +2308,6 @@ class GameEdit(Game):
             if bishopmove:
                 widget.insert(widget.index(start) + '+1 char', PGN_BISHOP)
                 widget.delete(widget.index(start))
-            self.bind_for_movemode_on_exit_edit_symbol_mode()
             self.set_current()
             self.set_game_board()
             return
@@ -2533,7 +2343,6 @@ class GameEdit(Game):
             widget.tag_remove(MOVE_EDITED, start, end)
             widget.insert(widget.index(start) + '+1 char', PGN_BISHOP)
             widget.delete(widget.index(start))
-            self.bind_for_movemode_on_exit_edit_symbol_mode()
             self.set_current()
             self.set_game_board()
 
@@ -2822,7 +2631,8 @@ class GameEdit(Game):
         token data.
 
         """
-        self.token_bind_method[tokenprefix](self) # call set bindings method
+        if self._most_recent_bindings != tokenprefix:
+            self.token_bind_method[tokenprefix](self)
         self._allowed_chars_in_token = _CHARACTERS_ALLOWED_IN_TOKEN[tokenprefix]
         start, end = tagranges
         lead_trail = _TOKEN_LEAD_TRAIL[tokenprefix]
@@ -2958,24 +2768,179 @@ class GameEdit(Game):
         if tag_position:
             tag_add(positiontag, start, end)
         return positiontag, token_indicies
+        
+    # Most popups are same except for binding the popup menu attribute.
+    # This does the work for the ones with identical processing.
+    def create_non_move_popup(self, popup):
+        popup = self.create_popup(
+            popup,
+            move_navigation=self.get_navigate_score_from_non_move_events)
+        self.add_pgn_navigation_to_submenu_of_popup(
+            popup, index=self.export_popup_label)
+        self.add_pgn_insert_to_submenu_of_popup(
+            popup, index=self.export_popup_label)
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
+        
+    def create_pgn_tag_popup(self):
+        popup = self.create_popup(
+            self.pgn_tag_popup,
+            move_navigation=self.get_navigate_score_from_non_move_events)
+        self.add_pgn_navigation_to_submenu_of_popup(
+            popup, index=self.export_popup_label)
+        self.add_pgn_insert_to_submenu_of_popup(
+            popup,
+            include_tags=True,
+            include_movetext=False,
+            index=self.export_popup_label)
+        self.create_widget_navigation_submenu_for_popup(popup)
+        self.pgn_tag_popup = popup
+        return popup
 
-    def popup_pgn_tag_menu(self, event=None):
-        """Show the popup menu for edit symbol mode in game score.
+    def post_pgn_tag_menu(self, event=None):
+        """Post popup menu when a PGN tag is current token."""
+        return self.post_menu(
+            self.pgn_tag_popup, self.create_pgn_tag_popup, event=event)
+        
+    def post_pgn_tag_menu_at_top_left(self, event=None):
+        """Post popup menu when a PGN tag is current token."""
+        return self.post_menu_at_top_left(
+            self.pgn_tag_popup, self.create_pgn_tag_popup, event=event)
+        
+    def create_game_termination_popup(self):
+        popup = self.create_popup(
+            self.game_termination_popup,
+            move_navigation=self.get_navigate_score_from_non_move_events)
+        self.add_pgn_navigation_to_submenu_of_popup(
+            popup, index=self.export_popup_label)
+        self.create_widget_navigation_submenu_for_popup(popup)
+        self.game_termination_popup = popup
+        return popup
 
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
+    def post_game_termination_menu(self, event=None):
+        """Post popup menu when game termination is current token."""
+        return self.post_menu(
+            self.game_termination_popup,
+            self.create_game_termination_popup,
+            event=event)
+        
+    def post_game_termination_menu_at_top_left(self, event=None):
+        """Post popup menu when game termination is current token."""
+        return self.post_menu_at_top_left(
+            self.game_termination_popup,
+            self.create_game_termination_popup,
+            event=event)
+        
+    def create_comment_popup(self):
+        popup = self.create_non_move_popup(self.comment_popup)
+        self.comment_popup = popup
+        return popup
 
-        """
-        self.menupopup_pgntagmode.tk_popup(*self.score.winfo_pointerxy())
+    def post_comment_menu(self, event=None):
+        """Post popup menu when a comment is current token."""
+        return self.post_menu(
+            self.comment_popup, self.create_comment_popup, event=event)
+        
+    def post_comment_menu_at_top_left(self, event=None):
+        """Post popup menu when a comment is current token."""
+        return self.post_menu_at_top_left(
+            self.comment_popup, self.create_comment_popup, event=event)
+        
+    def create_nag_popup(self):
+        popup = self.create_non_move_popup(self.nag_popup)
+        self.nag_popup = popup
+        return popup
 
-    def popup_nonmove_menu(self, event=None):
-        """Show popup menu for navigation from non-move items in game score.
+    def post_nag_menu(self, event=None):
+        """Post popup menu when a NAG is current token."""
+        return self.post_menu(
+            self.nag_popup, self.create_nag_popup, event=event)
+        
+    def post_nag_menu_at_top_left(self, event=None):
+        """Post popup menu when a NAG is current token."""
+        return self.post_menu_at_top_left(
+            self.nag_popup, self.create_nag_popup, event=event)
+        
+    def create_start_rav_popup(self):
+        popup = self.create_non_move_popup(self.start_rav_popup)
+        self.start_rav_popup = popup
+        return popup
 
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
+    def post_start_rav_menu(self, event=None):
+        """Post popup menu when a '(', start RAV, is current token."""
+        return self.post_menu(
+            self.start_rav_popup, self.create_start_rav_popup, event=event)
+        
+    def post_start_rav_menu_at_top_left(self, event=None):
+        """Post popup menu when a '(', start RAV, is current token."""
+        return self.post_menu_at_top_left(
+            self.start_rav_popup, self.create_start_rav_popup, event=event)
+        
+    def create_end_rav_popup(self):
+        popup = self.create_non_move_popup(self.end_rav_popup)
+        self.end_rav_popup = popup
+        return popup
 
-        """
-        self.menupopup_nonmove.tk_popup(*self.score.winfo_pointerxy())
+    def post_end_rav_menu(self, event=None):
+        """Post popup menu when a ')', end RAV, is current token."""
+        return self.post_menu(
+            self.end_rav_popup, self.create_end_rav_popup, event=event)
+        
+    def post_end_rav_menu_at_top_left(self, event=None):
+        """Post popup menu when a ')', end RAV, is current token."""
+        return self.post_menu_at_top_left(
+            self.end_rav_popup, self.create_end_rav_popup, event=event)
+        
+    def create_comment_to_end_of_line_popup(self):
+        popup = self.create_non_move_popup(self.comment_to_end_of_line_popup)
+        self.comment_to_end_of_line_popup = popup
+        return popup
+
+    def post_comment_to_end_of_line_menu(self, event=None):
+        """Post popup menu when a ';...\n' comment is current token."""
+        return self.post_menu(self.comment_to_end_of_line_popup,
+                              self.create_comment_to_end_of_line_popup,
+                              event=event)
+        
+    def post_comment_to_end_of_line_menu_at_top_left(self, event=None):
+        """Post popup menu when a ';...\n' comment is current token."""
+        return self.post_menu_at_top_left(
+            self.comment_to_end_of_line_popup,
+            self.create_comment_to_end_of_line_popup,
+            event=event)
+        
+    def create_escape_whole_line_popup(self):
+        popup = self.create_non_move_popup(self.escape_whole_line_popup)
+        self.escape_whole_line_popup = popup
+        return popup
+
+    def post_escape_whole_line_menu(self, event=None):
+        """Post popup menu when a '\n%...\n' escape is current token."""
+        return self.post_menu(self.escape_whole_line_popup,
+                              self.create_escape_whole_line_popup,
+                              event=event)
+        
+    def post_escape_whole_line_menu_at_top_left(self, event=None):
+        """Post popup menu when a '\n%...\n' escape is current token."""
+        return self.post_menu_at_top_left(
+            self.escape_whole_line_popup,
+            self.create_escape_whole_line_popup,
+            event=event)
+        
+    def create_reserved_popup(self):
+        popup = self.create_non_move_popup(self.reserved_popup)
+        self.reserved_popup = popup
+        return popup
+
+    def post_reserved_menu(self, event=None):
+        """Post popup menu when a '<...>, reserved, is current token."""
+        return self.post_menu(
+            self.reserved_popup, self.create_reserved_popup, event=event)
+        
+    def post_reserved_menu_at_top_left(self, event=None):
+        """Post popup menu when a '<...>, reserved, is current token."""
+        return self.post_menu_at_top_left(
+            self.reserved_popup, self.create_reserved_popup, event=event)
 
     def _add_char_to_token(self, char):
         """"""
@@ -3047,26 +3012,207 @@ class GameEdit(Game):
             self.generate_fen_for_position(*self.tagpositionmap[tag]).join(
                 _EDIT_MOVE_CONTEXT),
             UNKNOWN_RESULT)
+        
+    def populate_navigate_score_submenu(self, submenu):
+        self.set_popup_bindings(submenu, self.get_navigate_score_events())
+        
+    # O-O-O is available to avoid ambiguity if both O-O and O-O-O are legal
+    # when typing moves in.  When move editing is not allowed the O-O-O menu
+    # option must be suppressed.
+    # The addition of include_tags and include_movetext arguments gets the
+    # method close to precipice of too complicated.
+    def populate_pgn_submenu(self,
+                             submenu,
+                             include_ooo=False,
+                             include_tags=False,
+                             include_movetext=True):
+        if include_movetext:
+            self.set_popup_bindings(
+                submenu, self.get_insert_pgn_in_movetext_events())
+        if include_tags:
+            self.set_popup_bindings(
+                submenu, self.get_insert_pgn_in_tags_events())
+        if not include_ooo:
+            return
+        self.set_popup_bindings(submenu, (
+            (EventSpec.gameedit_insert_castle_queenside,
+             self.insert_castle_queenside_command),
+            ))
+        
+    # This method should be in GameEdit, the nearest subclass of Score which
+    # supports editing games.
+    # Subclasses which need non-move PGN navigation should call this method.
+    # Intended for editors.
+    def add_pgn_insert_to_submenu_of_popup(self,
+                                           popup,
+                                           include_ooo=False,
+                                           include_tags=False,
+                                           include_movetext=True,
+                                           index=tkinter.END):
+        """Add non-move PGN insertion to a submenu of popup.
+
+        Subclasses must provide the methods named.
+
+        Moves, including RAVs, are inserted at current by starting to type.
+
+        Other items, such as comments, are inserted with the options on this
+        menu.
+
+        """
+        pgn_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_pgn_submenu(pgn_submenu,
+                                  include_ooo=include_ooo,
+                                  include_tags=include_tags,
+                                  include_movetext=include_movetext)
+        popup.insert_cascade(index=index, label='PGN', menu=pgn_submenu)
+        
+    def get_navigate_score_events(self):
+        """Return tuple of event definitions for navigating PGN.
+
+        Going to next and previous token, comment, or PGN tag; and first and
+        last token and comment is supported.
+
+        See Score.get_move_navigation_events for next and previous moves.
+
+        """
+        return (
+            (EventSpec.gameedit_show_previous_token, self.show_prev_token),
+            (EventSpec.gameedit_show_next_token, self.show_next_token),
+            (EventSpec.gameedit_show_first_token, self.show_first_token),
+            (EventSpec.gameedit_show_last_token, self.show_last_token),
+            (EventSpec.gameedit_show_first_comment, self.show_first_comment),
+            (EventSpec.gameedit_show_last_comment, self.show_last_comment),
+            (EventSpec.gameedit_show_previous_comment, self.show_prev_comment),
+            (EventSpec.gameedit_show_next_comment, self.show_next_comment),
+            (EventSpec.gameedit_to_previous_pgn_tag, self.to_prev_pgn_tag),
+            (EventSpec.gameedit_to_next_pgn_tag, self.to_next_pgn_tag),
+            )
+        
+    def get_insert_pgn_in_movetext_events(self):
+        """Return tuple of event definitions for inserting PGN constructs.
+
+        Inserting RAVs and adding of moves at end of game is allowed only when
+        the current token is a move.  The relevant characters are defined
+        elsewhere, including the O-O-O shortcut convenient when both O-O-O and
+        O-O are legal moves.
+
+        """
+        return (
+            (EventSpec.gameedit_insert_comment, self.insert_comment),
+            (EventSpec.gameedit_insert_reserved, self.insert_reserved),
+            (EventSpec.gameedit_insert_comment_to_eol,
+             self.insert_comment_to_eol),
+            (EventSpec.gameedit_insert_escape_to_eol,
+             self.insert_escape_to_eol),
+            (EventSpec.gameedit_insert_glyph, self.insert_glyph),
+            (EventSpec.gameedit_insert_white_win, self.insert_result_win),
+            (EventSpec.gameedit_insert_draw, self.insert_result_draw),
+            (EventSpec.gameedit_insert_black_win, self.insert_result_loss),
+            (EventSpec.gameedit_insert_other_result,
+             self.insert_result_termination),
+            )
+        
+    def get_insert_pgn_in_tags_events(self):
+        """Return tuple of event definitions for inserting PGN constructs.
+
+        Inserting and deleting PGN tags is allowed only when the current token
+        is a PGN tag.
+
+        """
+        return (
+            (EventSpec.gameedit_insert_pgn_tag, self.insert_pgn_tag),
+            (EventSpec.gameedit_insert_pgn_seven_tag_roster,
+             self.insert_pgn_seven_tag_roster),
+            (EventSpec.gameedit_delete_empty_pgn_tag,
+             self.delete_empty_pgn_tag),
+            )
+        
+    def get_set_insert_in_token_events(self):
+        return (
+            (EventSpec.gameedit_set_insert_previous_line_in_token,
+             self.set_insert_prev_line_in_token),
+            (EventSpec.gameedit_set_insert_previous_char_in_token,
+             self.set_insert_prev_char_in_token),
+            (EventSpec.gameedit_set_insert_next_char_in_token,
+             self.set_insert_next_char_in_token),
+            (EventSpec.gameedit_set_insert_next_line_in_token,
+             self.set_insert_next_line_in_token),
+            (EventSpec.gameedit_set_insert_first_char_in_token,
+             self.set_insert_first_char_in_token),
+            (EventSpec.gameedit_set_insert_last_char_in_token,
+             self.set_insert_last_char_in_token),
+            )
+        
+    def get_delete_char_in_token_events(self):
+        return (
+            (EventSpec.gameedit_delete_token_char_left,
+             self.delete_token_char_left),
+            (EventSpec.gameedit_delete_token_char_right,
+             self.delete_token_char_right),
+            (EventSpec.gameedit_delete_char_left, self.delete_char_left),
+            (EventSpec.gameedit_delete_char_right, self.delete_char_right),
+            )
+        
+    def get_delete_char_in_move_events(self):
+        return (
+            (EventSpec.gameedit_delete_move_char_left_shift,
+             self.delete_move_char_left),
+            (EventSpec.gameedit_delete_move_char_right_shift,
+             self.delete_move_char_right),
+            (EventSpec.gameedit_delete_move_char_left,
+             self.delete_move_char_left),
+            (EventSpec.gameedit_delete_move_char_right,
+             self.delete_move_char_right),
+            )
+        
+    def get_navigate_score_from_non_move_events(self):
+        return (
+            (EventSpec.gameedit_non_move_show_previous_in_variation,
+             self.show_prev_in_variation_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_previous_in_line,
+             self.show_prev_in_line_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_next_in_line,
+             self.show_next_in_line_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_next_in_variation,
+             self.show_next_in_variation_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_first_in_line,
+             self.show_first_in_line_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_last_in_line,
+             self.show_last_in_line_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_first_in_game,
+             self.show_first_in_game_from_non_move_token),
+            (EventSpec.gameedit_non_move_show_last_in_game,
+             self.show_last_in_game_from_non_move_token),
+            )
 
 
 class RepertoireEdit(GameEdit):
     
     """Display a repertoire with editing allowed.
+
+    gameclass is passed to the superclass as the gameclass argument.  It
+    defaults to GameDisplayMoves.
+
+    Attribute tags_displayed_last is the PGN tags, in order, to be displayed
+    immediately before the movetext.  It exists so Game*, Repertoire*, and
+    AnalysisScore*, instances can use identical code to display PGN tags.  It
+    is the PGN repertoire tags defined in ChessTab.
+
+    Attribute pgn_export_type is a tuple with the name of the type of data and
+    the class used to generate export PGN.  It exists so Game*, Repertoire*,
+    and AnalysisScore*, instances can use identical code to display PGN tags.
+    It is ('Repertoire', GameRepertoireDisplayMoves).
     
     """
     tags_displayed_last = REPERTOIRE_TAG_ORDER
+    pgn_export_type = 'Repertoire', GameRepertoireDisplayMoves
 
+    # gameclass=GameRepertoireDisplayMoves surely?
+    # Then maybe do not need pgn_export_type for 'export_..' methods in Score.
+    # Otherwise there is no point to this __init__ method.
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit repertoire score."""
         super(RepertoireEdit, self).__init__(gameclass=gameclass, **ka)
-        eapgn = EventSpec.export_archive_pgn_from_game
-        self.viewmode_database_popup.delete(eapgn[1])
-        self.menupopup_nonmove_database.delete(eapgn[1])
-        self.menupopup_pgntag_database.delete(eapgn[1])
-        for sequence, function in (
-            (eapgn, ''),
-            ):
-            self.score.bind(sequence[0], function)
 
     def insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster sequence."""
@@ -3074,25 +3220,17 @@ class RepertoireEdit(GameEdit):
         for t in REPERTOIRE_TAG_ORDER:
             self.add_pgntag_to_map(t, '')
         
-    def bind_for_viewmode(self):
-        """Set keyboard bindings and popup menu for traversing moves."""
-        super(RepertoireEdit, self).bind_for_viewmode()
-        for sequence, function in (
-            (EventSpec.export_archive_pgn_from_game, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
+    # There is no point to a repertoire without RAVs so the options suppressing
+    # RAVs are absent.
+    def get_all_export_events(self):
+        return (
+            (EventSpec.pgn_export_format_no_comments,
+             self.export_pgn_no_comments),
+            (EventSpec.pgn_export_format,
+             self.export_pgn),
+            (EventSpec.pgn_import_format,
+             self.export_pgn_import_format),
+            (EventSpec.text_internal_format,
+             self.export_text),
+            )
 
-    def export_pgn(self, event=None):
-        """Export repertoire as PGN."""
-        exporters.export_single_repertoire_as_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item('Repertoire', pgn=True))
-
-    def export_rav_pgn(self, event=None):
-        """Export repertoire as PGN moves and RAVs but excluding commentary."""
-        exporters.export_single_repertoire_as_rav_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item(
-                'RAV Repertoire', pgn=True))

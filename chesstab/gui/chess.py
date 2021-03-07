@@ -40,10 +40,10 @@ from pgn_read.core.parser import PGN
 from .gamerow import make_ChessDBrowGame
 from .cqlrow import make_ChessDBrowCQL
 from .repertoirerow import make_ChessDBrowRepertoire
-from .gamedisplay import DatabaseGameInsert
-from .cqldisplay import DatabaseCQLInsert
-from .repertoiredisplay import DatabaseRepertoireInsert
-from .querydisplay import DatabaseQueryInsert
+from .gamedisplay import GameDisplayInsert
+from .cqldisplay import CQLDisplayInsert
+from .repertoiredisplay import RepertoireDisplayInsert
+from .querydisplay import QueryDisplayInsert
 from . import constants, options
 from . import colourscheme
 from . import help
@@ -71,6 +71,7 @@ from ..core.filespec import (
 from ..core import exporters
 from .uci import UCI
 from .chess_ui import ChessUI
+from .eventspec import EventSpec
 
 # for runtime "from <db|dpt>results import ChessDatabase" and similar
 _ChessDB = 'ChessDatabase'
@@ -156,274 +157,238 @@ class Chess(ExceptionHandler):
             menu1 = tkinter.Menu(menubar, name='database', tearoff=False)
             menus.append(menu1)
             menubar.add_cascade(label='Database', menu=menu1, underline=0)
+            for accelerator, function in (
+                (EventSpec.menu_database_open,
+                 self.database_open),
+                (EventSpec.menu_database_new,
+                 self.database_new),
+                (EventSpec.menu_database_close,
+                 self.database_close),
+                (EventSpec.menu_database_delete,
+                 self.database_delete),
+                (EventSpec.menu_database_quit,
+                 self.database_quit),
+                ):
+                menu1.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu1),
+                    underline=accelerator[3])
             menu1.add_separator()
-            menu1.add_command(
-                label='Open',
-                underline=0,
-                command=self.try_command(self.database_open, menu1))
-            menu1.add_command(
-                label='New',
-                underline=0,
-                command=self.try_command(self.database_new, menu1))
-            menu1.add_command(
-                label='Close',
-                underline=0,
-                command=self.try_command(self.database_close, menu1))
-            menu1.add_separator()
-            menu102 = tkinter.Menu(menu1, name='import', tearoff=False)
-            menu1.add_cascade(label='Import', menu=menu102, underline=0)
             menu101 = tkinter.Menu(menu1, name='export', tearoff=False)
-            menu1.add_cascade(label='Export', menu=menu101, underline=0)
-            menu1.add_separator()
-            menu1.add_command(
-                label='Delete',
-                underline=0,
-                command=self.try_command(self.database_delete, menu1))
-            menu1.add_separator()
-            menu1.add_command(
-                label='Quit',
-                underline=0,
-                command=self.try_command(self.database_quit, menu1))
-            menu1.add_separator()
-
-            menu102.add_command(
-                label='Games',
-                underline=0,
-                command=self.try_command(self.database_import, menu102))
-            menu102.add_command(
-                label='Repertoires',
-                underline=0,
-                command=self.try_command(self.import_repertoires, menu102))
-            menu102.add_command(
-                label='Positions',
-                underline=0,
-                command=self.try_command(self.import_positions, menu102))
-
+            menu1.insert_cascade(
+                3,
+                label=EventSpec.menu_database_export[1],
+                menu=menu101,
+                underline=EventSpec.menu_database_export[3])
+            menu102 = tkinter.Menu(menu1, name='import', tearoff=False)
+            menu1.insert_cascade(
+                3,
+                label=EventSpec.menu_database_import[1],
+                menu=menu102,
+                underline=EventSpec.menu_database_import[3])
+            for i in (6, 5, 3, 0):
+                menu1.insert_separator(i)
+            for accelerator, function in (
+                (EventSpec.menu_database_games,
+                 self.database_import),
+                (EventSpec.menu_database_repertoires,
+                 self.import_repertoires),
+                (EventSpec.menu_database_positions,
+                 self.import_positions),
+                ):
+                menu102.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu102),
+                    underline=accelerator[3])
             menu10101 = tkinter.Menu(menu101, name='games', tearoff=False)
-            menu10101.add_command(
-                label='Archive PGN',
-                underline=0,
-                command=self.try_command(
-                    self.export_games_as_archive_pgn, menu10101))
-            menu10101.add_command(
-                label='RAV PGN',
-                underline=0,
-                command=self.try_command(
-                    self.export_games_as_rav_pgn, menu10101))
-            menu10101.add_command(
-                label='PGN',
-                underline=0,
-                command=self.try_command(self.export_games_as_pgn, menu10101))
-            menu10101.add_command(
-                label='Text',
-                underline=0,
-                command=self.try_command(self.export_games_as_text, menu10101))
-            menu101.add_cascade(label='Games', menu=menu10101, underline=0)
-            menu10102 = tkinter.Menu(menu101, name='repertoires', tearoff=False)
-            menu10102.add_command(
-                label='RAV PGN',
-                underline=0,
-                command=self.try_command(
-                    self.export_repertoires_as_rav_pgn, menu10102))
-            menu10102.add_command(
-                label='PGN',
-                underline=0,
-                command=self.try_command(
-                    self.export_repertoires_as_pgn, menu10102))
-            menu10102.add_command(
-                label='Text',
-                underline=0,
-                command=self.try_command(
-                    self.export_repertoires_as_text, menu10102))
             menu101.add_cascade(
-                label='Repertoires', menu=menu10102, underline=0)
-            menu10103 = tkinter.Menu(menu101, name='positions', tearoff=False)
-            menu101.add_command(
-                label='Positions',
-                underline=0,
-                command=self.try_command(self.export_positions, menu101))
-            menu101.add_command(
-                label='All (as text)',
-                underline=0,
-                command=self.try_command(self.export_all_as_text, menu101))
+                label=EventSpec.menu_database_games[1],
+                menu=menu10101,
+                underline=EventSpec.menu_database_games[3])
+            for accelerator, function in (
+                (EventSpec.pgn_reduced_export_format,
+                 self.export_all_games_pgn_reduced_export_format),
+                (EventSpec.pgn_export_format_no_comments_no_ravs,
+                 self.export_all_games_pgn_no_comments_no_ravs),
+                (EventSpec.pgn_export_format_no_comments,
+                 self.export_all_games_pgn_no_comments),
+                (EventSpec.pgn_export_format,
+                 self.export_all_games_pgn),
+                (EventSpec.pgn_import_format,
+                 self.export_all_games_pgn_import_format),
+                (EventSpec.text_internal_format,
+                 self.export_all_games_text),
+                ):
+                menu10101.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu10101),
+                    underline=accelerator[3])
+            menu10102 = tkinter.Menu(menu101, name='repertoires', tearoff=False)
+            menu101.add_cascade(
+                label=EventSpec.menu_database_repertoires[1],
+                menu=menu10102,
+                underline=EventSpec.menu_database_repertoires[3])
+            for accelerator, function in (
+                (EventSpec.pgn_export_format_no_comments,
+                 self.export_all_repertoires_pgn_no_comments),
+                (EventSpec.pgn_export_format,
+                 self.export_all_repertoires_pgn),
+                (EventSpec.pgn_import_format,
+                 self.export_all_repertoires_pgn_import_format),
+                (EventSpec.text_internal_format,
+                 self.export_all_repertoires_text),
+                ):
+                menu10102.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu10102),
+                    underline=accelerator[3])
+            for accelerator, function in (
+                (EventSpec.menu_database_positions,
+                 self.export_positions),
+                (EventSpec.menu_database_export_all_text,
+                 self.export_all_games_text),
+                ):
+                menu101.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu101),
+                    underline=accelerator[3])
 
             menu2 = tkinter.Menu(menubar, name='select', tearoff=False)
             menus.append(menu2)
             menubar.add_cascade(label='Select', menu=menu2, underline=0)
+            for accelerator, function in (
+                (EventSpec.menu_select_rule,
+                 self.index_select),
+                (EventSpec.menu_show,
+                 self.index_show),
+                (EventSpec.menu_hide,
+                 self.index_hide),
+                (EventSpec.menu_select_game,
+                 self.create_options_index_callback(GAMES_FILE_DEF)),
+                (EventSpec.menu_select_error,
+                 self.create_options_index_callback(SOURCE_FIELD_DEF)),
+                ):
+                menu2.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu2),
+                    underline=accelerator[3])
             menu2.add_separator()
-            menu2.add_command(
-                label='Rule',
-                underline=0,
-                command=self.try_command(self.index_select, menu2))
-            menu2.add_separator()
-            menu2.add_command(
-                label='Show',
-                underline=0,
-                command=self.try_command(self.index_show, menu2))
-            menu2.add_command(
-                label='Hide',
-                underline=0,
-                command=self.try_command(self.index_hide, menu2))
-            menu2.add_separator()
-            menu2.add_command(
-                label='Game',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(GAMES_FILE_DEF),
-                    menu2))
             menu201 = tkinter.Menu(menu2, name='index', tearoff=False)
             menus.append(menu201)
-            menu2.add_separator()
-            menu2.add_cascade(label='Index', menu=menu201, underline=0)
-            menu201.add_command(
-                label='Black',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(BLACK_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='White',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(WHITE_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='Event',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(EVENT_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='Date',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(DATE_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='Result',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(RESULT_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='Site',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(SITE_FIELD_DEF),
-                    menu201))
-            menu201.add_command(
-                label='Round',
-                underline=4,
-                command=self.try_command(
-                    self.create_options_index_callback(ROUND_FIELD_DEF),
-                    menu201))
-            menu2.add_separator()
-            menu2.add_command(
-                label='Error',
-                underline=0,
-                command=self.try_command(
-                    self.create_options_index_callback(SOURCE_FIELD_DEF),
-                    menu2))
-            menu2.add_separator()
+            menu2.insert_cascade(
+                4,
+                label=EventSpec.menu_select_index[1],
+                menu=menu201,
+                underline=EventSpec.menu_select_index[3])
+            for i in (5, 4, 3, 1, 0):
+                menu2.insert_separator(i)
+            for accelerator, field in (
+                (EventSpec.menu_select_index_black,
+                 BLACK_FIELD_DEF),
+                (EventSpec.menu_select_index_white,
+                 WHITE_FIELD_DEF),
+                (EventSpec.menu_select_index_event,
+                 EVENT_FIELD_DEF),
+                (EventSpec.menu_select_index_date,
+                 DATE_FIELD_DEF),
+                (EventSpec.menu_select_index_result,
+                 RESULT_FIELD_DEF),
+                (EventSpec.menu_select_index_site,
+                 SITE_FIELD_DEF),
+                (EventSpec.menu_select_index_round,
+                 ROUND_FIELD_DEF),
+                ):
+                menu201.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(
+                        self.create_options_index_callback(field),
+                        menu201),
+                    underline=accelerator[3])
 
             menu3 = tkinter.Menu(menubar, name='game', tearoff=False)
             menus.append(menu3)
             menubar.add_cascade(label='Game', menu=menu3, underline=0)
             menu3.add_separator()
-            menu3.add_command(
-                label='New Game',
-                underline=0,
-                command=self.try_command(self.game_new_game, menu3))
+            for accelerator, function in (
+                (EventSpec.menu_game_new_game,
+                 self.game_new_game),
+                ):
+                menu3.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu3),
+                    underline=accelerator[3])
             menu3.add_separator()
 
             menu4 = tkinter.Menu(menubar, name='position', tearoff=False)
             menus.append(menu4)
             menubar.add_cascade(label='Position', menu=menu4, underline=0)
+            for accelerator, function in (
+                (EventSpec.menu_position_partial,
+                 self.position_partial),
+                (EventSpec.menu_show,
+                 self.position_show),
+                (EventSpec.menu_hide,
+                 self.position_hide),
+                ):
+                menu4.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu4),
+                    underline=accelerator[3])
             menu4.add_separator()
-            menu4.add_command(
-                label='Partial',
-                underline=0,
-                command=self.try_command(self.position_partial, menu4))
-            menu4.add_separator()
-            menu4.add_command(
-                label='Show',
-                underline=0,
-                command=self.try_command(self.position_show, menu4))
-            menu4.add_command(
-                label='Hide',
-                underline=0,
-                command=self.try_command(self.position_hide, menu4))
-            menu4.add_separator()
+            for i in (1, 0):
+                menu4.insert_separator(i)
 
             menu5 = tkinter.Menu(menubar, name='repertoire', tearoff=False)
             menus.append(menu5)
             menubar.add_cascade(label='Repertoire', menu=menu5, underline=0)
+            for accelerator, function in (
+                (EventSpec.menu_repertoire_opening,
+                 self.repertoire_game),
+                (EventSpec.menu_show,
+                 self.repertoire_show),
+                (EventSpec.menu_hide,
+                 self.repertoire_hide),
+                ):
+                menu5.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu5),
+                    underline=accelerator[3])
             menu5.add_separator()
-            menu5.add_command(
-                label='Opening',
-                underline=0,
-                command=self.try_command(self.repertoire_game, menu5))
-            menu5.add_separator()
-            menu5.add_command(
-                label='Show',
-                underline=0,
-                command=self.try_command(self.repertoire_show, menu5))
-            menu5.add_command(
-                label='Hide',
-                underline=0,
-                command=self.try_command(self.repertoire_hide, menu5))
-            menu5.add_separator()
+            for i in (1, 0):
+                menu5.insert_separator(i)
 
             menu6 = tkinter.Menu(menubar, name='tools', tearoff=False)
             menus.append(menu6)
             menubar.add_cascade(label='Tools', menu=menu6, underline=0)
+            for accelerator, function in (
+                (EventSpec.menu_tools_board_style,
+                 self.select_board_style),
+                (EventSpec.menu_tools_board_fonts,
+                 self.select_board_fonts),
+                (EventSpec.menu_tools_board_colours,
+                 self.select_board_colours),
+                (EventSpec.menu_tools_hide_game_analysis,
+                 self.hide_game_analysis),
+                (EventSpec.menu_tools_show_game_analysis,
+                 self.show_game_analysis),
+                (EventSpec.menu_tools_hide_game_scrollbars,
+                 self.hide_scrollbars),
+                (EventSpec.menu_tools_show_game_scrollbars,
+                 self.show_scrollbars),
+                (EventSpec.menu_tools_toggle_game_move_numbers,
+                 self.toggle_game_move_numbers),
+                (EventSpec.menu_tools_toggle__analysis_fen,
+                 self.toggle_analysis_fen),
+                (EventSpec.menu_tools_toggle_single_view,
+                 self.toggle_single_view),
+                ):
+                menu6.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu6),
+                    underline=accelerator[3])
             menu6.add_separator()
-            menu6.add_command(
-                label='Board Style',
-                underline=6,
-                command=self.try_command(self.select_board_style, menu6))
-            menu6.add_command(
-                label='Board Fonts',
-                underline=6,
-                command=self.try_command(self.select_board_fonts, menu6))
-            menu6.add_command(
-                label='Board Colours',
-                underline=6,
-                command=self.try_command(self.select_board_colours, menu6))
-            menu6.add_separator()
-            menu6.add_command(
-                label='Hide Game Analysis',
-                underline=0,
-                command=self.try_command(self.hide_game_analysis, menu6))
-            menu6.add_command(
-                label='Show Game Analysis',
-                underline=5,
-                command=self.try_command(self.show_game_analysis, menu6))
-            menu6.add_separator()
-            menu6.add_command(
-                label='Hide Game Scrollbars',
-                underline=1,
-                command=self.try_command(self.hide_scrollbars, menu6))
-            menu6.add_command(
-                label='Show Game Scrollbars',
-                underline=2,
-                command=self.try_command(self.show_scrollbars, menu6))
-            menu6.add_separator()
-            menu6.add_command(
-                label='Toggle Game Move Numbers',
-                underline=12,
-                command=self.try_command(self.toggle_game_move_numbers, menu6))
-            menu6.add_separator()
-            menu6.add_command(
-                label='Toggle Analysis Fen',
-                underline=7,
-                command=self.try_command(self.toggle_analysis_fen, menu6))
-            menu6.add_separator()
-            menu6.add_command(
-                label='Toggle Single View',
-                underline=14,
-                command=self.try_command(self.toggle_single_view, menu6))
-            menu6.add_separator()
+            for i in (9, 8, 7, 5, 3, 0):
+                menu6.insert_separator(i)
 
             menu7 = tkinter.Menu(menubar, name='engines', tearoff=False)
             menus.append(menu7)
@@ -437,26 +402,22 @@ class Chess(ExceptionHandler):
             menus.append(menuhelp)
             menubar.add_cascade(label='Help', menu=menuhelp, underline=0)
             menuhelp.add_separator()
-            menuhelp.add_command(
-                label='Guide',
-                underline=0,
-                command=self.try_command(self.help_guide, menuhelp))
-            menuhelp.add_command(
-                label='Selection rules',
-                underline=0,
-                command=self.try_command(self.help_selection, menuhelp))
-            menuhelp.add_command(
-                label='File size',
-                underline=0,
-                command=self.try_command(self.help_file_size, menuhelp))
-            menuhelp.add_command(
-                label='Notes',
-                underline=0,
-                command=self.try_command(self.help_notes, menuhelp))
-            menuhelp.add_command(
-                label='About',
-                underline=0,
-                command=self.try_command(self.help_about, menuhelp))
+            for accelerator, function in (
+                (EventSpec.menu_help_guide,
+                 self.help_guide),
+                (EventSpec.menu_help_selection_rules,
+                 self.help_selection),
+                (EventSpec.menu_help_file_size,
+                 self.help_file_size),
+                (EventSpec.menu_help_notes,
+                 self.help_notes),
+                (EventSpec.menu_help_about,
+                 self.help_about),
+                ):
+                menuhelp.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menuhelp),
+                    underline=accelerator[3])
             menuhelp.add_separator()
 
             self.root.configure(menu=menubar)
@@ -941,7 +902,7 @@ class Chess(ExceptionHandler):
 
     def new_game(self):
         """Enter a new game."""
-        game = DatabaseGameInsert(
+        game = GameDisplayInsert(
             master=self.ui.view_games_pw,
             ui=self.ui,
             items_manager=self.ui.game_items,
@@ -950,7 +911,7 @@ class Chess(ExceptionHandler):
         game.collected_game = next(PGN(game_class=game.gameclass).read_games(
             ''.join((constants.EMPTY_SEVEN_TAG_ROSTER,
                      constants.UNKNOWN_RESULT))))
-        game.set_game()
+        game.set_and_tag_item_text()
         self.ui.add_game_to_display(game)
         try:
             # Is new window only one available for user interaction?
@@ -965,7 +926,7 @@ class Chess(ExceptionHandler):
 
     def new_partial_position(self):
         """Enter a new partial position."""
-        position = DatabaseCQLInsert(
+        position = CQLDisplayInsert(
             master=self.ui.view_partials_pw,
             ui=self.ui,
             items_manager=self.ui.partial_items,
@@ -974,7 +935,7 @@ class Chess(ExceptionHandler):
         # Show empty title and query lines or not?
         if self.ui.base_partials.is_visible():
             position.cql_statement.process_statement('')
-            position.set_cql_statement()
+            position.set_and_tag_item_text(reset_undo=True)
 
         self.ui.add_partial_position_to_display(position)
         try:
@@ -990,7 +951,7 @@ class Chess(ExceptionHandler):
 
     def new_repertoire_game(self):
         """Enter a new repertoire game (opening variation)."""
-        game = DatabaseRepertoireInsert(
+        game = RepertoireDisplayInsert(
             master=self.ui.view_repertoires_pw,
             ui=self.ui,
             items_manager=self.ui.repertoire_items,
@@ -999,7 +960,7 @@ class Chess(ExceptionHandler):
         game.collected_game = next(PGN(game_class=game.gameclass).read_games(
             ''.join((constants.EMPTY_REPERTOIRE_GAME,
                      constants.UNKNOWN_RESULT))))
-        game.set_game()
+        game.set_and_tag_item_text(reset_undo=True)
         self.ui.add_repertoire_to_display(game)
         try:
             # Is new window only one available for user interaction?
@@ -1246,62 +1207,99 @@ class Chess(ExceptionHandler):
                 message='The chess database has not been deleted',
                 )
 
-    def export_all_as_text(self):
+    def export_all_games_text(self):
         """Export all games, repertoires and positions as text files."""
         filenames = self.ui.get_export_folder()
         if filenames is None:
             return
-        exporters.export_games_as_text(self.opendatabase, filenames[0])
-        exporters.export_repertoires_as_text(self.opendatabase, filenames[1])
-        exporters.export_positions(self.opendatabase, filenames[2])
+        exporters.export_all_games_text(self.opendatabase, filenames[0])
+        exporters.export_all_repertoires_text(self.opendatabase, filenames[1])
+        exporters.export_all_positions(self.opendatabase, filenames[2])
 
-    def export_games_as_archive_pgn(self):
-        """Export all games as a PGN file in reduced export format."""
-        exporters.export_games_as_archive_pgn(
-            self.opendatabase,
-            self.ui.get_export_filename('Archive Games', pgn=True))
+    def export_all_games_pgn_reduced_export_format(self):
+        """Export all database games in PGN reduced export format."""
+        self.ui.export_report(
+            exporters.export_all_games_pgn_reduced_export_format(
+                self.opendatabase,
+                self.ui.get_export_filename(
+                    'Games (reduced export format)', pgn=True)),
+            'Games (reduced export format)')
 
-    def export_games_as_pgn(self):
-        """Export all games as a PGN file."""
-        exporters.export_games_as_pgn(
-            self.opendatabase,
-            self.ui.get_export_filename('Games', pgn=True))
+    def export_all_games_pgn(self):
+        """Export all database games in PGN export format."""
+        self.ui.export_report(
+            exporters.export_all_games_pgn(
+                self.opendatabase,
+                self.ui.get_export_filename('Games', pgn=True)),
+            'Games')
 
-    def export_games_as_rav_pgn(self):
-        """Export all games as a PGN file excluding all commentary tokens."""
-        exporters.export_games_as_rav_pgn(
-            self.opendatabase,
-            self.ui.get_export_filename('RAV Games', pgn=True))
+    def export_all_games_pgn_import_format(self):
+        """Export all database games in a PGN import format."""
+        self.ui.export_report(
+            exporters.export_all_games_pgn_import_format(
+                self.opendatabase,
+                self.ui.get_export_filename(
+                    'Games (import format)', pgn=True)),
+            'Games (import format)')
 
-    def export_games_as_text(self):
+    def export_all_games_pgn_no_comments(self):
+        """Export all database games in PGN export format excluding comments.
+        """
+        self.ui.export_report(
+            exporters.export_all_games_pgn_no_comments(
+                self.opendatabase,
+                self.ui.get_export_filename('Games (no comments)', pgn=True)),
+            'Games (no comments)')
+
+    def export_all_games_pgn_no_comments_no_ravs(self):
+        """Export all database games in PGN export format excluding comments
+        and RAVs.
+
+        """
+        self.ui.export_report(
+            exporters.export_all_games_pgn_no_comments_no_ravs(
+                self.opendatabase,
+                self.ui.get_export_filename(
+                    'Games (no comments no ravs)', pgn=True)),
+            'Games (no comments no ravs)')
+
+    def export_all_games_text(self):
         """Export all games as a text file."""
-        exporters.export_games_as_text(
+        exporters.export_all_games_text(
             self.opendatabase,
-            self.ui.get_export_filename('Games', pgn=False))
+            self.ui.get_export_filename('Games (internal format)', pgn=False))
 
     def export_positions(self):
         """Export all positions as a text file."""
-        exporters.export_positions(
+        exporters.export_all_positions(
             self.opendatabase,
             self.ui.get_export_filename('Partial Positions', pgn=False))
 
-    def export_repertoires_as_pgn(self):
-        """Export all repertoires as a text file with moves in PGN format"""
-        exporters.export_repertoires_as_pgn(
+    def export_all_repertoires_pgn(self):
+        """Export all repertoires in PGN export format."""
+        exporters.export_all_repertoires_pgn(
             self.opendatabase,
             self.ui.get_export_filename('Repertoires', pgn=True))
 
-    def export_repertoires_as_rav_pgn(self):
-        """Export all repertoires as a text file with moves in PGN format"""
-        exporters.export_repertoires_as_rav_pgn(
+    def export_all_repertoires_pgn_import_format(self):
+        """Export all repertoires in a PGN import format."""
+        exporters.export_all_repertoires_pgn_import_format(
             self.opendatabase,
-            self.ui.get_export_filename('RAV Repertoires', pgn=True))
+            self.ui.get_export_filename(
+                'Repertoires (import format)', pgn=True))
 
-    def export_repertoires_as_text(self):
-        """Export all repertoires as a text file."""
-        exporters.export_repertoires_as_text(
+    def export_all_repertoires_pgn_no_comments(self):
+        """Export all repertoires in PGN export format without comments."""
+        exporters.export_all_repertoires_pgn_no_comments(
             self.opendatabase,
-            self.ui.get_export_filename('Repertoires', pgn=False))
+            self.ui.get_export_filename('Repertoires (no comments)', pgn=True))
+
+    def export_all_repertoires_text(self):
+        """Export all repertoires as a text file."""
+        exporters.export_all_repertoires_text(
+            self.opendatabase,
+            self.ui.get_export_filename(
+                'Repertoires (internal format)', pgn=False))
 
     def import_positions(self):
         """Import positions from text file."""
@@ -1582,7 +1580,7 @@ class Chess(ExceptionHandler):
         # This only affects DPT databases (_dpt module) but the _sqlite and _db
         # modules have 'do-nothing' methods to fit.
         ds = ui.base_games.datasource
-        if ds and hasattr(ds, 'recordset'):
+        if ds and hasattr(ds, 'recordset') and ds.recordset is not None:
             ds.recordset.close()
 
         for grid in ui.game_games, ui.repertoire_games, ui.partial_games:
@@ -1761,7 +1759,7 @@ class Chess(ExceptionHandler):
 
     def new_index_selection(self):
         """Enter a new index selection."""
-        selection = DatabaseQueryInsert(
+        selection = QueryDisplayInsert(
             master=self.ui.view_selection_rules_pw,
             ui=self.ui,
             items_manager=self.ui.selection_items,
@@ -1770,7 +1768,7 @@ class Chess(ExceptionHandler):
         # Show empty title and query lines or not?
         if self.ui.base_selections.is_visible():
             selection.query_statement.process_query_statement('')
-            selection.set_query_statement()
+            selection.set_and_tag_item_text(reset_undo=True)
 
         self.ui.add_selection_rule_to_display(selection)
         try:

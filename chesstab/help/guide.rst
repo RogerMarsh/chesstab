@@ -111,7 +111,9 @@ Popup Menus
 
 Right mouse click displays a popup menu of actions if appropriate.
 
-Over a game or repertoire board right mouse click displays the next position unless variations are available, when a popup menu will appear.
+'Shift F10' and 'Ctrl F10' display a popup menu of actions for the item with keyboard focus if appropriate.  'Shift F10' posts the menu at top left corner of item. 'Ctrl F10' posts the menu at pointer position, which may be over another item.
+
+Over a game or repertoire board right mouse click displays the next position unless variations are available, when these are highlighted in the game score.
 
 
 Playing through a game

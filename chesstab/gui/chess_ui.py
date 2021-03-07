@@ -369,7 +369,11 @@ class ChessUI(ExceptionHandler):
         """Add game item to GUI."""
         self.game_items.add_item_to_display(item)
         if self.game_items.contains_one_item():
-            item.bind_score_pointer_for_widget_navigation(True)
+
+            # Call may not be necessary.
+            # This one repeats call in gamedisplay.GameDisplay.
+            #item.set_score_pointer_widget_navigation_bindings(True)
+
             self.set_game_position_data_source()
             self.calculate_payload_availability()
         self.configure_game_grid()
@@ -395,7 +399,10 @@ class ChessUI(ExceptionHandler):
         ri = self.repertoire_items
         ri.add_item_to_display(item)
         if ri.contains_one_item():
-            item.bind_score_pointer_for_widget_navigation(True)
+
+            # Call may not be necessary.
+            #item.set_score_pointer_widget_navigation_bindings(True)
+
             self.calculate_payload_availability()
             self.set_repertoire_data_source()
         self.configure_repertoire_grid()
@@ -409,7 +416,10 @@ class ChessUI(ExceptionHandler):
         si = self.selection_items
         si.add_item_to_display(item)
         if si.contains_one_item():
-            item.bind_score_pointer_for_widget_navigation(True)
+
+            # Call may not be necessary.
+            item.set_score_pointer_widget_navigation_bindings(True)
+
             self.calculate_payload_availability()
         self.configure_selection_grid()
         self.set_selection_rule_change_notifications(
@@ -464,7 +474,7 @@ class ChessUI(ExceptionHandler):
     def delete_game_view(self, item):
         """Remove (game) panel from GUI on 'delete' event from panel."""
         views = self.game_items
-        grid_item = views.delete_item_counters(item.panel)
+        grid_item = views.delete_item_counters(item)
         if grid_item:
             self.set_properties_on_all_game_grids(grid_item)
         had_focus = item.has_focus()
@@ -519,7 +529,7 @@ class ChessUI(ExceptionHandler):
     def delete_position_view(self, item):
         """Remove (partial) panel from GUI on 'delete' event from panel."""
         views = self.partial_items
-        grid_item = views.delete_item_counters(item.panel)
+        grid_item = views.delete_item_counters(item)
         if grid_item:
             if grid_item in self.base_partials.objects:
                 self.base_partials.set_properties(grid_item)
@@ -553,7 +563,7 @@ class ChessUI(ExceptionHandler):
     def delete_repertoire_view(self, item):
         """Remove (game) panel from GUI on 'delete' event from panel."""
         views = self.repertoire_items
-        grid_item = views.delete_item_counters(item.panel)
+        grid_item = views.delete_item_counters(item)
         if grid_item:
             if grid_item in self.base_repertoires.objects:
                 self.base_repertoires.set_properties(grid_item)
@@ -580,7 +590,7 @@ class ChessUI(ExceptionHandler):
     def delete_selection_rule_view(self, item):
         """Remove (selection rule) panel on 'delete' event from panel."""
         views = self.selection_items
-        grid_item = views.delete_item_counters(item.panel)
+        grid_item = views.delete_item_counters(item)
         if grid_item:
             if grid_item in self.base_selections.objects:
                 self.base_selections.set_properties(grid_item)
@@ -1136,8 +1146,6 @@ class ChessUI(ExceptionHandler):
             for i in self.selection_items.order:
                 if i.query_statement.dbset is None:
                     i.query_statement.dbset = GAMES_FILE_DEF
-                if i.selection_token_checker.dbset is None:
-                    i.selection_token_checker.dbset = GAMES_FILE_DEF
             #self.set_repertoire_data_source()
             #self.selection_items.active_item.set_game_list()
             self.selection_items.set_insert_or_delete_on_all_items()
@@ -1402,11 +1410,7 @@ class ChessUI(ExceptionHandler):
 
     def get_export_filename(self, datatype, pgn=True):
         """Return filename to contain export of datatype or None."""
-        if pgn:
-            desc = 'PGN'
-        else:
-            desc = 'Text'
-        title = ' '.join(('Export', datatype, 'as', desc))
+        title = ' '.join(('Export', datatype))
         if self.is_import_subprocess_active():
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
@@ -1425,14 +1429,10 @@ class ChessUI(ExceptionHandler):
 
     def get_export_filename_for_single_item(self, datatype, pgn=True):
         """Return filename to contain export of datatype or None."""
-        if pgn:
-            desc = 'PGN'
-        else:
-            desc = 'Text'
         return self._get_export_filename(
             datatype,
             pgn,
-            ' '.join(('Export', datatype, 'as', desc)))
+            ' '.join(('Export', datatype)))
 
     def get_export_folder(self):
         """Return folder name to contain export of database or None."""
@@ -1780,13 +1780,17 @@ class ChessUI(ExceptionHandler):
     def filter_game(self):
         """"""
         t = self.tb_entry.get()
-        self.base_games.load_new_partial_key(t if len(t) else None)
+        self.base_games.record_count = None
+        self.base_games.set_partial_key(t if len(t) else None)
 
         # Not yet sure if other three filter_* methods need fill_view() call to
         # populate widget without an explicit scroll action by user.
         # '*' seems to be treated as a 0-n wildcard character when passed to
         # SQLite3 via apsw or sqlite3 interfaces, and creates a situation that
         # looks difficult to resolve in DataGrid.
+        # (Added much later:)
+        # Implementing filters with '*' characters could be done by selection
+        # rules evaluated here using the 't' value.
         try:
             self.base_games.fill_view()
         except KeyError:
@@ -1795,14 +1799,17 @@ class ChessUI(ExceptionHandler):
                     parent=self.get_toplevel(),
                     title='Filter Games',
                     message=''.join((
-                        "Filter '", t, "' contains a '*': if the database ",
-                        "engine is SQLite3 an attempt to scroll the list of ",
+                        "Filter '", t, "' contains a '*'.\n\nThis warning is ",
+                        "expected to appear if the database engine is ",
+                        "SQLite3 and means an attempt to scroll the list of ",
                         "games will cause a program crash.\n\nA known way ",
                         "to avoid this is menu option 'Select | Game'.\n\n",
                         "Assuming the filter was enabled by menu option ",
                         "'Select | White' the filter can be done by 'Select ",
                         "| Rule', typing 'White starts ", t, "', followed ",
-                        "by 'Ctrl + Enter'.")))
+                        "by 'Ctrl + Enter'.\n\nIf the filter was enabled by ",
+                        "'Select | Result' the appropriate rule is likely ",
+                        "to be 'Result eq *'.")))
 
     def filter_partial(self):
         """"""
@@ -1858,3 +1865,19 @@ class ChessUI(ExceptionHandler):
                     exceptions.append(i, items)
         for i, items in exceptions:
             items.remove(i)
+
+    def export_report(self, result, title):
+        if result is None:
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message=''.join(
+                    ('No games scores output because none are ',
+                     'PGN export format compliant')))
+        elif result is False:
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title=title,
+                message=''.join(
+                    ('Some games scores are not output because they are ',
+                     'not PGN export format compliant')))

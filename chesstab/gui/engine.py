@@ -2,9 +2,9 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Display a chess engine definition.
+"""Widget to display a chess engine definition.
 
-A chess engine definition is command to run a chess engine.
+A chess engine definition is the command to run a chess engine.
 
 The Engine class displays a chess engine definition.
 
@@ -30,6 +30,16 @@ from .enginetext import EngineText
 class Engine(EngineText):
 
     """Chess engine definition widget.
+
+    master is used as the master argument for the tkinter Frame widget passed
+    to superclass.
+
+    boardfont is no longer used.
+
+    See superclass for ui, items_manager, and itemgrid, arguments.  These may
+    be, or have been, absorbed into **ka argument.
+
+    
     """
 
     def __init__(

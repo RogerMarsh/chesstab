@@ -2,63 +2,84 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise delete dialogue to delete chess engine definition record.
+"""Customise show toplevel to show chess engine definition record.
 """
 
 from solentware_grid.gui.datashow import DataShow
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .enginedisplay import DialogueEngineDisplay
+from .enginetoplevel import EngineToplevel
+from .topleveltext import ShowText
 
 
-class ChessDBshowEngine(ExceptionHandler, DataShow):
-    """Dialog to show a chess engine definition from database.
+class EngineDbShow(ExceptionHandler, ShowText, DataShow):
+    """Show a chess engine definition from database.
 
-    The chess engine definition is in it's own Toplevel widget.
+    parent is used as the master argument in an EngineToplevel call.
+
+    ui is used as the ui argument in an EngineToplevel call.
+
+    parent, oldobject, and the EngineToplevel instance created, are used as
+    arguments in the super.__init__ call.
+
+    Attribute text_name provides the name used in widget titles and message
+    text.
+
+    Methods get_title_for_object and set_item, and properties ui_base_table;
+    ui_items_in_toplevels; and ui, allow similar methods in various classes
+    to be expressed identically and defined once.
 
     """
+    text_name = 'Engine Definition'
 
-    def __init__(self, parent, instance, ui=None):
-        """Create dialogue widget for deleting chess engine definition."""
-        oldview = DialogueEngineDisplay(master=parent, ui=ui)
-        if ui is not None:
-            ui.engines_in_toplevels.add(oldview)
-        oldview.definition.extract_engine_definition(instance.get_srvalue())
-        oldview.set_engine_definition(instance.value)
-        super(ChessDBshowEngine, self).__init__(
-            instance,
-            parent,
-            oldview,
-            ':  '.join((
-                'Show Engine Definition',
-                instance.value._description_string)),
-            )
-        self.bind_buttons_to_widget(oldview.score)
-        self.ui = ui
-       
-    def dialog_ok(self):
-        """Delete record and return delete action response (True for deleted).
+    def __init__(self, parent, oldobject, ui=None):
+        """Create toplevel widget for showing chess engine definition.
 
-        Check that database is open and is same one as deletion action was
-        started.
+        ui should be a UCI instance.
 
         """
-        if self.ui.database is None:
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
-            return False
-        return super(ChessDBshowEngine, self).dialog_ok()
+        # Toplevel title set '' in __init__ and to proper value in initialize.
+        super().__init__(oldobject,
+                         parent,
+                         EngineToplevel(master=parent, ui=ui),
+                         '')
+        self.initialize()
+
+    def get_title_for_object(self, object_=None):
+        """Return title for Toplevel containing a chess engine definition
+        object_.
+
+        Default value of object_ is object attribute from DataShow class.
+
+        """
+        if object_ is None:
+            object_ = self.object
+        return '  '.join((
+            self.text_name.join(('Show ', ':')),
+            object_.value.get_name_text()))
+
+    @property
+    def ui_base_table(self):
+        return self.ui.base_engines
+
+    @property
+    def ui_items_in_toplevels(self):
+        return self.ui.engines_in_toplevels
+
+    @property
+    def ui(self):
+        return self.oldview.ui
+
+    def set_item(self, view, object_):
+        view.definition.extract_engine_definition(object_.get_srvalue())
+        view.set_engine_definition(object_.value)
 
     def tidy_on_destroy(self):
-        """Clear up after dialogue destruction."""
-        self.ui.engines_in_toplevels.discard(self.oldview)
-
-        # base_engines is None when this happens on Quit.
+        # ui_base_table is None when this happens other than directly closing
+        # the Toplevel.
         try:
-            self.ui.base_engines.selection.clear()
+            super().tidy_on_destroy()
         except AttributeError:
-            if self.ui.base_engines is not None:
+            if self.ui_base_table is not None:
                 raise

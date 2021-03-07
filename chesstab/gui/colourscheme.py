@@ -331,7 +331,7 @@ class _ColourScheme(ExceptionHandler):
             'Kg3Qc8Nd3Kg8f4Qc6Nc1Qa4Qb31-0',
             '\n'))
         self.game.collected_game = next(PGN().read_games(gs))
-        self.game.set_game()
+        self.game.set_and_tag_item_text()
         self.game.get_top_widget().pack(fill=tkinter.BOTH, expand=1)
         self.game.get_top_widget().pack_propagate(False)
 

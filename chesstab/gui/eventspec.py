@@ -32,8 +32,6 @@ NEXT_REPERTOIRE = 'Next Repertoire'
 REPERTOIRE = 'Repertoire'
 PREVIOUS_GAME = 'Previous Game'
 NEXT_GAME = 'Next Game'
-GAME = 'Game'
-ANALYSIS = 'Analysis'
 PREVIOUS_PARTIAL_POSITION = 'Previous Partial Position'
 NEXT_PARTIAL_POSITION = 'Next Partial Position'
 PREVIOUS_SELECTION_RULE = 'Previous Selection Rule'
@@ -43,195 +41,62 @@ NEXT_SELECTION_RULE = 'Next Selection Rule'
 class EventSpec(object):
     """Event detail values for ChessTab keyboard and pointer actions."""
 
-    # PartialPositionGames
-    partial_game_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    partial_game_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    partial_game_grid_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    partial_game_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    partial_game_grid_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    partial_game_grid_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'F9')
-    partial_game_grid_to_active_game = (
+    # Navigate to another specific widget event specifications.  (Not next
+    # widget in tab order or similar.)
+    # When this class was introduced it was convenient name the events like
+    # 'position_grid_to_partial_grid' and 'partial_game_grid_to_partial_grid',
+    # though both were "('<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')", to
+    # avoid making mistakes.  Opportunity taken, when adding export events,
+    # to replace these with 'navigate_to_partial_grid' names.
+    navigate_to_active_game = (
         '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    partial_game_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    partial_game_grid_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    partial_game_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_game_from_partial_game_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_game_from_partial_game_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
-    export_archive_pgn_from_partial_game_grid = (
-        '<Shift-Alt-KeyPress-Home>', 'Export Archive PGN', 'Shift Alt Home')
-    export_rav_pgn_from_partial_game_grid = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_partial_game_grid = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-
-    # GamePositionGames
-    position_grid_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    position_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    position_grid_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    position_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    position_grid_to_active_partial = (
+    navigate_to_active_partial = (
         '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    position_grid_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    position_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    position_grid_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    position_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    position_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    display_game_from_position_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_game_from_position_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
-    export_archive_pgn_from_position_grid = (
-        '<Shift-Alt-KeyPress-Home>', 'Export Archive PGN', 'Shift Alt Home')
-    export_rav_pgn_from_position_grid = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_position_grid = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-
-    # TagRosterGrid
-    game_grid_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    game_grid_to_active_repertoire = (
+    navigate_to_active_repertoire = (
         '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    game_grid_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    game_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    game_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    game_grid_to_partial_game_grid = (
+    navigate_to_active_selection_rule = (
+        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
+    navigate_to_game_grid = (
+        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
+    navigate_to_partial_game_grid = (
         '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    game_grid_to_position_grid = (
+    navigate_to_partial_grid = (
+        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
+    navigate_to_position_grid = (
         '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    game_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    game_grid_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    game_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_game_from_game_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_game_from_game_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
-    export_archive_pgn_from_game_grid = (
-        '<Shift-Alt-KeyPress-Home>', 'Export Archive PGN', 'Shift Alt Home')
-    export_rav_pgn_from_game_grid = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_game_grid = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-
-    # RepertoireGrid
-    repertoire_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    repertoire_grid_to_repertoire_game_grid = (
+    navigate_to_repertoire_game_grid = (
         '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    repertoire_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    repertoire_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    repertoire_grid_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    repertoire_grid_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    repertoire_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    repertoire_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    repertoire_grid_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    repertoire_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_game_from_repertoire_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_game_from_repertoire_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
-    export_rav_pgn_from_repertoire_grid = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_repertoire_grid = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-
-    # RepertoirePositionGames
-    repertoire_game_grid_to_repertoire_grid = (
+    navigate_to_repertoire_grid = (
         '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    repertoire_game_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    repertoire_game_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    repertoire_game_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    repertoire_game_grid_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    repertoire_game_grid_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    repertoire_game_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    repertoire_game_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    repertoire_game_grid_to_selection_rule_grid = (
+    navigate_to_selection_rule_grid = (
         '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    repertoire_game_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_game_from_repertoire_game_grid = (
+
+    # All the grids have Display and Display allow edit options, with the same
+    # prompt and keystrokes no matter the type of data.  The grids are
+    # PartialPositionGames, GamePositionGames, TagRosterGrid, RepertoireGrid,
+    # RepertoirePositionGames, PartialGrid, and SelectionGrid.
+    display_record_from_grid = (
         '<KeyPress-F11>', 'Display', 'F11')
-    edit_game_from_repertoire_game_grid = (
+    edit_record_from_grid = (
         '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
-    export_archive_pgn_from_repertoire_game_grid = (
-        '<Shift-Alt-KeyPress-Home>', 'Export Archive PGN', 'Shift Alt Home')
-    export_rav_pgn_from_repertoire_game_grid = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_repertoire_game_grid = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-    cycle_up_one_repeat_in_repertoire_game_grid = (
-        '<Shift-KeyPress-Up>', 'Previous Transposition', 'Shift Up')
-    cycle_down_one_repeat_in_repertoire_game_grid = (
-        '<Shift-KeyPress-Down>', 'Next Transposition', 'Shift Down')
 
     # PartialGrid
-    partial_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    partial_grid_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    partial_grid_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    partial_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    partial_grid_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    partial_grid_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    partial_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    partial_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    partial_grid_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    partial_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_partial_from_partial_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_partial_from_partial_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
     export_from_partial_grid = (
         '<Control-Alt-KeyPress-Home>', 'Export', 'Ctrl Alt Home')
+
+    # All the display, and edit, widgets have Insert, Delete, Update, and Make
+    # Active options.  These event definitions replace those named for the
+    # widget using them.
+    # The Dismiss option is a plausible renaming of the Close options named
+    # after the data in the widget.
+    # Some have a List Games option.
+    display_insert = ('<KeyPress-Insert>', 'Insert', 'Insert')
+    display_delete = ('<KeyPress-Delete>', 'Delete', 'Delete')
+    display_update = ('<Alt-KeyPress-Insert>', 'Edit', 'Alt Insert')
+    display_dismiss = ('<Alt-KeyPress-F12>', 'Close Item', 'Alt F12')
+    display_make_active = ('', 'Make Active', 'Left Click')
+    display_dismiss_inactive = ('', 'Close Item', '')
+    display_list = ('<Control-KeyPress-Return>', 'List Games', 'Ctrl Enter')
 
     # Score widget, common to Game and Repertoire widgets.
     # Default lambda in Score.__init__ ignored.
@@ -259,26 +124,22 @@ class EventSpec(object):
         '<KeyPress-Up>', 'Cancel Variation', 'Up')
     score_disable_keypress = (
         '<KeyPress>', '', '') # No menu entry for this initialisation event.
+    score_enable_F10_menubar = ('<KeyPress-F10>', '', 'F10')
+    score_enable_F10_popupmenu_at_top_left = (
+        '<Shift-KeyPress-F10>', 'Popup Menu at Top Left', 'Shift F10')
+    score_enable_F10_popupmenu_at_pointer = (
+        '<Control-KeyPress-F10>', 'Popup Menu at Pointer', 'Ctrl F10')
 
     # Game widget analyse events.
     # Inherited by Repertoire, GameEdit, and RepertoireEdit, widgets.
     analyse_game = (
         '<Alt-KeyPress-a>', 'Analyse', 'Alt a')
 
-    # Game widget PGN export events.
-    # Inherited by Repertoire, GameEdit, and RepertoireEdit, widgets.
-    export_archive_pgn_from_game = (
-        '<Shift-Alt-KeyPress-Home>', 'Export Archive PGN', 'Shift Alt Home')
-    export_rav_pgn_from_game = (
-        '<Control-Shift-KeyPress-Home>', 'Export RAV PGN', 'Ctrl Shift Home')
-    export_pgn_from_game = (
-        '<Control-Alt-KeyPress-Home>', 'Export PGN', 'Ctrl Alt Home')
-
     # GameEdit widget editing events.
     # Inherited by RepertoireEdit widget.
     gameedit_insert_rav = (
         '<KeyPress>', '', '') # A menu entry would say type moves to insert.
-    gameedit_insert_rav_castle_queenside = (
+    gameedit_insert_castle_queenside = (
         '<Control-KeyPress-o>', 'O-O-O', 'Ctrl o')
     gameedit_insert_comment = (
         '<Control-KeyPress-braceleft>', 'Insert Comment', 'Ctrl {')
@@ -401,122 +262,24 @@ class EventSpec(object):
         '<KeyPress>', '', '') # A menu entry would say type moves to insert.
     gameedit_edit_move = (
         '<KeyPress-BackSpace>', '', '') # A menu entry would make sense.
-    gameedit_insert_castle_queenside = (
-        '<Control-KeyPress-o>', 'O-O-O', 'Ctrl o')
 
     # GameDisplay
-    gamedisplay_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    gamedisplay_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    gamedisplay_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    gamedisplay_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    gamedisplay_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    gamedisplay_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    gamedisplay_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    gamedisplay_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
     gamedisplay_to_previous_game = (
         '<KeyPress-F7>', PREVIOUS_GAME, 'F7')
     gamedisplay_to_next_game = (
         '<KeyPress-F8>', NEXT_GAME, 'F8')
-    gamedisplay_game_to_analysis = (
-        '<Alt-KeyPress-F8>', ANALYSIS, 'Alt F8')
-    gamedisplay_analysis_to_game = (
-        '<Alt-KeyPress-F8>', GAME, 'Alt F8')
-    gamedisplay_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    gamedisplay_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
 
-    # DatabaseGameDisplay
-    databasegamedisplay_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databasegamedisplay_delete = (
-        '<KeyPress-Delete>', 'Delete', 'Delete')
-    databasegamedisplay_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Game', 'Alt F12')
-    databasegamedisplay_make_active = (
-        '', 'Make Active', 'Left Click')
-    databasegamedisplay_dismiss_inactive = (
-        '', 'Close Game', '')
-
-    # DatabaseGameEdit.
-    databasegameedit_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databasegameedit_update = (
-        '<Alt-KeyPress-Insert>', 'Update', 'Alt Insert')
-    databasegameedit_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Game', 'Alt F12')
-    databasegameedit_make_active = (
-        '', 'Make Active', 'Left Click')
-    databasegameedit_dismiss_inactive = (
-        '', 'Close Game', '')
-
-    # GameDialogue
-    gamedialogue_game_to_analysis = (
-        '<Alt-KeyPress-F8>', ANALYSIS, 'Alt F8')
-    gamedialogue_analysis_to_game = (
-        '<Alt-KeyPress-F8>', GAME, 'Alt F8')
+    # Switch between scoresheet and analysis in game or repertoire.
+    scoresheet_to_analysis = ('<Alt-KeyPress-F8>', 'Analysis', 'Alt F8')
+    analysis_to_scoresheet = ('<Alt-KeyPress-F8>', 'Scoresheet', 'Alt F8')
 
     # PartialDisplay
-    partialdisplay_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
     partialdisplay_to_previous_partial = (
         '<KeyPress-F7>', PREVIOUS_PARTIAL_POSITION, 'F7')
     partialdisplay_to_next_partial = (
         '<KeyPress-F8>', NEXT_PARTIAL_POSITION, 'F8')
-    partialdisplay_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    partialdisplay_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    partialdisplay_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    partialdisplay_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    partialdisplay_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    partialdisplay_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    partialdisplay_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    partialdisplay_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    partialdisplay_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
     export_from_partialdisplay = (
         '<Control-Alt-KeyPress-Home>', 'Export', 'Ctrl Alt Home')
-
-    # DatabasePartialDisplay
-    databasepartialdisplay_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databasepartialdisplay_delete = (
-        '<KeyPress-Delete>', 'Delete', 'Delete')
-    databasepartialdisplay_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Partial', 'Alt F12')
-    databasepartialdisplay_make_active = (
-        '', 'Make Active', 'Left Click')
-    databasepartialdisplay_dismiss_inactive = (
-        '', 'Close Partial', '')
-
-    # DatabasePartialEdit
-    databasepartialedit_show_game_list = (
-        '<Control-KeyPress-Return>', 'List Games', 'Ctrl Enter')
-    databasepartialedit_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databasepartialedit_update = (
-        '<Alt-KeyPress-Insert>', 'Edit', 'Alt Insert')
-    databasepartialedit_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Partial', 'Alt F12')
-    databasepartialedit_make_active = (
-        '', 'Make Active', 'Left Click')
-    databasepartialedit_dismiss_inactive = (
-        '', 'Close Partial', '')
 
     # PartialEdit
     partialedit_insert_char_or_token = (
@@ -547,64 +310,10 @@ class EventSpec(object):
         '<KeyPress-End>', '', '') # A menu entry would make sense.
 
     # RepertoireDisplay
-    repertoiredisplay_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    repertoiredisplay_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    repertoiredisplay_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    repertoiredisplay_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    repertoiredisplay_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    repertoiredisplay_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    repertoiredisplay_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
-    repertoiredisplay_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    repertoiredisplay_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    repertoiredisplay_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
     repertoiredisplay_to_previous_repertoire = (
         '<KeyPress-F7>', PREVIOUS_REPERTOIRE, 'F7')
     repertoiredisplay_to_next_repertoire = (
         '<KeyPress-F8>', NEXT_REPERTOIRE, 'F8')
-    repertoiredisplay_repertoire_to_analysis = (
-        '<Alt-KeyPress-F8>', ANALYSIS, 'Alt F8')
-    repertoiredisplay_analysis_to_repertoire = (
-        '<Alt-KeyPress-F8>', REPERTOIRE, 'Alt F8')
-
-    # DatabaseRepertoireDisplay
-    databaserepertoiredisplay_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databaserepertoiredisplay_delete = (
-        '<KeyPress-Delete>', 'Delete', 'Delete')
-    databaserepertoiredisplay_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Repertoire', 'Alt F12')
-    databaserepertoiredisplay_make_active = (
-        '', 'Make Active', 'Left Click')
-    databaserepertoiredisplay_dismiss_inactive = (
-        '', 'Close Repertoire', '')
-
-    # DatabaseRepertoireEdit
-    databaserepertoireedit_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databaserepertoireedit_update = (
-        '<Alt-KeyPress-Insert>', 'Update', 'Alt Insert')
-    databaserepertoireedit_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Repertoire', 'Alt F12')
-    databaserepertoireedit_make_active = (
-        '', 'Make Active', 'Left Click')
-    databaserepertoireedit_dismiss_inactive = (
-        '', 'Close Repertoire', '')
-
-    # RepertoireDialogue
-    repertoiredialogue_repertoire_to_analysis = (
-        '<Alt-KeyPress-F8>', ANALYSIS, 'Alt F8')
-    repertoiredialogue_analysis_to_repertoire = (
-        '<Alt-KeyPress-F8>', REPERTOIRE, 'Alt F8')
 
     # PartialScore
     partialscore_disable_keypress = (
@@ -612,8 +321,8 @@ class EventSpec(object):
 
     # Partial widget partial position export events.
     # Inherited by PartialEdit widget.
-    export_text_from_partial = (
-        '<Control-Alt-KeyPress-Home>', 'Export', 'Ctrl Alt Home')
+    text_from_partial = (
+        '<Control-Alt-KeyPress-Home>', 'Text', 'Ctrl Alt Home')
 
     # Keyboard traversal events (Control-F8 Control-F7): all relevant widgets.
     # tab_traverse_backward bindings behave differently to expectation given
@@ -627,88 +336,14 @@ class EventSpec(object):
         '<Alt-KeyPress-F8>', 'Focus Round', 'Alt F8')
 
     # SelectionDisplay
-    selectiondisplay_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    selectiondisplay_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    selectiondisplay_to_selection_rule_grid = (
-        '<KeyPress-F3>', SELECTION_RULE_LIST, 'F3')
     selectiondisplay_to_previous_selection = (
         '<KeyPress-F7>', PREVIOUS_SELECTION_RULE, 'F7')
     selectiondisplay_to_next_selection = (
         '<KeyPress-F8>', NEXT_SELECTION_RULE, 'F8')
-    selectiondisplay_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    selectiondisplay_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    selectiondisplay_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    selectiondisplay_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    selectiondisplay_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    selectiondisplay_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    selectiondisplay_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-
-    # SelectionGrid
-    selection_grid_to_active_partial = (
-        '<Alt-KeyPress-F2>', ACTIVE_PARTIAL_POSITION, 'Alt F2')
-    selection_grid_to_partial_game_grid = (
-        '<Shift-KeyPress-F2>', GAMES_PARTIAL_POSITION, 'Shift F2')
-    selection_grid_to_repertoire_grid = (
-        '<KeyPress-F6>', REPERTOIRE_GAME_LIST, 'F6')
-    selection_grid_to_active_repertoire = (
-        '<Alt-KeyPress-F6>', ACTIVE_REPERTOIRE, 'Alt F6')
-    selection_grid_to_repertoire_game_grid = (
-        '<Shift-KeyPress-F6>', GAMES_REPERTOIRE, 'Shift F6')
-    selection_grid_to_position_grid = (
-        '<Shift-KeyPress-F9>', POSITION_GAME_LIST, 'Shift F9')
-    selection_grid_to_active_game = (
-        '<Alt-KeyPress-F9>', ACTIVE_GAME, 'Alt F9')
-    selection_grid_to_game_grid = (
-        '<KeyPress-F9>', GAMES_DATABASE, 'F9')
-    selection_grid_to_partial_grid = (
-        '<KeyPress-F2>', PARTIAL_POSITION_LIST, 'F2')
-    selection_grid_to_active_selection_rule = (
-        '<Alt-KeyPress-F3>', ACTIVE_SELECTION_RULE, 'Alt F3')
-    display_selection_rule_from_selection_grid = (
-        '<KeyPress-F11>', 'Display', 'F11')
-    edit_selection_rule_from_selection_grid = (
-        '<Control-KeyPress-F11>', 'Display allow edit', 'Ctrl F11')
 
     # SelectionText
     selectiontext_disable_keypress = (
         '<KeyPress>', '', '') # Keyboard actions do nothing by default.
-
-    # DatabaseSelectionDisplay
-    databaseselectiondisplay_show_game_list = (
-        '<Control-KeyPress-Return>', 'List Games', 'Ctrl Enter')
-    databaseselectiondisplay_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databaseselectiondisplay_delete = (
-        '<KeyPress-Delete>', 'Delete', 'Delete')
-    databaseselectiondisplay_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Selection', 'Alt F12')
-    databaseselectiondisplay_make_active = (
-        '', 'Make Active', 'Left Click')
-    databaseselectiondisplay_dismiss_inactive = (
-        '', 'Close Selection', '')
-
-    # DatabaseSelectionEdit
-    databaseselectionedit_show_game_list = (
-        '<Control-KeyPress-Return>', 'List Games', 'Ctrl Enter')
-    databaseselectionedit_insert = (
-        '<KeyPress-Insert>', 'Insert', 'Insert')
-    databaseselectionedit_update = (
-        '<Alt-KeyPress-Insert>', 'Edit', 'Alt Insert')
-    databaseselectionedit_dismiss = (
-        '<Alt-KeyPress-F12>', 'Close Selection', 'Alt F12')
-    databaseselectionedit_make_active = (
-        '', 'Make Active', 'Left Click')
-    databaseselectionedit_dismiss_inactive = (
-        '', 'Close Selection', '')
 
     # EngineGrid
     engine_grid_run = (
@@ -725,3 +360,99 @@ class EventSpec(object):
     # DatabaseEngineEdit
     databaseengineedit_browse = (
         '<Alt-KeyPress-b>', 'Browse Engines', 'Alt b')
+
+    # Export PGN options.
+    # These are put in the 'Export' submenu available on all widgets based on
+    # subclasses of Score or GameListGrid; and in the main Database menu.
+    # Attempt with <Alt-Shift-KeyPress-Home> for reduced export format failed.
+    # Shift-Home is already taken by the bindings defined for DataGrids in the
+    # solentware_misc.gui.datagrid module: hence Shift-Escape below.
+    pgn_reduced_export_format = (
+        '<Alt-KeyPress-End>', 'PGN reduced', 'Alt End', 4)
+    pgn_export_format_no_comments_no_ravs = (
+        '<Control-KeyPress-Home>', 'PGN all tags moves played', 'Ctrl Home', 4)
+    pgn_export_format_no_comments = (
+        '<Control-Shift-KeyPress-Home>',
+        'PGN no comments',
+        'Ctrl Shift Home',
+        4)
+    pgn_export_format = (
+        '<Control-Alt-KeyPress-Home>', 'PGN', 'Ctrl Alt Home', 0)
+    pgn_import_format = (
+        '<Shift-KeyPress-Escape>', 'PGN import', 'Shift Escape', 4)
+    text_internal_format = (
+        '<Alt-KeyPress-Home>', 'Text', 'Alt Home', 0)
+
+    # ButtonPress event definitions.
+    control_buttonpress_1 = ('<Control-ButtonPress-1>', '', '')
+    control_buttonpress_3 = ('<Control-ButtonPress-3>', '', '')
+    shift_buttonpress_1 = ('<Shift-ButtonPress-1>', '', '')
+    shift_buttonpress_3 = ('<Shift-ButtonPress-3>', '', '')
+    alt_buttonpress_1 = ('<Alt-ButtonPress-1>', '', '')
+    alt_buttonpress_3 = ('<Alt-ButtonPress-3>', '', '')
+    buttonpress_1 = ('<ButtonPress-1>', '', '')
+    buttonpress_3 = ('<ButtonPress-3>', '', '')
+
+    # Menubar event definitions.
+    # F10 in any window invokes the first menu (probably Database).
+    # Alt-x invokes the corresponding menu in the menubar, where x is the
+    # underlined character.
+    menu_database_open = ('', 'Open', '', 0)
+    menu_database_new = ('', 'New', '', 0)
+    menu_database_close = ('', 'Close', '', 0)
+    menu_database_import = ('', 'Import', '', 0)
+    menu_database_export = ('', 'Export', '', 0)
+    menu_database_delete = ('', 'Delete', '', 0)
+    menu_database_quit = ('', 'Quit', '', 0)
+    menu_database_export_all_text = ('', 'All (text)', '', 0)
+
+    # Games, Repertoires, and Positions, are used in the Import and Export
+    # submenus of the Database menu.
+    menu_database_games = ('', 'Games', '', 0)
+    menu_database_repertoires = ('', 'Repertoires', '', 0)
+    menu_database_positions = ('', 'Positions', '', 0)
+
+    # Show and hide are used in the Select, Position, and Repertoire menus.
+    menu_show = ('', 'Show', '', 0)
+    menu_hide = ('', 'Hide', '', 0)
+
+    menu_select_rule = ('', 'Rule', '', 0)
+    menu_select_game = ('', 'Game', '', 0)
+    menu_select_index = ('', 'Index', '', 0)
+    menu_select_error = ('', 'Error', '', 0)
+
+    # Submenu for menu_select_index.
+    menu_select_index_black = ('', 'Black', '', 0)
+    menu_select_index_white = ('', 'White', '', 0)
+    menu_select_index_event = ('', 'Event', '', 0)
+    menu_select_index_date = ('', 'Date', '', 0)
+    menu_select_index_result = ('', 'Result', '', 0)
+    menu_select_index_site = ('', 'Site', '', 0)
+    menu_select_index_round = ('', 'Round', '', 4)
+
+    menu_game_new_game = ('', 'New Game', '', 0)
+    menu_position_partial = ('', 'Partial', '', 0)
+    menu_repertoire_opening = ('', 'Opening', '', 0)
+    menu_tools_board_style = ('', 'Board Style', '', 6)
+    menu_tools_board_fonts = ('', 'Board Fonts', '', 6)
+    menu_tools_board_colours = ('', 'Board Colours', '', 6)
+    menu_tools_hide_game_analysis = ('', 'Hide Game Analysis', '', 0)
+    menu_tools_show_game_analysis = ('', 'Show Game Analysis', '', 5)
+    menu_tools_hide_game_scrollbars = ('', 'Hide Game Scrollbars', '', 1)
+    menu_tools_show_game_scrollbars = ('', 'Show Game Scrollbars', '', 2)
+    menu_tools_toggle_game_move_numbers = (
+        '', 'Toggle Game Move Numbers', '', 12)
+    menu_tools_toggle__analysis_fen = ('', 'Toggle Analysis Fen', '', 7)
+    menu_tools_toggle_single_view = ('', 'Toggle Single View', '', 14)
+    menu_engines_position_queues = ('', 'Position Queues', '', 0)
+    menu_engines_show_engines = ('', 'Show Engines', '', 5)
+    menu_engines_start_engine = ('', 'Start Engine', '', 0)
+    menu_engines_quit_all_engines = ('', 'Quit All Engines', '', 0)
+    menu_commands_multipv = ('', 'MultiPV', '', 6)
+    menu_commands_depth = ('', 'Depth', '', 0)
+    menu_commands_hash = ('', 'Hash', '', 0)
+    menu_help_guide = ('', 'Guide', '', 0)
+    menu_help_selection_rules = ('', 'Selection rules', '', 0)
+    menu_help_file_size = ('', 'File size', '', 0)
+    menu_help_notes = ('', 'Notes', '', 0)
+    menu_help_about = ('', 'About', '', 0)

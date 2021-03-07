@@ -23,6 +23,7 @@ from ..core.filespec import (
     ENGINE_FILE_DEF,
     COMMAND_FIELD_DEF,
     )
+from .eventspec import EventSpec
 
 import sys
 _win32_platform = (sys.platform == 'win32')
@@ -49,38 +50,36 @@ class UCI(ExceptionHandler):
         self.menu_commands = menu_commands
 
         menu_engines.add_separator()
-        menu_engines.add_command(
-            label='Position Queues',
-            underline=0,
-            command=self.try_command(self.position_queue_status, menu_engines))
-        menu_engines.add_command(
-            label='Show Engines',
-            underline=5,
-            command=self.try_command(self.show_engines, menu_engines))
-        menu_engines.add_command(
-            label='Start Engine',
-            underline=0,
-            command=self.try_command(self.start_engine, menu_engines))
-        menu_engines.add_command(
-            label='Quit All Engines',
-            underline=0,
-            command=self.try_command(self.quit_all_engines, menu_engines))
+        for accelerator, function in (
+            (EventSpec.menu_engines_position_queues,
+             self.position_queue_status),
+            (EventSpec.menu_engines_show_engines,
+             self.show_engines),
+            (EventSpec.menu_engines_start_engine,
+             self.start_engine),
+            (EventSpec.menu_engines_quit_all_engines,
+             self.quit_all_engines),
+            ):
+            menu_engines.add_command(
+                label=accelerator[1],
+                command=self.try_command(function, menu_engines),
+                underline=accelerator[3])
         menu_engines.add_separator()
         menu_engines.add_separator()
 
         menu_commands.add_separator()
-        menu_commands.add_command(
-            label='MultiPV',
-            underline=6,
-            command=self.try_command(self.set_multipv, menu_commands))
-        menu_commands.add_command(
-            label='Depth',
-            underline=0,
-            command=self.try_command(self.set_depth, menu_commands))
-        menu_commands.add_command(
-            label='Hash',
-            underline=0,
-            command=self.try_command(self.set_hash, menu_commands))
+        for accelerator, function in (
+            (EventSpec.menu_commands_multipv,
+             self.set_multipv),
+            (EventSpec.menu_commands_depth,
+             self.set_depth),
+            (EventSpec.menu_commands_hash,
+             self.set_hash),
+            ):
+            menu_commands.add_command(
+                label=accelerator[1],
+                command=self.try_command(function, menu_commands),
+                underline=accelerator[3])
         menu_commands.add_separator()
 
         # Must do both these commands between each move to get consistent

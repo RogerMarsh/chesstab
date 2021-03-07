@@ -23,9 +23,9 @@ from pgn_read.core.constants import (
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordRepertoireTags
-from .repertoiredbedit import ChessDBeditRepertoire
-from .repertoiredbdelete import ChessDBdeleteRepertoire
-from .repertoiredbshow import ChessDBshowRepertoire
+from .repertoiredbedit import RepertoireDbEdit
+from .repertoiredbdelete import RepertoireDbDelete
+from .repertoiredbshow import RepertoireDbShow
 from . import constants
 from ..core.constants import TAG_OPENING, REPERTOIRE_GAME_TAGS
 
@@ -89,25 +89,25 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
             ]
         
     def show_row(self, dialog, oldobject):
-        """Return a ChessDBshowRepertoire dialog for instance.
+        """Return a RepertoireDbShow toplevel for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return ChessDBshowRepertoire(dialog, oldobject, ui=self.ui)
+        return RepertoireDbShow(dialog, oldobject, ui=self.ui)
         
     def delete_row(self, dialog, oldobject):
-        """Return a ChessDBdeleteRepertoire dialog for instance.
+        """Return a RepertoireDbDelete toplevel for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return ChessDBdeleteRepertoire(dialog, oldobject, ui=self.ui)
+        return RepertoireDbDelete(dialog, oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a ChessDBeditRepertoire dialog for instance.
+        """Return a RepertoireDbEdit toplevel for instance.
 
         dialog - a Toplevel
         newobject - a ChessDBrecordGame containing original data to be edited
@@ -115,12 +115,11 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return ChessDBeditRepertoire(
-            newobject,
-            dialog,
-            oldobject,
-            showinitial=showinitial,
-            ui=self.ui)
+        return RepertoireDbEdit(newobject,
+                                dialog,
+                                oldobject,
+                                showinitial=showinitial,
+                                ui=self.ui)
 
     def grid_row(self, **kargs):
         """Return customized super(ChessDBrowRepertoire, self).grid_row(...).

@@ -4,13 +4,9 @@
 
 """Edit a chess engine definition.
 
-The EngineEdit class displays a chess engine definition and allows editing.
+The EngineEdit class extends the engine.Engine class to allow editing.
 
-This class has the selection.Engine class as a superclass.
-
-This class does not allow deletion of chess engine definitions from a database.
-
-An instance of these classes fits into the user interface as the only item in a
+An instance of this class fits into the user interface as the only item in a
 new toplevel widget.
 
 """
@@ -31,6 +27,10 @@ del sys
 class EngineEdit(engine.Engine):
     
     """Display a chess engine definition with editing allowed.
+
+    Attribute _is_definition_editable is True meaning the statement can be
+    edited.
+    
     """
 
     # True means selection selection can be edited
@@ -42,26 +42,17 @@ class EngineEdit(engine.Engine):
         # Context is same for each location so do not need dictionary of
         # Engine instances.
         self.engine_definition_checker = Engine()
-
-    def bind_for_viewmode(self):
-        """Set keyboard bindings for chess engine definition display."""
-        super(EngineEdit, self).bind_for_viewmode()
-        for sequence, function in (
+        
+    # Not sure what events these are yet; or if name is best.
+    # Remove '_navigation'?
+    def get_active_navigation_events(self):
+        return (
+            (EventSpec.databaseenginedisplay_run, self.run_engine),
             (EventSpec.databaseengineedit_browse, self.browse_engine),
-            ):
-            if function:
-                self.score.bind(sequence[0], self.try_event(function))
-                self.viewmode_popup.add_command(
-                    label=sequence[1],
-                    command=self.try_command(
-                        function, self.viewmode_popup),
-                    accelerator=sequence[2])
-
-    def disable_keyboard(self):
-        """Override and do nothing."""
+            )
 
     def browse_engine(self, event=None):
-        """"""
+        """Dialogue to replace chess engine definition in editor."""
         if _win32_platform:
             filetypes = (('Chess Engines', '*.exe'),)
         else:

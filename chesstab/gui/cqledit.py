@@ -4,13 +4,12 @@
 
 """Edit a Chess Query Language (ChessQL) statement.
 
-The CQLEdit class displays a ChessQL statement and allows editing.
+ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
+Costeff).
 
-This class has the cql.CQL class as a superclass.
+The CQLEdit class extends the cql.CQL class to allow editing.
 
-This class does not allow deletion of ChessQL statements from a database.
-
-An instance of these classes fits into the user interface in two ways: as an
+An instance of this class fits into the user interface in two ways: as an
 item in a panedwindow of the main widget, or as the only item in a new toplevel
 widget.
 
@@ -22,24 +21,16 @@ from .cql import CQL
 class CQLEdit(CQL):
     
     """Display a ChessQL statement with editing allowed.
+
+    Attribute _is_cql_query_editable is True meaning the statement can be
+    edited.
+
     """
 
     # True means ChessQL statement can be edited
     _is_cql_query_editable = True
 
+    # Remove if this is all it is left doing.
     def __init__(self, **ka):
         """Extend ChessQL statement widget as editor."""
         super().__init__(**ka)
-        self.bind_pointer()
-
-    def bind_pointer(self):
-        """Set pointer button-1 binding."""
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', ''), # go_to_token
-            ('<ButtonPress-3>', ''),
-            ):
-            self.score.bind(sequence, function)
-
-    def disable_keyboard(self):
-        """Override and do nothing."""

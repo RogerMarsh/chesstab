@@ -2,18 +2,14 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Display a Chess Query Language (ChessQL) statement.
+"""Widget to display a Chess Query Language (ChessQL) statement.
 
-ChessQL statements define patterns of chess pieces used to select games which
-match the conditions stated in the statement.
-
-The ChessQL syntax is defined in:
-https://web.archive.org/web/20140130143815/http://www.rbnn.com/cql/
-(www.rbnn.com is no longer availabable).
+ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
+Costeff).
 
 The CQL class displays a ChessQL statement.
 
-An instance of these classes fits into the user interface in two ways: as an
+An instance of this class fits into the user interface in two ways: as an
 item in a panedwindow of the main widget, or as the only item in a new toplevel
 widget.
 
@@ -30,12 +26,22 @@ to allow deletion of ChessQL statements from a database.
 
 import tkinter
 
-from .cqlscore import CQLScore
+from .cqltext import CQLText
+from .eventspec import EventSpec
     
 
-class CQL(CQLScore):
+class CQL(CQLText):
 
     """ChessQL statement widget.
+
+    master is used as the master argument for the tkinter Frame widget passed
+    to superclass.
+
+    boardfont is no longer used. (A relic of pre-CQL syntax days.)
+
+    See superclass for ui, items_manager, and itemgrid, arguments.  These may
+    be, or have been, absorbed into **ka argument.
+
     """
 
     def __init__(
@@ -46,13 +52,8 @@ class CQL(CQLScore):
         items_manager=None,
         itemgrid=None,
         **ka):
-        """Create widgets to display ChessQL statement.
-
-        Create Frame in toplevel and add Canvas and Text.
-        Text width and height set to zero so widget fit itself into whatever
-        space Frame has available.
-        Canvas must be square leaving Text at least half the Frame.
-
+        """Create Frame and delegate to superclass, then set grid geometry
+        manager.
         """
 
         panel = tkinter.Frame(
@@ -75,8 +76,8 @@ class CQL(CQLScore):
 
         # The popup menus specific to CQL (placed same as Game equivalent)
 
-        self.viewmode_popup.add_cascade(
-            label='Database', menu=self.viewmode_database_popup)
+        #self.active_popup.add_cascade(
+        #    label='Database', menu=self.database_popup)
 
         # For compatibility with Game when testing if item has focus.
         self.takefocus_widget = self.score
@@ -125,14 +126,22 @@ class CQL(CQLScore):
         else:
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
 
-    def bind_score_pointer_for_widget_navigation(self, switch):
+    def set_database_navigation_close_item_bindings(self, switch=True):
+        self.set_event_bindings_score(
+            self.get_database_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigation_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_close_item_events(), switch=switch)
+
+    def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', self.try_event(self.give_focus_to_widget)),
-            ('<ButtonPress-3>', self.try_event(self.popup_inactive_menu)),
-            ):
-            self.score.bind(sequence, '' if not switch else function)
+        self.set_event_bindings_score(
+            ((EventSpec.control_buttonpress_1, ''),
+             (EventSpec.buttonpress_1, self.give_focus_to_widget),
+             (EventSpec.buttonpress_3, self.post_inactive_menu),
+             ),
+            switch=switch)
 
     def set_colours(self, sbg, bbg, bfg):
         """Set colours and fonts used to display ChessQL statement.
@@ -142,6 +151,11 @@ class CQL(CQLScore):
         bfg == True - set board piece colours
 
         """
+        
+    def create_active_popup(self):
+        popup = super().create_active_popup()
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
 
     def export_partial(self, event=None):
         """Export displayed partial position definition."""

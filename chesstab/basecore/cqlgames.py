@@ -96,7 +96,7 @@ class ChessQLGames:
         # ChessDBrecordGameUpdate is the closest class to that needed.
         # No update capability is needed, and a different set of 'per move'
         # attributes might be better.
-        # The 'try ...' statements in .gui.cqldisplay and .gui.cqlscore fit the
+        # The 'try ...' statements in .gui.cqldisplay and .gui.cqltext fit the
         # version of Find(...) call with the recordclass argument.
         #self.cqlfinder = Find(
         #    self.dbhome, self.dbset, recordclass=ChessDBrecordGameUpdate)

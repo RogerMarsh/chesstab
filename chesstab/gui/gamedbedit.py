@@ -2,7 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise edit dialogue to edit or insert chess game record.
+"""Customise edit toplevel to edit or insert chess game record.
 """
 
 import tkinter
@@ -15,117 +15,122 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
-from .gamedisplay import DialogueGameDisplay, DialogueGameEdit
+from .gametoplevel import GameToplevel, GameToplevelEdit
+from .toplevelpgn import EditPGN
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 
 
-class ChessDBeditGame(ExceptionHandler, DataEdit):
+class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
     
-    """Dialog to edit a game on, or insert a game into, database.
+    """Edit PGN text for game on database, or insert a new record.
 
-    The game is in it's own Toplevel widget and playing through the game does
-    not change the list of games, in the main widget, matching the current
-    position on the board.
+    parent is used as the master argument in GameToplevel calls.
+
+    ui is used as the ui argument in GameToplevel calls.
+
+    newobject, parent, oldobject, and the one or two GameToplevel instances
+    created, are used as arguments in the super.__init__ call.
+
+    showinitial determines whether a GameToplevel is created for oldobject if
+    there is one.
+
+    Attribute pgn_score_name provides the name used in widget titles and
+    message text.
+
+    Attribute pgn_score_tags provides empty PGN tags to present when creating
+    an insert Toplevel.  It is the empty PGN Seven Tag Roster.
+
+    Attribute pgn_score_source provides the error key value to index a PGN
+    game score with errors.
+
+    Methods get_title_for_object and set_item, and properties ui_base_table;
+    ui_items_in_toplevels; and ui, allow similar methods in various classes
+    to be expressed identically and defined once.
 
     """
+    pgn_score_name = 'Game'
+    pgn_score_tags = EMPTY_SEVEN_TAG_ROSTER
+    pgn_score_source = 'Editor'
 
     def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
         """Extend and create dialogue widget to edit or insert chess game."""
-        if oldobject:
-            tags = oldobject.value.collected_game._tags
+        if not oldobject:
+            showinitial = False
+        super().__init__(
+            newobject,
+            parent,
+            oldobject,
+            GameToplevelEdit(master=parent, ui=ui),
+            '',
+            oldview=GameToplevel(master=parent,
+                                 ui=ui) if showinitial else showinitial,
+            )
+        self.initialize()
+
+    @property
+    def ui_base_table(self):
+        return self.ui.base_games
+
+    @property
+    def ui_items_in_toplevels(self):
+        return self.ui.games_and_repertoires_in_toplevels
+
+    @property
+    def ui(self):
+        return self.newview.ui
+
+    def set_item(self, view, object_):
+        self.set_default_source_for_object(object_)
+        view.set_position_analysis_data_source()
+        view.collected_game = next(
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+        view.set_and_tag_item_text()
+
+    def get_title_for_object(self, object_=None):
+        """Return title for Toplevel containing a Game object_.
+
+        Default value of object_ is oldobject attribute from DataEdit class.
+
+        """
+        if object_ is None:
+            object_ = self.oldobject
+        if object_:
+            tags = object_.value.collected_game._tags
             try:
-                title = '  '.join((
-                    'Edit Game:',
+                return '  '.join((
+                    self.pgn_score_name.join(('Edit ', ':')),
                     ' - '.join((
                         tags[TAG_WHITE],
                         tags[TAG_BLACK])),
                     ))
             except TypeError:
-                title = 'Edit Game - names unknown or invalid'
+                return self.pgn_score_name.join(
+                    ('Edit ', ' - names unknown or invalid'))
             except KeyError:
-                title = 'Edit Game - names unknown or invalid'
+                return self.pgn_score_name.join(
+                    ('Edit ', ' - names unknown or invalid'))
         else:
-            title = 'Insert Game'
-            showinitial = False
-        if showinitial:
-            showinitial = DialogueGameDisplay(master=parent, ui=ui)
-            showinitial.set_position_analysis_data_source()
-            if ui is not None:
-                ui.games_and_repertoires_in_toplevels.add(showinitial)
-            showinitial.collected_game = next(
-                PGN(game_class=showinitial.gameclass
-                    ).read_games(newobject.get_srvalue()))
-            showinitial.set_game()
-        newview = DialogueGameEdit(master=parent, ui=ui)
-        newview.set_position_analysis_data_source()
-        if ui is not None:
-            ui.games_and_repertoires_in_toplevels.add(newview)
-        if oldobject:
-            newview.collected_game = next(
-                PGN(game_class=newview.gameclass
-                    ).read_games(oldobject.get_srvalue()))
-        else:
-            newview.collected_game = next(
-                PGN(game_class=newview.gameclass
-                    ).read_games(''.join((EMPTY_SEVEN_TAG_ROSTER, '*'))))
-        newview.set_game()
-        super(ChessDBeditGame, self).__init__(
-            newobject,
-            parent,
-            oldobject,
-            newview,
-            title,
-            oldview=showinitial,
-            )
+            return ''.join(('Insert ', self.pgn_score_name))
 
-        # Bind only to newview.score and newview.analysis.score because these
-        # alone takes focus.
-        self.bind_buttons_to_widget(newview.score)
-        self.bind_buttons_to_widget(newview.analysis.score)
+    def set_default_source_for_object(self, object_=None):
+        """Set default source for Toplevel containing a Game object_.
 
-        self.ui = ui
+        Default value of object_ is oldobject attribute from DataEdit class.
 
-    def dialog_ok(self):
-        """Update record and return update action response (True for updated).
+        Currently do nothing for games.  Originally used for games with PGN
+        errors, where it was the name of the PGN file containing the game.
 
-        Check that database is open and is same one as update action was
-        started.
+        Now present for compatibility with Repertoires.
 
         """
-        if self.ui.database is None:
-            self.status.configure(
-                text='Cannot update because not connected to a database')
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
-            return False
-        text = self.newview.get_score_error_escapes_removed()
-        self.newobject.value.load(repr(text))
-        if not self.newobject.value.collected_game.is_pgn_valid():
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent=self.parent,
-                title='Edit Game',
-                message=''.join(
-                    ('The edited game score contains at least one illegal ',
-                     'move in PGN.\n\nPlease re-confirm request to edit game.',
-                     ))):
-                return False
-            self.newobject.value.set_game_source('Editor')
-        return super(ChessDBeditGame, self).dialog_ok()
+        pass
         
     def put(self):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        super(ChessDBeditGame, self).put()
+        super().put()
 
     def edit(self):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        super(ChessDBeditGame, self).edit()
-
-    def tidy_on_destroy(self):
-        """Clear up after dialogue destruction."""
-        self.ui.games_and_repertoires_in_toplevels.discard(self.oldview)
-        self.ui.games_and_repertoires_in_toplevels.discard(self.newview)
-        self.ui.base_games.selection.clear()
+        super().edit()

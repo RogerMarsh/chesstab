@@ -36,8 +36,6 @@ from .constants import (
     TAGS_VARIATIONS_COMMENTS_FONT,
     NAVIGATE_TOKEN,
     NAVIGATE_MOVE,
-    INSERT_RAV,
-    MOVE_EDITED,
     TOKEN,
     RAV_MOVES,
     CHOICE,
@@ -55,7 +53,6 @@ from .constants import (
     START_SCORE_MARK,
     NAVIGATE_COMMENT,
     TOKEN_MARK,
-    INSERT_TOKEN_MARK,
     PGN_TAG,
     ALTERNATIVE_MOVE_COLOR,
     VARIATION_COLOR,
@@ -127,11 +124,6 @@ class PositionScore(ExceptionHandler):
         # black moves after start and end of recursive annotation variation
         # markers.
         self._force_movenumber = False
-        
-    def bind_for_viewmode(self):
-        """Set keyboard bindings for traversing moves."""
-        # Appropriate bindings still to be decided
-        #self.score.bind('<KeyPress>', lambda e: 'break')
 
     # Nothing needed on <Unmap> event at present
     def on_map(self, event):
@@ -168,7 +160,7 @@ class PositionScore(ExceptionHandler):
                     ).read_games(text))
             self._context = context
             try:
-                self.set_game()
+                self.set_and_tag_item_text()
             finally:
                 del self._context
         
@@ -183,11 +175,9 @@ class PositionScore(ExceptionHandler):
         """Destroy the widget displaying game."""
         self.score.destroy()
         
-    def set_game(self, starttoken=None, reset_undo=False):
+    def set_and_tag_item_text(self, reset_undo=False):
         """Display the game as board and moves.
 
-        starttoken is the move played to reach the position displayed and this
-        move becomes the current move.
         reset_undo causes the undo redo stack to be cleared if True.  Set True
         on first display of a game for editing so that repeated Ctrl-Z in text
         editing mode recovers the original score.

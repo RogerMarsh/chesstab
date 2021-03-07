@@ -145,6 +145,7 @@ RAV_SEP = 'rs'              # prefix for line tags with trailing separator
 # Each RAV_TAG<suffix> starts with the range of the ( for RAV_MOVES<suffix>
 # and also contains the ranges of the ) tokens whose nearest following move
 # token has RAV_MOVES<suffix>.
+RAV_START_TAG = 'rst'       # all ranges for start RAV tokens (added for edit)
 RAV_END_TAG = 'ret'         # all ranges for end RAV tokens
 RAV_TAG = 'rt'              # prefix for start and end RAV tags
 ALL_CHOICES = 'ac'          # all the first moves of RAV_MOVES tags
@@ -157,8 +158,6 @@ DESCRIPTION = 'pd'          # all ranges for name of partial position
 PIECE_LOCATIONS = 'lo'      # all ranges for piece squares in partial position
 # mark the start of the game score, which also end of PGN tags
 START_SCORE_MARK = 'scoremark'
-# mark insertion point for new tokens in game score, usually just after current
-INSERT_TOKEN_MARK = 'inserttokenmark'
 # mark start and end points of editable range, usually range of current
 START_EDIT_MARK = 'starteditmark'
 END_EDIT_MARK = 'endeditmark'

@@ -17,9 +17,9 @@ from solentware_grid.gui.datarow import (
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordQuery
-from .querydbedit import ChessDBeditQuery
-from .querydbdelete import ChessDBdeleteQuery
-from .querydbshow import ChessDBshowQuery
+from .querydbedit import QueryDbEdit
+from .querydbdelete import QueryDbDelete
+from .querydbshow import QueryDbShow
 from . import constants
 
 ON_DISPLAY_COLOUR = '#eba610' # a pale orange
@@ -67,25 +67,25 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
             ]
         
     def show_row(self, dialog, oldobject):
-        """Return a ChessDBshowQuery dialog for instance.
+        """Return a QueryDbShow toplevel for oldobject.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordQuery containing original data
 
         """
-        return ChessDBshowQuery(dialog, oldobject, ui=self.ui)
+        return QueryDbShow(dialog, oldobject, ui=self.ui)
         
     def delete_row(self, dialog, oldobject):
-        """Return a ChessDBdeleteQuery dialog for instance.
+        """Return a QueryDbDelete dialog for oldobject.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordQuery containing original data
 
         """
-        return ChessDBdeleteQuery(dialog, oldobject, ui=self.ui)
+        return QueryDbDelete(dialog, oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a ChessDBeditQuery dialog for instance.
+        """Return a QueryDbEdit dialog for oldobject.
 
         dialog - a Toplevel
         newobject - a ChessDBrecordQuery containing original data to be
@@ -94,7 +94,7 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return ChessDBeditQuery(
+        return QueryDbEdit(
             newobject,
             dialog,
             oldobject,

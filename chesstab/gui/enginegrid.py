@@ -267,9 +267,9 @@ class EngineGrid(EngineListGrid):
         self.ui = ui
         self.make_header(ChessDBrowEngine.header_specification)
         self.__bind_on()
-        for function, accelerator in (
-            (self.run_engine,
-             EventSpec.engine_grid_run),
+        for accelerator, function in (
+            (EventSpec.engine_grid_run,
+             self.run_engine),
             ):
             self.menupopup.insert_command(
                 0,
@@ -280,13 +280,13 @@ class EngineGrid(EngineListGrid):
     def bind_off(self):
         """Disable all bindings."""
         super(EngineGrid, self).bind_off()
-        for function, accelerator in (
-            ('',
-             EventSpec.engine_grid_run),
+        for sequence, function in (
+            (EventSpec.engine_grid_run,
+             ''),
             ):
             if function:
                 function = self.try_event(function)
-            self.frame.bind(accelerator[0], function)
+            self.frame.bind(sequence[0], function)
 
     def bind_on(self):
         """Enable all bindings."""
@@ -295,13 +295,13 @@ class EngineGrid(EngineListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        for function, accelerator in (
-            (self.run_engine,
-             EventSpec.engine_grid_run),
+        for sequence, function in (
+            (EventSpec.engine_grid_run,
+             self.run_engine),
             ):
             if function:
                 function = self.try_event(function)
-            self.frame.bind(accelerator[0], function)
+            self.frame.bind(sequence[0], function)
         
     def on_partial_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
@@ -502,4 +502,8 @@ class EngineGrid(EngineListGrid):
                 title='Run Engine',
                 message='Engine must be path without hostname or port.\n')
             return
-        self.ui.run_engine(definition.get_engine_command_text())
+        command = definition.get_engine_command_text().split(' ', 1)
+        if len(command) == 1:
+            self.ui.run_engine(command[0])
+        else:
+            self.ui.run_engine(command[0], args=command[1].strip())

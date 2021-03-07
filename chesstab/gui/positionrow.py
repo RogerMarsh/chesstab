@@ -22,9 +22,9 @@ from .datarow import DataRow
 from . import constants
 from ..core.chessrecord import ChessDBrecordGamePosition
 from .positionscore import PositionScore
-from .gamedbedit import ChessDBeditGame
-from .gamedbdelete import ChessDBdeleteGame
-from .gamedbshow import ChessDBshowGame
+from .gamedbedit import GameDbEdit
+from .gamedbdelete import GameDbDelete
+from .gamedbshow import GameDbShow
 
 ON_DISPLAY_COLOUR = '#eba610' # a pale orange
 
@@ -73,25 +73,25 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
             ]
         
     def show_row(self, dialog, oldobject):
-        """Return a ChessDBshowGame dialog for instance.
+        """Return a GameDbShow toplevel for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return ChessDBshowGame(dialog, oldobject, ui=self.ui)
+        return GameDbShow(dialog, oldobject, ui=self.ui)
         
     def delete_row(self, dialog, oldobject):
-        """Return a ChessDBdeleteGame dialog for instance.
+        """Return a GameDbDelete toplevel for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return ChessDBdeleteGame(dialog, oldobject, ui=self.ui)
+        return GameDbDelete(dialog, oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a ChessDBeditGame dialog for instance.
+        """Return a GameDbEdit toplevel for instance.
 
         dialog - a Toplevel
         newobject - a ChessDBrecordGame containing original data to be edited
@@ -99,11 +99,11 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return ChessDBeditGame(newobject,
-                               dialog,
-                               oldobject,
-                               showinitial=showinitial,
-                               ui=self.ui)
+        return GameDbEdit(newobject,
+                          dialog,
+                          oldobject,
+                          showinitial=showinitial,
+                          ui=self.ui)
 
     def grid_row(self, position=None, context=(None, None, None), **kargs):
         """Return super().grid_row(textitems=(...), **kargs).

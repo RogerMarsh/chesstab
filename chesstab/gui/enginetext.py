@@ -2,27 +2,64 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Display a chess engine definition.
+"""Widget to display a chess engine definition.
 """
 
 import tkinter
 import tkinter.messagebox
 from urllib.parse import urlsplit
+import enum
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.engine import Engine
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
+
+
+# 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
+# EngineText uses NO_EDITABLE_TAGS and INITIAL_BINDINGS.
+# EngineEdit uses all the names.
+# See Score.NonTagBind for the apparently missing values.
+class NonTagBind(enum.Enum):
+    NO_EDITABLE_TAGS = 1
+    DEFAULT_BINDINGS = 3
+    INITIAL_BINDINGS = 4
     
 
 class EngineText(ExceptionHandler):
 
-    """Chess engine definition widget built from Text and Scrollbar widgets.
+    """Chess engine definition widget.
+
+    panel is used as the master argument for the tkinter Text and Scrollbar
+    widgets created to display the statement text.
+
+    ui is the user interface manager for an instance of EngineText, usually an
+    instance of ChessUI.
+
+    items_manager is the ui attribute which tracks which EngineText instance is
+    active (as defined by ui).
+
+    itemgrid is the ui reference to the DataGrid from which the record was
+    selected.
+
+    Subclasses are responsible for providing a geometry manager.
+
+    Attribute _is_definition_editable is False meaning the statement cannot be
+    edited.
+
+    Attribute _most_recent_bindings is set to indicate the initial set of
+    event bindings.  Instances will override this as required.
+
+    
     """
 
     # True means engine definition can be edited
     _is_definition_editable = False
+
+    # Indicate the most recent set of bindings applied to score attribute.
+    # Values are Tk tag names or members of NonTagBind enumeration. 
+    _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
     def __init__(
         self,
@@ -56,37 +93,225 @@ class EngineText(ExceptionHandler):
         self.score.configure(yscrollcommand=self.scrollbar.set)
 
         # Keyboard actions do nothing by default.
-        self.disable_keyboard()
+        self.set_keypress_binding(switch=False)
+        self.set_event_bindings_score(self.get_menubar_events())
 
-        # The popup menus for the engine definition
-
-        self.viewmode_popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.viewmode_navigation_popup = None
+        # The popup menus for the engine definition.
+        self.active_popup = None
+        self.inactive_popup = None
 
         # Selection rule parser instance to process text.
         self.definition = Engine()
-        
-    def bind_for_viewmode(self):
-        """Set keyboard bindings for chess engine definition display."""
-        for sequence, function in (
-            (EventSpec.databaseenginedisplay_run, self.run_engine),
-            ):
-            if function:
-                self.score.bind(sequence[0], self.try_event(function))
-                self.viewmode_popup.add_command(
-                    label=sequence[1],
-                    command=self.try_command(
-                        function, self.viewmode_popup),
-                    accelerator=sequence[2])
 
-    def bind_pointer_for_viewmode_popup(self):
-        """Show popup menu."""
-        self.score.bind('<ButtonPress-3>',
-                        self.try_event(self.popup_viewmode_menu))
+    def set_popup_bindings(self, popup, bindings=()):
+        for accelerator, function in bindings:
+            popup.add_command(
+                label=accelerator[1],
+                command=self.try_command(function, popup),
+                accelerator=accelerator[2])
+        
+    def set_event_bindings_score(self, bindings=(), switch=True):
+        """Set bindings if switch is True or unset the bindings."""
+        ste = self.try_event
+        for sequence, function in bindings:
+            self.score.bind(
+                sequence[0],
+                ste(function) if switch and function else '')
+
+    def set_keypress_binding(self, function=None, bindings=(), switch=True):
+        """Set bindings to function if switch is True or disable keypress."""
+        if switch and function:
+            stef = self.try_event(function)
+            for sequence in bindings:
+                self.score.bind(sequence[0], stef)
+        else:
+            stekb = self.try_event(self.press_break)
+            for sequence in bindings:
+                self.score.bind(sequence[0], stekb)
+
+    def get_menubar_events(self):
+        """Return tuple of event binding definitions passed for menubar."""
+        return (
+            (EventSpec.score_enable_F10_menubar, self.press_none),
+            )
+
+    def press_break(self, event=None):
+        """No nothing and prevent event handling by next handlers."""
+        return 'break'
+
+    def press_none(self, event=None):
+        """Do nothing and allow event to be handled by next handler."""
+        return None
+        
+    def bind_for_active(self, switch=True):
+        """Set keyboard bindings and popup menu for non-editing actions.
+
+        Method exists for compatibility with score.Score way of doing things.
+
+        The Text widget contains two tokens, the chess engine definition name
+        and the definition.  Both tokens are editable, or both are not, and
+        the standard Text widget operations are available when editable.
+
+        """
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
+        self.set_active_bindings(switch=switch)
+        
+    def bind_for_initial_state(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
+        
+    # Dispatch dictionary for token binding selection.
+    # Keys are the possible values of self._most_recent_bindings.
+    token_bind_method = {
+        NonTagBind.NO_EDITABLE_TAGS: bind_for_active,
+        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
+        }
 
     def give_focus_to_widget(self, event=None):
         """Do nothing and return 'break'.  Override in subclasses as needed."""
         return 'break'
+        
+    # Not sure what events these are yet; or if name is best.
+    # Remove '_navigation'?
+    # Engine description records are always shown in a Toplevel.
+    # Dismiss item and database update actions by keypress and buttunpress
+    # are assumed to be exposed by the associated solentware_misc class.
+    def get_active_navigation_events(self):
+        return (
+            (EventSpec.databaseenginedisplay_run, self.run_engine),
+            )
+
+    # Engine description records are always shown in a Toplevel.
+    # The methods where get_inactive_events() is used are never used.
+    def get_inactive_events(self):
+        return (
+            (EventSpec.display_make_active, self.set_focus_panel_item_command),
+            (EventSpec.display_dismiss_inactive, self.delete_item_view),
+            )
+
+    def get_F10_popup_events(self, top_left, pointer):
+        """Return tuple of event definitions to post popup menus at top left
+        of focus widget and at pointer location within application widget.
+
+        top_left and pointer are functions.
+
+        """
+        return (
+            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
+            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
+            )
+
+    # The default Text widget bindings are probably what is wanted.
+    def get_modifier_buttonpress_suppression_events(self):
+        """Return tuple of event binding definitions suppressing buttonpress
+        with Control, Shift, or Alt."""
+        return ()
+
+    def get_active_button_events(self):
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_3, self.post_active_menu),
+            )
+
+    def set_active_bindings(self, switch=True):
+        """Switch bindings for editing chess engine definition on or off."""
+        self.set_event_bindings_score(
+            self.get_active_navigation_events(),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_F10_popup_events(self.post_active_menu_at_top_left,
+                                      self.post_active_menu),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_active_button_events(),
+            switch=switch)
+        
+    # Subclasses with database interfaces may override method.
+    def create_database_submenu(self, menu):
+        return None
+        
+    def create_active_popup(self):
+        assert self.active_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_active_navigation_events())
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        self.active_popup = popup
+        return popup
+        
+    # Engine description records are always shown in a Toplevel.
+    # create_inactive_popup() is never used.
+    def create_inactive_popup(self):
+        assert self.inactive_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_inactive_events())
+        self.inactive_popup = popup
+        return popup
+        
+    def post_menu(self,
+                  menu, create_menu,
+                  allowed=True,
+                  event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(*self.score.winfo_pointerxy())
+
+        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def post_menu_at_top_left(self,
+                              menu,
+                              create_menu,
+                              allowed=True,
+                              event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
+
+        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def post_active_menu(self, event=None):
+        """Show the popup menu for chess engine definition navigation."""
+        return self.post_menu(
+            self.active_popup,
+            self.create_active_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+        
+    def post_active_menu_at_top_left(self, event=None):
+        """Show the popup menu for chess engine definition navigation."""
+        return self.post_menu_at_top_left(
+            self.active_popup,
+            self.create_active_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+        
+    def post_inactive_menu(self, event=None):
+        """Show the popup menu for a chess engine definition in an inactive
+        item."""
+        return self.post_menu(
+            self.inactive_popup, self.create_inactive_popup, event=event)
+        
+    def post_inactive_menu_at_top_left(self, event=None):
+        """Show the popup menu for a chess engine definition in an inactive
+        item."""
+        return self.post_menu_at_top_left(
+            self.inactive_popup, self.create_inactive_popup, event=event)
+        
+    def is_active_item_mapped(self):
+        """"""
+        if self.items.is_mapped_panel(self.panel):
+            if self is not self.items.active_item:
+                return False
+        return True
         
     def set_engine_definition(self, reset_undo=False):
         """Display the chess engine definition as text.
@@ -100,6 +325,8 @@ class EngineText(ExceptionHandler):
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
         self.map_engine_definition()
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_active()
         if not self._is_definition_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -127,23 +354,6 @@ class EngineText(ExceptionHandler):
         # No mapping of tokens to text in widget (yet).
         self.score.insert(tkinter.INSERT,
                           self.definition.get_name_engine_command_text())
-        
-    def popup_viewmode_menu(self, event=None):
-        """Show the popup menu for chess engine definition actions.
-
-        Subclasses define particular entries for this menu.  This class adds
-        no items to the menu.
-
-        """
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item:
-                return 'break'
-        self.viewmode_popup.tk_popup(*self.score.winfo_pointerxy())
-
-    def disable_keyboard(self):
-        """"""
-        self.score.bind(EventSpec.selectiontext_disable_keypress[0],
-                        lambda e: 'break')
 
     def run_engine(self, event=None):
         """Run chess engine."""
@@ -175,7 +385,7 @@ class EngineText(ExceptionHandler):
         except ValueError as exc:
             tkinter.messagebox.showerror(
                 parent=self.panel,
-                title=self.__title,
+                title='Run Engine',
                 message=''.join(('The port in the chess engine definition is ',
                                  'invalid.\n\n',
                                  'The reported error for the port is:\n\n',
@@ -212,4 +422,8 @@ class EngineText(ExceptionHandler):
                     'does not name a file.',
                     )))
             return
-        self.ui.run_engine(self.definition.get_engine_command_text())
+        command = self.definition.get_engine_command_text().split(' ', 1)
+        if len(command) == 1:
+            self.ui.run_engine(command[0])
+        else:
+            self.ui.run_engine(command[0], args=command[1].strip())

@@ -2,7 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Display a game of chess.
+"""Widget to display a game of chess.
 
 The display contains the game score, a board with the current position in the
 game, and any analysis of the current position by chess engines.
@@ -24,17 +24,9 @@ An instance of these classes fits into the user interface in two ways: as an
 item in a panedwindow of the main widget, or as the only item in a new toplevel
 widget.
 
-The gameedit module provides subclasses which allow editing in the main
-application window.
-
-The gamedbshow, repertoiredbshow, gamedbedit, and repertoiredbedit, modules
-provide subclasses used in a new toplevel widget to display or edit games or
-repertoires.
-
-The gamedbdelete and repertoiredbdelete modules provide subclasses used in a
-new toplevel widget to allow deletion of games or repertoires from a database.
-
 """
+# Obsolete comment, but the idea is being realised through the displaypgn and
+# displaytext modules.  (partial has meanwhile become cql).
 # Game (game.py) and Partial (partial.py) should be
 # subclasses of some more basic class.  They are not because Game started
 # as a game displayer while Partial started as a Text widget with no
@@ -46,6 +38,7 @@ new toplevel widget to allow deletion of games or repertoires from a database.
 # 'more basic class' above.
 
 import tkinter
+import tkinter.messagebox
 
 from pgn_read.core.constants import (
     TAG_FEN,
@@ -53,7 +46,11 @@ from pgn_read.core.constants import (
 from pgn_read.core.parser import PGN
 from pgn_read.core.game import generate_fen_for_position
 
-from ..core.pgn import GameDisplayMoves, GameAnalysis
+from ..core.pgn import (
+    GameDisplayMoves,
+    GameAnalysis,
+    GameRepertoireDisplayMoves,
+    )
 from .board import Board
 from .score import Score, AnalysisScore, ScoreNoGameException
 from ..core import exporters
@@ -64,6 +61,7 @@ from .constants import (
     MOVETEXT_INDENT_TAG,
     FORCED_INDENT_TAG,
     MOVETEXT_MOVENUMBER_TAG,
+    STATUS_SEVEN_TAG_ROSTER_PLAYERS,
     )
 from .eventspec import EventSpec
 from ..core.filespec import ANALYSIS_FILE_DEF
@@ -75,6 +73,7 @@ from ..core.constants import (
     START_TAG,
     BOARDSIDE,
     NOPIECE,
+    REPERTOIRE_TAG_ORDER,
     )
 
 
@@ -82,10 +81,43 @@ class Game(Score):
 
     """Chess game widget composed from Board and Text widgets.
 
+    master is used as the master argument for the tkinter Frame widget passed
+    to superclass and the Board call.
+
+    ui is used as the ui argument in the Board call, and bound to the ui
+    attribute of self.
+
+    The Board widget is used as the board argument in the super().__init__
+    and AnalysisScore calls.
+
+    tags_variations_comments_font is used as the tags_variations_comments_font
+    argument in the super().__init__ and AnalysisScore calls.
+
+    moves_played_in_game_font is used as the moves_played_in_game_font
+    argument in the super().__init__ and AnalysisScore calls.
+
+    items_manager is used as the items_manager argument in the
+    super().__init__ and AnalysisScore calls.
+
+    itemgrid is used as the itemgrid argument in the super().__init__ and
+    AnalysisScore calls.
+
+    boardfont is used as the boardfont argument in the Board call.
+
+    gameclass is used as the gameclass argument in the super().__init__ call.
+
     Analysis of the game's current position, where available, is provided by
     an AnalysisDS instance from the dpt.analysisds or basecore.analysisds
     modules.
+
     """
+    # Some menu popup entries in the Game hierarchy declare their location
+    # as 'before Analyse' or 'before Export'.  This is a convenient way of
+    # getting the popup entries in the desired order, taking order of
+    # execution of various methods into account: nothing special about the
+    # analyse or export entries otherwise.
+    analyse_popup_label = EventSpec.analyse_game[1]
+    export_popup_label = EventSpec.menu_database_export[1]
 
     def __init__(
         self,
@@ -98,21 +130,10 @@ class Game(Score):
         items_manager=None,
         itemgrid=None,
         **ka):
-        """Extend with widgets to display game.
-
-        master - parent widget for frame created to display game
-        tags_variations_comments_font - font for tags variations and comments
-        moves_played_in_game_font - font for move played in game
-        boardfont - font for pieces on board showing current position
-        gameclass - Game subclass for data structure created by PGN class
-        ui - the container for game list and game display widgets.
-
-        Create Frame in toplevel and add Canvas and Text.
-        Text width and height set to zero so widget fit itself into whatever
-        space Frame has available.
-        Canvas must be square leaving Text at least half the Frame.
-
+        """Create Frame and Board and delegate to superclass, then set grid
+        geometry.
         """
+        self.ui = ui
         panel = tkinter.Frame(
             master,
             borderwidth=2,
@@ -129,7 +150,6 @@ class Game(Score):
             tags_variations_comments_font=tags_variations_comments_font,
             moves_played_in_game_font=moves_played_in_game_font,
             gameclass=gameclass,
-            ui=ui,
             items_manager=items_manager,
             itemgrid=itemgrid,
             **ka)
@@ -137,10 +157,10 @@ class Game(Score):
         self.analysis = AnalysisScore(
             panel,
             board,
+            owned_by_game=self,
             tags_variations_comments_font=tags_variations_comments_font,
             moves_played_in_game_font=moves_played_in_game_font,
             gameclass=GameAnalysis,
-            ui=ui,
             items_manager=items_manager,
             itemgrid=itemgrid,
             **ka)
@@ -165,33 +185,6 @@ class Game(Score):
             panel.after_idle(self.hide_scrollbars)
         self.configure_game_widget()
 
-        # The popup menus specific to Game subclass
-
-        for function, accelerator in (
-            (self.analyse_game,
-             EventSpec.analyse_game),
-            ):
-            self.viewmode_popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.viewmode_popup),
-                accelerator=accelerator[2])
-        self.viewmode_popup.add_cascade(
-            label='Database', menu=self.viewmode_database_popup)
-        for function, accelerator in (
-            (self.export_archive_pgn,
-             EventSpec.export_archive_pgn_from_game),
-            (self.export_rav_pgn,
-             EventSpec.export_rav_pgn_from_game),
-            (self.export_pgn,
-             EventSpec.export_pgn_from_game),
-            ):
-            self.viewmode_database_popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(
-                    function, self.viewmode_database_popup),
-                accelerator=accelerator[2])
-
         # True means analysis widget refers to same position as game widget; so
         # highlighting of analysis still represents future valid navigation.
         # Any navigation in game widget makes any highlighting in analysis
@@ -201,31 +194,6 @@ class Game(Score):
         self.game_analysis_in_progress = False
         self.takefocus_widget = self.score
         self.analysis_data_source = None
-        
-    def bind_for_viewmode(self):
-        """Set keyboard bindings and popup menu for traversing moves."""
-        super(Game, self).bind_for_viewmode()
-        self._bind_export(True)
-
-    def bind_for_select_variation_mode(self):
-        """Set keyboard bindings and popup menu for selecting a variation."""
-        super(Game, self).bind_for_select_variation_mode()
-        self._bind_export(False)
-        
-    def _bind_export(self, switch):
-        """Set keyboard bindings for exporting games."""
-        ste = self.try_event
-        for sequence, function in (
-            (EventSpec.export_archive_pgn_from_game,
-             self.export_archive_pgn),
-            (EventSpec.export_rav_pgn_from_game,
-             self.export_rav_pgn),
-            (EventSpec.export_pgn_from_game,
-             self.export_pgn),
-            ):
-            self.score.bind(
-                sequence[0],
-                '' if not switch else '' if not function else ste(function))
         
     def get_top_widget(self):
         """Return topmost widget for game display.
@@ -315,18 +283,11 @@ class Game(Score):
             position = self.tagpositionmap[self.current]
         self._analyse_position(*position)
         
-    def set_game(self, starttoken=None, reset_undo=False):
+    def set_and_tag_item_text(self, reset_undo=False):
         """Delegate to superclass method and queue analysis request to engines.
-
-        starttoken is the move played to reach the position displayed and this
-        move becomes the current move.
-        reset_undo causes the undo redo stack to be cleared if True.  Set True
-        on first display of a game for editing so that repeated Ctrl-Z in text
-        editing mode recovers the original score.
-        
         """
         try:
-            super().set_game(starttoken=starttoken, reset_undo=reset_undo)
+            super().set_and_tag_item_text(reset_undo=reset_undo)
         except ScoreNoGameException:
             return
         self.score.tag_add(MOVETEXT_INDENT_TAG, '1.0', tkinter.END)
@@ -360,25 +321,6 @@ class Game(Score):
             #        raise
             #    break
             uci.ui_analysis_queue.put((sas, pa))
-
-    def export_archive_pgn(self, event=None):
-        """Export game as PGN Archive."""
-        exporters.export_single_game_as_archive_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item(
-                'Archive Game', pgn=True))
-
-    def export_pgn(self, event=None):
-        """Export game as PGN."""
-        exporters.export_single_game_as_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item('Game', pgn=True))
-
-    def export_rav_pgn(self, event=None):
-        """Export game as PGN moves and RAVs but excluding commentary."""
-        exporters.export_single_game_as_rav_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item('RAV Game', pgn=True))
 
     def hide_game_analysis(self):
         """Hide the widgets which show analysis from chess engines."""
@@ -566,70 +508,106 @@ class Game(Score):
         self.panel.grid_columnconfigure(1, weight=1)
         self.panel.grid_columnconfigure(2, weight=0)
 
-    def bind_board_pointer_for_board_navigation(self, switch):
-        """Enable or disable bindings for game navigation."""
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', self.try_event(self._spil)),
-            ('<ButtonPress-3>', self.try_event(self._sniv)),
-            ):
-            for s in self.board.boardsquares.values():
-                s.bind(sequence, '' if not switch else function)
+    def set_active_bindings(self, switch=True):
+        """Delegate to toggle other relevant bindings and switch board pointer
+        bindings for traversing moves between the game or repertoire and
+        engine analysis.
 
-    def _spil(self, event=None):
-        if self.takefocus_widget is self.analysis.score:
-            return self.analysis.show_prev_in_line(event=event)
+        """
+        super().set_active_bindings(switch=switch)
+        if self.score is self.takefocus_widget:
+            self.set_board_pointer_move_bindings(switch=switch)
         else:
-            return self.show_prev_in_line(event=event)
+            self.analysis.set_board_pointer_move_bindings(switch=switch)
 
-    def _sniv(self, event=None):
-        if self.takefocus_widget is self.analysis.score:
-            return self.analysis.show_next_in_variation(event=event)
+    def set_select_variation_bindings(self, switch=True):
+        """Delegate to toggle other relevant bindings and switch board pointer
+        bindings for selecting a variation between the game or repertoire and
+        engine analysis.
+
+        """
+        super().set_select_variation_bindings(switch=switch)
+        if self.score is self.takefocus_widget:
+            self.set_board_pointer_select_variation_bindings(switch=switch)
         else:
-            return self.show_next_in_variation(event=event)
+            self.analysis.set_board_pointer_select_variation_bindings(
+                switch=switch)
 
-    def bind_board_pointer_for_widget_navigation(self, switch):
+    # It is not wrong to activate, or deactivate, all three sets of bindings
+    # for both self(.score) and self.analysis(.score) but the current choice
+    # is to leave Database and Close Item bindings out of self.analysis.
+    # Database and Close Item refer to the item, game or repertoire, not the
+    # engine analysis.
+    def set_database_navigation_close_item_bindings(self, switch=True):
+        self.set_event_bindings_score(
+            self.get_database_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigation_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_close_item_events(), switch=switch)
+        self.analysis.set_event_bindings_score(
+            self.get_navigation_events(), switch=switch)
+
+    def set_board_pointer_widget_navigation_bindings(self, switch):
         """Enable or disable bindings for widget selection."""
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', self.try_event(self.give_focus_to_widget)),
-            ('<ButtonPress-3>', self.try_event(self.popup_inactive_menu)),
-            ):
-            for s in self.board.boardsquares.values():
-                s.bind(sequence, '' if not switch else function)
+        self.set_event_bindings_board(
+            self.get_modifier_buttonpress_suppression_events(),
+            switch=switch)
+        self.set_event_bindings_board(
+            ((EventSpec.buttonpress_1, self.give_focus_to_widget),
+             (EventSpec.buttonpress_3, self.post_inactive_menu),
+             ),
+            switch=switch)
 
-    def bind_score_pointer_for_widget_navigation(self, switch):
+    def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""
+        self.set_event_bindings_board(
+            self.get_modifier_buttonpress_suppression_events(),
+            switch=switch)
         if not switch:
-            p1score = ''
-            p1analysis = ''
-            p3score = ''
-            p3analysis = ''
+            bindings = (
+                (EventSpec.buttonpress_1, self.press_break),
+                (EventSpec.buttonpress_3, self.press_break),
+                )
+            self.set_event_bindings_score(bindings)
+            self.analysis.set_event_bindings_score(bindings)
         else:
-            if self is not self.items.active_item:
-                p1score = self.try_event(self.give_focus_to_widget)
-                p1analysis = p1score
-                p3score = self.try_event(self.popup_inactive_menu)
-                p3analysis = self.try_event(self.analysis.popup_inactive_menu)
-            elif self.score is self.takefocus_widget:
-                p1score = self.try_event(self.give_focus_to_widget)
-                p1analysis = p1score
-                p3score = self.try_event(self.popup_viewmode_menu)
-                p3analysis = self.try_event(self.analysis.popup_inactive_menu)
-            else:
-                p1score = self.try_event(self.give_focus_to_widget)
-                p1analysis = p1score
-                p3score = self.try_event(self.popup_inactive_menu)
-                p3analysis = self.try_event(self.analysis.popup_viewmode_menu)
-        for sequence, function, widget in (
-            ('<Control-ButtonPress-1>', '', self.score),
-            ('<ButtonPress-1>', p1score, self.score),
-            ('<ButtonPress-3>', p3score, self.score),
-            ('<Control-ButtonPress-1>', '', self.analysis.score),
-            ('<ButtonPress-1>', p1analysis, self.analysis.score),
-            ('<ButtonPress-3>', p3analysis, self.analysis.score),
-            ):
-            widget.bind(sequence, function)
+            bindings = (
+                (EventSpec.buttonpress_1, self.give_focus_to_widget),
+                )
+            self.set_event_bindings_score(bindings)
+            self.analysis.set_event_bindings_score(bindings)
+            self.set_event_bindings_score((
+                (EventSpec.buttonpress_3, self.post_inactive_menu),
+                ))
+            self.analysis.set_event_bindings_score((
+                (EventSpec.buttonpress_3, self.analysis.post_inactive_menu),
+                ))
+
+    def set_toggle_game_analysis_bindings(self, switch):
+        """Set keystoke bindings to switch between game and analysis."""
+        self.set_event_bindings_score((
+            (EventSpec.scoresheet_to_analysis,
+             self.analysis_current_item),
+            ))
+        self.analysis.set_event_bindings_score((
+            (EventSpec.analysis_to_scoresheet,
+             self.current_item),
+            ))
+
+    def set_score_pointer_to_score_bindings(self, switch):
+        """Set score pointer bindings to go to game."""
+        self.set_event_bindings_score((
+            (EventSpec.alt_buttonpress_1, self.current_item),
+            ),
+            switch=switch)
+
+    def set_analysis_score_pointer_to_analysis_score_bindings(self, switch):
+        """Set analysis score pointer bindings to go to analysis score."""
+        self.analysis.set_event_bindings_score((
+            (EventSpec.alt_buttonpress_1, self.analysis_current_item),
+            ),
+            switch=switch)
 
     def set_colours(self, sbg, bbg, bfg):
         """Set colours and fonts used to display games.
@@ -649,15 +627,6 @@ class Game(Score):
             self.board.set_color_scheme()
         if bfg:
             self.board.draw_board()
-
-    def bind_score_pointer_for_toggle_game_analysis(self, switch):
-        """Set or unset pointer bindings for widget navigation."""
-        for sequence, function, widget in (
-            ('<Control-ButtonPress-1>', self.current_item, self.score),
-            ('<Control-ButtonPress-1>',
-             self.analysis_current_item, self.analysis.score),
-            ):
-            widget.bind(sequence, '' if not switch else function)
 
     def set_position_analysis_data_source(self):
         """Attach database analysis for position to game widget."""
@@ -679,46 +648,70 @@ class Game(Score):
         for s, p in squares.items():
             p.set_square(s)
         return generate_fen_for_position(squares.values(), *a)
+        
+    def create_move_popup(self):
+        popup = super().create_move_popup()
+        self.set_popup_bindings(popup,
+                                ((EventSpec.analyse_game, self.analyse_game),),
+                                index=self.export_popup_label)
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
+        
+    def create_select_move_popup(self):
+        popup = super().create_select_move_popup()
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
+
+    def set_statusbar_text(self):
+        """Set status bar to display player name PGN Tags."""
+        tags = self.collected_game._tags
+        self.ui.statusbar.set_status_text(
+            '  '.join(
+                [tags.get(k, '')
+                 for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]))
 
 
 class Repertoire(Game):
 
     """Chess repertoire game widget composed from Board and Text widgets.
+
+    gameclass is passed to the superclass as the gameclass argument.  It
+    defaults to GameDisplayMoves.
+
+    Attribute tags_displayed_last is the PGN tags, in order, to be displayed
+    immediately before the movetext.  It exists so Game*, Repertoire*, and
+    AnalysisScore*, instances can use identical code to display PGN tags.  It
+    is the PGN repertoire tags defined in ChessTab.
+
+    Attribute pgn_export_type is a tuple with the name of the type of data and
+    the class used to generate export PGN.  It exists so Game*, Repertoire*,
+    and AnalysisScore*, instances can use identical code to display PGN tags.
+    It is ('Repertoire', GameRepertoireDisplayMoves).
+
     """
     # Override methods referring to Seven Tag Roster
 
-    tags_displayed_last = REPERTOIRE_GAME_TAGS
+    tags_displayed_last = REPERTOIRE_TAG_ORDER
+    pgn_export_type = 'Repertoire', GameRepertoireDisplayMoves
 
+    # gameclass=GameRepertoireDisplayMoves surely?
+    # Then maybe do not need pgn_export_type for 'export_..' methods in Score.
+    # Otherwise there is no point to this __init__ method.
     def __init__(self, gameclass=GameDisplayMoves, **ka):
-        """Extend to display repertoire game.
-
-        gameclass - Game subclass for data structure created by PGN class
-
-        """
+        """Extend to display repertoire game."""
         super(Repertoire, self).__init__(gameclass=gameclass, **ka)
-        self.viewmode_database_popup.delete(
-            EventSpec.export_archive_pgn_from_game[1])
         
-    def bind_for_viewmode(self):
-        """Set keyboard bindings and popup menu for traversing moves."""
-        super(Repertoire, self).bind_for_viewmode()
-        for sequence, function in (
-            (EventSpec.export_archive_pgn_from_game, ''),
-            ):
-            if function:
-                function = self.try_event(function)
-            self.score.bind(sequence[0], function)
-
-    def export_pgn(self, event=None):
-        """Export repertoire as PGN."""
-        exporters.export_single_repertoire_as_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item('Repertoire', pgn=True))
-
-    def export_rav_pgn(self, event=None):
-        """Export repertoire as PGN moves and RAVs but excluding commentary."""
-        exporters.export_single_repertoire_as_rav_pgn(
-            self.score.get('1.0', tkinter.END),
-            self.ui.get_export_filename_for_single_item(
-                'RAV Repertoire', pgn=True))
+    # There is no point to a repertoire without RAVs so the options suppressing
+    # RAVs are absent.
+    def get_all_export_events(self):
+        return (
+            (EventSpec.pgn_export_format_no_comments,
+             self.export_pgn_no_comments),
+            (EventSpec.pgn_export_format,
+             self.export_pgn),
+            (EventSpec.pgn_import_format,
+             self.export_pgn_import_format),
+            (EventSpec.text_internal_format,
+             self.export_text),
+            )
 

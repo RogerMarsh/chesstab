@@ -2,89 +2,109 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise edit dialogue to edit or insert game selection rule record.
+"""Customise edit toplevel to edit or insert game selection rule record.
 """
-
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .querydisplay import DialogueQueryDisplay, DialogueQueryEdit
+from .querytoplevel import QueryToplevel, QueryToplevelEdit
+from .topleveltext import EditText
 
 
-class ChessDBeditQuery(ExceptionHandler, DataEdit):
-    """Dialog to edit a game selection rule on, or insert one into, database.
+class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
+    """Edit game selection rule on database, or insert a new record.
 
-    The game selection rule is in it's own Toplevel widget.
+    parent is used as the master argument in QueryToplevel calls.
+
+    ui is used as the ui argument in QueryToplevel calls.
+
+    newobject, parent, oldobject, and the one or two QueryToplevel instances
+    created, are used as arguments in the super.__init__ call.
+
+    showinitial determines whether a QueryToplevel is created for oldobject if
+    there is one.
+
+    Attribute text_name provides the name used in widget titles and message
+    text.
+
+    Methods get_title_for_object and set_item, and properties ui_base_table;
+    ui_items_in_toplevels; and ui, allow similar methods in various classes
+    to be expressed identically and defined once.
 
     """
+    text_name = 'Selection Rule Statement'
 
     def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
-        """Extend and create dialogue to edit or insert selection rule."""
-        if oldobject:
-            title = ':  '.join((
-                'Edit Selection Rule',
-                oldobject.value._description_string))
-        else:
-            title = 'Insert Selection Rule'
+        """Extend and create toplevel to edit or insert selection rule."""
+        if not oldobject:
             showinitial = False
-        self.__title = title.split(':')[0]
-        if showinitial:
-            showinitial = DialogueQueryDisplay(master=parent, ui=ui)
-            if ui is not None:
-                ui.selections_in_toplevels.add(showinitial)
-                showinitial.query_statement.set_database(
-                    ui.base_games.datasource.dbhome)
-                showinitial.query_statement.dbset = (
-                    ui.base_games.datasource.dbset)
-            showinitial.query_statement.process_query_statement(
-                oldobject.get_srvalue())
-            showinitial.set_query_statement()
-        newview = DialogueQueryEdit(master=parent, ui=ui)
-        if ui is not None:
-            ui.selections_in_toplevels.add(newview)
-            newview.query_statement.set_database(
-                ui.base_games.datasource.dbhome)
-            newview.query_statement.dbset = ui.base_games.datasource.dbset
-        newview.query_statement.process_query_statement(newobject.get_srvalue())
-        newview.set_query_statement()
-        super(ChessDBeditQuery, self).__init__(
+        super().__init__(
             newobject,
             parent,
             oldobject,
-            newview,
-            title,
-            oldview=showinitial,
+            QueryToplevelEdit(master=parent, ui=ui),
+            '',
+            oldview=QueryToplevel(master=parent,
+                                  ui=ui) if showinitial else showinitial,
             )
+        if ui is not None:
+            nqs = self.newview.query_statement
+            nqs.set_database(ui.base_games.datasource.dbhome)
+            nqs.dbset = ui.base_games.datasource.dbset
+            if showinitial:
+                oqs = self.oldview.query_statement
+                oqs.set_database(ui.base_games.datasource.dbhome)
+                oqs.dbset = ui.base_games.datasource.dbset
+        self.initialize()
 
-        # Bind only to newview.score because it alone takes focus.
-        self.bind_buttons_to_widget(newview.score)
+    def get_title_for_object(self, object_=None):
+        """Return title for Toplevel containing a selection rule object_.
 
-        self.ui = ui
-        
-    def dialog_ok(self):
-        """Update record and return update action response (True for updated).
-
-        Check that database is open and is same one as update action was
-        started.
+        Default value of object_ is object attribute from DataShow class.
 
         """
-        if self.ui.database is None:
-            self.status.configure(
-                text='Cannot update because not connected to a database')
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
-            return False
+        if object_ is None:
+            object_ = self.oldobject
+        if object_:
+            return '  '.join((
+                self.text_name.join(('Edit ', ':')),
+                object_.value.get_name_text()))
+        else:
+            return ''.join(('Insert ', self.text_name))
+
+    @property
+    def ui_base_table(self):
+        return self.ui.base_selections
+
+    @property
+    def ui_items_in_toplevels(self):
+        return self.ui.selections_in_toplevels
+
+    @property
+    def ui(self):
+        return self.newview.ui
+
+    def set_item(self, view, object_):
+        view.query_statement.process_query_statement(object_.get_srvalue())
+        view.set_and_tag_item_text(reset_undo=True)
+        
+    def dialog_ok(self):
+        """Return update action response (True for deleted).
+
+        Delegate to superclass if the game selection rule is a valid statement
+        or confirmation has been given for an invalid statement.
+
+        """
+        title = self.get_title_for_object()
         self.newobject.value.load(
             repr(self.newview.get_name_query_statement_text()))
         if not len(self.newobject.value.get_name_text()):
             tkinter.messagebox.showerror(
                 parent=self.parent,
-                title=self.__title,
+                title=title,
                 message=''.join((
                     "The selection rule has no name.\n\nPlease enter it's ",
                     "name as the first line of text.'")))
@@ -92,7 +112,7 @@ class ChessDBeditQuery(ExceptionHandler, DataEdit):
         if self.newobject.value.where_error:
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.parent,
-                title=self.__title,
+                title=title,
                 message=''.join((
                     'Confirm request to update game selection rule named:\n\n',
                     self.newobject.value.get_name_text(),
@@ -100,10 +120,4 @@ class ChessDBeditQuery(ExceptionHandler, DataEdit):
                     self.newobject.value.where_error.get_error_report(
                         self.ui.base_games.get_data_source())))):
                 return False
-        return super(ChessDBeditQuery, self).dialog_ok()
-
-    def tidy_on_destroy(self):
-        """Clear up after dialogue destruction."""
-        self.ui.selections_in_toplevels.discard(self.oldview)
-        self.ui.selections_in_toplevels.discard(self.newview)
-        self.ui.base_selections.selection.clear()
+        return super().dialog_ok()

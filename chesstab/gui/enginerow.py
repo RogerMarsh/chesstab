@@ -17,9 +17,9 @@ from solentware_grid.gui.datarow import (
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordEngine
-from .enginedbedit import ChessDBeditEngine
-from .enginedbdelete import ChessDBdeleteEngine
-from .enginedbshow import ChessDBshowEngine
+from .enginedbedit import EngineDbEdit
+from .enginedbdelete import EngineDbDelete
+from .enginedbshow import EngineDbShow
 from . import constants
 
 ON_DISPLAY_COLOUR = '#eba610' # a pale orange
@@ -67,25 +67,25 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
             ]
         
     def show_row(self, dialog, oldobject):
-        """Return a ChessDBshowEngine dialog for instance.
+        """Return a EngineDbShow toplevel for oldobject.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordEngine containing original data
 
         """
-        return ChessDBshowEngine(dialog, oldobject, ui=self.ui)
+        return EngineDbShow(dialog, oldobject, ui=self.ui)
         
     def delete_row(self, dialog, oldobject):
-        """Return a ChessDBdeleteEngine dialog for instance.
+        """Return a EngineDbDelete toplevel for oldobject.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordEngine containing original data
 
         """
-        return ChessDBdeleteEngine(dialog, oldobject, ui=self.ui)
+        return EngineDbDelete(dialog, oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a ChessDBeditEngine dialog for instance.
+        """Return a EngineDbEdit toplevel for oldobject.
 
         dialog - a Toplevel
         newobject - a ChessDBrecordEngine containing original data to be
@@ -94,7 +94,7 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return ChessDBeditEngine(
+        return EngineDbEdit(
             newobject,
             dialog,
             oldobject,

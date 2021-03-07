@@ -1,8 +1,8 @@
 # gamedbshow.py
-# Copyright 2015 Roger Marsh
+# Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise show dialogue to display chess game record.
+"""Customise show toplevel to display chess game record.
 """
 
 from solentware_grid.gui.datashow import DataShow
@@ -10,59 +10,94 @@ from solentware_grid.gui.datashow import DataShow
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
+
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
-from .gamedisplay import DialogueGameDisplay
+from .gametoplevel import GameToplevel
+from .toplevelpgn import ShowPGN
 
 
-class ChessDBshowGame(ExceptionHandler, DataShow):
+class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
     
-    """Dialog to show a game from database.
+    """Show PGN text for game from database.
 
-    The game is in it's own Toplevel widget and playing through the game does
-    not change the list of games, in the main widget, matching the current
-    position on the board.
+    parent is used as the master argument in a GameToplevel call.
+
+    ui is used as the ui argument in a GameToplevel call.
+
+    parent, oldobject, and the GameToplevel instance created, are used as
+    arguments in the super.__init__ call.
+
+    Attribute pgn_score_name provides the name used in widget titles and
+    message text.
+
+    Methods get_title_for_object and set_item, and properties ui_base_table;
+    ui_items_in_toplevels; and ui, allow similar methods in various classes
+    to be expressed identically and defined once.
 
     """
+    pgn_score_name = 'Game'
 
     def __init__(self, parent, oldobject, ui=None):
-        """Extend and create dialogue widget for displaying chess game."""
-        oldview = DialogueGameDisplay(master=parent, ui=ui)
-        oldview.set_position_analysis_data_source()
-        if ui is not None:
-            ui.games_and_repertoires_in_toplevels.add(oldview)
-        oldview.collected_game = next(
-            PGN(game_class=oldview.gameclass
-                ).read_games(oldobject.get_srvalue()))
-        oldview.set_game()
-        tags = oldobject.value.collected_game._tags
+        """Extend and create toplevel widget for displaying chess game."""
+        # Toplevel title set '' in __init__ and to proper value in initialize.
+        super().__init__(oldobject,
+                         parent,
+                         GameToplevel(master=parent, ui=ui),
+                         '')
+        self.initialize()
+
+    @property
+    def ui_base_table(self):
+        return self.ui.base_games
+
+    @property
+    def ui_items_in_toplevels(self):
+        return self.ui.games_and_repertoires_in_toplevels
+
+    @property
+    def ui(self):
+        return self.oldview.ui
+
+    def set_item(self, view, object_):
+        self.set_default_source_for_object(object_)
+        view.set_position_analysis_data_source()
+        view.collected_game = next(
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+        view.set_and_tag_item_text()
+
+    def get_title_for_object(self, object_=None):
+        """Return title for Toplevel containing a Game object_.
+
+        Default value of object_ is object attribute from DataShow class.
+
+        """
+        if object_ is None:
+            object_ = self.object
         try:
-            tt = '  '.join((
-                'Show Game:',
+            tags = object_.value.collected_game._tags
+            return '  '.join((
+                self.pgn_score_name.join(('Show ', ':')),
                 ' - '.join((
                     tags[TAG_WHITE],
                     tags[TAG_BLACK])),
                 ))
         except TypeError:
-            tt = 'Show Game - names unknown or invalid'
+            return self.pgn_score_name.join(
+                ('Show ', ' - names unknown or invalid'))
         except KeyError:
-            tt = 'Show Game - names unknown or invalid'
-        super(ChessDBshowGame, self).__init__(oldobject, parent, oldview, tt)
-        self.bind_buttons_to_widget(oldview.score)
-        self.bind_buttons_to_widget(oldview.analysis.score)
-        self.ui = ui
+            return self.pgn_score_name.join(
+                ('Show ', ' - names unknown or invalid'))
 
-    def dialog_ok(self):
-        """Dismiss dialogue."""
-        if self.ui.database is None:
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
-            return False
-        return super(ChessDBshowGame, self).dialog_ok()
+    def set_default_source_for_object(self, object_=None):
+        """Set default source for Toplevel containing a Game object_.
 
-    def tidy_on_destroy(self):
-        """Clear up after dialogue destruction."""
-        self.ui.games_and_repertoires_in_toplevels.discard(self.oldview)
-        self.ui.base_games.selection.clear()
+        Default value of object_ is object attribute from DataShow class.
+
+        Currently do nothing for games.  Originally used for games with PGN
+        errors, where it was the name of the PGN file containing the game.
+
+        Now present for compatibility with Repertoires.
+
+        """
+        pass

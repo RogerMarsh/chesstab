@@ -2,7 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Display the score of a game of chess.
+"""Widget to display the score of a game of chess.
 
 The Score class displays text derived from PGN and highlights moves depending
 on the current position while navigating the game score.
@@ -34,6 +34,7 @@ a superclass of game.Repertoire.
 # and PartialEdit (partialedit.py) as well.
 
 import tkinter
+import enum
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
@@ -44,8 +45,9 @@ from pgn_read.core.constants import (
     PGN_DOT,
     )
 from pgn_read.core.squares import Squares
+from pgn_read.core.parser import PGN
 
-from ..core.pgn import GameDisplayMoves
+from ..core.pgn import GameDisplayMoves, GameAnalysis
 from .constants import (
     LINE_COLOR,
     MOVE_COLOR,
@@ -55,8 +57,6 @@ from .constants import (
     TAGS_VARIATIONS_COMMENTS_FONT,
     NAVIGATE_TOKEN,
     NAVIGATE_MOVE,
-    INSERT_RAV,
-    MOVE_EDITED,
     TOKEN,
     RAV_MOVES,
     CHOICE,
@@ -74,14 +74,12 @@ from .constants import (
     START_SCORE_MARK,
     NAVIGATE_COMMENT,
     TOKEN_MARK,
-    INSERT_TOKEN_MARK,
     PGN_TAG,
     BUILD_TAG,
     TERMINATION_TAG,
     SPACE_SEP,
     NEWLINE_SEP,
     NULL_SEP,
-    STATUS_SEVEN_TAG_ROSTER_PLAYERS,
     FORCE_NEWLINE_AFTER_FULLMOVES,
     FORCED_INDENT_TAG,
     MOVETEXT_MOVENUMBER_TAG,
@@ -89,6 +87,22 @@ from .constants import (
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
+from ..core import exporters
+
+
+# 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
+# Score uses NO_EDITABLE_TAGS, INITIAL_BINDINGS, and SELECT_VARIATION.
+# GameEdit uses all the names.
+class NonTagBind(enum.Enum):
+    # Current token is a move.
+    NO_EDITABLE_TAGS = 1
+    NO_CURRENT_TOKEN = 2
+    DEFAULT_BINDINGS = 3
+    INITIAL_BINDINGS = 4
+    CURRENT_NO_TAGS = 5
+    # Current token is a move with variations for next move, and the attempt
+    # to go to next move was intercepted to choose which one.
+    SELECT_VARIATION = 6
 
 
 # The ScoreNoGameException is intended to catch cases where a file
@@ -101,9 +115,73 @@ class ScoreNoGameException(Exception):
     pass
 
 
+# The ScoreMapToBoardException is intended to catch cases where an attempt is
+# made to display chess engine analysis for a position in which an illegal
+# move is played.  In particular in the GameEdit subclass when the move played
+# is the last in game or variation, but is being edited at the time and not
+# complete.  It is caught in the AnalysisScore class but should be treated as
+# a real error in the Score class.
+class ScoreMapToBoardException(Exception):
+    pass
+
+
 class Score(ExceptionHandler):
 
-    """Chess score widget composed from Text and Scrollbar widgets.
+    """Chess score  widget.
+
+    panel is used as the master argument for the tkinter Text and Scrollbar
+    widgets created to display the statement text.
+
+    board is the board.Board instance where the current position in this Score
+    instance is shown.
+
+    tags_variations_comments_font is the font used for non-move PGN tokens,
+    the default font is in class attribute tags_variations_comments_font.
+
+    moves_played_in_game_font is the font used for non-move PGN tokens, the
+    default font is in class attribute moves_played_in_game_font.
+
+    ui is the user interface manager for an instance of CQLText, usually an
+    instance of ChessUI.  It is ignored and Score instances refer to the
+    board for the ui.
+
+    items_manager is the ui attribute which tracks which CQLText instance is
+    active (as defined by ui).
+
+    itemgrid is the ui reference to the DataGrid from which the record was
+    selected.
+
+    Subclasses are responsible for providing a geometry manager.
+
+    Attribute l_color is the background colour for a variation when it has
+    the current move.
+
+    Attribute m_color is the background colour for moves in a variation when
+    it has the current move, which are before the current move.
+
+    Attribute am_color is the background colour for moves which start other
+    variations when selecting a variation.  The current choice has the colour
+    specified by l_color.
+
+    Attribute v_color is the background colour for the game move preceding
+    the first move in the variation.
+
+    Attribute tags_displayed_last is the PGN tags, in order, to be displayed
+    immediately before the movetext.  It exists so Game*, Repertoire*, and
+    AnalysisScore*, instances can use identical code to display PGN tags.  It
+    is the PGN Seven Tag Roster.
+
+    Attribute pgn_export_type is a tuple with the name of the type of data and
+    the class used to generate export PGN.  It exists so Game*, Repertoire*,
+    and AnalysisScore*, instances can use identical code to display PGN tags.
+    It is ('Game', GameDisplayMoves).
+
+    Attribute _is_score_editable is False meaning the statement cannot be
+    edited.
+
+    Attribute _most_recent_bindings is set to indicate the initial set of
+    event bindings.  Instances will override this as required.
+
     """
 
     l_color = LINE_COLOR
@@ -117,7 +195,17 @@ class Score(ExceptionHandler):
     _is_score_editable = False
 
     tags_displayed_last = SEVEN_TAG_ROSTER
+    pgn_export_type = 'Game', GameDisplayMoves
 
+    # Indicate the most recent set of bindings applied to score attribute.
+    # There will be some implied bindings to the board attribute, but board
+    # may  be shared by more than one Score instance.  The analysis.score and
+    # score attributes of a Game instance for example.
+    # Values are Tk tag names or members of NonTagBind enumeration. 
+    _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
+
+    # Maybe do not need pgn_export_type for 'export_..' methods if repertoire
+    # subclasses use gameclass=GameRepertoireDisplayMoves.
     def __init__(
         self,
         panel,
@@ -129,21 +217,8 @@ class Score(ExceptionHandler):
         items_manager=None,
         itemgrid=None,
         **ka):
-        """Extend with widgets to display game score.
-
-        tags_variations_comments_font - font for tags variations and comments
-        moves_played_in_game_font - font for move played in game
-        gameclass - Game subclass for data structure created by PGN class
-        ui - the container for game list and game display widgets.
-
-        Create Frame in toplevel and add Canvas and Text.
-        Text width and height set to zero so widget fit itself into whatever
-        space Frame has available.
-        Canvas must be square leaving Text at least half the Frame.
-
-        """
+        """Create widgets to display game score."""
         super(Score, self).__init__(**ka)
-        self.ui = ui
 
         # May be worth using a Null() instance for these two attributes.
         if items_manager is None:
@@ -157,6 +232,10 @@ class Score(ExceptionHandler):
             self.moves_played_in_game_font = moves_played_in_game_font
         self.panel = panel
         self.board = board
+
+        # The setting of inactiveselectbackground and selectbackground hides
+        # the selection. 'Shift Left' and similar are intercepted and do not
+        # affect the selection but 'Shift ButtonPress-1 Drag' is not.
         self.score = tkinter.Text(
             self.panel,
             width=0,
@@ -164,7 +243,10 @@ class Score(ExceptionHandler):
             takefocus=tkinter.FALSE,
             font=self.tags_variations_comments_font,
             undo=True,
-            wrap=tkinter.WORD)
+            wrap=tkinter.WORD,
+            inactiveselectbackground='')
+        self.score.configure(selectbackground=self.score.cget('background'))
+
         self.score.tag_configure(
             MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font)
 
@@ -185,53 +267,14 @@ class Score(ExceptionHandler):
             command=self.score.yview)
         self.score.configure(yscrollcommand=self.scrollbar.set)
 
-        # Keyboard actions do nothing by default.
-        self.score.bind(EventSpec.score_disable_keypress[0],
-                        lambda e: 'break')
+        # Suppress all keystrokes except F10 passed through to menubar.
+        self.set_keypress_binding(switch=False)
+        self.set_event_bindings_score(self.get_menubar_events())
 
-        # The popup menus for the game score
-
-        self.viewmode_popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.viewmode_database_popup = tkinter.Menu(
-            master=self.viewmode_popup, tearoff=False)
-        for function, accelerator in (
-            (self.show_next_in_line,
-             EventSpec.score_show_next_in_line),
-            (self.show_next_in_variation,
-             EventSpec.score_show_next_in_variation),
-            (self.show_prev_in_line,
-             EventSpec.score_show_previous_in_line),
-            (self.show_prev_in_variation,
-             EventSpec.score_show_previous_in_variation),
-            (self.show_first_in_game,
-             EventSpec.score_show_first_in_game),
-            (self.show_last_in_game,
-             EventSpec.score_show_last_in_game),
-            (self.show_first_in_line,
-             EventSpec.score_show_first_in_line),
-            (self.show_last_in_line,
-             EventSpec.score_show_last_in_line),
-            ):
-            self.viewmode_popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, self.viewmode_popup),
-                accelerator=accelerator[2])
-        self.selectmode_popup = tkinter.Menu(
-            master=self.score, tearoff=False)
-        for function, accelerator in (
-            (self.variation_cycle,
-             EventSpec.score_cycle_selection_to_next_variation),
-            (self.show_variation,
-             EventSpec.score_show_selected_variation),
-            (self.variation_cancel,
-             EventSpec.score_cancel_selection_of_variation),
-            ):
-            self.selectmode_popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, self.selectmode_popup),
-                accelerator=accelerator[2])
+        # The popup menus for the game score.
+        self.move_popup = None
+        self.select_move_popup = None
         self.inactive_popup = None
-        self.viewmode_navigation_popup = None
 
         # None implies initial position and is deliberately not a valid Tk tag.
         self.current = None # Tk tag of current move
@@ -264,93 +307,511 @@ class Score(ExceptionHandler):
         # only the first move gets numbered.
         self._force_newline = False
 
-    def add_navigation_to_viewmode_popup(self, **kwargs):
-        '''Add 'Navigation' entry to movemode popup if not already present.'''
+    # This method arose when seeking clarity in the way popup menus were set,
+    # and replaces lots of 'add_command' calls scattered all over.
+    # Long term, either this method or add_cascade_menu_to_popup will do all.
+    def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
+        """Insert bindings in popup before index in popup.
 
+        Default index is tkinter.END which seems to mean insert at end of
+        popup, not before last entry in popup as might be expected from the
+        way expressed in the 'Tk menu manual page' for index command.  (The
+        manual page describes 'end' in the context of 'none' for 'activate'
+        option.  It does make sense 'end' meaning after existing entries
+        when inserting entries.)
+
+        """
+        for accelerator, function in bindings:
+            popup.insert_command(
+                index=index,
+                label=accelerator[1],
+                command=self.try_command(function, popup),
+                accelerator=accelerator[2])
+
+    # This method arose because of one case where the menu needs setting up
+    # but the caller did not know if anything needed to be done.
+    # Long term, either this method or set_popup_bindings will do all.
+    # Should be called insert_cascade_menu_in_popup but misunderstanding index
+    # argument led to name used.
+    def add_cascade_menu_to_popup(
+        self, label, popup, bindings=None, order=None, index=tkinter.END):
+        '''Add label as cascade_menu, and bindings, to popup if not already
+        present before index entry.
+
+        The bindings are not applied if cascade_menu is alreay in popup menu.
+
+        '''
         # Cannot see a way of asking 'Does entry exist?' other than:
         try:
-            self.viewmode_popup.index('Navigation')
+            popup.index(label)
         except:
-            self.viewmode_navigation_popup = tkinter.Menu(
-                master=self.viewmode_popup, tearoff=False)
-            self.viewmode_popup.add_cascade(
-                label='Navigation', menu=self.viewmode_navigation_popup)
-            self.bind_navigation_for_viewmode_popup(**kwargs)
+            cascade_menu = tkinter.Menu(master=popup, tearoff=False)
+            popup.insert_cascade(label=label, menu=cascade_menu, index=index)
+            if order is None:
+                order = ()
+            if bindings is None:
+                bindings = {}
+            for definition in order:
+                function = bindings.get(definition)
+                if function is not None:
+                    cascade_menu.add_command(
+                        label=definition[1],
+                        command=self.try_command(function, cascade_menu),
+                        accelerator=definition[2])
         
-    def bind_for_viewmode(self):
-        """Set keyboard bindings and popup menu for traversing moves."""
-        self._bind_select_variation(False)
-        self._bind_viewmode(True)
-
-    def bind_for_select_variation_mode(self):
-        """Set keyboard bindings and popup menu for selecting a variation."""
-        self._bind_viewmode(False)
-        self._bind_select_variation(True)
-        
-    def _bind_viewmode(self, switch):
-        """Set keyboard bindings for traversing moves."""
+    # Follow example of set_popup_bindings for keystroke and pointer-click,
+    # away from menus, events.
+    def set_event_bindings_score(self, bindings=(), switch=True):
+        """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
-        for sequence, function in (
-            (EventSpec.score_show_previous_in_variation,
-             self.show_prev_in_variation),
-            (EventSpec.score_show_previous_in_line,
-             self.show_prev_in_line),
-            (EventSpec.score_show_next_in_line,
-             self.show_next_in_line),
-            (EventSpec.score_show_next_in_variation,
-             self.show_next_in_variation),
-            (EventSpec.score_show_first_in_line,
-             self.show_first_in_line),
-            (EventSpec.score_show_last_in_line,
-             self.show_last_in_line),
-            (EventSpec.score_show_first_in_game,
-             self.show_first_in_game),
-            (EventSpec.score_show_last_in_game,
-             self.show_last_in_game),
-            ):
+        for sequence, function in bindings:
             self.score.bind(
                 sequence[0],
-                '' if not switch else '' if not function else ste(function))
-
-    def _bind_select_variation(self, switch):
-        """Set keyboard bindings for selecting a variation."""
+                ste(function) if switch and function else '')
+        
+    def set_event_bindings_board(self, bindings=(), switch=True):
+        """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
-        for sequence, function in (
-            (EventSpec.score_cancel_selection_of_variation,
-             self.variation_cancel),
-            (EventSpec.score_show_selected_variation,
-             self.show_variation),
+        sbbv = self.board.boardsquares.values
+        for sequence, function in bindings:
+            stef = ste(function) if switch and function else ''
+            for w in sbbv():
+                w.bind(sequence[0], stef)
+
+    def set_keypress_binding(self, function=None, bindings=(), switch=True):
+        """Set bindings to function if switch is True or disable keypress."""
+        if switch and function:
+            stef = self.try_event(function)
+            for sequence in bindings:
+                self.score.bind(sequence[0], stef)
+        else:
+            stekb = self.try_event(self.press_break)
+            for sequence in bindings:
+                self.score.bind(sequence[0], stekb)
+
+    def press_break(self, event=None):
+        """Do nothing and prevent event handling by next handlers."""
+        return 'break'
+
+    def press_none(self, event=None):
+        """Do nothing and allow event to be handled by next handler."""
+        return None
+        
+    # Renamed from 'bind_for_viewmode' when 'bind_for_*' methods tied to Tk
+    # Text widget tag names were introduced.
+    def bind_for_move(self, switch=True):
+        """Set keyboard bindings and popup menu for traversing moves.
+
+        Two navigation states are assumed.  Traversing the game score through
+        adjacent tokens, and selecting the next move from a set of variations.
+
+        For pointer clicks a token is defined to be adjacent to all tokens.
+
+        """
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
+        self.set_active_bindings(switch=switch)
+
+    # Renamed from 'bind_for_select_variation_mode' when 'bind_for_*' methods
+    # tied to Tk Text widget tag names were introduced.
+    def bind_for_select_variation(self, switch=True):
+        """Set keyboard bindings and popup menu for selecting a variation.
+
+        Two navigation states are assumed.  Traversing the game score through
+        adjacent tokens, and selecting the next move from a set of variations.
+
+        For pointer clicks a token is defined to be adjacent to all tokens.
+
+        """
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.SELECT_VARIATION
+        self.set_select_variation_bindings(switch=True)
+        
+    def bind_for_initial_state(self, switch=True):
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
+        
+    # Dispatch dictionary for token binding selection.
+    # Keys are the possible values of self._most_recent_bindings.
+    token_bind_method = {
+        NonTagBind.NO_EDITABLE_TAGS: bind_for_move,
+        NonTagBind.SELECT_VARIATION: bind_for_select_variation,
+        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
+        }
+
+    # Renamed from '_bind_viewmode' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    def set_active_bindings(self, switch=True):
+        """Switch bindings for traversing moves on or off."""
+        self.set_event_bindings_score(
+            self.get_move_navigation_events(),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_F10_popup_events(self.post_move_menu_at_top_left,
+                                      self.post_move_menu),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_all_export_events(),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_move_button_events(),
+            switch=switch)
+
+    # Renamed from '_bind_select_variation' when 'bind_for_*' methods tied
+    # to Tk Text widget tag names were introduced.
+    def set_select_variation_bindings(self, switch=True):
+        """Switch bindings for selecting a variation on or off."""
+        self.set_event_bindings_score(
+            self.get_select_move_events(),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_F10_popup_events(self.post_select_move_menu_at_top_left,
+                                      self.post_select_move_menu),
+            switch=switch)
+        self.set_event_bindings_score(
+            self.get_select_move_button_events(),
+            switch=switch)
+
+    # This method may have independence from set_active_bindings when the
+    # control_buttonpress_1 event is fired.
+    # (So there should be a 'select_variation' version too?)
+    # Renamed from bind_score_pointer_for_board_navigation to fit current use.
+    def set_score_pointer_item_navigation_bindings(self, switch):
+        """Set or unset pointer bindings for game navigation."""
+        self.set_event_bindings_score(
+            self.get_move_button_events(),
+            switch=switch)
+
+    # Not yet used.
+    # Recently added to game.py but moved here because it makes more sense to
+    # do the work in the (game).score or (game.analysis).score object than
+    # choose which is wanted in the (game) object.
+    # set_board_pointer_widget_navigation_bindings is likely to follow.
+    # There is no equivalent of set_select_variation_bindings for this to be
+    # part of.
+    def set_board_pointer_select_variation_bindings(self, switch):
+        """Enable or disable bindings for variation selection."""
+        self.set_event_bindings_board(
+            self.get_modifier_buttonpress_suppression_events(),
+            switch=switch)
+        self.set_event_bindings_board(
+            ((EventSpec.buttonpress_1, self.variation_cancel),
+             (EventSpec.buttonpress_3, self.show_next_in_variation),
+             (EventSpec.shift_buttonpress_3, self.show_variation),
+             ),
+            switch=switch)
+
+    # There is no equivalent of set_active_bindings for this to be part of.
+    def set_board_pointer_move_bindings(self, switch):
+        """Enable or disable bindings for game navigation."""
+        self.set_event_bindings_board(
+            self.get_modifier_buttonpress_suppression_events(),
+            switch=switch)
+        self.set_event_bindings_board(
+            ((EventSpec.buttonpress_1, self.show_prev_in_line),
+             (EventSpec.shift_buttonpress_1, self.show_prev_in_variation),
+             (EventSpec.buttonpress_3, self.show_next_in_variation),
+             ),
+            switch=switch)
+
+    def get_keypress_suppression_events(self):
+        """Return tuple of event binding definitions suppressing all keystrokes
+        except F10 which is allowed to pass through for menubar."""
+        return (
+            (EventSpec.score_disable_keypress, self.press_break),
+            )
+
+    # May become an eight argument ButtonPress event handler setter method
+    # because it is always associated with settings for ButtonPress-1 and
+    # ButtonPress-3.  Especially if events other than Control-ButtonPress-1
+    # get handlers.
+    def get_modifier_buttonpress_suppression_events(self):
+        """Return tuple of event binding definitions suppressing buttonpress
+        with Control, Shift, or Alt."""
+        return (
+            (EventSpec.control_buttonpress_1, self.press_break),
+            (EventSpec.control_buttonpress_3, self.press_break),
+            (EventSpec.shift_buttonpress_1, self.press_break),
+            (EventSpec.shift_buttonpress_3, self.press_break),
+            (EventSpec.alt_buttonpress_1, self.press_break),
+            (EventSpec.alt_buttonpress_3, self.press_break),
+            )
+
+    def get_menubar_events(self):
+        """Return tuple of event binding definitions passed for menubar."""
+        return (
+            (EventSpec.score_enable_F10_menubar, self.press_none),
+            )
+
+    # Used in gameedit.  Eventually in score, repertoiredisplay, and
+    # gamedisplay too, replacing get_select_move_button_events and
+    # get_move_button_events.
+    # See querytext.QueryText and cqltext.CQLText for a possible outcome.
+    def get_button_events(self, buttonpress3):
+        """Return tuple of buttonpress event bindings including buttonpress3.
+
+        control_buttonpress_1 is a toggle between game and engine analysis.
+        buttonpress_1 goes to the token under the pointer.
+        buttonpress3 is expected to be the poster method for the popup menu
+        appropriate to the token under the pointer.
+
+        """
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, self.go_to_token),
+            (EventSpec.buttonpress_3, buttonpress3),
+            )
+
+    def get_F10_popup_events(self, top_left, pointer):
+        """Return tuple of event definitions to post popup menus at top left
+        of focus widget and at pointer location within application widget.
+
+        top_left and pointer are functions.
+
+        """
+        return (
+            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
+            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
+            )
+
+    # A Game widget has one Board widget and two Score widgets.  Each Score
+    # widget has a Text widget but only one of these can have the focus.
+    # Whichever has the focus may have item navigation bindings for it's
+    # pointer, and the other one's pointer bindings are disabled.
+    # The control_buttonpress_1 event is intended to give focus to the other's
+    # Text widget, but is not set yet.
+    def get_move_button_events(self):
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, self.go_to_token),
+            (EventSpec.buttonpress_3, self.post_move_menu),
+            )
+
+    # A Game widget has one Board widget and two Score widgets.  Each Score
+    # widget has a Text widget but only one of these can have the focus.
+    # Whichever has the focus may have select move bindings for it's pointer,
+    # and the other one's pointer bindings are disabled.
+    # The control_buttonpress_1 event is intended to give focus to the other's
+    # Text widget, but is not set yet.
+    def get_select_move_button_events(self):
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, self.variation_cancel),
+            (EventSpec.buttonpress_3, self.post_select_move_menu),
+            )
+
+    def get_inactive_button_events(self):
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, self.give_focus_to_widget),
+            (EventSpec.buttonpress_3, self.post_inactive_menu),
+            )
+        
+    # Subclasses which need widget navigation in their popup menus should
+    # call this method.
+    def create_widget_navigation_submenu_for_popup(self, popup):
+        """Create and populate a submenu of popup for widget navigation.
+
+        The commands in the submenu should switch focus to another widget.
+
+        Subclasses should define a generate_popup_navigation_maps method and
+        binding_labels iterable suitable for allowed navigation.
+        
+        """
+        navigation_map, local_map = self.generate_popup_navigation_maps()
+        local_map.update(navigation_map)
+        self.add_cascade_menu_to_popup(
+            'Navigation', popup,
+            bindings=local_map, order=self.binding_labels)
+        
+    # Subclasses which need dismiss widget in a menu should call this method.
+    def add_close_item_entry_to_popup(self, popup):
+        """Add option to dismiss widget entry to popup.
+
+        Subclasses must provide a delete_item_view method.
+
+        """
+        self.set_popup_bindings(popup, self.get_close_item_events())
+        
+    # Subclasses which need non-move PGN navigation should call this method.
+    # Intended for editors.
+    def add_pgn_navigation_to_submenu_of_popup(self, popup, index=tkinter.END):
+        """Add non-move PGN navigation to a submenu of popup.
+
+        Subclasses must provide the methods named.
+
+        """
+        navigate_score_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_navigate_score_submenu(navigate_score_submenu)
+        popup.insert_cascade(
+            index=index, label='Navigate Score', menu=navigate_score_submenu)
+        
+    # These get_xxx_events methods are used by event bind and popup creation
+    # methods.
+
+    def get_select_move_events(self):
+        return (
             (EventSpec.score_cycle_selection_to_next_variation,
              self.variation_cycle),
-            ):
-            self.score.bind(
-                sequence[0],
-                '' if not switch else '' if not function else ste(function))
+            (EventSpec.score_show_selected_variation, self.show_variation),
+            (EventSpec.score_cancel_selection_of_variation,
+             self.variation_cancel),
+            )
+        
+    def get_all_export_events(self):
+        return (
+            (EventSpec.pgn_reduced_export_format,
+             self.export_pgn_reduced_export_format),
+            (EventSpec.pgn_export_format_no_comments_no_ravs,
+             self.export_pgn_no_comments_no_ravs),
+            (EventSpec.pgn_export_format_no_comments,
+             self.export_pgn_no_comments),
+            (EventSpec.pgn_export_format, self.export_pgn),
+            (EventSpec.pgn_import_format, self.export_pgn_import_format),
+            (EventSpec.text_internal_format, self.export_text),
+            )
+        
+    def get_move_navigation_events(self):
+        return (
+            (EventSpec.score_show_next_in_line, self.show_next_in_line),
+            (EventSpec.score_show_next_in_variation,
+             self.show_next_in_variation),
+            (EventSpec.score_show_previous_in_line, self.show_prev_in_line),
+            (EventSpec.score_show_previous_in_variation,
+             self.show_prev_in_variation),
+            (EventSpec.score_show_first_in_game, self.show_first_in_game),
+            (EventSpec.score_show_last_in_game, self.show_last_in_game),
+            (EventSpec.score_show_first_in_line, self.show_first_in_line),
+            (EventSpec.score_show_last_in_line, self.show_last_in_line),
+            )
 
-    def bind_score_pointer_for_board_navigation(self, switch):
-        """Set or unset pointer bindings for game navigation."""
-        ste = self.try_event
-        for sequence, function in (
-            ('<Control-ButtonPress-1>', ''),
-            ('<ButtonPress-1>', ste(self.go_to_token)),
-            ('<ButtonPress-3>', ste(self.popup_viewmode_menu)),
-            ):
-            self.score.bind(sequence, '' if not switch else function)
+    def get_inactive_events(self):
+        return (
+            (EventSpec.display_make_active, self.set_focus_panel_item_command),
+            (EventSpec.display_dismiss_inactive, self.delete_item_view),
+            )
+        
+    # Subclasses with database interfaces may override method.
+    def create_database_submenu(self, menu):
+        return None
+        
+    # Analysis subclasses override method to exclude the first four items.
+    # Repertoire subclasses override method to exclude the first two items.
+    def populate_export_submenu(self, submenu):
+        self.set_popup_bindings(submenu, self.get_all_export_events())
+        
+    # Most create_<>_popup methods in GameEdit start with entries defined here.
+    def populate_popup_move_navigation(self, popup, move_navigation=None):
+        if move_navigation is None:
+            self.set_popup_bindings(popup, self.get_move_navigation_events())
+        else:
+            self.set_popup_bindings(popup, move_navigation())
+        
+    # Most create_<>_popup methods call create_popup to do all their setup.
+    def create_popup(self, popup, move_navigation=None):
+        assert popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.populate_popup_move_navigation(popup,
+                                            move_navigation=move_navigation)
+        export_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_export_submenu(export_submenu)
+        popup.add_cascade(label='Export', menu=export_submenu)
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        return popup
+        
+    def create_move_popup(self):
+        self.move_popup = self.create_popup(self.move_popup)
+        return self.move_popup
+        
+    def create_select_move_popup(self):
+        assert self.select_move_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_select_move_events())
+        export_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_export_submenu(export_submenu)
+        popup.add_cascade(label='Export', menu=export_submenu)
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        self.select_move_popup = popup
+        return popup
+        
+    def create_inactive_popup(self):
+        assert self.inactive_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_inactive_events())
+        self.inactive_popup = popup
+        return popup
+        
+    def post_menu(self,
+                  menu, create_menu,
+                  allowed=True,
+                  event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(*self.score.winfo_pointerxy())
 
-    def bind_navigation_for_viewmode_popup(self, bindings=None, order=None):
-        """Set popup bindings for toplevel navigation."""
-        if order is None:
-            order = ()
-        if bindings is None:
-            bindings = {}
-        for label, accelerator in order:
-            function = bindings.get(label)
-            if function is not None:
-                self.viewmode_navigation_popup.add_command(
-                    label=label,
-                    command=self.try_command(
-                        function, self.viewmode_navigation_popup),
-                    accelerator=accelerator)
+        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def post_menu_at_top_left(self,
+                              menu,
+                              create_menu,
+                              allowed=True,
+                              event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
+
+        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def post_move_menu(self, event=None):
+        """Show the popup menu for game score navigation."""
+        return self.post_menu(
+            self.move_popup,
+            self.create_move_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+        
+    def post_move_menu_at_top_left(self, event=None):
+        """Show the popup menu for game score navigation."""
+        return self.post_menu_at_top_left(
+            self.move_popup,
+            self.create_move_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+
+    def post_select_move_menu(self, event=None):
+        """Show the popup menu for variation selection in game score."""
+        return self.post_menu(
+            self.select_move_popup,
+            self.create_select_move_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+
+    def post_select_move_menu_at_top_left(self, event=None):
+        """Show the popup menu for variation selection in game score."""
+        return self.post_menu_at_top_left(
+            self.select_move_popup,
+            self.create_select_move_popup,
+            allowed=self.is_active_item_mapped(),
+            event=event)
+        
+    def post_inactive_menu(self, event=None):
+        """Show the popup menu for a game score in an inactive item."""
+        return self.post_menu(
+            self.inactive_popup, self.create_inactive_popup, event=event)
+        
+    def post_inactive_menu_at_top_left(self, event=None):
+        """Show the popup menu for a game score in an inactive item."""
+        return self.post_menu_at_top_left(
+            self.inactive_popup, self.create_inactive_popup, event=event)
 
     def colour_variation(self):
         """Colour variation and display its initial position.
@@ -455,11 +916,9 @@ class Score(ExceptionHandler):
         self.set_game_list()
         return True
         
-    def set_game(self, starttoken=None, reset_undo=False):
+    def set_and_tag_item_text(self, reset_undo=False):
         """Display the game as board and moves.
 
-        starttoken is the move played to reach the position displayed and this
-        move becomes the current move.
         reset_undo causes the undo redo stack to be cleared if True.  Set True
         on first display of a game for editing so that repeated Ctrl-Z in text
         editing mode recovers the original score.
@@ -476,13 +935,15 @@ class Score(ExceptionHandler):
                 ''.join(('The following text was probably found between two ',
                          'games in a file expected to be in PGN format.\n\n')))
             self.score.insert(tkinter.END, self.collected_game._text)
-            self.bind_for_viewmode()
+            if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+                self.bind_for_move()
             if not self._is_score_editable:
                 self.score.configure(state=tkinter.DISABLED)
             if reset_undo:
                 self.score.edit_reset()
             raise
-        self.bind_for_viewmode()
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_move()
         if not self._is_score_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -508,7 +969,8 @@ class Score(ExceptionHandler):
 
     def show_variation(self, event=None):
         """Enter selected variation and display its initial position."""
-        self.bind_for_viewmode()
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_move()
         self.colour_variation()
         return 'break'
         
@@ -565,7 +1027,8 @@ class Score(ExceptionHandler):
 
         vt = self.get_colouring_variation_tag_for_selection(st)
         self.set_variation_selection_tags(pt, ct, st, vt)
-        self.bind_for_select_variation_mode()
+        if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
+            self.bind_for_select_variation()
         return 'break'
         
     def show_prev_in_line(self, event=None):
@@ -595,7 +1058,8 @@ class Score(ExceptionHandler):
                 elif self.get_prior_to_variation_tag_of_move(
                     self.current) is None:
                     return 'break'
-                self.bind_for_select_variation_mode()
+                if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
+                    self.bind_for_select_variation()
                 self.variation_cycle()
                 return 'break'
         self.current = self.select_prev_move_in_line()
@@ -643,7 +1107,8 @@ class Score(ExceptionHandler):
         if self.current is not None:
             if not self.is_currentmove_in_main_line():
                 self.add_currentmove_variation_to_colouring_tag()
-        self.bind_for_viewmode()
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_move()
         return 'break'
         
     def variation_cycle(self, event=None):
@@ -1187,7 +1652,7 @@ class Score(ExceptionHandler):
             for p, s in cg._initial_position[0]:
                 spm[s] = p
         except TypeError:
-            raise ScoreNoGameException('Unable to map text to board')
+            raise ScoreMapToBoardException('Unable to map text to board')
         assert len(cg._text) == len(cg._position_deltas)
         tags_displayed = self.map_tags_display_order()
         for text, position in zip(cg._text, cg._position_deltas):
@@ -1212,11 +1677,11 @@ class Score(ExceptionHandler):
 
             # Currently ignored if present in PGN input.
             elif t0 == '%':
-                self.map_non_move(text)
+                self.map_escape_to_eol(text)
 
-            # Currently ignored if present in PGN input.
+            # Currently not ignored if present in PGN input.
             elif t0 == '<':
-                self.map_non_move(text)
+                self.map_start_reserved(text)
 
             else:
                 self.map_non_move(text)
@@ -1427,6 +1892,7 @@ class Score(ExceptionHandler):
     def map_start_reserved(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self.score.insert(tkinter.INSERT, NEWLINE_SEP)
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):
@@ -1608,14 +2074,6 @@ class Score(ExceptionHandler):
             return
         return tr
 
-    def set_statusbar_text(self):
-        """Set status bar to display player name PGN Tags."""
-        tags = self.collected_game._tags
-        self.ui.statusbar.set_status_text(
-            '  '.join(
-                [tags.get(k, '')
-                 for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]))
-
     def set_move_tag(self, start, end):
         """Add range start to end to MOVE_TAG (which is expected to be empty).
 
@@ -1773,6 +2231,10 @@ class Score(ExceptionHandler):
         """Return Tk tag name for prior move with same suffix as choice."""
         return ''.join((PRIOR_MOVE, choice[len(CHOICE):]))
 
+    # If pointer click location is between last PGN Tag and first move in
+    # movetext, it would be reasonable to allow the call to reposition at
+    # start of game.  Then there is a pointer click option equivalent to
+    # the popup menu and keypress ways of getting to start of game.
     def go_to_move(self, index):
         """Show position for move text at index"""
         widget = self.score
@@ -1780,15 +2242,15 @@ class Score(ExceptionHandler):
         if not move:
             move = widget.tag_prevrange(NAVIGATE_MOVE, index)
             if not move:
-                return
+                return None
             elif widget.compare(move[1], '<', index):
-                return
+                return None
         elif widget.compare(move[0], '>', index):
             move = widget.tag_prevrange(NAVIGATE_MOVE, move[0])
             if not move:
-                return
+                return None
             if widget.compare(move[1], '<', index):
-                return
+                return None
         selected_move = self.get_position_tag_of_index(index)
         if selected_move:
             self.clear_moves_played_in_variation_colouring_tag()
@@ -1799,47 +2261,25 @@ class Score(ExceptionHandler):
             self.apply_colouring_to_variation_back_to_main_line()
             self.set_game_board()
             return True
+        return None
 
     def go_to_token(self, event=None):
-        """Set position and highlighting for token under pointer"""
+        """Set position and highlighting for token under pointer if self is
+        the active item.
+
+        """
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
                 return 'break'
-        self.go_to_move(
+        return self.go_to_move(
             self.score.index(''.join(('@', str(event.x), ',', str(event.y)))))
         
-    def popup_inactive_menu(self, event=None):
-        """Show the popup menu for a score in an inactive item.
-
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
-
-        """
-        self.inactive_popup.tk_popup(*self.score.winfo_pointerxy())
-        
-    def popup_viewmode_menu(self, event=None):
-        """Show the popup menu for game score navigation.
-
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
-
-        """
+    def is_active_item_mapped(self):
+        """Return True if self is the active item, or False if not."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
-                return 'break'
-        self.viewmode_popup.tk_popup(*self.score.winfo_pointerxy())
-
-    def popup_variation_menu(self, event=None):
-        """Show the popup menu for variation selection in game score.
-
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
-
-        """
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item:
-                return 'break'
-        self.selectmode_popup.tk_popup(*self.score.winfo_pointerxy())
+                return False
+        return True
 
     def show_new_current(self, new_current=None):
         """Set current to new item and adjust display."""
@@ -1853,9 +2293,9 @@ class Score(ExceptionHandler):
         
     def show_item(self, new_item=None):
         """Display new item if not None."""
-        if new_item:
-            return self.show_new_current(new_current=new_item)
-        return 'break'
+        if not new_item:
+            return 'break'
+        return self.show_new_current(new_current=new_item)
 
     def set_game_list(self):
         """Display list of records in grid.
@@ -1962,6 +2402,111 @@ class Score(ExceptionHandler):
             return ''
         return self.score.get(*tr)
 
+    def export_pgn_reduced_export_format(self, event=None):
+        """Export PGN tags and movetext in reduced export format."""
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title=t.join(('Export ', ' (reduced export format)')),
+                message=t+' score is not PGN export format compliant')
+            return
+        exporters.export_single_game_pgn_reduced_export_format(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(
+                t+' (reduced export format)', pgn=True))
+
+    def export_pgn(self, event=None):
+        """Export PGN tags and movetext in export format."""
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title='Export '+t,
+                message=t+' score is not PGN export format compliant')
+            return
+        exporters.export_single_game_pgn(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item('Game', pgn=True))
+
+    def export_pgn_no_comments_no_ravs(self, event=None):
+        """Export PGN tags and movetext in export format, no comments or RAVs.
+        """
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title=t.join(('Export ', ' (no comments or RAVs)')),
+                message=t+' score is not PGN export format compliant')
+            return
+        exporters.export_single_game_pgn_no_comments_no_ravs(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(
+                t+' (no comments or RAVs)', pgn=True))
+
+    def export_pgn_no_comments(self, event=None):
+        """Export PGN tags and movetext in export format without comments."""
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title=t.join(('Export ', ' (no comments)')),
+                message=t+' score is not PGN export format compliant')
+            return
+        exporters.export_single_game_pgn_no_comments(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(
+                t+' (no comments)', pgn=True))
+
+    def export_pgn_import_format(self, event=None):
+        """Export PGN tags and movetext in an import format.
+
+        Optional whitespace and indicators are removed from the export format
+        and then a single space is inserted between each PGN tag or movetext
+        token, except a newline is used to fit the 80 character limit on line
+        length.
+
+        """
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title=t.join(('Export ', ' (import format)')),
+                message=t+' score is not PGN import format compliant')
+            return
+        exporters.export_single_game_pgn_import_format(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(
+                t+' (import format)', pgn=True))
+
+    def export_text(self, event=None):
+        """Export PGN tags and movetext as text without optional whitespace
+        and indicators, and without check indicators.
+
+        A single newline separates games, but newlines may appear in comments,
+        as the boundaries of escaped lines, or as termination of a comment to
+        end of line.
+
+        Newlines are not inserted to keep line lengths below some limit.
+
+        """
+        t, gc = self.pgn_export_type
+        collected_game = next(PGN(game_class=gc).read_games(
+            self.score.get('1.0', tkinter.END)))
+        exporters.export_single_game_text(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(t, pgn=False))
+
 
 class AnalysisScore(Score):
 
@@ -1982,13 +2527,26 @@ class AnalysisScore(Score):
     the final position in the game or a variation.
 
     Recursive analysis (of a position in the analysis) is not supported.
+
+    Attribute pgn_export_type is a tuple with the name of the type of data and
+    the class used to generate export PGN.  It exists so Game*, Repertoire*,
+    and AnalysisScore*, instances can use identical code to display PGN tags.
+    It is ('Analysis', GameAnalysis).
+
+    Attribute analysis_text is the default for PGN text in the AnalysyisScore
+    widget.  It is None meaning there is no analysis to show.
     
     """
     # Initial value of current text displayed in analysis widget: used to
     # control refresh after periodic update requests.
     analysis_text = None
-    
 
+    pgn_export_type = 'Analysis', GameAnalysis
+
+    def __init__(self, *a, owned_by_game=None, **ka):
+        super().__init__(*a, **ka)
+        self.owned_by_game = owned_by_game
+    
     def clear_score(self):
         """Clear data stuctures for navigating a game score.
 
@@ -2011,39 +2569,25 @@ class AnalysisScore(Score):
         self.nextmovetags = dict()
 
     def go_to_token(self, event=None):
-        """Set position and highlighting for token under pointer"""
+        """Set position and highlighting for token under pointer if
+        self.analysis is the active item.
+
+        """
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item.analysis:
                 return 'break'
-        self.go_to_move(
+        return self.go_to_move(
             self.score.index(''.join(('@', str(event.x), ',', str(event.y)))))
         
-    def popup_viewmode_menu(self, event=None):
-        """Show the popup menu for game score navigation.
-
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
-
-        """
+    def is_active_item_mapped(self):
+        """Return True if self.analysis is the active item, or False if not."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item.analysis:
-                return 'break'
-        self.viewmode_popup.tk_popup(*self.score.winfo_pointerxy())
-
-    def popup_variation_menu(self, event=None):
-        """Show the popup menu for variation selection in game score.
-
-        Subclasses may have particular entries to be the default which is
-        implemented by overriding this method.
-
-        """
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item.analysis:
-                return 'break'
-        self.selectmode_popup.tk_popup(*self.score.winfo_pointerxy())
+                return False
+        return True
         
     def set_score(self, analysis_text, reset_undo=False):
-        """Display the game as moves.
+        """Display the position analysis as moves.
 
         starttoken is the move played to reach the position displayed and this
         move becomes the current move.
@@ -2057,7 +2601,7 @@ class AnalysisScore(Score):
         self.score.delete('1.0', tkinter.END)
 
         # An attempt to insert an illegal move into a game score will cause
-        # an exception when parsing the engine.  Expected to happen when
+        # an exception when parsing the engine output.  Expected to happen when
         # editing or inserting a game and the move before an incomplete move
         # becomes the current move.
         # Illegal moves are wrapped in '{Error::  ::{{::}' comments by the
@@ -2065,15 +2609,16 @@ class AnalysisScore(Score):
         # follow the standard strictly.
         try:
             self.map_game()
-        except TypeError:
+        except ScoreMapToBoardException:
             self.score.insert(
                 tkinter.END,
-                ''.join(('The analysis is attached to an illegal move, ',
-                         'likely while editing or inserting a game.\n\nIt ',
+                ''.join(('The analysis is attached to an illegal move, which ',
+                         'can happen while editing or inserting a game.\n\nIt ',
                          'is displayed but cannot be played through.\n\n')))
             self.score.insert(tkinter.END, analysis_text)
 
-        self.bind_for_viewmode()
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_move()
         if not self._is_score_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -2247,3 +2792,103 @@ class AnalysisScore(Score):
     def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
         return self.insert_token_into_text(token, NEWLINE_SEP)
+        
+    # Analysis does not follow PGN export format, so those options are absent.
+    def get_all_export_events(self):
+        return (
+            (EventSpec.pgn_import_format,
+             self.export_pgn_import_format),
+            (EventSpec.text_internal_format,
+             self.export_text),
+            )
+        
+    # Analysis widget uses the associated Game method to make active or dismiss
+    # item.  Some searching through the self.board.ui object is likely.
+    def create_inactive_popup(self):
+        g = self.owned_by_game
+        assert self.inactive_popup is None and g is not None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_inactive_events())
+        self.inactive_popup = popup
+        return popup
+
+    def get_inactive_button_events(self):
+        g = self.owned_by_game
+        assert g is not None and self is g.analysis
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, g.give_focus_to_widget),
+            (EventSpec.buttonpress_3, g.post_inactive_menu),
+            )
+
+    def get_inactive_events(self):
+        g = self.owned_by_game
+        assert g is not None and self is g.analysis
+        return (
+            (EventSpec.display_make_active,
+             g.set_focus_panel_item_command),
+            (EventSpec.display_dismiss_inactive,
+             g.delete_item_view),
+            )
+        
+    # Subclasses which need widget navigation in their popup menus should
+    # call this method.
+    def create_widget_navigation_submenu_for_popup(self, popup):
+        """Create and populate a submenu of popup for widget navigation.
+
+        The commands in the submenu should switch focus to another widget.
+
+        Subclasses should define a generate_popup_navigation_maps method and
+        binding_labels iterable suitable for allowed navigation.
+        
+        """
+        (navigation_map,
+         local_map) = self.owned_by_game.generate_popup_navigation_maps()
+        del local_map[EventSpec.scoresheet_to_analysis]
+        local_map[EventSpec.analysis_to_scoresheet
+                  ] = self.owned_by_game.current_item
+        local_map.update(navigation_map)
+        self.add_cascade_menu_to_popup(
+            'Navigation', popup,
+            bindings=local_map, order=self.owned_by_game.binding_labels)
+        
+    def create_move_popup(self):
+        popup = super().create_move_popup()
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
+        
+    def create_select_move_popup(self):
+        popup = super().create_select_move_popup()
+        self.create_widget_navigation_submenu_for_popup(popup)
+        return popup
+
+    def set_select_variation_bindings(self, switch=True):
+        """Delegate to toggle other relevant bindings and switch board pointer
+        bindings for selecting a variation between the game or repertoire and
+        engine analysis.
+
+        """
+        super().set_select_variation_bindings(switch=switch)
+        self.set_board_pointer_select_variation_bindings(switch=switch)
+        
+    # A way of getting pointer clicks on board to behave like pointer clicks
+    # on analysis score when traversing to previous moves has not been found.
+    # The problem seems to be the lack of a move prior to the move played and
+    # variations, compared with the game or repertoire score.  Also the clicks
+    # on board are the same event for previous move without leaving variation
+    # and previous move and leave variation if at at first move; but these are
+    # separate events for clicks, or keystrokes, on the analysis score.
+    def variation_cancel(self, event=None):
+        """Remove all variation highlighting."""
+        if self.score is event.widget:
+            return super().variation_cancel(event=event)
+        current = self.current
+        self.show_prev_in_line()
+        if current != self.current:
+            return 'break'
+        elif current is None:
+            return 'break'
+        else:
+            return self.show_prev_in_variation()
+            #self.show_prev_in_variation()
+            #if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            #    self.bind_for_move()

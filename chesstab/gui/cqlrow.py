@@ -17,9 +17,9 @@ from solentware_grid.gui.datarow import (
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordPartial
-from .cqldbedit import ChessDBeditCQL
-from .cqldbdelete import ChessDBdeleteCQL
-from .cqldbshow import ChessDBshowCQL
+from .cqldbedit import CQLDbEdit
+from .cqldbdelete import CQLDbDelete
+from .cqldbshow import CQLDbShow
 from . import constants
 
 ON_DISPLAY_COLOUR = '#eba610' # a pale orange
@@ -67,25 +67,25 @@ class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
             ]
         
     def show_row(self, dialog, oldobject):
-        """Return a ChessDBshowCQL dialog for instance.
+        """Return a CQLDbShow dialog for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordPartial containing original data
 
         """
-        return ChessDBshowCQL(dialog, oldobject, ui=self.ui)
+        return CQLDbShow(dialog, oldobject, ui=self.ui)
         
     def delete_row(self, dialog, oldobject):
-        """Return a ChessDBdeleteCQL dialog for instance.
+        """Return a CQLDbDelete dialog for instance.
 
         dialog - a Toplevel
         oldobject - a ChessDBrecordPartial containing original data
 
         """
-        return ChessDBdeleteCQL(dialog, oldobject, ui=self.ui)
+        return CQLDbDelete(dialog, oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a ChessDBeditCQL dialog for instance.
+        """Return a CQLDbEdit dialog for instance.
 
         dialog - a Toplevel
         newobject - a ChessDBrecordPartial containing original data to be
@@ -94,7 +94,7 @@ class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return ChessDBeditCQL(
+        return CQLDbEdit(
             newobject,
             dialog,
             oldobject,

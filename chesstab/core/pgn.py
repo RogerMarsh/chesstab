@@ -117,8 +117,8 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
             return False
         return True
 
-    def get_export_repertoire_text(self):
-        """Return Export format PGN text for repertoire"""
+    def get_repertoire_pgn(self):
+        """Return export format PGN for repertoire."""
         tags = self._tags
         pb = []
         for t in REPERTOIRE_TAG_ORDER:
@@ -129,11 +129,11 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
         for t, v in sorted([tv for tv in tags.items()
                             if tv[0] not in REPERTOIRE_GAME_TAGS]):
             pb.extend(['[', t, ' "', v, '"]\n'])
-        pb.append(self.get_export_pgn_movetext())
+        pb.append(self.get_all_movetext_in_pgn_export_format())
         return ''.join(pb)
 
-    def get_export_repertoire_rav_text(self):
-        """Return Export format PGN text for repertoire RAV"""
+    def get_repertoire_pgn_no_comments(self):
+        """Return export format PGN for repertoire excluding comments."""
         tags = self._tags
         pb = []
         for t in REPERTOIRE_TAG_ORDER:
@@ -144,7 +144,7 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
         for t, v in sorted([tv for tv in tags.items()
                             if tv[0] not in REPERTOIRE_GAME_TAGS]):
             pb.extend(['[', t, ' "', v, '"]\n'])
-        pb.append(self.get_export_pgn_rav_movetext())
+        pb.append(self.get_movetext_without_comments_in_pgn_export_format())
         return ''.join(pb)
 
 
@@ -392,7 +392,12 @@ class GameAnalysis(GameDisplayMoves):
     """Generate data to display Chess Engine analysis without ability to edit.
 
     The notion of mandatory PGN tags, like the 'seven tag roster', is removed
-    from the GameDisplayMoves class.
+    from the GameDisplayMoves class.  Section 8.1.1: Seven Tag Roster of the
+    PGN specification starts: 'There is a set of tags defined for mandatory
+    use for archival storage of PGN data.  This is the STR (Seven Tag Roster)'.
+    Thus the absence of all the STR tags does not prevent data from being
+    called PGN data.  In particular the Result tag is not present fitting the
+    Game Termination Marker '*' assigned to all analysis.
 
     Subclasses may use the PGN tag structure to manage analysis, but exactly
     what tags are defined is up to them.

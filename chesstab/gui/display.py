@@ -29,6 +29,9 @@ class Display(object):
     def bind_for_widget_navigation(self):
         """Subclasses shall override this method if necessary.
 
+        Set pointer bindings for this widget to become the active item of it's
+        type and regain the focus.
+
         An active item will have specific bindings, such as to traverse a game
         score and display the corresponding board position.
 
