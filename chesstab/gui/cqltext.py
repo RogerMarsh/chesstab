@@ -65,26 +65,6 @@ class CQLText(BlankText):
         # Not sure this is needed or wanted.
         #self.cql_statement.dbset = ui.base_games.datasource.dbset
 
-    # set_popup_bindings and add_cascade_menu_to_popup copied from score.Score.
-
-    def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
-        """Insert bindings in popup before index in popup.
-
-        Default index is tkinter.END which seems to mean insert at end of
-        popup, not before last entry in popup as might be expected from the
-        way expressed in the 'Tk menu manual page' for index command.  (The
-        manual page describes 'end' in the context of 'none' for 'activate'
-        option.  It does make sense 'end' meaning after existing entries
-        when inserting entries.)
-
-        """
-        for accelerator, function in bindings:
-            popup.insert_command(
-                index=index,
-                label=accelerator[1],
-                command=self.try_command(function, popup),
-                accelerator=accelerator[2])
-
     def add_cascade_menu_to_popup(
         self, label, popup, bindings=None, order=None, index=tkinter.END):
         '''Add cascade_menu, and bindings, to popup if not already present.
@@ -199,24 +179,8 @@ class CQLText(BlankText):
             (EventSpec.buttonpress_3, buttonpress3),
             )
 
-    def get_F10_popup_events(self, top_left, pointer):
-        """Return tuple of event definitions to post popup menus at top left
-        of focus widget and at pointer location within application widget.
-
-        top_left and pointer are functions.
-
-        """
-        return (
-            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
-            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
-            )
-
     # score.Score.get_move_button_events is replaced by get_button_events.
     # score.Score.get_select_move_button_events has no equivalent.
-        
-    # Subclasses with database interfaces may override method.
-    def create_database_submenu(self, menu):
-        return None
         
     # Subclasses which need widget navigation in their popup menus should
     # call this method.
@@ -267,33 +231,6 @@ class CQLText(BlankText):
             (EventSpec.buttonpress_3, self.post_inactive_menu),
             )
         
-    def post_menu(self,
-                  menu, create_menu,
-                  allowed=True,
-                  event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(*self.score.winfo_pointerxy())
-
-        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
-    def post_menu_at_top_left(self,
-                              menu,
-                              create_menu,
-                              allowed=True,
-                              event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
-
-        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
     def post_active_menu(self, event=None):
         """Show the popup menu for ChessQL statement navigation."""
         return self.post_menu(
@@ -328,10 +265,6 @@ class CQLText(BlankText):
             (EventSpec.display_make_active, self.set_focus_panel_item_command),
             (EventSpec.display_dismiss_inactive, self.delete_item_view),
             )
-
-    def give_focus_to_widget(self, event=None):
-        """Do nothing and return 'break'.  Override in subclasses as needed."""
-        return 'break'
         
     def set_and_tag_item_text(self, reset_undo=False):
         """Display the ChessQL statement as text.
@@ -366,13 +299,6 @@ class CQLText(BlankText):
         # No mapping of tokens to text in widget (yet).
         self.score.insert(tkinter.INSERT,
                           self.cql_statement.get_name_statement_text())
-        
-    def is_active_item_mapped(self):
-        """"""
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item:
-                return False
-        return True
         
     def get_partial_key_cql_statement(self):
         """Return ChessQL statement for use as partial key."""

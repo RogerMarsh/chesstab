@@ -269,27 +269,6 @@ class Score(BlankText):
         # only the first move gets numbered.
         self._force_newline = False
 
-    # This method arose when seeking clarity in the way popup menus were set,
-    # and replaces lots of 'add_command' calls scattered all over.
-    # Long term, either this method or add_cascade_menu_to_popup will do all.
-    def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
-        """Insert bindings in popup before index in popup.
-
-        Default index is tkinter.END which seems to mean insert at end of
-        popup, not before last entry in popup as might be expected from the
-        way expressed in the 'Tk menu manual page' for index command.  (The
-        manual page describes 'end' in the context of 'none' for 'activate'
-        option.  It does make sense 'end' meaning after existing entries
-        when inserting entries.)
-
-        """
-        for accelerator, function in bindings:
-            popup.insert_command(
-                index=index,
-                label=accelerator[1],
-                command=self.try_command(function, popup),
-                accelerator=accelerator[2])
-
     # This method arose because of one case where the menu needs setting up
     # but the caller did not know if anything needed to be done.
     # Long term, either this method or set_popup_bindings will do all.
@@ -491,18 +470,6 @@ class Score(BlankText):
             (EventSpec.buttonpress_3, buttonpress3),
             )
 
-    def get_F10_popup_events(self, top_left, pointer):
-        """Return tuple of event definitions to post popup menus at top left
-        of focus widget and at pointer location within application widget.
-
-        top_left and pointer are functions.
-
-        """
-        return (
-            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
-            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
-            )
-
     # A Game widget has one Board widget and two Score widgets.  Each Score
     # widget has a Text widget but only one of these can have the focus.
     # Whichever has the focus may have item navigation bindings for it's
@@ -617,10 +584,6 @@ class Score(BlankText):
             (EventSpec.display_dismiss_inactive, self.delete_item_view),
             )
         
-    # Subclasses with database interfaces may override method.
-    def create_database_submenu(self, menu):
-        return None
-        
     # Analysis subclasses override method to exclude the first four items.
     # Repertoire subclasses override method to exclude the first two items.
     def populate_export_submenu(self, submenu):
@@ -670,33 +633,6 @@ class Score(BlankText):
         self.set_popup_bindings(popup, self.get_inactive_events())
         self.inactive_popup = popup
         return popup
-        
-    def post_menu(self,
-                  menu, create_menu,
-                  allowed=True,
-                  event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(*self.score.winfo_pointerxy())
-
-        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
-    def post_menu_at_top_left(self,
-                              menu,
-                              create_menu,
-                              allowed=True,
-                              event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
-
-        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
         
     def post_move_menu(self, event=None):
         """Show the popup menu for game score navigation."""
@@ -773,10 +709,6 @@ class Score(BlankText):
         self.current = selected_first_move
         self.set_current()
         self.set_game_board()
-
-    def give_focus_to_widget(self, event=None):
-        """Do nothing and return 'break'.  Override in subclasses as needed."""
-        return 'break'
 
     def is_game_in_text_edit_mode(self):
         """Return True if current state of score widget is 'normal'."""
@@ -2200,13 +2132,6 @@ class Score(BlankText):
                 return 'break'
         return self.go_to_move(
             self.score.index(''.join(('@', str(event.x), ',', str(event.y)))))
-        
-    def is_active_item_mapped(self):
-        """Return True if self is the active item, or False if not."""
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item:
-                return False
-        return True
 
     def show_new_current(self, new_current=None):
         """Set current to new item and adjust display."""

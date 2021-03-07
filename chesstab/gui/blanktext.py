@@ -124,3 +124,77 @@ class BlankText(ExceptionHandler):
     def press_none(self, event=None):
         """Do nothing and allow event to be handled by next handler."""
         return None
+
+    # This method arose when seeking clarity in the way popup menus were set,
+    # and replaces lots of 'add_command' calls scattered all over.
+    # Long term, either this method or add_cascade_menu_to_popup will do all.
+    def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
+        """Insert bindings in popup before index in popup."""
+
+        # Default index is tkinter.END which seems to mean insert at end of
+        # popup, not before last entry in popup as might be expected from the
+        # way expressed in the 'Tk menu manual page' for index command.  (The
+        # manual page describes 'end' in the context of 'none' for 'activate'
+        # option.  It does make sense 'end' meaning after existing entries
+        # when inserting entries.)
+
+        for accelerator, function in bindings:
+            popup.insert_command(
+                index=index,
+                label=accelerator[1],
+                command=self.try_command(function, popup),
+                accelerator=accelerator[2])
+
+    def give_focus_to_widget(self, event=None):
+        """Do nothing and return 'break'.  Override in subclasses as needed."""
+        return 'break'
+
+    def get_F10_popup_events(self, top_left, pointer):
+        """Return tuple of event definitions to post popup menus at top left
+        of focus widget and at pointer location within application widget.
+
+        top_left and pointer are functions.
+
+        """
+        return (
+            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
+            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
+            )
+        
+    # Subclasses with database interfaces may override method.
+    def create_database_submenu(self, menu):
+        return None
+        
+    def post_menu(self,
+                  menu, create_menu,
+                  allowed=True,
+                  event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(*self.score.winfo_pointerxy())
+
+        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def post_menu_at_top_left(self,
+                              menu,
+                              create_menu,
+                              allowed=True,
+                              event=None):
+        if menu is None:
+            menu = create_menu()
+        if not allowed:
+            return 'break'
+        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
+
+        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
+        return 'break'
+        
+    def is_active_item_mapped(self):
+        """"""
+        if self.items.is_mapped_panel(self.panel):
+            if self is not self.items.active_item:
+                return False
+        return True

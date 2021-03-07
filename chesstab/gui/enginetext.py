@@ -53,13 +53,6 @@ class EngineText(BlankText):
 
         # Selection rule parser instance to process text.
         self.definition = Engine()
-
-    def set_popup_bindings(self, popup, bindings=()):
-        for accelerator, function in bindings:
-            popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, popup),
-                accelerator=accelerator[2])
         
     def bind_for_active(self, switch=True):
         """Set keyboard bindings and popup menu for non-editing actions.
@@ -87,10 +80,6 @@ class EngineText(BlankText):
         NonTagBind.NO_EDITABLE_TAGS: bind_for_active,
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
         }
-
-    def give_focus_to_widget(self, event=None):
-        """Do nothing and return 'break'.  Override in subclasses as needed."""
-        return 'break'
         
     # Not sure what events these are yet; or if name is best.
     # Remove '_navigation'?
@@ -108,18 +97,6 @@ class EngineText(BlankText):
         return (
             (EventSpec.display_make_active, self.set_focus_panel_item_command),
             (EventSpec.display_dismiss_inactive, self.delete_item_view),
-            )
-
-    def get_F10_popup_events(self, top_left, pointer):
-        """Return tuple of event definitions to post popup menus at top left
-        of focus widget and at pointer location within application widget.
-
-        top_left and pointer are functions.
-
-        """
-        return (
-            (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
-            (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
             )
 
     # The default Text widget bindings are probably what is wanted.
@@ -146,10 +123,6 @@ class EngineText(BlankText):
             self.get_active_button_events(),
             switch=switch)
         
-    # Subclasses with database interfaces may override method.
-    def create_database_submenu(self, menu):
-        return None
-        
     def create_active_popup(self):
         assert self.active_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
@@ -169,33 +142,6 @@ class EngineText(BlankText):
         self.inactive_popup = popup
         return popup
         
-    def post_menu(self,
-                  menu, create_menu,
-                  allowed=True,
-                  event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(*self.score.winfo_pointerxy())
-
-        # So 'Control-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
-    def post_menu_at_top_left(self,
-                              menu,
-                              create_menu,
-                              allowed=True,
-                              event=None):
-        if menu is None:
-            menu = create_menu()
-        if not allowed:
-            return 'break'
-        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
-
-        # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
     def post_active_menu(self, event=None):
         """Show the popup menu for chess engine definition navigation."""
         return self.post_menu(
@@ -212,24 +158,19 @@ class EngineText(BlankText):
             allowed=self.is_active_item_mapped(),
             event=event)
         
+    # If create_inactive_popup() is never used this can't be either.
     def post_inactive_menu(self, event=None):
         """Show the popup menu for a chess engine definition in an inactive
         item."""
         return self.post_menu(
             self.inactive_popup, self.create_inactive_popup, event=event)
         
+    # If create_inactive_popup() is never used this can't be either.
     def post_inactive_menu_at_top_left(self, event=None):
         """Show the popup menu for a chess engine definition in an inactive
         item."""
         return self.post_menu_at_top_left(
             self.inactive_popup, self.create_inactive_popup, event=event)
-        
-    def is_active_item_mapped(self):
-        """"""
-        if self.items.is_mapped_panel(self.panel):
-            if self is not self.items.active_item:
-                return False
-        return True
         
     def set_engine_definition(self, reset_undo=False):
         """Display the chess engine definition as text.
