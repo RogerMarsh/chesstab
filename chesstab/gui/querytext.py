@@ -7,62 +7,38 @@
 
 import tkinter
 import tkinter.messagebox
-import enum
-
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .constants import (
     START_SELECTION_RULE_MARK,
     )
 from ..core.querystatement import QueryStatement
 from .eventspec import EventSpec
-from .displayitems import DisplayItemsStub
 from .gamerow import make_ChessDBrowGame
 from ..core.chessrecord import ChessDBrecordGameTags
-
-
-# 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
-# QueryText uses NO_EDITABLE_TAGS and INITIAL_BINDINGS.
-# QueryEdit uses all the names.
-# See Score.NonTagBind for the apparently missing values.
-class NonTagBind(enum.Enum):
-    NO_EDITABLE_TAGS = 1
-    DEFAULT_BINDINGS = 3
-    INITIAL_BINDINGS = 4
+from .blanktext import NonTagBind, BlankText
     
 
-class QueryText(ExceptionHandler):
+class QueryText(BlankText):
 
     """Game selection rule widget.
 
-    panel is used as the master argument for the tkinter Text and Scrollbar
-    widgets created to display the statement text.
+    panel is used as the panel argument for the super().__init__ call.
 
     ui is the user interface manager for an instance of QueryText, usually an
     instance of ChessUI.
 
-    items_manager is the ui attribute which tracks which QueryText instance is
-    active (as defined by ui).
+    items_manager is used as the items_manager argument for the
+    super().__init__ call.
 
     itemgrid is the ui reference to the DataGrid from which the record was
     selected.
 
     Subclasses are responsible for providing a geometry manager.
 
-    Attribute _is_query_editable is False meaning the statement cannot be
-    edited.
-
     Attribute _most_recent_bindings is set to indicate the initial set of
     event bindings.  Instances will override this as required.
 
     """
-
-    # True means selection rule can be edited
-    _is_query_editable = False
-
-    # Indicate the most recent set of bindings applied to score attribute.
-    # Values are Tk tag names or members of NonTagBind enumeration. 
-    _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
     def __init__(
         self,
@@ -72,40 +48,15 @@ class QueryText(ExceptionHandler):
         itemgrid=None,
         **ka):
         """Create widgets to display game selection rule."""
-        super(QueryText, self).__init__(**ka)
+        super().__init__(panel, items_manager=items_manager, **ka)
         self.ui = ui
-
-        # May be worth using a Null() instance for these two attributes.
-        if items_manager is None:
-            items_manager = DisplayItemsStub()
-        self.items = items_manager
         self.itemgrid = itemgrid
-
-        self.panel = panel
-        self.score = tkinter.Text(
-            master=self.panel,
-            width=0,
-            height=0,
-            takefocus=tkinter.FALSE,
-            undo=True,
-            wrap=tkinter.WORD)
-        self.scrollbar = tkinter.Scrollbar(
-            master=self.panel,
-            orient=tkinter.VERTICAL,
-            takefocus=tkinter.FALSE,
-            command=self.score.yview)
-        self.score.configure(yscrollcommand=self.scrollbar.set)
-
-        # Keyboard actions do nothing by default.
-        self.set_keypress_binding(switch=False)
-        self.set_event_bindings_score(self.get_menubar_events())
 
         # The popup menus for the selection rule.
         # active_popup and score.Score.move_popup are equivalent.
         # There is no equivalent to score.Score.select_move_popup because
         # query text is plain text.
         self.active_popup = None
-        self.inactive_popup = None
 
         # Selection rule parser instance to process text.
         self.query_statement = QueryStatement()
@@ -157,33 +108,6 @@ class QueryText(ExceptionHandler):
                         label=definition[1],
                         command=self.try_command(function, cascade_menu),
                         accelerator=definition[2])
-        
-    def set_event_bindings_score(self, bindings=(), switch=True):
-        """Set bindings if switch is True or unset the bindings."""
-        ste = self.try_event
-        for sequence, function in bindings:
-            self.score.bind(
-                sequence[0],
-                ste(function) if switch and function else '')
-
-    def set_keypress_binding(self, function=None, bindings=(), switch=True):
-        """Set bindings to function if switch is True or disable keypress."""
-        if switch and function:
-            stef = self.try_event(function)
-            for sequence in bindings:
-                self.score.bind(sequence[0], stef)
-        else:
-            stekb = self.try_event(self.press_break)
-            for sequence in bindings:
-                self.score.bind(sequence[0], stekb)
-
-    def press_break(self, event=None):
-        """Do nothing and prevent event handling by next handlers."""
-        return 'break'
-
-    def press_none(self, event=None):
-        """Do nothing and allow event to be handled by next handler."""
-        return None
         
     # bind_for_active and score.Score.bind_for_move are equivalent.
     def bind_for_active(self, switch=True):
@@ -254,12 +178,6 @@ class QueryText(ExceptionHandler):
         """Return tuple of event binding definitions suppressing buttonpress
         with Control, Shift, or Alt."""
         return ()
-
-    def get_menubar_events(self):
-        """Return tuple of event binding definitions passed for menubar."""
-        return (
-            (EventSpec.score_enable_F10_menubar, self.press_none),
-            )
 
     # Perhaps replace get_select_move_button_events and get_move_button_events
     # in score.Score where there are several notes about this.
@@ -420,13 +338,13 @@ class QueryText(ExceptionHandler):
         Ctrl-Z in text editing mode recovers the original selection rule.
         
         """
-        if not self._is_query_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
         self.map_query_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_active()
-        if not self._is_query_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
             self.score.edit_reset()

@@ -20,12 +20,12 @@ class QueryEdit(Query):
     
     """Display a game selection rule with editing allowed.
 
-    Attribute _is_query_editable is True means the statement can be edited.
+    Attribute _is_text_editable is True means the statement can be edited.
     
     """
 
     # True means selection selection can be edited
-    _is_query_editable = True
+    _is_text_editable = True
 
     # Remove if this is all it is left doing.
     def __init__(self, **ka):

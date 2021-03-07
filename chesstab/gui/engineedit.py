@@ -28,13 +28,13 @@ class EngineEdit(engine.Engine):
     
     """Display a chess engine definition with editing allowed.
 
-    Attribute _is_definition_editable is True meaning the statement can be
+    Attribute _is_text_editable is True meaning the statement can be
     edited.
     
     """
 
     # True means selection selection can be edited
-    _is_definition_editable = True
+    _is_text_editable = True
 
     def __init__(self, **ka):
         """Extend chess engine definition widget as editor."""

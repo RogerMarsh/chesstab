@@ -225,7 +225,7 @@ class GameEdit(Game):
     which is used for editing. This class provides methods to handle single
     moves complementing the game facing methods in PGN.
     
-    Attribute _is_score_editable is True meaning the statement can be edited.
+    Attribute _is_text_editable is True meaning the statement can be edited.
 
     Attribute _most_recent_bindings is set to indicate the initial set of
     event bindings.  Instances will override this as required.
@@ -241,7 +241,7 @@ class GameEdit(Game):
     # ( unicode for Python 3.n compatibility and drop encode().       )
 
     # True means game score can be edited.
-    _is_score_editable = True
+    _is_text_editable = True
 
     # Indicate the most recent set of bindings applied to score attribute.
     # There will be some implied bindings to the board attribute, but board is

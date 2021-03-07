@@ -36,8 +36,6 @@ a superclass of game.Repertoire.
 import tkinter
 import enum
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
-
 from pgn_read.core.constants import (
     TAG_FEN,
     SEVEN_TAG_ROSTER,
@@ -88,6 +86,7 @@ from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
 from ..core import exporters
+from .blanktext import BlankText
 
 
 # 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
@@ -125,12 +124,11 @@ class ScoreMapToBoardException(Exception):
     pass
 
 
-class Score(ExceptionHandler):
+class Score(BlankText):
 
     """Chess score  widget.
 
-    panel is used as the master argument for the tkinter Text and Scrollbar
-    widgets created to display the statement text.
+    panel is used as the panel argument for the super().__init__ call.
 
     board is the board.Board instance where the current position in this Score
     instance is shown.
@@ -145,8 +143,8 @@ class Score(ExceptionHandler):
     instance of ChessUI.  It is ignored and Score instances refer to the
     board for the ui.
 
-    items_manager is the ui attribute which tracks which CQLText instance is
-    active (as defined by ui).
+    items_manager is used as the items_manager argument for the
+    super().__init__ call.
 
     itemgrid is the ui reference to the DataGrid from which the record was
     selected.
@@ -176,9 +174,6 @@ class Score(ExceptionHandler):
     and AnalysisScore*, instances can use identical code to display PGN tags.
     It is ('Game', GameDisplayMoves).
 
-    Attribute _is_score_editable is False meaning the statement cannot be
-    edited.
-
     Attribute _most_recent_bindings is set to indicate the initial set of
     event bindings.  Instances will override this as required.
 
@@ -190,9 +185,6 @@ class Score(ExceptionHandler):
     v_color = VARIATION_COLOR
     tags_variations_comments_font = TAGS_VARIATIONS_COMMENTS_FONT
     moves_played_in_game_font = MOVES_PLAYED_IN_GAME_FONT
-
-    # True means game score can be edited
-    _is_score_editable = False
 
     tags_displayed_last = SEVEN_TAG_ROSTER
     pgn_export_type = 'Game', GameDisplayMoves
@@ -218,35 +210,17 @@ class Score(ExceptionHandler):
         itemgrid=None,
         **ka):
         """Create widgets to display game score."""
-        super(Score, self).__init__(**ka)
-
-        # May be worth using a Null() instance for these two attributes.
-        if items_manager is None:
-            items_manager = DisplayItemsStub()
-        self.items = items_manager
+        super().__init__(panel, items_manager=items_manager, **ka)
         self.itemgrid = itemgrid
-        
         if tags_variations_comments_font:
             self.tags_variations_comments_font = tags_variations_comments_font
         if moves_played_in_game_font:
             self.moves_played_in_game_font = moves_played_in_game_font
-        self.panel = panel
         self.board = board
-
-        # The setting of inactiveselectbackground and selectbackground hides
-        # the selection. 'Shift Left' and similar are intercepted and do not
-        # affect the selection but 'Shift ButtonPress-1 Drag' is not.
-        self.score = tkinter.Text(
-            self.panel,
-            width=0,
-            height=0,
-            takefocus=tkinter.FALSE,
+        self.score.configure(
             font=self.tags_variations_comments_font,
-            undo=True,
-            wrap=tkinter.WORD,
+            selectbackground=self.score.cget('background'),
             inactiveselectbackground='')
-        self.score.configure(selectbackground=self.score.cget('background'))
-
         self.score.tag_configure(
             MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font)
 
@@ -260,21 +234,9 @@ class Score(ExceptionHandler):
             LINE_END_TAG, background=self.score.cget('background'))
         self.score.tag_configure(MOVE_TAG, background=self.m_color)
 
-        self.scrollbar = tkinter.Scrollbar(
-            master=self.panel,
-            orient=tkinter.VERTICAL,
-            takefocus=tkinter.FALSE,
-            command=self.score.yview)
-        self.score.configure(yscrollcommand=self.scrollbar.set)
-
-        # Suppress all keystrokes except F10 passed through to menubar.
-        self.set_keypress_binding(switch=False)
-        self.set_event_bindings_score(self.get_menubar_events())
-
         # The popup menus for the game score.
         self.move_popup = None
         self.select_move_popup = None
-        self.inactive_popup = None
 
         # None implies initial position and is deliberately not a valid Tk tag.
         self.current = None # Tk tag of current move
@@ -359,16 +321,6 @@ class Score(ExceptionHandler):
                         command=self.try_command(function, cascade_menu),
                         accelerator=definition[2])
         
-    # Follow example of set_popup_bindings for keystroke and pointer-click,
-    # away from menus, events.
-    def set_event_bindings_score(self, bindings=(), switch=True):
-        """Set bindings if switch is True or unset the bindings."""
-        ste = self.try_event
-        for sequence, function in bindings:
-            self.score.bind(
-                sequence[0],
-                ste(function) if switch and function else '')
-        
     def set_event_bindings_board(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
@@ -377,25 +329,6 @@ class Score(ExceptionHandler):
             stef = ste(function) if switch and function else ''
             for w in sbbv():
                 w.bind(sequence[0], stef)
-
-    def set_keypress_binding(self, function=None, bindings=(), switch=True):
-        """Set bindings to function if switch is True or disable keypress."""
-        if switch and function:
-            stef = self.try_event(function)
-            for sequence in bindings:
-                self.score.bind(sequence[0], stef)
-        else:
-            stekb = self.try_event(self.press_break)
-            for sequence in bindings:
-                self.score.bind(sequence[0], stekb)
-
-    def press_break(self, event=None):
-        """Do nothing and prevent event handling by next handlers."""
-        return 'break'
-
-    def press_none(self, event=None):
-        """Do nothing and allow event to be handled by next handler."""
-        return None
         
     # Renamed from 'bind_for_viewmode' when 'bind_for_*' methods tied to Tk
     # Text widget tag names were introduced.
@@ -538,12 +471,6 @@ class Score(ExceptionHandler):
             (EventSpec.shift_buttonpress_3, self.press_break),
             (EventSpec.alt_buttonpress_1, self.press_break),
             (EventSpec.alt_buttonpress_3, self.press_break),
-            )
-
-    def get_menubar_events(self):
-        """Return tuple of event binding definitions passed for menubar."""
-        return (
-            (EventSpec.score_enable_F10_menubar, self.press_none),
             )
 
     # Used in gameedit.  Eventually in score, repertoiredisplay, and
@@ -924,7 +851,7 @@ class Score(ExceptionHandler):
         editing mode recovers the original score.
         
         """
-        if not self._is_score_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
         try:
@@ -937,14 +864,14 @@ class Score(ExceptionHandler):
             self.score.insert(tkinter.END, self.collected_game._text)
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
                 self.bind_for_move()
-            if not self._is_score_editable:
+            if not self._is_text_editable:
                 self.score.configure(state=tkinter.DISABLED)
             if reset_undo:
                 self.score.edit_reset()
             raise
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_move()
-        if not self._is_score_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
             self.score.edit_reset()
@@ -2596,7 +2523,7 @@ class AnalysisScore(Score):
         editing mode recovers the original score.
         
         """
-        if not self._is_score_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete('1.0', tkinter.END)
 
@@ -2619,7 +2546,7 @@ class AnalysisScore(Score):
 
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_move()
-        if not self._is_score_editable:
+        if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
             self.score.edit_reset()

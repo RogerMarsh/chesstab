@@ -22,13 +22,13 @@ class CQLEdit(CQL):
     
     """Display a ChessQL statement with editing allowed.
 
-    Attribute _is_cql_query_editable is True meaning the statement can be
+    Attribute _is_text_editable is True meaning the statement can be
     edited.
 
     """
 
     # True means ChessQL statement can be edited
-    _is_cql_query_editable = True
+    _is_text_editable = True
 
     # Remove if this is all it is left doing.
     def __init__(self, **ka):
