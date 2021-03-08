@@ -2,7 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Test chess board class and methods to draw position on board."""
+"""Demonstrate chess board class and methods to draw position on board."""
 
 
 if __name__ == '__main__':
@@ -30,10 +30,11 @@ if __name__ == '__main__':
     from ..core.constants import NOPIECE
 
     root = tkinter.Tk()
-    root.wm_title('Test Board')
+    root.wm_title('Demonstrate Board')
     f = fonts.make_chess_fonts(root, preferred_pieces=('Chess Lucena',))
     b = Board(root, boardborder=10)
-    b.get_top_widget().pack(fill=tkinter.BOTH, expand=1)
+    del f
+    b.get_top_widget().pack(fill=tkinter.BOTH, expand=tkinter.TRUE)
     b.get_top_widget().pack_propagate(False)
     b.set_board({
         'a8': Piece(FEN_BLACK_ROOK, 'a8'),
@@ -69,5 +70,6 @@ if __name__ == '__main__':
         'g1': Piece(FEN_WHITE_KNIGHT, 'g1'),
         'h1': Piece(FEN_WHITE_ROOK, 'h1'),
         })
+    del b
     root.pack_propagate(False)
     root.mainloop()

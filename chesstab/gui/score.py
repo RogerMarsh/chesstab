@@ -126,7 +126,7 @@ class ScoreMapToBoardException(Exception):
 
 class Score(BlankText):
 
-    """Chess score  widget.
+    """Chess score widget.
 
     panel is used as the panel argument for the super().__init__ call.
 
@@ -205,7 +205,6 @@ class Score(BlankText):
         tags_variations_comments_font=None,
         moves_played_in_game_font=None,
         gameclass=GameDisplayMoves,
-        ui=None,
         items_manager=None,
         itemgrid=None,
         **ka):
