@@ -992,8 +992,8 @@ class GameEdit(Game):
     # best to have one each for all the editable tokens, in particular escaped
     # line and comment to end of line, to cope with the slight variation in
     # editing rules.
-    # The bind_for_move() call must be replaced because it may, probably
-    # will, occur when not in select variation state.
+    # The bind_for_primary_activity() call must be replaced because it may,
+    # probably will, occur when not in select variation state.
     def set_current(self):
         """Override to set edit and navigation bindings for current token.
 
@@ -1066,7 +1066,7 @@ class GameEdit(Game):
 
             # Must be replaced because it's assumptions may not be true.
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-                self.bind_for_move()
+                self.bind_for_primary_activity()
 
             return
 

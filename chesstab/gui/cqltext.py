@@ -91,34 +91,6 @@ class CQLText(BlankText):
                         label=definition[1],
                         command=self.try_command(function, cascade_menu),
                         accelerator=definition[2])
-        
-    # bind_for_active and score.Score.bind_for_move are equivalent.
-    def bind_for_active(self, switch=True):
-        """Set keyboard bindings and popup menu for non-editing actions.
-
-        Method exists for compatibility with score.Score way of doing things.
-
-        The Text widget contains two tokens, the CQL statement name and the
-        staement.  Both tokens are editable, or both are not, and
-        the standard Text widget operations are available when editable.
-
-        """
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
-        self.set_active_bindings(switch=switch)
-        
-    def bind_for_initial_state(self, switch=True):
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
-        
-    # Dispatch dictionary for token binding selection.
-    # Keys are the possible values of self._most_recent_bindings.
-    token_bind_method = {
-        NonTagBind.NO_EDITABLE_TAGS: bind_for_active,
-        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
-        }
 
     def set_active_bindings(self, switch=True):
         """Switch bindings for traversing query statement on or off."""
@@ -279,7 +251,7 @@ class CQLText(BlankText):
         self.score.delete('1.0', tkinter.END)
         self.map_cql_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_active()
+            self.bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:

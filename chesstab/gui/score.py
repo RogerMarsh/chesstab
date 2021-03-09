@@ -86,22 +86,7 @@ from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
 from ..core import exporters
-from .blanktext import BlankText
-
-
-# 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
-# Score uses NO_EDITABLE_TAGS, INITIAL_BINDINGS, and SELECT_VARIATION.
-# GameEdit uses all the names.
-class NonTagBind(enum.Enum):
-    # Current token is a move.
-    NO_EDITABLE_TAGS = 1
-    NO_CURRENT_TOKEN = 2
-    DEFAULT_BINDINGS = 3
-    INITIAL_BINDINGS = 4
-    CURRENT_NO_TAGS = 5
-    # Current token is a move with variations for next move, and the attempt
-    # to go to next move was intercepted to choose which one.
-    SELECT_VARIATION = 6
+from .blanktext import BlankText, NonTagBind
 
 
 # The ScoreNoGameException is intended to catch cases where a file
@@ -307,22 +292,6 @@ class Score(BlankText):
             stef = ste(function) if switch and function else ''
             for w in sbbv():
                 w.bind(sequence[0], stef)
-        
-    # Renamed from 'bind_for_viewmode' when 'bind_for_*' methods tied to Tk
-    # Text widget tag names were introduced.
-    def bind_for_move(self, switch=True):
-        """Set keyboard bindings and popup menu for traversing moves.
-
-        Two navigation states are assumed.  Traversing the game score through
-        adjacent tokens, and selecting the next move from a set of variations.
-
-        For pointer clicks a token is defined to be adjacent to all tokens.
-
-        """
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
-        self.set_active_bindings(switch=switch)
 
     # Renamed from 'bind_for_select_variation_mode' when 'bind_for_*' methods
     # tied to Tk Text widget tag names were introduced.
@@ -340,18 +309,10 @@ class Score(BlankText):
             self._most_recent_bindings = NonTagBind.SELECT_VARIATION
         self.set_select_variation_bindings(switch=True)
         
-    def bind_for_initial_state(self, switch=True):
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
-        
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
-    token_bind_method = {
-        NonTagBind.NO_EDITABLE_TAGS: bind_for_move,
-        NonTagBind.SELECT_VARIATION: bind_for_select_variation,
-        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
-        }
+    token_bind_method = BlankText.token_bind_method.copy()
+    token_bind_method[NonTagBind.SELECT_VARIATION] = bind_for_select_variation
 
     # Renamed from '_bind_viewmode' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
@@ -794,14 +755,14 @@ class Score(BlankText):
                          'games in a file expected to be in PGN format.\n\n')))
             self.score.insert(tkinter.END, self.collected_game._text)
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-                self.bind_for_move()
+                self.bind_for_primary_activity()
             if not self._is_text_editable:
                 self.score.configure(state=tkinter.DISABLED)
             if reset_undo:
                 self.score.edit_reset()
             raise
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_move()
+            self.bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -828,7 +789,7 @@ class Score(BlankText):
     def show_variation(self, event=None):
         """Enter selected variation and display its initial position."""
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_move()
+            self.bind_for_primary_activity()
         self.colour_variation()
         return 'break'
         
@@ -966,7 +927,7 @@ class Score(BlankText):
             if not self.is_currentmove_in_main_line():
                 self.add_currentmove_variation_to_colouring_tag()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_move()
+            self.bind_for_primary_activity()
         return 'break'
         
     def variation_cycle(self, event=None):
@@ -2469,7 +2430,7 @@ class AnalysisScore(Score):
             self.score.insert(tkinter.END, analysis_text)
 
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_move()
+            self.bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -2742,4 +2703,4 @@ class AnalysisScore(Score):
             return self.show_prev_in_variation()
             #self.show_prev_in_variation()
             #if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            #    self.bind_for_move()
+            #    self.bind_for_primary_activity()

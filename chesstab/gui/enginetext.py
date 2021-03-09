@@ -54,33 +54,6 @@ class EngineText(BlankText):
         # Selection rule parser instance to process text.
         self.definition = Engine()
         
-    def bind_for_active(self, switch=True):
-        """Set keyboard bindings and popup menu for non-editing actions.
-
-        Method exists for compatibility with score.Score way of doing things.
-
-        The Text widget contains two tokens, the chess engine definition name
-        and the definition.  Both tokens are editable, or both are not, and
-        the standard Text widget operations are available when editable.
-
-        """
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
-        self.set_active_bindings(switch=switch)
-        
-    def bind_for_initial_state(self, switch=True):
-        if switch:
-            self.token_bind_method[self._most_recent_bindings](self, False)
-            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
-        
-    # Dispatch dictionary for token binding selection.
-    # Keys are the possible values of self._most_recent_bindings.
-    token_bind_method = {
-        NonTagBind.NO_EDITABLE_TAGS: bind_for_active,
-        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
-        }
-        
     # Not sure what events these are yet; or if name is best.
     # Remove '_navigation'?
     # Engine description records are always shown in a Toplevel.
@@ -185,7 +158,7 @@ class EngineText(BlankText):
         self.score.delete('1.0', tkinter.END)
         self.map_engine_definition()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_active()
+            self.bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:

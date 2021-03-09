@@ -20,12 +20,20 @@ from .displayitems import DisplayItemsStub
 
 # 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
 # NO_EDITABLE_TAGS and INITIAL_BINDINGS are used if _is_text_editable is False.
-# All the names are used if _is_text_editable is True.
-# See score.Score.NonTagBind for a case with more values.
+# All subclasses use DEFAULT_BINDINGS is _is_text_editable is True.
+# Score uses NO_CURRENT_TOKEN, CURRENT_NO_TAGS, and SELECT_VARIATION, which
+# other subclasses do not.
+# GameEdit uses all the names.
 class NonTagBind(enum.Enum):
+    # Current token is a move.
     NO_EDITABLE_TAGS = 1
+    NO_CURRENT_TOKEN = 2
     DEFAULT_BINDINGS = 3
     INITIAL_BINDINGS = 4
+    CURRENT_NO_TAGS = 5
+    # Current token is a move with variations for next move, and the attempt
+    # to go to next move was intercepted to choose which one.
+    SELECT_VARIATION = 6
     
 
 class BlankText(ExceptionHandler):
@@ -198,3 +206,33 @@ class BlankText(ExceptionHandler):
             if self is not self.items.active_item:
                 return False
         return True
+        
+    def bind_for_primary_activity(self, switch=True):
+        """Set (switch True) or clear bindings for main actions when active.
+
+        If bool(switch) is true, clear the most recently set bindings first.
+
+        """
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
+        self.set_active_bindings(switch=switch)
+        
+    def bind_for_initial_state(self, switch=True):
+        """Clear the most recently set bindings if bool(switch) is True.
+
+        Assume not setting new bindings leaves widget in initial state.
+
+        If bool(switch) is False, nothing is done.
+
+        """
+        if switch:
+            self.token_bind_method[self._most_recent_bindings](self, False)
+            self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
+        
+    # Dispatch dictionary for token binding selection.
+    # Keys are the possible values of self._most_recent_bindings.
+    token_bind_method = {
+        NonTagBind.NO_EDITABLE_TAGS: bind_for_primary_activity,
+        NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
+        }
