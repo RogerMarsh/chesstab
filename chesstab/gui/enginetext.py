@@ -12,9 +12,10 @@ from urllib.parse import urlsplit
 from ..core.engine import Engine
 from .eventspec import EventSpec
 from .blanktext import NonTagBind, BlankText
+from .sharedtext import SharedTextEngineText
     
 
-class EngineText(BlankText):
+class EngineText(SharedTextEngineText, BlankText):
 
     """Chess engine definition widget.
 
@@ -64,24 +65,20 @@ class EngineText(BlankText):
             (EventSpec.databaseenginedisplay_run, self.run_engine),
             )
 
-    # Engine description records are always shown in a Toplevel.
-    # The methods where get_inactive_events() is used are never used.
-    def get_inactive_events(self):
-        return (
-            (EventSpec.display_make_active, self.set_focus_panel_item_command),
-            (EventSpec.display_dismiss_inactive, self.delete_item_view),
-            )
-
-    # The default Text widget bindings are probably what is wanted.
-    def get_modifier_buttonpress_suppression_events(self):
-        """Return tuple of event binding definitions suppressing buttonpress
-        with Control, Shift, or Alt."""
-        return ()
-
     def get_active_button_events(self):
         return self.get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_3, self.post_active_menu),
             )
+
+    def create_active_popup(self):
+        assert self.active_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_active_navigation_events())
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        self.active_popup = popup
+        return popup
 
     def set_active_bindings(self, switch=True):
         """Switch bindings for editing chess engine definition on or off."""
@@ -95,55 +92,6 @@ class EngineText(BlankText):
         self.set_event_bindings_score(
             self.get_active_button_events(),
             switch=switch)
-        
-    def create_active_popup(self):
-        assert self.active_popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_active_navigation_events())
-        database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
-        self.active_popup = popup
-        return popup
-        
-    # Engine description records are always shown in a Toplevel.
-    # create_inactive_popup() is never used.
-    def create_inactive_popup(self):
-        assert self.inactive_popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_inactive_events())
-        self.inactive_popup = popup
-        return popup
-        
-    def post_active_menu(self, event=None):
-        """Show the popup menu for chess engine definition navigation."""
-        return self.post_menu(
-            self.active_popup,
-            self.create_active_popup,
-            allowed=self.is_active_item_mapped(),
-            event=event)
-        
-    def post_active_menu_at_top_left(self, event=None):
-        """Show the popup menu for chess engine definition navigation."""
-        return self.post_menu_at_top_left(
-            self.active_popup,
-            self.create_active_popup,
-            allowed=self.is_active_item_mapped(),
-            event=event)
-        
-    # If create_inactive_popup() is never used this can't be either.
-    def post_inactive_menu(self, event=None):
-        """Show the popup menu for a chess engine definition in an inactive
-        item."""
-        return self.post_menu(
-            self.inactive_popup, self.create_inactive_popup, event=event)
-        
-    # If create_inactive_popup() is never used this can't be either.
-    def post_inactive_menu_at_top_left(self, event=None):
-        """Show the popup menu for a chess engine definition in an inactive
-        item."""
-        return self.post_menu_at_top_left(
-            self.inactive_popup, self.create_inactive_popup, event=event)
         
     def set_engine_definition(self, reset_undo=False):
         """Display the chess engine definition as text.

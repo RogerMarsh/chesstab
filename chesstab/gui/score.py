@@ -87,6 +87,7 @@ from .displayitems import DisplayItemsStub
 from ..core.pgn import get_position_string
 from ..core import exporters
 from .blanktext import BlankText, NonTagBind
+from .sharedtext import SharedTextScore
 
 
 # The ScoreNoGameException is intended to catch cases where a file
@@ -109,7 +110,7 @@ class ScoreMapToBoardException(Exception):
     pass
 
 
-class Score(BlankText):
+class Score(SharedTextScore, BlankText):
 
     """Chess score widget.
 
@@ -252,37 +253,6 @@ class Score(BlankText):
         # Score technique does not work, forced newlines are not needed, and
         # only the first move gets numbered.
         self._force_newline = False
-
-    # This method arose because of one case where the menu needs setting up
-    # but the caller did not know if anything needed to be done.
-    # Long term, either this method or set_popup_bindings will do all.
-    # Should be called insert_cascade_menu_in_popup but misunderstanding index
-    # argument led to name used.
-    def add_cascade_menu_to_popup(
-        self, label, popup, bindings=None, order=None, index=tkinter.END):
-        '''Add label as cascade_menu, and bindings, to popup if not already
-        present before index entry.
-
-        The bindings are not applied if cascade_menu is alreay in popup menu.
-
-        '''
-        # Cannot see a way of asking 'Does entry exist?' other than:
-        try:
-            popup.index(label)
-        except:
-            cascade_menu = tkinter.Menu(master=popup, tearoff=False)
-            popup.insert_cascade(label=label, menu=cascade_menu, index=index)
-            if order is None:
-                order = ()
-            if bindings is None:
-                bindings = {}
-            for definition in order:
-                function = bindings.get(definition)
-                if function is not None:
-                    cascade_menu.add_command(
-                        label=definition[1],
-                        command=self.try_command(function, cascade_menu),
-                        accelerator=definition[2])
         
     def set_event_bindings_board(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
@@ -453,38 +423,6 @@ class Score(BlankText):
             (EventSpec.buttonpress_1, self.variation_cancel),
             (EventSpec.buttonpress_3, self.post_select_move_menu),
             )
-
-    def get_inactive_button_events(self):
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, self.give_focus_to_widget),
-            (EventSpec.buttonpress_3, self.post_inactive_menu),
-            )
-        
-    # Subclasses which need widget navigation in their popup menus should
-    # call this method.
-    def create_widget_navigation_submenu_for_popup(self, popup):
-        """Create and populate a submenu of popup for widget navigation.
-
-        The commands in the submenu should switch focus to another widget.
-
-        Subclasses should define a generate_popup_navigation_maps method and
-        binding_labels iterable suitable for allowed navigation.
-        
-        """
-        navigation_map, local_map = self.generate_popup_navigation_maps()
-        local_map.update(navigation_map)
-        self.add_cascade_menu_to_popup(
-            'Navigation', popup,
-            bindings=local_map, order=self.binding_labels)
-        
-    # Subclasses which need dismiss widget in a menu should call this method.
-    def add_close_item_entry_to_popup(self, popup):
-        """Add option to dismiss widget entry to popup.
-
-        Subclasses must provide a delete_item_view method.
-
-        """
-        self.set_popup_bindings(popup, self.get_close_item_events())
         
     # Subclasses which need non-move PGN navigation should call this method.
     # Intended for editors.
@@ -537,12 +475,6 @@ class Score(BlankText):
             (EventSpec.score_show_first_in_line, self.show_first_in_line),
             (EventSpec.score_show_last_in_line, self.show_last_in_line),
             )
-
-    def get_inactive_events(self):
-        return (
-            (EventSpec.display_make_active, self.set_focus_panel_item_command),
-            (EventSpec.display_dismiss_inactive, self.delete_item_view),
-            )
         
     # Analysis subclasses override method to exclude the first four items.
     # Repertoire subclasses override method to exclude the first two items.
@@ -587,13 +519,6 @@ class Score(BlankText):
         self.select_move_popup = popup
         return popup
         
-    def create_inactive_popup(self):
-        assert self.inactive_popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_inactive_events())
-        self.inactive_popup = popup
-        return popup
-        
     def post_move_menu(self, event=None):
         """Show the popup menu for game score navigation."""
         return self.post_menu(
@@ -625,16 +550,6 @@ class Score(BlankText):
             self.create_select_move_popup,
             allowed=self.is_active_item_mapped(),
             event=event)
-        
-    def post_inactive_menu(self, event=None):
-        """Show the popup menu for a game score in an inactive item."""
-        return self.post_menu(
-            self.inactive_popup, self.create_inactive_popup, event=event)
-        
-    def post_inactive_menu_at_top_left(self, event=None):
-        """Show the popup menu for a game score in an inactive item."""
-        return self.post_menu_at_top_left(
-            self.inactive_popup, self.create_inactive_popup, event=event)
 
     def colour_variation(self):
         """Colour variation and display its initial position.
