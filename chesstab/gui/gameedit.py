@@ -99,6 +99,7 @@ from .constants import (
     TERMINATION_TAG,
     SPACE_SEP,
     RAV_START_TAG,
+    MOVETEXT_MOVENUMBER_TAG,
     )
 from ..core import exporters
 
@@ -1427,6 +1428,10 @@ class GameEdit(Game):
         else:
             current = self.select_prev_move_in_line()
             delete_rav = False
+        move_number_indicator = widget.tag_prevrange(
+            MOVETEXT_MOVENUMBER_TAG,
+            tr[0],
+            widget.tag_ranges(current)[-1] if current else '1.0')
         if delete_rav:
             ravtag = self.get_rav_tag_for_rav_moves(
                 self.get_variation_tag_of_index(tr[0]))
@@ -1438,10 +1443,14 @@ class GameEdit(Game):
                     RAV_END_TAG,
                     widget.tag_prevrange(ravtag, tkinter.END)[0])[0])))
             widget.delete(tr[0], tr[1])
+            if move_number_indicator:
+                widget.delete(*move_number_indicator)
             widget.delete(*widget.tag_ranges(self.get_token_tag_of_index(
                 widget.tag_nextrange(ravtag, '1.0')[0])))
         else:
             widget.delete(tr[0], tr[1])
+            if move_number_indicator:
+                widget.delete(*move_number_indicator)
         del self.edit_move_context[self.current]
         del self.tagpositionmap[self.current]
         self.current = current
