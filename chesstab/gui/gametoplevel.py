@@ -24,8 +24,8 @@ class GameToplevelEdit(ToplevelPGN, GameEdit):
     """Customize GameEdit to be the single instance in a Toplevel widget.
     """
         
-    def create_move_popup(self):
-        popup = super().create_move_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label)
         self.add_pgn_insert_to_submenu_of_popup(

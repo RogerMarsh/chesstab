@@ -216,7 +216,7 @@ class BlankText(ExceptionHandler):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
-        self.set_active_bindings(switch=switch)
+        self.set_primary_activity_bindings(switch=switch)
         
     def bind_for_initial_state(self, switch=True):
         """Clear the most recently set bindings if bool(switch) is True.
@@ -236,3 +236,28 @@ class BlankText(ExceptionHandler):
         NonTagBind.NO_EDITABLE_TAGS: bind_for_primary_activity,
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
         }
+
+    def create_primary_activity_popup(self):
+        assert self.primary_activity_popup is None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, self.get_primary_activity_events())
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        self.primary_activity_popup = popup
+        return popup
+
+    def get_button_events(self, buttonpress1=None, buttonpress3=None):
+        """Return tuple of buttonpress event bindings.
+
+        buttonpress1 and buttonpress3 default to self.press_none().
+
+        """
+        if buttonpress1 is None:
+            buttonpress1 = self.press_none
+        if buttonpress3 is None:
+            buttonpress3 = self.press_none
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, buttonpress1),
+            (EventSpec.buttonpress_3, buttonpress3),
+            )

@@ -79,7 +79,7 @@ class Query(QueryText):
 
         # The popup menus specific to Query (placed same as Game equivalent)
 
-        #self.active_popup.add_cascade(
+        #self.primary_activity_popup.add_cascade(
         #    label='Database', menu=self.database_popup)
 
         # For compatibility with Game when testing if item has focus.
@@ -155,7 +155,7 @@ class Query(QueryText):
 
         """
         
-    def create_active_popup(self):
-        popup = super().create_active_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup

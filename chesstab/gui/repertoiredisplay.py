@@ -223,8 +223,8 @@ class RepertoireDisplay(_RepertoireDisplay,
         #original.value.set_game_source(self.sourceobject.value.gamesource)
         original_value.set_game_source('No opening name')
         
-    def create_move_popup(self):
-        popup = super().create_move_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
         

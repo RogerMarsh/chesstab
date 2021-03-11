@@ -118,12 +118,12 @@ class ShowText:
         return submenu
 
     # The only active bindings compared with displaypgn.ShowPGN.
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Delegate to toggle other relevant bindings and toggle bindings for
         database actions, navigation to other widgets, and close widget.
 
         """
-        super().set_active_bindings(switch=switch)
+        super().set_primary_activity_bindings(switch=switch)
         self.set_database_navigation_close_item_bindings(switch=switch)
 
     # Not relevant away from displaypgn.ShowPGN.
@@ -311,14 +311,16 @@ class InsertText:
             )
 
 
-# Introduced to remove create_active_popup method from InsertText class: it's
-# presence prevented displaypgn.InsertPGN being a subclass of InsertText.
+# Introduced to remove create_primary_activity_popup method from InsertText
+# class: it's presence prevented displaypgn.InsertPGN being a subclass of
+# InsertText.
 # In the PGN classes the displayed list of games depends on which token is
 # current, but in the non-PGN Text classes the displayed list of games is
 # determined by evaluation of a query on demand.
-# When inserting or editing a record the create_active_popup method of this
-# class makes an option to demand evaluation available in a popup menu.  When
-# showing a record the demand is implicit in making the 'show' widget active.
+# When inserting or editing a record the create_primary_activity_popup method
+# of this class makes an option to demand evaluation available in a popup menu.
+# When showing a record the demand is implicit in making the 'show' widget
+# active.
 # In the PGN classes the demand is always implicit in making a token current,
 # so there is no PGN equivalent of ListGamesText.
 class ListGamesText:
@@ -331,8 +333,8 @@ class ListGamesText:
 
     """
         
-    def create_active_popup(self):
-        popup = super().create_active_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_list_games_entry_to_popup(popup)
         return popup
 

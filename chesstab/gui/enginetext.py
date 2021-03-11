@@ -50,47 +50,30 @@ class EngineText(SharedTextEngineText, BlankText):
         self.ui = ui
 
         # The popup menus for the engine definition.
-        self.active_popup = None
+        self.primary_activity_popup = None
 
         # Selection rule parser instance to process text.
         self.definition = Engine()
         
-    # Not sure what events these are yet; or if name is best.
-    # Remove '_navigation'?
     # Engine description records are always shown in a Toplevel.
     # Dismiss item and database update actions by keypress and buttunpress
     # are assumed to be exposed by the associated solentware_misc class.
-    def get_active_navigation_events(self):
+    def get_primary_activity_events(self):
         return (
             (EventSpec.databaseenginedisplay_run, self.run_engine),
             )
 
-    def get_active_button_events(self):
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_3, self.post_active_menu),
-            )
-
-    def create_active_popup(self):
-        assert self.active_popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_active_navigation_events())
-        database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
-        self.active_popup = popup
-        return popup
-
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Switch bindings for editing chess engine definition on or off."""
         self.set_event_bindings_score(
-            self.get_active_navigation_events(),
+            self.get_primary_activity_events(),
             switch=switch)
         self.set_event_bindings_score(
             self.get_F10_popup_events(self.post_active_menu_at_top_left,
                                       self.post_active_menu),
             switch=switch)
         self.set_event_bindings_score(
-            self.get_active_button_events(),
+            self.get_button_events(buttonpress3=self.post_active_menu),
             switch=switch)
         
     def set_engine_definition(self, reset_undo=False):

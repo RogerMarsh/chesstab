@@ -255,8 +255,8 @@ class _QueryDisplay(ExceptionHandler, Display):
         local_map = {}
         return navigation_map, local_map
         
-    def create_active_popup(self):
-        popup = super().create_active_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
@@ -338,8 +338,8 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
     # QueryDisplay has this method, but CQLDisplay does not, because the game
     # list area is shared with the main game list and the index lists.
     # Generating the game list on demand may be necessary at any time.
-    def create_active_popup(self):
-        popup = super().create_active_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_list_games_entry_to_popup(popup, index='Close Item')
         return popup
 

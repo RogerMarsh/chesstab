@@ -508,13 +508,13 @@ class Game(Score):
         self.panel.grid_columnconfigure(1, weight=1)
         self.panel.grid_columnconfigure(2, weight=0)
 
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Delegate to toggle other relevant bindings and switch board pointer
         bindings for traversing moves between the game or repertoire and
         engine analysis.
 
         """
-        super().set_active_bindings(switch=switch)
+        super().set_primary_activity_bindings(switch=switch)
         if self.score is self.takefocus_widget:
             self.set_board_pointer_move_bindings(switch=switch)
         else:
@@ -649,8 +649,8 @@ class Game(Score):
             p.set_square(s)
         return generate_fen_for_position(squares.values(), *a)
         
-    def create_move_popup(self):
-        popup = super().create_move_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.set_popup_bindings(popup,
                                 ((EventSpec.analyse_game, self.analyse_game),),
                                 index=self.export_popup_label)

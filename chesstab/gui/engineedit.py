@@ -43,9 +43,7 @@ class EngineEdit(engine.Engine):
         # Engine instances.
         self.engine_definition_checker = Engine()
         
-    # Not sure what events these are yet; or if name is best.
-    # Remove '_navigation'?
-    def get_active_navigation_events(self):
+    def get_primary_activity_events(self):
         return (
             (EventSpec.databaseenginedisplay_run, self.run_engine),
             (EventSpec.databaseengineedit_browse, self.browse_engine),

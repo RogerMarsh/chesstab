@@ -238,8 +238,8 @@ class _CQLDisplay(ExceptionHandler, Display):
         local_map = {}
         return navigation_map, local_map
         
-    def create_active_popup(self):
-        popup = super().create_active_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 

@@ -54,10 +54,7 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.itemgrid = itemgrid
 
         # The popup menus for the selection rule.
-        # active_popup and score.Score.move_popup are equivalent.
-        # There is no equivalent to score.Score.select_move_popup because
-        # query text is plain text.
-        self.active_popup = None
+        self.primary_activity_popup = None
 
         # Selection rule parser instance to process text.
         self.query_statement = QueryStatement()

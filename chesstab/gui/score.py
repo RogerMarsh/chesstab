@@ -220,7 +220,7 @@ class Score(SharedTextScore, BlankText):
         self.score.tag_configure(MOVE_TAG, background=self.m_color)
 
         # The popup menus for the game score.
-        self.move_popup = None
+        self.primary_activity_popup = None
         self.select_move_popup = None
 
         # None implies initial position and is deliberately not a valid Tk tag.
@@ -286,10 +286,10 @@ class Score(SharedTextScore, BlankText):
 
     # Renamed from '_bind_viewmode' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing moves on or off."""
         self.set_event_bindings_score(
-            self.get_move_navigation_events(),
+            self.get_primary_activity_events(),
             switch=switch)
         self.set_event_bindings_score(
             self.get_F10_popup_events(self.post_move_menu_at_top_left,
@@ -299,7 +299,7 @@ class Score(SharedTextScore, BlankText):
             self.get_all_export_events(),
             switch=switch)
         self.set_event_bindings_score(
-            self.get_move_button_events(),
+            self.get_primary_activity_button_events(),
             switch=switch)
 
     # Renamed from '_bind_select_variation' when 'bind_for_*' methods tied
@@ -314,17 +314,18 @@ class Score(SharedTextScore, BlankText):
                                       self.post_select_move_menu),
             switch=switch)
         self.set_event_bindings_score(
-            self.get_select_move_button_events(),
+            self.get_button_events(buttonpress1=self.variation_cancel,
+                                   buttonpress3=self.post_select_move_menu),
             switch=switch)
 
-    # This method may have independence from set_active_bindings when the
+    # This method may have independence from set_primary_activity_bindings when the
     # control_buttonpress_1 event is fired.
     # (So there should be a 'select_variation' version too?)
     # Renamed from bind_score_pointer_for_board_navigation to fit current use.
     def set_score_pointer_item_navigation_bindings(self, switch):
         """Set or unset pointer bindings for game navigation."""
         self.set_event_bindings_score(
-            self.get_move_button_events(),
+            self.get_primary_activity_button_events(),
             switch=switch)
 
     # Not yet used.
@@ -332,8 +333,7 @@ class Score(SharedTextScore, BlankText):
     # do the work in the (game).score or (game.analysis).score object than
     # choose which is wanted in the (game) object.
     # set_board_pointer_widget_navigation_bindings is likely to follow.
-    # There is no equivalent of set_select_variation_bindings for this to be
-    # part of.
+    # There is no equivalent of set_select_variation_bindings to contain this.
     def set_board_pointer_select_variation_bindings(self, switch):
         """Enable or disable bindings for variation selection."""
         self.set_event_bindings_board(
@@ -346,7 +346,7 @@ class Score(SharedTextScore, BlankText):
              ),
             switch=switch)
 
-    # There is no equivalent of set_active_bindings for this to be part of.
+    # There is no equivalent of set_primary_activity_bindings to contain this.
     def set_board_pointer_move_bindings(self, switch):
         """Enable or disable bindings for game navigation."""
         self.set_event_bindings_board(
@@ -382,47 +382,15 @@ class Score(SharedTextScore, BlankText):
             (EventSpec.alt_buttonpress_3, self.press_break),
             )
 
-    # Used in gameedit.  Eventually in score, repertoiredisplay, and
-    # gamedisplay too, replacing get_select_move_button_events and
-    # get_move_button_events.
-    # See querytext.QueryText and cqltext.CQLText for a possible outcome.
-    def get_button_events(self, buttonpress3):
-        """Return tuple of buttonpress event bindings including buttonpress3.
-
-        control_buttonpress_1 is a toggle between game and engine analysis.
-        buttonpress_1 goes to the token under the pointer.
-        buttonpress3 is expected to be the poster method for the popup menu
-        appropriate to the token under the pointer.
-
-        """
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, self.go_to_token),
-            (EventSpec.buttonpress_3, buttonpress3),
-            )
-
     # A Game widget has one Board widget and two Score widgets.  Each Score
     # widget has a Text widget but only one of these can have the focus.
     # Whichever has the focus may have item navigation bindings for it's
     # pointer, and the other one's pointer bindings are disabled.
     # The control_buttonpress_1 event is intended to give focus to the other's
     # Text widget, but is not set yet.
-    def get_move_button_events(self):
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, self.go_to_token),
-            (EventSpec.buttonpress_3, self.post_move_menu),
-            )
-
-    # A Game widget has one Board widget and two Score widgets.  Each Score
-    # widget has a Text widget but only one of these can have the focus.
-    # Whichever has the focus may have select move bindings for it's pointer,
-    # and the other one's pointer bindings are disabled.
-    # The control_buttonpress_1 event is intended to give focus to the other's
-    # Text widget, but is not set yet.
-    def get_select_move_button_events(self):
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, self.variation_cancel),
-            (EventSpec.buttonpress_3, self.post_select_move_menu),
-            )
+    def get_primary_activity_button_events(self):
+        return self.get_button_events(buttonpress1=self.go_to_token,
+                                      buttonpress3=self.post_move_menu)
         
     # Subclasses which need non-move PGN navigation should call this method.
     # Intended for editors.
@@ -462,7 +430,11 @@ class Score(SharedTextScore, BlankText):
             (EventSpec.text_internal_format, self.export_text),
             )
         
-    def get_move_navigation_events(self):
+    # These are the event bindings to traverse moves in PGN movetext.
+    # The method name emphasizes the connection with implementation of main
+    # purpose of CQLText, EngineText, and QueryText, widgets; rather than
+    # being one of several sets of events available for PGN text files.
+    def get_primary_activity_events(self):
         return (
             (EventSpec.score_show_next_in_line, self.show_next_in_line),
             (EventSpec.score_show_next_in_variation,
@@ -481,30 +453,19 @@ class Score(SharedTextScore, BlankText):
     def populate_export_submenu(self, submenu):
         self.set_popup_bindings(submenu, self.get_all_export_events())
         
-    # Most create_<>_popup methods in GameEdit start with entries defined here.
-    def populate_popup_move_navigation(self, popup, move_navigation=None):
-        if move_navigation is None:
-            self.set_popup_bindings(popup, self.get_move_navigation_events())
-        else:
-            self.set_popup_bindings(popup, move_navigation())
-        
-    # Most create_<>_popup methods call create_popup to do all their setup.
-    def create_popup(self, popup, move_navigation=None):
-        assert popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.populate_popup_move_navigation(popup,
-                                            move_navigation=move_navigation)
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self.populate_export_submenu(export_submenu)
-        popup.add_cascade(label='Export', menu=export_submenu)
-        database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
+        index = 'Database'
+        try:
+            popup.index(index)
+        except tkinter.TclError as exc:
+            if str(exc) != index.join(('bad menu entry index "', '"')):
+                raise
+            index = tkinter.END
+        popup.insert_cascade(label='Export', menu=export_submenu, index=index)
         return popup
-        
-    def create_move_popup(self):
-        self.move_popup = self.create_popup(self.move_popup)
-        return self.move_popup
         
     def create_select_move_popup(self):
         assert self.select_move_popup is None
@@ -522,16 +483,16 @@ class Score(SharedTextScore, BlankText):
     def post_move_menu(self, event=None):
         """Show the popup menu for game score navigation."""
         return self.post_menu(
-            self.move_popup,
-            self.create_move_popup,
+            self.primary_activity_popup,
+            self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
             event=event)
         
     def post_move_menu_at_top_left(self, event=None):
         """Show the popup menu for game score navigation."""
         return self.post_menu_at_top_left(
-            self.move_popup,
-            self.create_move_popup,
+            self.primary_activity_popup,
+            self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
             event=event)
 
@@ -2578,8 +2539,8 @@ class AnalysisScore(Score):
             'Navigation', popup,
             bindings=local_map, order=self.owned_by_game.binding_labels)
         
-    def create_move_popup(self):
-        popup = super().create_move_popup()
+    def create_primary_activity_popup(self):
+        popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup
         

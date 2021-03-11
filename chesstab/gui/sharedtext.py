@@ -31,7 +31,7 @@ class SharedText:
 
     """
 
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing query statement on or off."""
         self.set_event_bindings_score(
             self.get_F10_popup_events(self.post_active_menu_at_top_left,
@@ -47,35 +47,8 @@ class SharedText:
             self.get_button_events(buttonpress3=self.post_active_menu),
             switch=switch)
 
-    # Perhaps replace get_select_move_button_events and get_move_button_events
-    # in score.Score where there are several notes about this.
-    def get_button_events(self, buttonpress1=None, buttonpress3=None):
-        """Return tuple of buttonpress event bindings.
-
-        buttonpress1 and buttonpress3 default to self.press_none().
-
-        """
-        if buttonpress1 is None:
-            buttonpress1 = self.press_none
-        if buttonpress3 is None:
-            buttonpress3 = self.press_none
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, buttonpress1),
-            (EventSpec.buttonpress_3, buttonpress3),
-            )
-
-    def get_active_events(self):
+    def get_primary_activity_events(self):
         return ()
-        
-    def create_active_popup(self):
-        assert self.active_popup is None
-        popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_active_events())
-        database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
-        self.active_popup = popup
-        return popup
 
 
 class SharedTextEngineText:
@@ -96,16 +69,16 @@ class SharedTextEngineText:
     def post_active_menu(self, event=None):
         """Show the popup menu for chess engine definition navigation."""
         return self.post_menu(
-            self.active_popup,
-            self.create_active_popup,
+            self.primary_activity_popup,
+            self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
             event=event)
         
     def post_active_menu_at_top_left(self, event=None):
         """Show the popup menu for chess engine definition navigation."""
         return self.post_menu_at_top_left(
-            self.active_popup,
-            self.create_active_popup,
+            self.primary_activity_popup,
+            self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
             event=event)
 

@@ -301,7 +301,7 @@ class GameEdit(Game):
             self.process_move()
         return 'break'
 
-    def set_active_bindings(self, switch=True):
+    def set_primary_activity_bindings(self, switch=True):
         """Delegate to toggle other relevant bindings and toggle bindings for
         inserting moves and traversing all tokens.
 
@@ -309,7 +309,7 @@ class GameEdit(Game):
         marker is present.
 
         """
-        super().set_active_bindings(switch=switch)
+        super().set_primary_activity_bindings(switch=switch)
         if self.score.tag_ranges(EDIT_RESULT):
             self.set_keypress_binding(
                 function=self.insert_rav,
@@ -387,7 +387,7 @@ class GameEdit(Game):
                  self.insert_castle_queenside_command),
                 ), switch=switch)
         self.set_event_bindings_score(
-            self.get_button_events(popup_pointer),
+            self.get_button_events(buttonpress3=popup_pointer),
             switch=switch)
         self.set_event_bindings_score(
             self.get_F10_popup_events(popup_top_left, popup_pointer),
@@ -481,7 +481,7 @@ class GameEdit(Game):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_MOVE
-        super().set_active_bindings(switch=switch)
+        super().set_primary_activity_bindings(switch=switch)
         self.set_event_bindings_score(
             self.get_insert_pgn_in_movetext_events(), switch=switch)
         self.set_event_bindings_score(
@@ -497,13 +497,13 @@ class GameEdit(Game):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = INSERT_RAV
-        self.set_active_bindings(switch=switch)
+        self.set_primary_activity_bindings(switch=switch)
         
     def bind_for_move_edited(self, switch=True):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = MOVE_EDITED
-        super().set_active_bindings(switch=switch)
+        super().set_primary_activity_bindings(switch=switch)
         self.set_event_bindings_score(
             self.get_insert_pgn_in_movetext_events(), switch=switch)
         self.set_event_bindings_score(
@@ -515,7 +515,9 @@ class GameEdit(Game):
              self.add_move_char_to_token),
             ), switch=switch)
         self.set_event_bindings_score(
-            self.get_button_events(self.post_move_menu), switch=switch)
+            self.get_button_events(buttonpress1=self.go_to_token,
+                                   buttonpress3=self.post_move_menu),
+            switch=switch)
         
     # Should self.set_edit_symbol_mode_bindings() be used?
     def bind_for_rav_start(self, switch=True):
@@ -554,7 +556,9 @@ class GameEdit(Game):
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.NO_CURRENT_TOKEN
         self.set_event_bindings_score(
-            self.get_button_events(self.post_comment_menu), switch=switch)
+            self.get_button_events(buttonpress1=self.go_to_token,
+                                   buttonpress3=self.post_comment_menu),
+            switch=switch)
         
     def bind_for_unrecognised_edit_token(self, switch=True):
         if switch:
@@ -982,7 +986,9 @@ class GameEdit(Game):
     # Take opportunity to rename self.veiwmode_popup as self.move_popup with
     # additional menus: but not yet as too many non-gameedit modules need
     # modifying.  It is inherited from Score.  self.selectmode_popup, also
-    # inherited from Score, will be renamed select_move_popup.
+    # inherited from Score, will be renamed select_move_popup.  Later
+    # self.move_popup renamed to self.primay_activity_popup to be same as in
+    # SharedText.
     # self.inactive_popup seems ok.
     # self.viewmode_comment_popup and self.viewmode_pgntag_popup can just drop
     # viewmode_ from their names.  The only references outside gameedit are in
@@ -2768,6 +2774,19 @@ class GameEdit(Game):
         if tag_position:
             tag_add(positiontag, start, end)
         return positiontag, token_indicies
+
+    def create_popup(self, popup, move_navigation=None):
+        assert popup is None
+        assert move_navigation is not None
+        popup = tkinter.Menu(master=self.score, tearoff=False)
+        self.set_popup_bindings(popup, move_navigation())
+        export_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_export_submenu(export_submenu)
+        popup.add_cascade(label='Export', menu=export_submenu)
+        database_submenu = self.create_database_submenu(popup)
+        if database_submenu:
+            popup.add_cascade(label='Database', menu=database_submenu)
+        return popup
         
     # Most popups are same except for binding the popup menu attribute.
     # This does the work for the ones with identical processing.
@@ -3072,7 +3091,7 @@ class GameEdit(Game):
         Going to next and previous token, comment, or PGN tag; and first and
         last token and comment is supported.
 
-        See Score.get_move_navigation_events for next and previous moves.
+        See Score.get_primary_activity_events for next and previous moves.
 
         """
         return (
