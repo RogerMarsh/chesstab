@@ -100,6 +100,7 @@ from .constants import (
     SPACE_SEP,
     RAV_START_TAG,
     MOVETEXT_MOVENUMBER_TAG,
+    FORCED_NEWLINE_TAG,
     )
 from ..core import exporters
 
@@ -1396,8 +1397,21 @@ class GameEdit(Game):
         self.add_position_tag_to_pgntag_tags(positiontag, start, end)
         return start, end, sepend
 
+    def delete_forced_newline_token_prefix(self, tag, range_):
+        """Delete nearest newline in tag before range_"""
+        widget = self.score
+        forced_newline = widget.tag_prevrange(
+            FORCED_NEWLINE_TAG,
+            range_[0],
+            widget.tag_prevrange(tag, range_[0])[-1])
+
+        # There should be a test here to prevent creation of a sequence of
+        # fullmoves longer than FORCE_NEWLINE_AFTER_FULLMOVES.
+        if forced_newline:
+            widget.delete(*forced_newline)
+
     def delete_empty_move(self):
-        """"""
+        """Delete empty move from PGN movetext and RAV if it is empty too."""
         widget = self.score
         if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
@@ -1447,10 +1461,12 @@ class GameEdit(Game):
                 widget.delete(*move_number_indicator)
             widget.delete(*widget.tag_ranges(self.get_token_tag_of_index(
                 widget.tag_nextrange(ravtag, '1.0')[0])))
+            self.delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr)
         else:
             widget.delete(tr[0], tr[1])
             if move_number_indicator:
                 widget.delete(*move_number_indicator)
+            self.delete_forced_newline_token_prefix(NAVIGATE_MOVE, tr)
         del self.edit_move_context[self.current]
         del self.tagpositionmap[self.current]
         self.current = current
@@ -1480,7 +1496,7 @@ class GameEdit(Game):
         self.set_game_board()
 
     def delete_empty_pgn_tag(self, event=None):
-        """"""
+        """Delete empty PGN tag token."""
         widget = self.score
         start = widget.index(tkinter.INSERT + ' linestart')
         tr = widget.tag_nextrange(PGN_TAG, start, START_SCORE_MARK)
@@ -1488,6 +1504,8 @@ class GameEdit(Game):
             if widget.compare(start, '==',  tr[0]):
                 # Hack. Empty PGN Tag is len('[  "" ]').
                 # Assume one PGN Tag per line.
+                # Could change this to work like 'forced_newline', but PGN tags
+                # are supposed to be preceded by a newline.
                 if len(widget.get(*tr)) == 7:
                     widget.delete(*tr)
                     widget.delete(tr[0] + '-1c') # the preceding newline if any
@@ -1498,7 +1516,7 @@ class GameEdit(Game):
         return 'break'
 
     def delete_empty_token(self):
-        """"""
+        """Delete empty non-move token from PGN movetext."""
         widget = self.score
         if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
@@ -1515,6 +1533,7 @@ class GameEdit(Game):
                         if widget.compare(tpr[0], '>', START_SCORE_MARK):
                             current = self.get_position_tag_of_index(tpr[0])
             widget.delete(*tr)
+            self.delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr)
             del self.tagpositionmap[self.current]
             self.current = current
             self.set_current()

@@ -184,6 +184,8 @@ MOVETEXT_INDENT_TAG = 'movetextindent'
 MOVETEXT_MOVENUMBER_TAG = 'movenumbertag'
 # indentation tag for first move after forced newline in game movetext.
 FORCED_INDENT_TAG = 'forcedindent'
+# newline characters inserted in game movetext for layout or performance.
+FORCED_NEWLINE_TAG = 'forcednewlinetag'
 
 EMPTY_SEVEN_TAG_ROSTER = ''.join([r.join(('[', '""]'))
                                   for r in SEVEN_TAG_ROSTER])

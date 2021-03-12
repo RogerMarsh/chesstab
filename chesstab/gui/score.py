@@ -81,6 +81,7 @@ from .constants import (
     FORCE_NEWLINE_AFTER_FULLMOVES,
     FORCED_INDENT_TAG,
     MOVETEXT_MOVENUMBER_TAG,
+    FORCED_NEWLINE_TAG,
     )
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
@@ -1240,6 +1241,24 @@ class Score(SharedTextScore, BlankText):
         widget.insert(tkinter.INSERT, separator)
         return start, end, widget.index(tkinter.INSERT)
 
+    def insert_forced_newline_into_text(self):
+        """Insert newline and tag it if widget is editable.
+
+        A newline is added after FORCE_NEWLINE_AFTER_FULLMOVES fullmoves
+        without a newline, or before various non-move tokens.  It is tagged
+        if the widget is editable so deletion of the token can force deletion
+        of the newline.
+
+        """
+        if self._is_text_editable:
+            widget = self.score
+            start = widget.index(tkinter.INSERT)
+            widget.insert(tkinter.INSERT, NEWLINE_SEP)
+            widget.tag_add(
+                FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
+        else:
+            self.score.insert(tkinter.INSERT, NEWLINE_SEP)
+
     def is_currentmove_in_main_line(self):
         """Return True if currentmove is in the main line tag"""
         return self.is_index_in_main_line(
@@ -1409,7 +1428,7 @@ class Score(SharedTextScore, BlankText):
         if not fwa:
             self._force_newline += 1
         if self._force_newline > FORCE_NEWLINE_AFTER_FULLMOVES:
-            widget.insert(tkinter.INSERT, NEWLINE_SEP)
+            self.insert_forced_newline_into_text()
             self._force_newline = 1
         if not fwa:
             start, end, sepend = self.insert_token_into_text(
@@ -1486,7 +1505,7 @@ class Score(SharedTextScore, BlankText):
         self.varstack.append((self._vartag, self._ravtag, self._token_position))
         self.choicestack.append(self._choicetag)
         self._vartag, self._ravtag = self.get_rav_tag_names()
-        widget.insert(tkinter.INSERT, NEWLINE_SEP)
+        self.insert_forced_newline_into_text()
         self._force_newline = 0
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
@@ -1548,13 +1567,13 @@ class Score(SharedTextScore, BlankText):
     def map_start_comment(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
-        self.score.insert(tkinter.INSERT, NEWLINE_SEP)
+        self.insert_forced_newline_into_text()
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
+        self.insert_forced_newline_into_text()
         widget = self.score
-        widget.insert(tkinter.INSERT, NEWLINE_SEP)
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])#token)
         end = widget.index(tkinter.INSERT)# + ' -1 chars')
@@ -1568,6 +1587,13 @@ class Score(SharedTextScore, BlankText):
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])
         end = widget.index(tkinter.INSERT)# + ' -1 chars')
+
+        # First character of this token is the newline to be tagged.
+        # If necessary it is probably safe to use the commented version
+        # because a forced newline will appear after the escaped line's EOL.
+        #widget.tag_add(FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
+        widget.tag_add(FORCED_NEWLINE_TAG, start)
+
         #widget.insert(tkinter.INSERT, NULL_SEP)
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, widget.index(tkinter.INSERT)
@@ -1587,7 +1613,7 @@ class Score(SharedTextScore, BlankText):
     def map_start_reserved(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
-        self.score.insert(tkinter.INSERT, NEWLINE_SEP)
+        self.insert_forced_newline_into_text()
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):
