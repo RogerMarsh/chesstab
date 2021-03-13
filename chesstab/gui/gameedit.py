@@ -1637,7 +1637,7 @@ class GameEdit(Game):
             point = widget.tag_nextrange(EDIT_RESULT, insert_point_limit)
             if not point:
                 return widget.index(tkinter.END)
-            return point[0]
+            return widget.index(point[0]) + '-1 lines lineend'
         if not next_move:
             return end_rav[0]
         if widget.compare(next_move[0], '>', end_rav[0]):
@@ -1793,9 +1793,10 @@ class GameEdit(Game):
         if self.current is None:
             # Assume that no moves, including incomplete or illegal, exist.
             # In other words bindings prevent getting here if they do exist.
-            p = self.score.tag_ranges(EDIT_RESULT)
+            p = widget.tag_ranges(EDIT_RESULT)
             if p:
-                widget.mark_set(tkinter.INSERT, p[0])
+                widget.mark_set(tkinter.INSERT,
+                                widget.index(p[0])+'-1 lines lineend')
             else:
                 widget.mark_set(tkinter.INSERT, tkinter.END)
             vartag = self.get_rav_tag_names()[0]
