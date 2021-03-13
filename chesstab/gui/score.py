@@ -1434,14 +1434,14 @@ class Score(SharedTextScore, BlankText):
             start, end, sepend = self.insert_token_into_text(
                 str(p1[5])+'.', SPACE_SEP)
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-            if self._force_newline == 1:
+            if self._is_text_editable or self._force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
         elif self._next_move_is_choice:
             start, end, sepend = self.insert_token_into_text(
                 str(position[0][5])+'...', SPACE_SEP)
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
-        if self._force_newline == 1:
+        if self._is_text_editable or self._force_newline == 1:
             widget.tag_add(FORCED_INDENT_TAG, start, end)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)

@@ -101,6 +101,7 @@ from .constants import (
     RAV_START_TAG,
     MOVETEXT_MOVENUMBER_TAG,
     FORCED_NEWLINE_TAG,
+    FORCE_NEWLINE_AFTER_FULLMOVES,
     )
 from ..core import exporters
 
@@ -1398,16 +1399,55 @@ class GameEdit(Game):
         return start, end, sepend
 
     def delete_forced_newline_token_prefix(self, tag, range_):
-        """Delete nearest newline in tag before range_"""
+        """Delete nearest newline in tag before range_ keeping lines short.
+
+        Newline is not deleted if a sequence of fullmoves longer than
+        FORCE_NEWLINE_AFTER_FULLMOVES without a newline would be created.
+
+        """
         widget = self.score
+        tpr = widget.tag_prevrange(tag, range_[0])
+        if not tpr:
+            return
         forced_newline = widget.tag_prevrange(
             FORCED_NEWLINE_TAG,
             range_[0],
-            widget.tag_prevrange(tag, range_[0])[-1])
+            tpr[-1])
+        if not forced_newline:
+            return
 
-        # There should be a test here to prevent creation of a sequence of
-        # fullmoves longer than FORCE_NEWLINE_AFTER_FULLMOVES.
-        if forced_newline:
+        # A non-move token before, and adjacent to, a forced newline will
+        # leave '\n\n' when deleted, failing the 'len(tri)' test if there
+        # are more than FORCE_NEWLINE_AFTER_FULLMOVES fullmoves enclosing
+        # the token without a non-move token.  Second newline is forced
+        # newline associated with adjacent token: delete other one.
+        if widget.get(*forced_newline) == '\n\n':
+            widget.delete(forced_newline[0])
+            forced_newline = widget.tag_prevrange(
+                FORCED_NEWLINE_TAG,
+                range_[0],
+                tpr[-1])
+            if not forced_newline:
+                return
+
+        tpr = widget.tag_prevrange(FORCED_NEWLINE_TAG, forced_newline[0])
+        if not tpr:
+            tpr = [widget.index(START_SCORE_MARK)]
+        tnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, forced_newline[1])
+        if not tnr:
+            tnr = [widget.index(tkinter.END)]
+        tri = 0
+        if tpr or tnr:
+            tr = widget.tag_ranges(NAVIGATE_MOVE)
+            pr = tpr[-1]
+            nr = tnr[0]
+            for ti in tr:
+                if (widget.compare(ti, '>', pr) and
+                    widget.compare(ti, '<', nr)):
+                    tri += 1
+
+        # Two tokens per fullmove; two index values per token. So * 4.
+        if tri <= FORCE_NEWLINE_AFTER_FULLMOVES * 4:
             widget.delete(*forced_newline)
 
     def delete_empty_move(self):
@@ -1826,7 +1866,7 @@ class GameEdit(Game):
 
     def insert_empty_glyph(self):
         """Insert "$<null> " sequence."""
-        self.set_insertion_point_before_next_token()
+        self.set_insertion_point_before_next_token(between_newlines=False)
         self.add_glyph('$', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
@@ -2158,6 +2198,8 @@ class GameEdit(Game):
     def add_start_comment(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_comment(token)
+        self.score.tag_remove(
+            FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
@@ -2180,6 +2222,8 @@ class GameEdit(Game):
     def add_comment_to_eol(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_comment_to_eol(token)
+        self.score.tag_remove(
+            FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
@@ -2202,6 +2246,8 @@ class GameEdit(Game):
     def add_escape_to_eol(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_escape_to_eol(token)
+        self.score.tag_remove(
+            FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
@@ -2234,6 +2280,8 @@ class GameEdit(Game):
     def add_glyph(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_glyph(token)
+        self.score.tag_remove(
+            FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
@@ -2266,6 +2314,8 @@ class GameEdit(Game):
     def add_start_reserved(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_reserved(token)
+        self.score.tag_remove(
+            FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
         return token_indicies
 
@@ -2619,22 +2669,46 @@ class GameEdit(Game):
             if widget.compare(tkinter.INSERT, '<', START_EDIT_MARK):
                 widget.mark_set(tkinter.INSERT, START_EDIT_MARK)
         
-    def set_insertion_point_before_next_token(self):
-        """"""
+    def set_insertion_point_before_next_token(self, between_newlines=True):
+        """INSERT is set before next token and it's move number if any, and
+        before it's 'forced newline' too if there is one.  Ensure there is an
+        adjacent newline before and after INSERT if between_newlines is true.
+
+        PGN export format will put a newline between a move number indicator
+        and a move to keep line length below 80 characters.  The newlines
+        inserted in the tkinter.Text widget are always put before the move
+        number indicator, never between it and a move.
+
+        Numberic Annotation Glyths are short and between_newlines is False
+        for them, although a case can be made for putting these on a line
+        by themselves too.
+
+        Any text inserted at INSERT if between_newlines is true will need
+        the FORCED_NEWLINE_TAG tag removed (inherited by enclosure).
+
+        """
         widget = self.score
         if self.current is None:
             widget.mark_set(tkinter.INSERT, START_SCORE_MARK)
             return
-        range_ = widget.tag_ranges(self.current)
-        try:
-            widget.mark_set(
-                tkinter.INSERT,
-                widget.tag_nextrange(
-                    NAVIGATE_TOKEN,
-                    range_[-1])[0]
-                )
-        except IndexError:
-            widget.mark_set(tkinter.INSERT, widget.tag_ranges(EDIT_RESULT)[0])
+        trc = widget.tag_ranges(self.current)
+        tr = widget.tag_nextrange(NAVIGATE_TOKEN, trc[-1])
+        if not tr:
+            tr = widget.tag_nextrange(EDIT_RESULT)
+        trfnl = widget.tag_prevrange(FORCED_NEWLINE_TAG, tr[0], trc[-1])
+        if trfnl:
+            tr = trfnl
+        else:
+            trmm = widget.tag_prevrange(
+                MOVETEXT_MOVENUMBER_TAG, tr[0], trc[-1])
+            if trmm:
+                tr = trmm
+        widget.mark_set(tkinter.INSERT, tr[0])
+        if between_newlines:
+            if not trfnl:
+                self.insert_forced_newline_into_text()
+                widget.mark_set(
+                    tkinter.INSERT, tkinter.INSERT + ' -1 char')
 
     def set_insertion_point_before_next_pgn_tag(self):
         """Set INSERT at point for insertion of empty PGN Tag or Tags.
