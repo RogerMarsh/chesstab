@@ -36,6 +36,7 @@ from pgn_read.core.constants import (
     FEN_BLACK_BISHOP,
     PGN_BISHOP,
     PGN_CAPTURE_MOVE,
+    FEN_WHITE_ACTIVE,
     )
 from pgn_read.core.parser import PGN
 from pgn_read.core.game import GameStrictPGN
@@ -102,6 +103,7 @@ from .constants import (
     MOVETEXT_MOVENUMBER_TAG,
     FORCED_NEWLINE_TAG,
     FORCE_NEWLINE_AFTER_FULLMOVES,
+    FORCED_INDENT_TAG,
     )
 from ..core import exporters
 
@@ -1811,9 +1813,29 @@ class GameEdit(Game):
 
         self.get_next_positiontag_name()
         positiontag, tokentag, tokenmark = self.get_current_tag_and_mark_names()
-        self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
+        tpm = self.tagpositionmap
+        tpm[positiontag] = tpm[self.current]
         self.edit_move_context[
             positiontag] = self.create_edit_move_context(positiontag)
+        tpmpt = tpm[positiontag]
+        if tpmpt[1] == FEN_WHITE_ACTIVE:
+            tpr = widget.tag_prevrange(FORCED_NEWLINE_TAG, tkinter.INSERT)
+            if not tpr:
+                tpr = [widget.index(START_SCORE_MARK)]
+            tpr = tpr[0]
+            tr = widget.tag_ranges(NAVIGATE_MOVE)
+            tri = 0
+            for ti in tr:
+                if widget.compare(ti, '>=', tkinter.INSERT):
+                    break
+                if widget.compare(ti, '>', tpr):
+                    tri += 1
+            if tri >= FORCE_NEWLINE_AFTER_FULLMOVES * 4:
+                self.insert_forced_newline_into_text()
+            start, end, sepend = self.insert_token_into_text(
+                str(tpmpt[5])+'.', SPACE_SEP)
+            widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+            widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
         for tag in (
             positiontag,
@@ -1821,6 +1843,7 @@ class GameEdit(Game):
             NAVIGATE_MOVE,
             NAVIGATE_TOKEN,
             MOVE_EDITED,
+            FORCED_INDENT_TAG,
             ):
             widget.tag_add(tag, start, end)
         if self.current is not None:
@@ -1956,14 +1979,16 @@ class GameEdit(Game):
             widget.tag_add(ALL_CHOICES, start, end)
             widget.tag_add(choice, start, end)
         widget.mark_set(tkinter.INSERT, point)
+        self.insert_forced_newline_into_text()
         start, end, sepend = self.insert_token_into_text('(', SPACE_SEP)
 
+        tpm = self.tagpositionmap
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
         vartag, ravtag = self.get_rav_tag_names()
         if prior:
-            self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
+            tpm[positiontag] = tpm[self.current]
         else:
-            self.tagpositionmap[positiontag] = self.tagpositionmap[None]
+            tpm[positiontag] = tpm[None]
         widget.tag_add(tokentag, start, sepend)
         for tag in ravtag, positiontag, NAVIGATE_TOKEN, RAV_START_TAG:
             widget.tag_add(tag, start, end)
@@ -1984,10 +2009,20 @@ class GameEdit(Game):
     
         newmovetag = self.get_next_positiontag_name()
         positiontag, tokentag, tokenmark = self.get_current_tag_and_mark_names()
-        self.tagpositionmap[positiontag] = self.tagpositionmap[self.current]
+        tpm[positiontag] = tpm[self.current]
         self.edit_move_context[
             positiontag] = self.create_edit_move_context(positiontag)
+        tpmpt = tpm[positiontag]
+        start, end, sepend = self.insert_token_into_text(
+            str(tpmpt[5])+('.' if tpmpt[1] == FEN_WHITE_ACTIVE else '...'),
+            SPACE_SEP)
+        widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+        widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+
+        # FORCED_INDENT_TAG is not needed, compared with
+        # insert_empty_move_after_currentmove(), because this token can only
+        # be first on a line due to word wrap.
         for tag in (
             positiontag,
             vartag,
@@ -1999,6 +2034,7 @@ class GameEdit(Game):
             MOVE_EDITED,
             ):
             widget.tag_add(tag, start, end)
+
         if vartag is self._gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         for tag in (
@@ -2017,8 +2053,7 @@ class GameEdit(Game):
 
         start, end, sepend = self.insert_token_into_text(')', SPACE_SEP)
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
-        self.tagpositionmap[positiontag] = self.tagpositionmap[
-            self.nextmovetags[current][0]]
+        tpm[positiontag] = tpm[self.nextmovetags[current][0]]
         for tag in (
             self.get_rav_tag_for_rav_moves(variation),
             positiontag,
@@ -2030,6 +2065,7 @@ class GameEdit(Game):
             current,
             variation,
             variation)
+        self.insert_forced_newline_into_text()
 
         return newmovetag
 
@@ -2695,7 +2731,9 @@ class GameEdit(Game):
         trc = widget.tag_ranges(self.current)
         tr = widget.tag_nextrange(NAVIGATE_TOKEN, trc[-1])
         if not tr:
-            tr = widget.tag_nextrange(EDIT_RESULT)
+            tr = [
+                widget.index(widget.tag_nextrange(EDIT_RESULT, trc[-1])[
+                    0] + '-1 lines lineend')]
         trfnl = widget.tag_prevrange(FORCED_NEWLINE_TAG, tr[0], trc[-1])
         if trfnl:
             tr = trfnl
