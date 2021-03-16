@@ -1407,6 +1407,10 @@ class GameEdit(Game):
         FORCE_NEWLINE_AFTER_FULLMOVES without a newline would be created.
 
         """
+
+        # Maybe always look at NAVIGATE_TOKEN if the search can be stopped
+        # at start of movetext: is this START_SCORE_MARK at all times.  Doubt
+        # is when START_SCORE_MARK is set.
         widget = self.score
         tpr = widget.tag_prevrange(tag, range_[0])
         if not tpr:
@@ -1418,12 +1422,16 @@ class GameEdit(Game):
         if not forced_newline:
             return
 
+        # Do not delete both newlines around the RAV being deleted if
+        # it the last one in a list of several for a move.
+
         # A non-move token before, and adjacent to, a forced newline will
         # leave '\n\n' when deleted, failing the 'len(tri)' test if there
         # are more than FORCE_NEWLINE_AFTER_FULLMOVES fullmoves enclosing
         # the token without a non-move token.  Second newline is forced
         # newline associated with adjacent token: delete other one.
         if widget.get(*forced_newline) == '\n\n':
+            nttpr = widget.tag_prevrange(NAVIGATE_TOKEN, range_[0])
             widget.delete(forced_newline[0])
             forced_newline = widget.tag_prevrange(
                 FORCED_NEWLINE_TAG,
@@ -1431,18 +1439,25 @@ class GameEdit(Game):
                 tpr[-1])
             if not forced_newline:
                 return
+            nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, forced_newline[-1])
+            if nttnr and NAVIGATE_MOVE not in widget.tag_names(nttnr[0]):
+                return
+            if not nttnr:
+                return
+            if nttpr and NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
+                return
 
-        tpr = widget.tag_prevrange(FORCED_NEWLINE_TAG, forced_newline[0])
-        if not tpr:
-            tpr = [widget.index(START_SCORE_MARK)]
-        tnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, forced_newline[1])
-        if not tnr:
-            tnr = [widget.index(tkinter.END)]
+        fnltpr = widget.tag_prevrange(FORCED_NEWLINE_TAG, forced_newline[0])
+        if not fnltpr:
+            fnltpr = [widget.index(START_SCORE_MARK)]
+        fnltnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, forced_newline[-1])
+        if not fnltnr:
+            fnltnr = [widget.index(tkinter.END)]
         tri = 0
-        if tpr or tnr:
+        if fnltpr or fnltnr:
             tr = widget.tag_ranges(NAVIGATE_MOVE)
-            pr = tpr[-1]
-            nr = tnr[0]
+            pr = fnltpr[-1]
+            nr = fnltnr[0]
             for ti in tr:
                 if (widget.compare(ti, '>', pr) and
                     widget.compare(ti, '<', nr)):
@@ -1837,6 +1852,11 @@ class GameEdit(Game):
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
             widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+
+        # event_char and separator will have been tagged for elide by enclosure
+        # if it is a black move.  The indentation tag too, but that is needed.
+        widget.tag_remove(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+
         for tag in (
             positiontag,
             vartag,
@@ -1869,22 +1889,43 @@ class GameEdit(Game):
 
     def insert_empty_comment(self):
         """Insert "{<null>) " sequence."""
-        self.set_insertion_point_before_next_token()
+        self.set_insertion_point_before_next_token(
+            between_newlines=bool(
+                self.score.tag_nextrange(
+                    NAVIGATE_TOKEN,
+                    tkinter.INSERT,
+                    self.score.tag_ranges(EDIT_RESULT)[0])))
         self.add_start_comment('{}', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
 
     def insert_empty_comment_to_eol(self):
         """Insert ";<null>\n " sequence."""
-        self.set_insertion_point_before_next_token()
+        self.set_insertion_point_before_next_token(
+            between_newlines=bool(
+                self.score.tag_nextrange(
+                    NAVIGATE_TOKEN,
+                    tkinter.INSERT,
+                    self.score.tag_ranges(EDIT_RESULT)[0])))
         self.add_comment_to_eol(';\n', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
 
     def insert_empty_escape_to_eol(self):
-        """Insert "\n%<null>\n " sequence."""
-        self.set_insertion_point_before_next_token()
-        self.add_escape_to_eol('\n%\n', self.get_position_for_current())
+        """Insert "\n%<null>\n " sequence.
+
+        Leading '\n' is the PGN rule.  Here this is done as a consequence
+        of putting all non-move movetext tokens on their own line.  Thus
+        identical to comment to EOL except '%' not ';' at beginning.
+
+        """
+        self.set_insertion_point_before_next_token(
+            between_newlines=bool(
+                self.score.tag_nextrange(
+                    NAVIGATE_TOKEN,
+                    tkinter.INSERT,
+                    self.score.tag_ranges(EDIT_RESULT)[0])))
+        self.add_comment_to_eol('%\n', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
 
@@ -1908,7 +1949,12 @@ class GameEdit(Game):
 
     def insert_empty_reserved(self):
         """Insert "<[null]>) " sequence."""
-        self.set_insertion_point_before_next_token()
+        self.set_insertion_point_before_next_token(
+            between_newlines=bool(
+                self.score.tag_nextrange(
+                    NAVIGATE_TOKEN,
+                    tkinter.INSERT,
+                    self.score.tag_ranges(EDIT_RESULT)[0])))
         self.add_start_reserved('<>', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
@@ -1967,7 +2013,9 @@ class GameEdit(Game):
             start, end = nextmove
             widget.tag_add(ALL_CHOICES, start, end)
             widget.tag_add(choice, start, end)
-        elif not widget.tag_nextrange(prior, '1.0'):
+        # Why not just test 'ctr' which is already set?
+        elif not ctr:#widget.tag_nextrange(prior, '1.0'):
+            assert bool(ctr) == bool(widget.tag_nextrange(prior, '1.0'))
             # no variations exist immediately after current move so set up
             # variation choice structures.  map_insert_rav cannot do this as
             # it assumes variation structure exists, if at all, for preceding
@@ -1979,7 +2027,9 @@ class GameEdit(Game):
             widget.tag_add(ALL_CHOICES, start, end)
             widget.tag_add(choice, start, end)
         widget.mark_set(tkinter.INSERT, point)
-        self.insert_forced_newline_into_text()
+        # Existence of choice implies the prior forced newline is in place.
+        if not ctr:
+            self.insert_forced_newline_into_text()
         start, end, sepend = self.insert_token_into_text('(', SPACE_SEP)
 
         tpm = self.tagpositionmap
@@ -2019,6 +2069,10 @@ class GameEdit(Game):
         widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+
+        # event_char and separator will have been tagged for elide by enclosure
+        # if it is a black move.  The indentation tag too, but that is needed.
+        widget.tag_remove(MOVETEXT_MOVENUMBER_TAG, start, sepend)
 
         # FORCED_INDENT_TAG is not needed, compared with
         # insert_empty_move_after_currentmove(), because this token can only
@@ -2150,6 +2204,8 @@ class GameEdit(Game):
         else:
             self.previousmovetags[positiontag] = (None, None, None)
 
+    # Override Score version because GameEdit inserts and Score appends.
+    # Unwanted tags can be inherited from surrounding characters.
     def map_move_text(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self.tag_token_for_editing(
@@ -2161,6 +2217,8 @@ class GameEdit(Game):
         self._token_position = self.tagpositionmap[positiontag]
         return token_indicies
 
+    # Override Score version because GameEdit inserts and Score appends.
+    # Unwanted tags can be inherited from surrounding characters.
     def map_start_rav(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         # need self._choicetag set by supersclass method
@@ -2226,14 +2284,18 @@ class GameEdit(Game):
 
     def _map_start_comment(self, token):
         """Extend to tag token for single-step navigation and game editing."""
+        if self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                    tkinter.INSERT,
+                                    START_SCORE_MARK):
+            self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super().map_start_comment(token),
+            self.insert_token_into_text(token, SPACE_SEP),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_COMMENT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_start_comment(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_comment(token)
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
@@ -2241,23 +2303,28 @@ class GameEdit(Game):
         return token_indicies
 
     def map_start_comment(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_comment(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def _map_comment_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
+        if self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                    tkinter.INSERT,
+                                    START_SCORE_MARK):
+            self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super().map_comment_to_eol(token),
+            super()._map_comment_to_eol(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_COMMENT_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_comment_to_eol(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_comment_to_eol(token)
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
@@ -2265,23 +2332,28 @@ class GameEdit(Game):
         return token_indicies
 
     def map_comment_to_eol(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_comment_to_eol(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def _map_escape_to_eol(self, token):
         """Extend to tag token for single-step navigation and game editing."""
+        if self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                    tkinter.INSERT,
+                                    START_SCORE_MARK):
+            self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super().map_escape_to_eol(token),
+            super()._map_escape_to_eol(token),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_ESCAPE_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_escape_to_eol(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_escape_to_eol(token)
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
@@ -2289,8 +2361,9 @@ class GameEdit(Game):
         return token_indicies
 
     def map_escape_to_eol(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_escape_to_eol(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
@@ -2307,15 +2380,15 @@ class GameEdit(Game):
         return token_indicies
 
     def _map_glyph(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         return self.tag_token_for_editing(
-            super().map_glyph(token),
+            self.insert_token_into_text(token, SPACE_SEP),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_GLYPH, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_glyph(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_glyph(token)
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
@@ -2323,7 +2396,7 @@ class GameEdit(Game):
         return token_indicies
 
     def map_glyph(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_glyph(token)
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
@@ -2341,15 +2414,19 @@ class GameEdit(Game):
         return token_indicies
 
     def _map_start_reserved(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
+        if self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                      tkinter.INSERT,
+                                      START_SCORE_MARK):
+            self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super().map_start_reserved(token),
+            self.insert_token_into_text(token, SPACE_SEP),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_RESERVED, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             )
 
     def add_start_reserved(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_reserved(token)
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
@@ -2357,8 +2434,9 @@ class GameEdit(Game):
         return token_indicies
 
     def map_start_reserved(self, token):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_start_reserved(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
@@ -2706,6 +2784,15 @@ class GameEdit(Game):
             if widget.compare(tkinter.INSERT, '<', START_EDIT_MARK):
                 widget.mark_set(tkinter.INSERT, START_EDIT_MARK)
         
+    # Adding between_newlines argument seemed a good idea at first, but when
+    # the insert_empty_comment() method turned out to need a conditional to
+    # set the argument the whole thing began to look far too complicated.
+    # See the other insert_empty_*() methods, except moves, too.
+    # Solution may involve a new mark with right gravity, END_SCORE_MARK,
+    # set at end of line before the Game Termination Marker.  Perhaps the
+    # blank line between the PGN Tags and the Game Termination Marker in the
+    # new game template should be removed, if this is not forced.
+    # The escaped line may continue to be a problem.
     def set_insertion_point_before_next_token(self, between_newlines=True):
         """INSERT is set before next token and it's move number if any, and
         before it's 'forced newline' too if there is one.  Ensure there is an

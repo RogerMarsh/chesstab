@@ -1566,22 +1566,29 @@ class Score(SharedTextScore, BlankText):
 
     def map_start_comment(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.insert_forced_newline_into_text()
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    def map_comment_to_eol(self, token):
+    # self._force_newline is not set by gameedit.GameEdit.add_comment_to_eol().
+    def _map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self.insert_forced_newline_into_text()
         widget = self.score
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])#token)
         end = widget.index(tkinter.INSERT)# + ' -1 chars')
         #widget.insert(tkinter.INSERT, NULL_SEP)
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, widget.index(tkinter.INSERT)
 
-    def map_escape_to_eol(self, token):
+    def map_comment_to_eol(self, token):
+        """Add token to game text. position is ignored. Return token range."""
+        self.insert_forced_newline_into_text()
+        token_indicies = self._map_comment_to_eol(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        return token_indicies
+
+    # self._force_newline is not set by gameedit.GameEdit.add_escape_to_eol().
+    def _map_escape_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
         start = widget.index(tkinter.INSERT)
@@ -1595,8 +1602,13 @@ class Score(SharedTextScore, BlankText):
         widget.tag_add(FORCED_NEWLINE_TAG, start)
 
         #widget.insert(tkinter.INSERT, NULL_SEP)
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, widget.index(tkinter.INSERT)
+
+    def map_escape_to_eol(self, token):
+        """Add token to game text. position is ignored. Return token range."""
+        token_indicies = self._map_comment_to_eol(token)
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        return token_indicies
 
     def map_integer(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
@@ -1612,8 +1624,8 @@ class Score(SharedTextScore, BlankText):
 
     def map_start_reserved(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.insert_forced_newline_into_text()
+        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):
