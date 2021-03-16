@@ -371,7 +371,9 @@ class GameEdit(Game):
 
         """
         self.set_event_bindings_score(
-            self.get_navigate_score_from_non_move_events(), switch=switch)
+            self.get_primary_activity_from_non_move_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
         if include_movetext:
             self.set_event_bindings_score(
                 self.get_insert_pgn_in_movetext_events(), switch=switch)
@@ -538,7 +540,9 @@ class GameEdit(Game):
              self.press_break),
             ), switch=switch)
         self.set_event_bindings_score(
-            self.get_navigate_score_from_non_move_events(), switch=switch)
+            self.get_primary_activity_from_non_move_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
         
     # Should self.set_edit_symbol_mode_bindings() be used?
     def bind_for_rav_end(self, switch=True):
@@ -554,7 +558,9 @@ class GameEdit(Game):
              self.press_break),
             ), switch=switch)
         self.set_event_bindings_score(
-            self.get_navigate_score_from_non_move_events(), switch=switch)
+            self.get_primary_activity_from_non_move_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
         
     def bind_for_no_current_token(self, switch=True):
         if switch:
@@ -579,7 +585,9 @@ class GameEdit(Game):
              self.press_break),
             ), switch=switch)
         self.set_event_bindings_score(
-            self.get_navigate_score_from_non_move_events(), switch=switch)
+            self.get_primary_activity_from_non_move_events(), switch=switch)
+        self.set_event_bindings_score(
+            self.get_navigate_score_events(), switch=switch)
         
     def bind_for_initial_state(self, switch=True):
         if switch:
@@ -3021,7 +3029,7 @@ class GameEdit(Game):
     def create_non_move_popup(self, popup):
         popup = self.create_popup(
             popup,
-            move_navigation=self.get_navigate_score_from_non_move_events)
+            move_navigation=self.get_primary_activity_from_non_move_events)
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.export_popup_label)
         self.add_pgn_insert_to_submenu_of_popup(
@@ -3032,7 +3040,7 @@ class GameEdit(Game):
     def create_pgn_tag_popup(self):
         popup = self.create_popup(
             self.pgn_tag_popup,
-            move_navigation=self.get_navigate_score_from_non_move_events)
+            move_navigation=self.get_primary_activity_from_non_move_events)
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.export_popup_label)
         self.add_pgn_insert_to_submenu_of_popup(
@@ -3057,7 +3065,7 @@ class GameEdit(Game):
     def create_game_termination_popup(self):
         popup = self.create_popup(
             self.game_termination_popup,
-            move_navigation=self.get_navigate_score_from_non_move_events)
+            move_navigation=self.get_primary_activity_from_non_move_events)
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.export_popup_label)
         self.create_widget_navigation_submenu_for_popup(popup)
@@ -3412,7 +3420,7 @@ class GameEdit(Game):
              self.delete_move_char_right),
             )
         
-    def get_navigate_score_from_non_move_events(self):
+    def get_primary_activity_from_non_move_events(self):
         return (
             (EventSpec.gameedit_non_move_show_previous_in_variation,
              self.show_prev_in_variation_from_non_move_token),
