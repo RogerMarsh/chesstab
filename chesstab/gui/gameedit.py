@@ -134,7 +134,7 @@ _TOKEN_LEAD_TRAIL = {
     EDIT_COMMENT: (1, 1),
     EDIT_RESERVED: (1, 1),
     EDIT_COMMENT_EOL: (1, 0),
-    EDIT_ESCAPE_EOL: (2, 0),
+    EDIT_ESCAPE_EOL: (1, 0),
     EDIT_MOVE_ERROR: (0, 0),
     EDIT_MOVE: (0, 0),
     INSERT_RAV: (0, 0),
@@ -713,8 +713,7 @@ class GameEdit(Game):
         if self.current:
             if not self.is_current_in_movetext():
                 return 'break'
-        self.insert_empty_escape_to_eol()
-        return self.show_next_comment()
+        return self.show_item(new_item=self.insert_empty_escape_to_eol())
         
     def insert_glyph(self, event=None):
         """Insert glyph in game score after current."""
@@ -1942,9 +1941,10 @@ class GameEdit(Game):
                     NAVIGATE_TOKEN,
                     tkinter.INSERT,
                     self.score.tag_ranges(EDIT_RESULT)[0])))
-        self.add_comment_to_eol('%\n', self.get_position_for_current())
+        t = self.add_escape_to_eol('%\n', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
+        return t[0]
 
     def insert_empty_glyph(self):
         """Insert "$<null> " sequence."""
@@ -2368,8 +2368,7 @@ class GameEdit(Game):
         return self.tag_token_for_editing(
             super()._map_escape_to_eol(token),
             self.get_tag_and_mark_names,
-            tag_start_to_end=(
-                EDIT_ESCAPE_EOL, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
+            tag_start_to_end=(EDIT_ESCAPE_EOL, NAVIGATE_TOKEN),
             )
 
     def add_escape_to_eol(self, token, position):
@@ -2378,8 +2377,13 @@ class GameEdit(Game):
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
-        return token_indicies
+        return positiontag, token_indicies
 
+    # The EDIT_ESCAPE_EOL entry in _TOKEN_LEAD_TRAIL has been changed from
+    # (2, 0) to (1, 0) to fit the add_escape_to_eol() case.  Not sure yet
+    # if this breaks the map_escape_to_eol() case, which currently cannot
+    # happen because '\n%\n' tokens are not put on database even if present
+    # in the PGN movetext.
     def map_escape_to_eol(self, token):
         """Override to tag token for single-step navigation and game editing."""
         positiontag, token_indicies = self._map_escape_to_eol(token)
