@@ -850,8 +850,7 @@ class GameEdit(Game):
         if self.current:
             if not self.is_current_in_movetext():
                 return 'break'
-        self.insert_empty_reserved()
-        return self.show_next_comment()
+        return self.show_item(new_item=self.insert_empty_reserved())
 
     def insert_castle_queenside_command(self):
         """Insert or edit the O-O-O movetext."""
@@ -1449,7 +1448,7 @@ class GameEdit(Game):
                 return
             nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, forced_newline[-1])
             if nttnr and NAVIGATE_MOVE not in widget.tag_names(nttnr[0]):
-                if widget.get(*nttnr) != RAV_END:
+                if widget.get(*nttnr) != END_RAV:
                     return
             if not nttnr:
                 return
@@ -1973,9 +1972,10 @@ class GameEdit(Game):
                     NAVIGATE_TOKEN,
                     tkinter.INSERT,
                     self.score.tag_ranges(EDIT_RESULT)[0])))
-        self.add_start_reserved('<>', self.get_position_for_current())
+        t = self.add_start_reserved('<>', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
+        return t[0]
 
     def insert_empty_rav_after_next_move(self, event_char):
         """Insert " ( <event_char> )" sequence.
@@ -2446,7 +2446,7 @@ class GameEdit(Game):
         return self.tag_token_for_editing(
             self.insert_token_into_text(token, SPACE_SEP),
             self.get_tag_and_mark_names,
-            tag_start_to_end=(EDIT_RESERVED, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
+            tag_start_to_end=(EDIT_RESERVED, NAVIGATE_TOKEN),
             )
 
     def add_start_reserved(self, token, position):
@@ -2455,7 +2455,7 @@ class GameEdit(Game):
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
-        return token_indicies
+        return positiontag, token_indicies
 
     def map_start_reserved(self, token):
         """Override to tag token for single-step navigation and game editing."""
@@ -3001,7 +3001,8 @@ class GameEdit(Game):
         tag_and_mark_names - method which returns tag and mark names for token
         tag_start_to_end - state tags appropriate for editable text of token
         tag_start_to_sepend - state tags appropriate for token
-        mark_for_edit - the insert index to be used when editing token
+        mark_for_edit - True if tokenmark returned by tag_and_mark_names is
+        to be made the insert point for editing the token
         tag_position - True if POSITION tag returned by tag_and_mark_names
         needs to be tagged. (There should be no harm doing this if not needed.)
 
