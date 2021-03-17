@@ -697,16 +697,14 @@ class GameEdit(Game):
         if self.current:
             if not self.is_current_in_movetext():
                 return 'break'
-        self.insert_empty_comment()
-        return self.show_next_comment()
+        return self.show_item(new_item=self.insert_empty_comment())
         
     def insert_comment_to_eol(self, event=None):
         """Insert comment to eol in game score after current."""
         if self.current:
             if not self.is_current_in_movetext():
                 return 'break'
-        self.insert_empty_comment_to_eol()
-        return self.show_next_comment()
+        return self.show_item(new_item=self.insert_empty_comment_to_eol())
         
     def insert_escape_to_eol(self, event=None):
         """Insert escape to eol in game score after current."""
@@ -720,8 +718,7 @@ class GameEdit(Game):
         if self.current:
             if not self.is_current_in_movetext():
                 return 'break'
-        self.insert_empty_glyph()
-        return self.show_next_comment()
+        return self.show_item(new_item=self.insert_empty_glyph())
         
     def insert_pgn_tag(self, event=None):
         """Insert a single empty pgn tag in game score after current."""
@@ -1911,9 +1908,10 @@ class GameEdit(Game):
                     NAVIGATE_TOKEN,
                     tkinter.INSERT,
                     self.score.tag_ranges(EDIT_RESULT)[0])))
-        self.add_start_comment('{}', self.get_position_for_current())
+        t = self.add_start_comment('{}', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
+        return t[0]
 
     def insert_empty_comment_to_eol(self):
         """Insert ";<null>\n " sequence."""
@@ -1923,9 +1921,10 @@ class GameEdit(Game):
                     NAVIGATE_TOKEN,
                     tkinter.INSERT,
                     self.score.tag_ranges(EDIT_RESULT)[0])))
-        self.add_comment_to_eol(';\n', self.get_position_for_current())
+        t = self.add_comment_to_eol(';\n', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
+        return t[0]
 
     def insert_empty_escape_to_eol(self):
         """Insert "\n%<null>\n " sequence.
@@ -1949,9 +1948,10 @@ class GameEdit(Game):
     def insert_empty_glyph(self):
         """Insert "$<null> " sequence."""
         self.set_insertion_point_before_next_token(between_newlines=False)
-        self.add_glyph('$', self.get_position_for_current())
+        t = self.add_glyph('$', self.get_position_for_current())
         if self.current is None:
             self.set_start_score_mark_before_positiontag()
+        return t[0]
 
     def insert_empty_pgn_tag(self):
         """Insert ' [ <null> "<null>" ] ' sequence."""
@@ -2320,7 +2320,7 @@ class GameEdit(Game):
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
-        return token_indicies
+        return positiontag, token_indicies
 
     def map_start_comment(self, token):
         """Override to tag token for single-step navigation and game editing."""
@@ -2349,7 +2349,7 @@ class GameEdit(Game):
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
-        return token_indicies
+        return positiontag, token_indicies
 
     def map_comment_to_eol(self, token):
         """Override to tag token for single-step navigation and game editing."""
@@ -2421,7 +2421,7 @@ class GameEdit(Game):
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
-        return token_indicies
+        return positiontag, token_indicies
 
     def map_glyph(self, token):
         """Override to tag token for single-step navigation and game editing."""
