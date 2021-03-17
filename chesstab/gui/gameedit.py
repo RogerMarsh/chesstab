@@ -1449,7 +1449,8 @@ class GameEdit(Game):
                 return
             nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, forced_newline[-1])
             if nttnr and NAVIGATE_MOVE not in widget.tag_names(nttnr[0]):
-                return
+                if widget.get(*nttnr) != RAV_END:
+                    return
             if not nttnr:
                 return
             if nttpr and NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
@@ -1662,7 +1663,12 @@ class GameEdit(Game):
             point = widget.tag_nextrange(EDIT_RESULT, insert_point_limit)
             if not point:
                 return widget.index(tkinter.END)
-            return widget.index(point[0]) + '-1 lines lineend'
+            nttpr = widget.tag_prevrange(NAVIGATE_TOKEN, point[0])
+            widget.mark_set(tkinter.INSERT,
+                            widget.index(point[0]) + '-1 lines lineend')
+            if NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
+                self.insert_forced_newline_into_text()
+            return widget.index(tkinter.INSERT)
         if not next_move:
             return end_rav[0]
         if widget.compare(next_move[0], '>', end_rav[0]):
@@ -1684,7 +1690,11 @@ class GameEdit(Game):
         while True:
             nr = widget.tag_nextrange(NAVIGATE_TOKEN, nr[-1])
             if not nr:
-                return widget.index(end_rav[1] + '+1char')
+                if widget.get(*end_rav) == END_RAV:
+                    return widget.index(end_rav[1] + '+1char')
+                widget.mark_set(tkinter.INSERT, widget.index(end_rav[1]))
+                self.insert_forced_newline_into_text()
+                return widget.index(tkinter.INSERT)
             end_rav = nr
             token = widget.get(*nr)
             if token == START_RAV:
@@ -2127,7 +2137,9 @@ class GameEdit(Game):
             current,
             variation,
             variation)
-        self.insert_forced_newline_into_text()
+        nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, end)
+        if nttnr and NAVIGATE_MOVE in widget.tag_names(nttnr[0]):
+            self.insert_forced_newline_into_text()
 
         return newmovetag
 
@@ -2389,6 +2401,10 @@ class GameEdit(Game):
 
     def _map_glyph(self, token):
         """Tag token for single-step navigation and game editing."""
+        tpr = self.score.tag_prevrange(
+            NAVIGATE_TOKEN, tkinter.INSERT, START_SCORE_MARK)
+        if tpr and NAVIGATE_MOVE not in self.score.tag_names(tpr[0]):
+            self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             self.insert_token_into_text(token, SPACE_SEP),
             self.get_tag_and_mark_names,
