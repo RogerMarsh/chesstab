@@ -2463,9 +2463,19 @@ class GameEdit(Game):
 
     def map_glyph(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_glyph(
-            token,
-            self.tokens_exist_between_movetext_start_and_insert_point())
+
+        # At present NAGs are not put on a line of their own when following
+        # a move.  They would be if the NAG translations were shown too.
+        #before = self.tokens_exist_between_movetext_start_and_insert_point()
+        before = self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                          tkinter.INSERT,
+                                          START_SCORE_MARK)
+        if before:
+            before = NAVIGATE_MOVE not in self.score.tag_names(before[0])
+        else:
+            before = False
+
+        positiontag, token_indicies = self._map_glyph(token, before)
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
