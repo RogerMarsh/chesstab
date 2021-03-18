@@ -2315,11 +2315,9 @@ class GameEdit(Game):
         self.tagpositionmap[positiontag] = self._token_position
         return token_indicies
 
-    def _map_start_comment(self, token):
+    def _map_start_comment(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
-        if self.score.tag_prevrange(NAVIGATE_TOKEN,
-                                    tkinter.INSERT,
-                                    START_SCORE_MARK):
+        if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             self.insert_token_into_text(token, SPACE_SEP),
@@ -2329,7 +2327,11 @@ class GameEdit(Game):
 
     def add_start_comment(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_comment(token)
+        before = self.tokens_exist_between_movetext_start_and_insert_point()
+        after = self.tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_start_comment(token, before)
+        if not before and after:
+            self.insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
@@ -2337,17 +2339,17 @@ class GameEdit(Game):
 
     def map_start_comment(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_comment(token)
+        positiontag, token_indicies = self._map_start_comment(
+            token,
+            self.tokens_exist_between_movetext_start_and_insert_point())
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_comment_to_eol(self, token):
+    def _map_comment_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
-        if self.score.tag_prevrange(NAVIGATE_TOKEN,
-                                    tkinter.INSERT,
-                                    START_SCORE_MARK):
+        if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             super()._map_comment_to_eol(token),
@@ -2358,7 +2360,11 @@ class GameEdit(Game):
 
     def add_comment_to_eol(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_comment_to_eol(token)
+        before = self.tokens_exist_between_movetext_start_and_insert_point()
+        after = self.tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_comment_to_eol(token, before)
+        if not before and after:
+            self.insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
@@ -2366,17 +2372,17 @@ class GameEdit(Game):
 
     def map_comment_to_eol(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_comment_to_eol(token)
+        positiontag, token_indicies = self._map_comment_to_eol(
+            token,
+            self.tokens_exist_between_movetext_start_and_insert_point())
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_escape_to_eol(self, token):
+    def _map_escape_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
-        if self.score.tag_prevrange(NAVIGATE_TOKEN,
-                                    tkinter.INSERT,
-                                    START_SCORE_MARK):
+        if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             super()._map_escape_to_eol(token),
@@ -2386,7 +2392,11 @@ class GameEdit(Game):
 
     def add_escape_to_eol(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_escape_to_eol(token)
+        before = self.tokens_exist_between_movetext_start_and_insert_point()
+        after = self.tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_escape_to_eol(token, before)
+        if not before and after:
+            self.insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
@@ -2399,7 +2409,9 @@ class GameEdit(Game):
     # in the PGN movetext.
     def map_escape_to_eol(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_escape_to_eol(token)
+        positiontag, token_indicies = self._map_escape_to_eol(
+            token,
+            self.tokens_exist_between_movetext_start_and_insert_point())
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
@@ -2416,11 +2428,9 @@ class GameEdit(Game):
         self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_glyph(self, token):
+    def _map_glyph(self, token, newline_prefix):
         """Tag token for single-step navigation and game editing."""
-        tpr = self.score.tag_prevrange(
-            NAVIGATE_TOKEN, tkinter.INSERT, START_SCORE_MARK)
-        if tpr and NAVIGATE_MOVE not in self.score.tag_names(tpr[0]):
+        if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             self.insert_token_into_text(token, SPACE_SEP),
@@ -2430,7 +2440,22 @@ class GameEdit(Game):
 
     def add_glyph(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_glyph(token)
+
+        # At present NAGs are not put on a line of their own when following
+        # a move.  They would be if the NAG translations were shown too.
+        #before = self.tokens_exist_between_movetext_start_and_insert_point()
+        before = self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                          tkinter.INSERT,
+                                          START_SCORE_MARK)
+        if before:
+            before = NAVIGATE_MOVE not in self.score.tag_names(before[0])
+        else:
+            before = False
+
+        after = self.tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_glyph(token, before)
+        if not before and after:
+            self.insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
@@ -2438,7 +2463,9 @@ class GameEdit(Game):
 
     def map_glyph(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_glyph(token)
+        positiontag, token_indicies = self._map_glyph(
+            token,
+            self.tokens_exist_between_movetext_start_and_insert_point())
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
@@ -2454,11 +2481,9 @@ class GameEdit(Game):
         self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_start_reserved(self, token):
+    def _map_start_reserved(self, token, newline_prefix):
         """Tag token for single-step navigation and game editing."""
-        if self.score.tag_prevrange(NAVIGATE_TOKEN,
-                                      tkinter.INSERT,
-                                      START_SCORE_MARK):
+        if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
             self.insert_token_into_text(token, SPACE_SEP),
@@ -2468,7 +2493,11 @@ class GameEdit(Game):
 
     def add_start_reserved(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_reserved(token)
+        before = self.tokens_exist_between_movetext_start_and_insert_point()
+        after = self.tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_start_reserved(token, before)
+        if not before and after:
+            self.insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1])
         self.link_inserts_to_moves(positiontag, position)
@@ -2476,7 +2505,9 @@ class GameEdit(Game):
 
     def map_start_reserved(self, token):
         """Override to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self._map_start_reserved(token)
+        positiontag, token_indicies = self._map_start_reserved(
+            token,
+            self.tokens_exist_between_movetext_start_and_insert_point())
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
@@ -2492,6 +2523,17 @@ class GameEdit(Game):
             )
         self.tagpositionmap[positiontag] = None
         return token_indicies
+
+    def tokens_exist_between_movetext_start_and_insert_point(self):
+        """Return True if tokens exist from movetext start to insert point."""
+        return bool(self.score.tag_prevrange(NAVIGATE_TOKEN,
+                                             tkinter.INSERT,
+                                             START_SCORE_MARK))
+
+    def tokens_exist_between_insert_point_and_game_terminator(self):
+        """Return True if tokens exist from insert point_to_game_terminator."""
+        return bool(self.score.tag_nextrange(NAVIGATE_TOKEN,
+                                             tkinter.INSERT))
 
     def process_move(self):
         """Splice a move being edited into the game score.
