@@ -1546,6 +1546,15 @@ class GameEdit(Game):
             self.set_current()
             self.apply_colouring_to_variation_back_to_main_line()
         elif self.current is None:
+            nttpr = widget.tag_prevrange(NAVIGATE_TOKEN,
+                                         tkinter.END,
+                                         widget.index(START_SCORE_MARK))
+            if nttpr:
+                fnltpr = widget.tag_prevrange(FORCED_NEWLINE_TAG,
+                                              tkinter.END,
+                                              widget.index(START_SCORE_MARK))
+                if fnltpr and widget.compare(fnltpr[0], '>',  nttpr[-1]):
+                    widget.delete(*fnltpr)
             self.set_current()
         else:
             start, end = widget.tag_ranges(self.current)
@@ -1827,6 +1836,10 @@ class GameEdit(Game):
             if p:
                 widget.mark_set(tkinter.INSERT,
                                 widget.index(p[0])+'-1 lines lineend')
+                if widget.tag_prevrange(NAVIGATE_TOKEN,
+                                        p[0],
+                                        widget.index(START_SCORE_MARK)):
+                    self.insert_forced_newline_into_text()
             else:
                 widget.mark_set(tkinter.INSERT, tkinter.END)
             vartag = self.get_rav_tag_names()[0]
