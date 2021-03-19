@@ -631,15 +631,25 @@ class Score(SharedTextScore, BlankText):
                 ''.join(('The following text was probably found between two ',
                          'games in a file expected to be in PGN format.\n\n')))
             self.score.insert(tkinter.END, self.collected_game._text)
+
+            # Must be replaced because bind_for_primary_activity() sets the
+            # board pointer bindings wrong for initial display of game.
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
                 self.bind_for_primary_activity()
+                self.set_board_pointer_widget_navigation_bindings(True)
+
             if not self._is_text_editable:
                 self.score.configure(state=tkinter.DISABLED)
             if reset_undo:
                 self.score.edit_reset()
             raise
+
+        # Must be replaced because bind_for_primary_activity() sets the
+        # board pointer bindings wrong for initial display of game.
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_primary_activity()
+            self.set_board_pointer_widget_navigation_bindings(True)
+
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:

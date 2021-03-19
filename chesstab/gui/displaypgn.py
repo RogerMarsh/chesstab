@@ -77,10 +77,12 @@ class ShowPGN(ShowText, ScorePGN):
         """Set bindings to navigate PGN score on pointer click."""
         if self.score is self.takefocus_widget:
             super().bind_for_item_navigation()
+            self.set_board_pointer_move_bindings(True)
             self.analysis.set_score_pointer_item_navigation_bindings(False)
             self.set_score_pointer_to_score_bindings(False)
             self.set_analysis_score_pointer_to_analysis_score_bindings(True)
         else:
+            self.analysis.set_board_pointer_move_bindings(True)
             self.set_score_pointer_item_navigation_bindings(False)
             self.analysis.set_score_pointer_item_navigation_bindings(True)
             self.set_score_pointer_to_score_bindings(True)

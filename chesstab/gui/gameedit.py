@@ -1077,11 +1077,8 @@ class GameEdit(Game):
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
                 self.token_bind_method[NonTagBind.NO_EDITABLE_TAGS](self)
             self.score.mark_set(tkinter.INSERT, START_SCORE_MARK)
-
-            # Must be replaced because it's assumptions may not be true.
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
                 self.bind_for_primary_activity()
-
             return
 
         # Disable editing.  (This was wrapped in a method used here only.)
