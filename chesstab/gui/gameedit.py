@@ -394,7 +394,8 @@ class GameEdit(Game):
                  self.insert_castle_queenside_command),
                 ), switch=switch)
         self.set_event_bindings_score(
-            self.get_button_events(buttonpress3=popup_pointer),
+            self.get_button_events(buttonpress1=self.go_to_token,
+                                   buttonpress3=popup_pointer),
             switch=switch)
         self.set_event_bindings_score(
             self.get_F10_popup_events(popup_top_left, popup_pointer),
