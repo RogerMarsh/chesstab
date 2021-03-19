@@ -1446,8 +1446,12 @@ class GameEdit(Game):
                     return
             if not nttnr:
                 return
-            if nttpr and NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
-                return
+            if nttpr:
+                if RAV_START_TAG in widget.tag_names(nttpr[0]):
+                    widget.delete(*forced_newline)
+                    return
+                if NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
+                    return
 
         fnltpr = widget.tag_prevrange(FORCED_NEWLINE_TAG, forced_newline[0])
         if not fnltpr:
@@ -1590,16 +1594,9 @@ class GameEdit(Game):
             return
         tr = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if tr:
-            if widget.compare(START_SCORE_MARK, '>', tkinter.INSERT):
-                current = self.select_prev_token_in_game()
-            else:
-                current = self.select_prev_comment_in_game()
-                if not current:
-                    tpr = widget.tag_prevrange(
-                        NAVIGATE_TOKEN, widget.tag_ranges(self.current)[0])
-                    if tpr:
-                        if widget.compare(tpr[0], '>', START_SCORE_MARK):
-                            current = self.get_position_tag_of_index(tpr[0])
+            current = self.select_prev_token_in_game()
+            if not current:
+                current = self.select_next_token_in_game()
             widget.delete(*tr)
             self.delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr)
             del self.tagpositionmap[self.current]
