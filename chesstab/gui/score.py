@@ -1528,8 +1528,8 @@ class Score(SharedTextScore, BlankText):
         Variation tags are set for guiding move navigation. self._vartag
         self._ravtag self._token_position and self._choicetag are restored
         from the stack for restoration at the end of the variation.
-        self._start_latest_move is set to the move which the first move of
-        the variation replaced.
+        (self._start_latest_move, self._end_latest_move) is set to the range
+        of the move which the first move of the variation replaced.
 
         The _square_piece_map is reset from position.
 
@@ -2495,8 +2495,8 @@ class AnalysisScore(Score):
         Variation tags are set for guiding move navigation. self._vartag
         self._ravtag self._token_position and self._choicetag are restored
         from the stack for restoration at the end of the variation.
-        self._start_latest_move is set to the move which the first move of
-        the variation replaced.
+        (self._start_latest_move, self._end_latest_move) is set to the range
+        of the move which the first move of the variation replaced.
 
         """
         try:

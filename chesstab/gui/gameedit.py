@@ -1337,21 +1337,24 @@ class GameEdit(Game):
         """Remove bindings for editing and put cursor at next PGN tag."""
         return self.to_prev_pgn_tag() # to start of current PGN tag if in one
 
-    def add_move_to_editable_moves(self, start, end, variation):
-        """Remove editable move in current line and add move at start end.
+    # This method may be removed because it is used in only two places, and
+    # one of those needs the 'tr' value too.
+    def add_move_to_editable_moves(self, variation):
+        """Mark last move in variation for editing rather than insert RAV.
 
-        This method allows editing of the last move in a rav or the game, and
-        insertion of a new move after the editable move which then ceases to
-        be editable.
+        This method should be called when it is known there are no more moves
+        in the game or a RAV, which is at end of RAV or game termination.
 
         """
         widget = self.score
-        current = widget.tag_prevrange(variation, tkinter.END)
-        if current:
-            widget.tag_remove(EDIT_MOVE, current[0], current[-1])
-            widget.tag_add(INSERT_RAV, current[0], current[-1])
-        widget.tag_add(EDIT_MOVE, start, end)
-        widget.tag_remove(INSERT_RAV, start, end)
+        tr = widget.tag_prevrange(variation, tkinter.END)
+
+        # Is it a game score with no moves?
+        if not tr:
+            return
+
+        widget.tag_add(EDIT_MOVE, *tr)
+        widget.tag_remove(INSERT_RAV, *tr)
 
     def add_pgntag_to_map(self, name, value):
         """Add a PGN Tag, a name and value, to the game score.
@@ -2273,8 +2276,7 @@ class GameEdit(Game):
     def map_end_rav(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
         # last move in rav is editable
-        self.add_move_to_editable_moves(
-            self._start_latest_move, self._end_latest_move, self._vartag)
+        self.add_move_to_editable_moves(self._vartag)
         # need self._choicetag set by supersclass method
         token_indicies = super().map_end_rav(token, position)
         prior = self.get_prior_tag_for_choice(self._choicetag)
@@ -2298,9 +2300,7 @@ class GameEdit(Game):
     def map_termination(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         # last move in game is editable
-        if self._start_latest_move:
-            self.add_move_to_editable_moves(
-                self._start_latest_move, self._end_latest_move, self._vartag)
+        self.add_move_to_editable_moves(self._vartag)
         positiontag, token_indicies = self.tag_token_for_editing(
             super().map_termination(token),
             self.get_tag_and_mark_names,
