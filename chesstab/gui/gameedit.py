@@ -256,6 +256,10 @@ class GameEdit(Game):
     # Values are Tk tag names or members of NonTagBind enumeration.
     _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
+    # Set True if a RAV for the first move of game is added using the editor.
+    # Deleting RAVs for the first move of game is only allowed if False.
+    _first_move_rav_inserted = False
+
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
         super().__init__(gameclass=gameclass, **ka)
@@ -753,6 +757,32 @@ class GameEdit(Game):
         else:
             return self.show_prev_pgn_tag_field_name()
         
+    def confirm_insert_rav_at_first_move(self):
+        """Return response to dialogue about insert first move RAV.
+
+        At present it is not safe to allow RAVs for the first move of a game
+        to be deleted if a RAV for the first move has been inserted in the
+        same editor.
+
+        The game has to be saved and then re-opened before such RAVs can be
+        deleted safely.  The problem is in some cases a program crash will
+        occur when the RAV is deleted by deleting the only remaining
+        character in the only move in the RAV.
+
+        """
+        if self._first_move_rav_inserted:
+            return True
+        if tkinter.messagebox.askyesno(
+            parent = self.ui.get_toplevel(),
+            title='Confirm Insert RAV for First Move',
+            message=''.join(
+                ("If this RAV is inserted you will not be allowed to delete ",
+                 "RAVs for the first move in this game until the game has ",
+                 "been saved and re-opened.\n\nDo you wish to proceed?",
+                 ))):
+            self._first_move_rav_inserted = True
+        return self._first_move_rav_inserted
+        
     def insert_rav(self, event):
         """Edit game score on keyboard event."""
         # To catch insertion when no moves, even incomplete or illegal, exist.
@@ -762,6 +792,9 @@ class GameEdit(Game):
             return self.insert_move(event)
         if not event.char:
             return 'break'
+        if not self.current:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
         if event.char in _MOVECHARS:
             inserted_move = self.insert_empty_rav_after_next_move(
                 event.char.translate(_FORCECASE))
@@ -789,6 +822,9 @@ class GameEdit(Game):
             return self.insert_move_castle_queenside(event)
         if not event.char:
             return 'break'
+        if not self.current:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
         inserted_move = self.insert_empty_rav_after_next_move('O-O-O')
         while not self.is_move_start_of_variation(
             inserted_move, self.step_one_variation(self.current)):
@@ -851,6 +887,9 @@ class GameEdit(Game):
 
     def insert_castle_queenside_command(self):
         """Insert or edit the O-O-O movetext."""
+        if not self.current:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
         ria = self.is_at_least_one_move_in_movetext()
         c = self.score.tag_ranges(self.current)
 
@@ -1495,6 +1534,24 @@ class GameEdit(Game):
                     widget.tag_ranges(prior)[0])
             except IndexError:
                 current = None
+
+            # It is not yet clear what changes around here will allow the
+            # blocked deletions to proceed, without breaking anything else.
+            if current is None and self._first_move_rav_inserted:
+                tkinter.messagebox.showinfo(
+                    parent = self.ui.get_toplevel(),
+                    title='Delete RAV for First Move',
+                    message=''.join(
+                        ("At least one RAV has been inserted for the first ",
+                         "move of this game in this editing session.  ",
+                         "Program crashes are certain in some cases if the ",
+                         "deletion proceeds here.\n\nUse this game's ",
+                         "'Database | Edit' option to save the game then ",
+                         "re-open the game with 'Display allow edit' to do ",
+                         "the RAV deletion."
+                         )))
+                return
+
             self.step_one_variation_select(current)
             selection = self.get_selection_tag_for_prior(prior)
             sr = widget.tag_nextrange(choice, widget.tag_ranges(selection)[1])
