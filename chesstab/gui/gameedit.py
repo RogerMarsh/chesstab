@@ -1552,15 +1552,23 @@ class GameEdit(Game):
                          )))
                 return
 
-            self.step_one_variation_select(current)
-            selection = self.get_selection_tag_for_prior(prior)
-            sr = widget.tag_nextrange(choice, widget.tag_ranges(selection)[1])
-            if sr:
-                widget.tag_add(selection, *sr)
-            else:
-                widget.tag_add(
-                    selection,
-                    *widget.tag_nextrange(choice, '1.0')[:2])
+            # First range in choice is a move in main line relative to RAV.
+            # For first move do not highlight main line when no RAVs exist
+            # after deletion of this one.
+            # At other moves main line does not get highlighted when any RAV
+            # is deleted, because there is a move to make current before the
+            # move choices.
+            if current or len(widget.tag_ranges(choice)) > 4:
+                self.step_one_variation_select(current)
+                selection = self.get_selection_tag_for_prior(prior)
+                sr = widget.tag_nextrange(choice,
+                                          widget.tag_ranges(selection)[1])
+                if sr:
+                    widget.tag_add(selection, *sr)
+                else:
+                    widget.tag_add(
+                        selection,
+                        *widget.tag_nextrange(choice, '1.0')[:2])
             delete_rav = True
         else:
             current = self.select_prev_move_in_line()
