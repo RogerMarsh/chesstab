@@ -45,7 +45,7 @@ from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 
 from .eventspec import EventSpec
-from .score import NonTagBind
+from .score import NonTagBind, ScoreNoGameException
 from .scorepgn import ScorePGN
 from .displaytext import ShowText, DisplayText, EditText, InsertText
 

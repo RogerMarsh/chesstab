@@ -294,7 +294,7 @@ class PositionScore(ExceptionHandler):
     def is_index_in_main_line(self, index):
         """Return True if index is in the main line tag"""
         return bool(self.score.tag_nextrange(
-            self._gamevartag,
+            self.gamevartag,
             index,
             ''.join((str(index), '+1 chars'))))
 
@@ -344,7 +344,7 @@ class PositionScore(ExceptionHandler):
         # With get_current_...() methods as well do not need self._vartag
         # state attributes.
         self._vartag = self.get_rav_tag_names()
-        self._gamevartag = self._vartag
+        self.gamevartag = self._vartag
 
         self._square_piece_map = {}
         
@@ -377,6 +377,11 @@ class PositionScore(ExceptionHandler):
             self.score.mark_set(START_SCORE_MARK, str(tr[0]))
         else:
             self.score.mark_set(START_SCORE_MARK, '1.0')
+
+        # Delete the attributes used to build the self.score Text widget.
+        del self._square_piece_map
+        del self._force_movenumber
+        del self._vartag
 
     def compare_two_positions(self, one, two):
         """Return True if positions one and two are same, otherwise False.
@@ -444,7 +449,7 @@ class PositionScore(ExceptionHandler):
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE:
             widget.tag_add(tag, start, end)
-        if self._vartag is self._gamevartag:
+        if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
         if not (prev_match_prevcontext or prev_match_currcontext):

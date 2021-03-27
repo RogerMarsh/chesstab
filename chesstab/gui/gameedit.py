@@ -217,6 +217,10 @@ _error_wrapper_re = re.compile(
     flags=re.DOTALL)
 
 
+class GameEditException(Exception):
+    pass
+
+
 class GameEdit(Game):
     
     """Display a game with editing allowed.
@@ -1906,7 +1910,7 @@ class GameEdit(Game):
             else:
                 widget.mark_set(tkinter.INSERT, tkinter.END)
             vartag = self.get_rav_tag_names()[0]
-            self._gamevartag = vartag
+            self.gamevartag = vartag
         else:
             start_current, end_current = widget.tag_ranges(self.current)
             insert_point = self.get_insertion_point_at_end_of_rav(end_current)
@@ -1958,7 +1962,7 @@ class GameEdit(Game):
         if self.current is not None:
             widget.tag_remove(EDIT_MOVE, start_current, end_current)
             widget.tag_add(INSERT_RAV, start_current, end_current)
-        if vartag == self._gamevartag:
+        if vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         for tag in (
             tokentag,
@@ -2183,7 +2187,7 @@ class GameEdit(Game):
             ):
             widget.tag_add(tag, start, end)
 
-        if vartag is self._gamevartag:
+        if vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         for tag in (
             tokentag,
@@ -2300,6 +2304,36 @@ class GameEdit(Game):
         else:
             self.previousmovetags[positiontag] = (None, None, None)
 
+    def get_range_of_prior_move(self, start):
+        """Override. Return range of PRIOR_MOVE tag before start.
+
+        The GameEdit class tags '('s with a PRIOR_MOVE tag which can be used
+        directly to get the range for the prior move.
+
+        Presence of the PRIOR_MOVE tag on '(' breaks the algorithm used in
+        the Score class' version of this method.
+
+        """
+        widget = self.score
+        for n in widget.tag_names(start):
+            if n.startswith(CHOICE):
+                return widget.tag_prevrange(
+                    self.get_prior_tag_for_choice(n),
+                    start)
+            if n.startswith(PRIOR_MOVE):
+                return widget.tag_nextrange(n, START_SCORE_MARK)
+        raise GameEditException('Unable to find prior move for RAV')
+
+    def get_range_of_main_move_for_rav(self, start):
+        """Return range of move for which start index ends a RAV."""
+        widget = self.score
+        for n in widget.tag_names(start):
+            if n.startswith(RAV_MOVES):
+                return widget.tag_nextrange(
+                    n,
+                    widget.tag_nextrange(n, start)[1])
+        raise GameEditException('Unable to find position for end RAV')
+
     # Override Score version because GameEdit inserts and Score appends.
     # Unwanted tags can be inherited from surrounding characters.
     def map_move_text(self, token, position):
@@ -2317,7 +2351,6 @@ class GameEdit(Game):
     # Unwanted tags can be inherited from surrounding characters.
     def map_start_rav(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        # need self._choicetag set by supersclass method
         token_indicies = super().map_start_rav(token, position)
         prior = self.get_prior_tag_for_choice(self._choicetag)
         prior_range = self.score.tag_ranges(prior)
@@ -2342,23 +2375,24 @@ class GameEdit(Game):
         """Extend to tag token for single-step navigation and game editing."""
         # last move in rav is editable
         self.add_move_to_editable_moves(self._vartag)
-        # need self._choicetag set by supersclass method
         token_indicies = super().map_end_rav(token, position)
         prior = self.get_prior_tag_for_choice(self._choicetag)
-        if self.score.tag_ranges(prior):
+        prior_range = self.score.tag_ranges(prior)
+        if prior_range:
+            self._token_position = self.tagpositionmap[
+                self.get_position_tag_of_index(
+                    self.get_range_of_main_move_for_rav(prior_range[0])[0])]
             tags = (self._ravtag, NAVIGATE_TOKEN, RAV_END_TAG, prior)
         else:
+            self._token_position = self.tagpositionmap[None]
             tags = (self._ravtag, NAVIGATE_TOKEN, RAV_END_TAG)
-        # Superclass method will reset self._token_position self._vartag
         positiontag, token_indicies = self.tag_token_for_editing(
             token_indicies,
             self.get_tag_and_mark_names,
             tag_start_to_end=tags,
             mark_for_edit=False,
             )
-        self.tagpositionmap[positiontag] = self.tagpositionmap[
-            self.get_position_tag_of_index(
-                self.score.tag_prevrange(self._vartag, tkinter.END)[0])]
+        self.tagpositionmap[positiontag] = self._token_position
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 

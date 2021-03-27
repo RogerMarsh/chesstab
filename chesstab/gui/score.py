@@ -111,6 +111,10 @@ class ScoreMapToBoardException(Exception):
     pass
 
 
+class ScoreException(Exception):
+    pass
+
+
 class Score(SharedTextScore, BlankText):
 
     """Chess score widget.
@@ -935,6 +939,30 @@ class Score(SharedTextScore, BlankText):
         self.score.tag_remove(LINE_TAG, '1.0', tkinter.END)
         self.score.tag_remove(LINE_END_TAG, '1.0', tkinter.END)
 
+    def get_range_of_prior_move(self, start):
+        """Return range of PRIOR_MOVE tag before start.
+
+        This method exists for use by create_previousmovetag() method so
+        it can be overridden in GameEdit class.  The Score class does not
+        tag '(' with a PRIOR_MOVE tag, but a route to this tag exists via
+        the CHOICE tag of the nearest move before the '('.
+
+        The GameEdit class tags '('s with a PRIOR_MOVE tag in it's extended
+        map_start_rav() method, which happens to break the algorithm in
+        Score.get_range_of_prior_move() {this method}.
+
+        """
+        widget = self.score
+        for n in widget.tag_names(
+            self.get_range_for_prior_move_before_insert()[0]):
+            if n.startswith(CHOICE):
+                return widget.tag_prevrange(
+                    self.get_prior_tag_for_choice(n),
+                    start)
+        else:
+            raise ScoreException(
+                'Unable to find prior move for RAV')
+
     def create_previousmovetag(self, positiontag, start):
         """"""
 
@@ -954,8 +982,19 @@ class Score(SharedTextScore, BlankText):
             varstack = list(self.varstack)
             while varstack:
                 var = varstack.pop()[0]
-                tr = widget.tag_prevrange(
-                    var, widget.tag_prevrange(var, start)[0])
+                tr = widget.tag_prevrange(var, start)
+                if tr:
+                    tr = widget.tag_prevrange(var, tr[0])
+
+                # Assume it is a '((' sequence.
+                # The text for var has not been put in the widget yet since
+                # it is after the RAV being processed, not before.
+                # get_range_for_prior_move_before_insert returns the inserted
+                # move range in this case, and prior is found relative to
+                # choice.
+                else:
+                    tr = self.get_range_of_prior_move(start)
+
                 if tr:
                     self.previousmovetags[positiontag] = (
                         self.get_position_tag_of_index(tr[0]),
@@ -963,7 +1002,7 @@ class Score(SharedTextScore, BlankText):
                         var)
                     break
             else:
-                if self._vartag is self._gamevartag:
+                if self._vartag is self.gamevartag:
                     self.previousmovetags[positiontag] = (None, None, None)
                 else:
                     self.previousmovetags[positiontag] = (None, False, None)
@@ -1295,7 +1334,7 @@ class Score(SharedTextScore, BlankText):
     def is_index_in_main_line(self, index):
         """Return True if index is in the main line tag"""
         return bool(self.score.tag_nextrange(
-            self._gamevartag,
+            self.gamevartag,
             index,
             ''.join((str(index), '+1 chars'))))
 
@@ -1360,11 +1399,12 @@ class Score(SharedTextScore, BlankText):
         # self._ravtag and self._choicetag state attributes.
         self._vartag, self._ravtag = self.get_rav_tag_names()
         self._choicetag = self.get_choice_tag_name()
-        self._gamevartag = self._vartag
+        self.gamevartag = self._vartag
 
         self._start_latest_move = ''
         self._end_latest_move = ''
         self._next_move_is_choice = False
+        self._unresolved_choice_count = 0
         self._token_position = None
         self._square_piece_map = {}
         
@@ -1420,6 +1460,18 @@ class Score(SharedTextScore, BlankText):
         # change technique to use it rather than BUILD_TAG.
         self.score.tag_delete(BUILD_TAG)
 
+        # Delete the attributes used to build the self.score Text widget.
+        del self._start_latest_move
+        del self._end_latest_move
+        del self._next_move_is_choice
+        del self._unresolved_choice_count
+        del self._token_position
+        del self._square_piece_map
+        del self._force_newline
+        del self._vartag
+        del self._ravtag
+        del self._choicetag
+
     def map_move_text(self, token, position):
         """Add token to game text. Set navigation tags. Return token range.
 
@@ -1455,7 +1507,7 @@ class Score(SharedTextScore, BlankText):
             widget.tag_add(FORCED_INDENT_TAG, start, end)
         for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
-        if self._vartag is self._gamevartag:
+        if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
         if self._next_move_is_choice:
@@ -1469,6 +1521,7 @@ class Score(SharedTextScore, BlankText):
             # round, with initialization, to avoid tag name clutter.
             widget.tag_add(self._choicetag, start, end)
             self._next_move_is_choice = False
+            self._unresolved_choice_count -= 1
 
         self._start_latest_move = start
         self._end_latest_move = end
@@ -1520,6 +1573,7 @@ class Score(SharedTextScore, BlankText):
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         self._next_move_is_choice = True
+        self._unresolved_choice_count += 1
         return start, end, sepend
 
     def map_end_rav(self, token, position):
@@ -1534,6 +1588,9 @@ class Score(SharedTextScore, BlankText):
         The _square_piece_map is reset from position.
 
         """
+        if self._unresolved_choice_count:
+            self._next_move_is_choice = True
+
         # ValueError exception has happened if and only if opening an invalid
         # game generated from an arbitrary text file completely unlike a PGN
         # file.  Probably no valid PGN tokens at all must be in the file to
@@ -1671,7 +1728,7 @@ class Score(SharedTextScore, BlankText):
         """Return name of tag associated with first move of game"""
         widget = self.score
         try:
-            index = widget.tag_nextrange(self._gamevartag, '1.0')[0]
+            index = widget.tag_nextrange(self.gamevartag, '1.0')[0]
         except IndexError:
             return None
         for tn in widget.tag_names(index):
@@ -1697,7 +1754,7 @@ class Score(SharedTextScore, BlankText):
         """Return name of tag associated with last move played in game"""
         widget = self.score
         try:
-            index = widget.tag_prevrange(self._gamevartag, tkinter.END)[0]
+            index = widget.tag_prevrange(self.gamevartag, tkinter.END)[0]
         except IndexError:
             return None
         for tn in widget.tag_names(index):
@@ -2424,7 +2481,7 @@ class AnalysisScore(Score):
 
         for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
-        if self._vartag is self._gamevartag:
+        if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
         if self._next_move_is_choice:

@@ -261,3 +261,21 @@ class BlankText(ExceptionHandler):
             (EventSpec.buttonpress_1, buttonpress1),
             (EventSpec.buttonpress_3, buttonpress3),
             )
+
+    # Take a snapshot of the tkinter.Text widget bound to self.score.  It is
+    # intended for problem tracing.  It is saved as a sibling of ErrorLog.
+    # At a convenient time dump_text_widget will become a method in the
+    # solentware_misc.gui.exceptionhandler.ExceptionHandler class.
+    def dump_text_widget(self, textwidget, filename=None):
+        if filename is None:
+            filename = 'dumptextwidget'
+        import os
+        import datetime
+        filename = '_'.join(
+            (filename,
+             datetime.datetime.now(datetime.timezone.utc).isoformat()))
+        with open(os.path.join(os.path.dirname(self.get_error_file_name()),
+                               filename),
+                  'w') as f:
+            for t in textwidget.dump('1.0', tkinter.END):
+                f.write(repr(t)+'\n')

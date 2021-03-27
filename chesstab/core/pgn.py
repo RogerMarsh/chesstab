@@ -480,6 +480,7 @@ class GameUpdate(Game):
                 self.variationnumber.pop()
             while len(self._ravstack) > len(self.halfmovenumber):
                 self.halfmovenumber.append(self.halfmovenumber[-1])
+                self.variationnumber.append(0)
             self._variation = ''.join(_convert_integer_to_length_hex(i)
                                       for i in self.variationnumber)
         self.halfmovenumber[-1] += 1
