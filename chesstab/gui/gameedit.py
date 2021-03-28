@@ -260,10 +260,6 @@ class GameEdit(Game):
     # Values are Tk tag names or members of NonTagBind enumeration.
     _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
-    # Set True if a RAV for the first move of game is added using the editor.
-    # Deleting RAVs for the first move of game is only allowed if False.
-    _first_move_rav_inserted = False
-
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
         super().__init__(gameclass=gameclass, **ka)
@@ -775,32 +771,6 @@ class GameEdit(Game):
         else:
             return self.show_prev_pgn_tag_field_name()
         
-    def confirm_insert_rav_at_first_move(self):
-        """Return response to dialogue about insert first move RAV.
-
-        At present it is not safe to allow RAVs for the first move of a game
-        to be deleted if a RAV for the first move has been inserted in the
-        same editor.
-
-        The game has to be saved and then re-opened before such RAVs can be
-        deleted safely.  The problem is in some cases a program crash will
-        occur when the RAV is deleted by deleting the only remaining
-        character in the only move in the RAV.
-
-        """
-        if self._first_move_rav_inserted:
-            return True
-        if tkinter.messagebox.askyesno(
-            parent = self.ui.get_toplevel(),
-            title='Confirm Insert RAV for First Move',
-            message=''.join(
-                ("If this RAV is inserted you will not be allowed to delete ",
-                 "RAVs for the first move in this game until the game has ",
-                 "been saved and re-opened.\n\nDo you wish to proceed?",
-                 ))):
-            self._first_move_rav_inserted = True
-        return self._first_move_rav_inserted
-        
     def insert_rav(self, event):
         """Insert first character of first move in new RAV in game score.
 
@@ -820,9 +790,6 @@ class GameEdit(Game):
             return self.insert_move(event)
         if not event.char:
             return 'break'
-        if not self.current:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         if event.char in _MOVECHARS:
             inserted_move = self.insert_empty_rav_after_next_move(
                 event.char.translate(_FORCECASE))
@@ -849,9 +816,6 @@ class GameEdit(Game):
         if not event.char:
             return 'break'
         move = self.get_implied_current_move()
-        if not move:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         if event.char in _MOVECHARS:
             inserted_move = self.insert_empty_rav_after_rav_start(
                 event.char.translate(_FORCECASE))
@@ -878,9 +842,6 @@ class GameEdit(Game):
         if not event.char:
             return 'break'
         move = self.get_implied_current_move()
-        if not move:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         if event.char in _MOVECHARS:
             inserted_move = self.insert_empty_rav_after_rav_start_move_or_rav(
                 event.char.translate(_FORCECASE))
@@ -906,9 +867,6 @@ class GameEdit(Game):
         if not event.char:
             return 'break'
         move = self.get_implied_current_move()
-        if not move:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         if event.char in _MOVECHARS:
             inserted_move = self.insert_empty_rav_after_rav_end(
                 event.char.translate(_FORCECASE))
@@ -983,9 +941,6 @@ class GameEdit(Game):
             move = self.current
         else:
             move = self.get_implied_current_move()
-        if not move:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         inserted_move = self.insert_empty_rav_after_next_move('O-O-O')
         while not self.is_move_start_of_variation(
             inserted_move, self.step_one_variation(move)):
@@ -1048,9 +1003,6 @@ class GameEdit(Game):
 
     def insert_castle_queenside_command(self):
         """Insert or edit the O-O-O movetext."""
-        if not self.current:
-            if not self.confirm_insert_rav_at_first_move():
-                return 'break'
         ria = self.is_at_least_one_move_in_movetext()
         c = self.score.tag_ranges(self.current)
 
@@ -1714,23 +1666,6 @@ class GameEdit(Game):
             except IndexError:
                 current = None
 
-            # It is not yet clear what changes around here will allow the
-            # blocked deletions to proceed, without breaking anything else.
-            if current is None and self._first_move_rav_inserted:
-                tkinter.messagebox.showinfo(
-                    parent = self.ui.get_toplevel(),
-                    title='Delete RAV for First Move',
-                    message=''.join(
-                        ("At least one RAV has been inserted for the first ",
-                         "move of this game in this editing session.  ",
-                         "Program crashes are certain in some cases if the ",
-                         "deletion proceeds here.\n\nUse this game's ",
-                         "'Database | Edit' option to save the game then ",
-                         "re-open the game with 'Display allow edit' to do ",
-                         "the RAV deletion."
-                         )))
-                return
-
             # First range in choice is a move in main line relative to RAV.
             # For first move do not highlight main line when no RAVs exist
             # after deletion of this one.
@@ -1793,7 +1728,8 @@ class GameEdit(Game):
                     choice, prior, self.get_selection_tag_for_prior(prior))
             self.clear_choice_colouring_tag()
             self.set_current()
-            self.apply_colouring_to_variation_back_to_main_line()
+            if self.current is not None and widget.tag_ranges(self.current):
+                self.apply_colouring_to_variation_back_to_main_line()
         elif self.current is None:
             nttpr = widget.tag_prevrange(NAVIGATE_TOKEN,
                                          tkinter.END,
@@ -2278,34 +2214,6 @@ class GameEdit(Game):
             variation = self.get_variation_tag_of_index(range_[0])
             nextmove = widget.tag_nextrange(variation, range_[-1])
 
-        # Hack to enable tagging with PRIOR_MOVE tag without disturbing prior.
-        # The absence of this tagging until introduction of inserting RAVs
-        # after other RAVs, rather than just after current move, did not
-        # cause problems.
-        if not prior:
-            second_move = widget.tag_nextrange(
-                NAVIGATE_TOKEN,
-                widget.tag_nextrange(NAVIGATE_TOKEN, START_SCORE_MARK)[1])
-            first_rav_start = widget.tag_nextrange(
-                RAV_START_TAG, START_SCORE_MARK)
-            if second_move and first_rav_start:
-                if widget.compare(first_rav_start[0], '<', second_move[0]):
-                    for n in widget.tag_names(first_rav_start[0]):
-                        if n.startswith(PRIOR_MOVE):
-                            prior_tag = n
-                            break
-                else:
-                    prior_tag = self.get_prior_tag_for_choice(choice)
-            elif first_rav_start:
-                for n in widget.tag_names(first_rav_start[0]):
-                    if n.startswith(PRIOR_MOVE):
-                        prior_tag = n
-                        break
-            else:
-                prior_tag = self.get_prior_tag_for_choice(choice)
-        else:
-            prior_tag = prior
-
         # Figure point where the new empty RAV should be inserted.
         ctr = widget.tag_ranges(choice)
         if ctr:
@@ -2362,8 +2270,10 @@ class GameEdit(Game):
                     positiontag,
                     NAVIGATE_TOKEN,
                     RAV_START_TAG,
-                    prior_tag):
+                    ):
             widget.tag_add(tag, start, end)
+        if prior:
+            widget.tag_add(prior, start, end)
         # Insert is surrounded by tagged colourvariation text unlike add at end.
         # This breaks the sequence so rest of inserts in this method do not get
         # tagged by colourvariation as well as ravtag.
@@ -2432,12 +2342,13 @@ class GameEdit(Game):
         tpm[positiontag] = tpm[self.nextmovetags[current][0]]
         for tag in (
             ravtag,
-            self.get_rav_tag_for_rav_moves(variation),
             positiontag,
             NAVIGATE_TOKEN,
             RAV_END_TAG,
-            prior_tag):
+            ):
             widget.tag_add(tag, start, end)
+        if prior:
+            widget.tag_add(prior, start, end)
         widget.tag_add(tokentag, start, sepend)
         self.previousmovetags[positiontag] = (
             current,
@@ -2635,7 +2546,12 @@ class GameEdit(Game):
                  EDIT_RESULT)),
             insert_point)
         if nttpr:
-            insert_point = nttpr[-1]
+            for n in widget.tag_names(nttpr[-1]):
+                if n.startswith(TOKEN):
+                    insert_point = widget.tag_ranges(n)[-1]
+                    break
+            else:
+                insert_point = nttpr[-1]
 
         widget.mark_set(tkinter.INSERT, insert_point)
         self.insert_forced_newline_into_text()
