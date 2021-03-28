@@ -31,7 +31,7 @@ from ..core.constants import (
     UNKNOWN_RESULT,
     )
 
-#names of chess board fonts in decreasing preference order
+# names of chess board fonts in decreasing preference order.
 # The 'win32' order is my preference, but Merida and Motif are microsoft-symbol
 # fonts according to description in /usr/local/share/fonts/../fonts.dir after
 # installation on FreeBSD 10.1 and produce the default characters, not pieces.
@@ -44,14 +44,14 @@ else:
         'Chess Cases', 'Chess Lucena', 'Chess Merida', 'Chess Motif')
 del sys
 
-#names of Tk named fonts
+# names of Tk named fonts.
 MOVES_PLAYED_IN_GAME_FONT = 'moves'
 PIECES_ON_BOARD_FONT = 'pieces'
 WILDPIECES_ON_BOARD_FONT = 'wildpieces'
 LISTS_OF_GAMES_FONT = 'lists'
 TAGS_VARIATIONS_COMMENTS_FONT = 'tags'
 
-#named colours in chessboard colour scheme
+# named colours in chessboard colour scheme.
 LITECOLOR_NAME = 'light squares'
 DARKCOLOR_NAME = 'dark squares'
 WHITECOLOR_NAME = 'white pieces'
@@ -61,19 +61,19 @@ MOVE_COLOR_NAME = 'move'
 ALTERNATIVE_MOVE_COLOR_NAME = 'alternative move'
 VARIATION_COLOR_NAME = 'variation'
 
-#default chessboard colour scheme
+# default chessboard colour scheme.
 LITECOLOR = '#d9eed9'
 DARKCOLOR = '#c2c298'
 WHITECOLOR = '#db0ee8'
 BLACKCOLOR = '#181634'
 
-#default game score colour scheme
+# default game score colour scheme.
 LINE_COLOR = '#76d9d9' # a light blue
 MOVE_COLOR = '#86d929' # a light green
 ALTERNATIVE_MOVE_COLOR = '#eb3010' # a dark orange
 VARIATION_COLOR = '#e0f113' # a pale yellow
 
-#names of chess score text management tags
+# names of chess score text management tags.
 '''The primary tags are POSITION<suffix> and TOKEN<suffix> where suffix is a
 serial number.  Every character is tagged by one TOKEN tag and for each TOKEN
 tag there is a corresponding POSITION tag which tags all the non-separator
@@ -119,7 +119,7 @@ one each for the sub-sequences "( moves2 )" and "( moves5 )".
 
 BUILD_TAG = 'bt'            # move and RAV markers (deleted after widget build)
 NAVIGATE_COMMENT = 'nc'     # can be selected by comment navigation
-NAVIGATE_TOKEN = 'nt'       # can be selected by navigation (score and partial)
+NAVIGATE_TOKEN = 'nt'       # can be selected by navigation
 NAVIGATE_MOVE = 'nm'        # can be selected by move navigation
 EDIT_GLYPH = 'eg'           # can be selected for glyph editing
 EDIT_RESULT = 'er'          # can be selected for result editing
@@ -139,15 +139,9 @@ CHOICE = 'ch'               # prefix for line choice tags
 SELECTION = 'se'            # prefix for line selected choice tags
 PRIOR_MOVE = 'pm'           # prefix for line prior move tags
 RAV_SEP = 'rs'              # prefix for line tags with trailing separator
-# RAV_TAG describes the significance of ( and ) tokens when searching for the
-# previous move token in the sequence of tokens.  It does not describe the
-# variation structure implied by the ( and ) symbols.
-# Each RAV_TAG<suffix> starts with the range of the ( for RAV_MOVES<suffix>
-# and also contains the ranges of the ) tokens whose nearest following move
-# token has RAV_MOVES<suffix>.
 RAV_START_TAG = 'rst'       # all ranges for start RAV tokens (added for edit)
 RAV_END_TAG = 'ret'         # all ranges for end RAV tokens
-RAV_TAG = 'rt'              # prefix for start and end RAV tags
+RAV_TAG = 'rt'              # prefix for a variations start and end RAV tags
 ALL_CHOICES = 'ac'          # all the first moves of RAV_MOVES tags
 POSITION = 'po'             # prefix for position map tags
 TOKEN = 'tn'                # prefix for token tags
@@ -156,22 +150,22 @@ PGN_TAG = 'pt'              # all ranges for PGN Tag name and value pairs
 TERMINATION_TAG ='tt'       # all ranges for values of termination tags
 DESCRIPTION = 'pd'          # all ranges for name of partial position
 PIECE_LOCATIONS = 'lo'      # all ranges for piece squares in partial position
-# mark the start of the game score, which also end of PGN tags
+# mark the start of the game score, which is also end of PGN tags.
 START_SCORE_MARK = 'scoremark'
-# mark start and end points of editable range, usually range of current
+# mark start and end points of editable range, usually range of current.
 START_EDIT_MARK = 'starteditmark'
 END_EDIT_MARK = 'endeditmark'
-# move played to reach position displayed on board
+# move played to reach position displayed on board.
 MOVE_TAG = MOVE_COLOR_NAME
-# moves in selected variation to be played from position displayed on board 
+# moves in selected variation to be played from position displayed on board.
 LINE_TAG = LINE_COLOR_NAME
-# first move in alternatives to selected variation not yet entered
+# first move in alternatives to selected variation not yet entered.
 ALTERNATIVE_MOVE_TAG = ALTERNATIVE_MOVE_COLOR_NAME
-# moves played from main line to reach position in which MOVE_TAG move played
+# moves played from main line to reach position in which MOVE_TAG move played.
 VARIATION_TAG = VARIATION_COLOR_NAME
-# last character in line. Hide the LINE_TAG colour to indicate no more moves
+# last character in line. Hide the LINE_TAG colour to indicate no more moves.
 LINE_END_TAG = 'line_end'
-# mark the start of the partial position, which is also end of description
+# mark the start of the partial position, which is also end of description.
 START_POSITION_MARK = 'positionmark'
 # indentation tag for variations generated by Chess Engines in analysis widget
 # of a Game instance.

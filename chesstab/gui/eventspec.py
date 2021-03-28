@@ -138,7 +138,17 @@ class EventSpec(object):
     # GameEdit widget editing events.
     # Inherited by RepertoireEdit widget.
     gameedit_insert_rav = (
-        '<KeyPress>', '', '') # A menu entry would say type moves to insert.
+        '<KeyPress>', 'Insert RAV: move move (<char>)', '<char>')
+    gameedit_insert_rav_after_rav_end = (
+        '<KeyPress>', 'Insert RAV: (...)(<char>)', '<char>')
+    gameedit_insert_rav_after_rav_start_move_or_rav = (
+        '<Shift-KeyPress>',
+        'Insert RAV: ( move (<char>)',
+        'Shift <char>')
+    gameedit_insert_rav_after_rav_start = (
+        '<Alt-KeyPress>',
+        'Insert RAV: ((<char>) move',
+        'Alt <char>')
     gameedit_insert_castle_queenside = (
         '<Control-KeyPress-o>', 'O-O-O', 'Ctrl o')
     gameedit_insert_comment = (
@@ -181,6 +191,10 @@ class EventSpec(object):
         '<Control-KeyPress-Up>', 'Previous Comment', 'Ctrl Up')
     gameedit_show_next_comment = (
         '<Control-KeyPress-Down>', 'Next Comment', 'Ctrl Down')
+    gameedit_show_previous_rav_start = (
+        '<Alt-KeyPress-Prior>', 'Previous RAV Start', 'Alt PageUp')
+    gameedit_show_next_rav_start = (
+        '<Alt-KeyPress-Next>', 'Next RAV Start', 'Alt PageDn')
     gameedit_to_previous_pgn_tag = (
         '<Control-KeyPress-Left>', 'Previous PGN Tag', 'Ctrl Left')
     gameedit_to_next_pgn_tag = (

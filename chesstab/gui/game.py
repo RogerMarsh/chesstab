@@ -38,7 +38,6 @@ widget.
 # 'more basic class' above.
 
 import tkinter
-import tkinter.messagebox
 
 from pgn_read.core.constants import (
     TAG_FEN,

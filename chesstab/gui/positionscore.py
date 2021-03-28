@@ -147,7 +147,7 @@ class PositionScore(ExceptionHandler):
         # method and _context attributes seems to be able to do the job.
         # Probably including taking account of castling and en-passant options
         # if required.
-        self.rav_number = 0
+        self.variation_number = 0
         self.varstack = []
         self.position_number = 0
         
@@ -226,16 +226,16 @@ class PositionScore(ExceptionHandler):
                 tag_values.append((t, tags[t]))
         return tag_values
     
-    def get_rav_tag_names(self):
-        """Return suffixed RAV_MOVES and RAV_TAG tag names.
+    def get_variation_tag_names(self):
+        """Return suffixed RAV_MOVES tag names.
 
         The suffixes are arbitrary so increment then generate suffix would be
         just as acceptable but generate then increment uses all numbers
         starting at 0.
 
         """
-        self.rav_number += 1
-        suffix = str(self.rav_number)
+        self.variation_number += 1
+        suffix = str(self.variation_number)
         return ''.join((RAV_MOVES, suffix))
 
     def get_next_positiontag_name(self):
@@ -343,7 +343,7 @@ class PositionScore(ExceptionHandler):
 
         # With get_current_...() methods as well do not need self._vartag
         # state attributes.
-        self._vartag = self.get_rav_tag_names()
+        self._vartag = self.get_variation_tag_names()
         self.gamevartag = self._vartag
 
         self._square_piece_map = {}
@@ -483,7 +483,7 @@ class PositionScore(ExceptionHandler):
         self._set_square_piece_map(position)
         widget = self.score
         self.varstack.append(self._vartag)
-        self._vartag = self.get_rav_tag_names()
+        self._vartag = self.get_variation_tag_names()
         self.insert_token_into_text(token, SPACE_SEP)
         self._force_movenumber = True
 

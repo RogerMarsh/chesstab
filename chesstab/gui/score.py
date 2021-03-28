@@ -60,7 +60,6 @@ from .constants import (
     CHOICE,
     PRIOR_MOVE,
     RAV_SEP,
-    RAV_TAG,
     ALL_CHOICES,
     POSITION,
     MOVE_TAG,
@@ -233,7 +232,7 @@ class Score(SharedTextScore, BlankText):
 
         # These attributes replace the structure used with wxWidgets controls.
         # Record the structure by tagging text in the Tk Text widget.
-        self.rav_number = 0
+        self.variation_number = 0
         self.varstack = []
         self.choice_number = 0
         self.choicestack = []
@@ -517,7 +516,7 @@ class Score(SharedTextScore, BlankText):
             allowed=self.is_active_item_mapped(),
             event=event)
 
-    def colour_variation(self):
+    def colour_variation(self, move):
         """Colour variation and display its initial position.
 
         The current move is coloured to indicate it is a move played to reach
@@ -527,7 +526,7 @@ class Score(SharedTextScore, BlankText):
         variation.
 
         """
-        if self.current is None:
+        if move is None:
 
             # No prior to variation tag exists: no move to attach it to.
             pt = None
@@ -535,7 +534,7 @@ class Score(SharedTextScore, BlankText):
             st = self.get_selection_tag_for_choice(ct)
 
         else:
-            pt = self.get_prior_to_variation_tag_of_move(self.current)
+            pt = self.get_prior_to_variation_tag_of_move(move)
             ct = self.get_choice_tag_for_prior(pt)
             st = self.get_selection_tag_for_prior(pt)
         self.clear_variation_choice_colouring_tag(ct)
@@ -543,10 +542,10 @@ class Score(SharedTextScore, BlankText):
         if self.is_move_in_main_line(selected_first_move):
             self.clear_moves_played_in_variation_colouring_tag()
             self.clear_variation_colouring_tag()
-        elif self.current is None:
+        elif move is None:
             self.set_next_variation_move_played_colouring_tag(st)
         else:
-            self.add_move_to_moves_played_colouring_tag(self.current)
+            self.add_move_to_moves_played_colouring_tag(move)
         self.current = selected_first_move
         self.set_current()
         self.set_game_board()
@@ -681,7 +680,7 @@ class Score(SharedTextScore, BlankText):
         """Enter selected variation and display its initial position."""
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_primary_activity()
-        self.colour_variation()
+        self.colour_variation(self.current)
         return 'break'
         
     def show_last_in_game(self, event=None):
@@ -1067,10 +1066,31 @@ class Score(SharedTextScore, BlankText):
                         if pn.startswith(POSITION):
                             return r
                     return None
-                if tn.startswith(RAV_TAG):
-                    start_search = widget.tag_ranges(tn)[0]
-                    skip_move_before_rav = True
-                    break
+
+                # Commented rather than removed because it may be an attempt
+                # to deal with ...<move1><move2>((<move3>)<move4>... style
+                # RAVs.  However these break in create_previousmovetag at
+                # line 958 when processing <move3> before getting here.
+                # (See code in commit to which this change was made.)
+                # The other RAV styles do not get here, using the 'RAV_MOVES'
+                # path instead.  This is only use of RAV_TAG in Score.
+                # So RAV_TAG is converted to mark the insertion point for a
+                # new RAV after an existing one, like <move4> in:
+                # ...<move1><move2>(<move3>)(<move4>)<move5>... from
+                # ...<move1><move2>(<move3>)<move5>... for example.
+                # RAV_TAG was used in GameEdit to spot the '(' tokens which
+                # start a RAV, and was thus only interested in a tag's first
+                # range.
+                # The RAV_TAGs did not always have the ranges as described in
+                # .constants: 'rt1' has ranges for ')' only, and most RAV_TAG
+                # tags refer to a '(' range only, for example.  'rt2' has the
+                # '(' for 'rt1'.
+                # Basically the RAV_TAG structure was rubbish.
+                #if tn.startswith(RAV_TAG):
+                #    start_search = widget.tag_ranges(tn)[0]
+                #    skip_move_before_rav = True
+                #    break
+
             else:
                 start_search = r[0]
             r = widget.tag_prevrange(BUILD_TAG, start_search)
@@ -1237,17 +1257,16 @@ class Score(SharedTextScore, BlankText):
         suffix = str(self.choice_number)
         return ''.join((CHOICE, suffix))
 
-    def get_rav_tag_names(self):
-        """Return suffixed RAV_MOVES and RAV_TAG tag names.
+    def get_variation_tag_name(self):
+        """Return suffixed RAV_MOVES tag name.
 
         The suffixes are arbitrary so increment then generate suffix would be
         just as acceptable but generate then increment uses all numbers
         starting at 0.
 
         """
-        self.rav_number += 1
-        suffix = str(self.rav_number)
-        return [''.join((t, suffix)) for t in (RAV_MOVES, RAV_TAG)]
+        self.variation_number += 1
+        return ''.join((RAV_MOVES, str(self.variation_number)))
 
     def get_next_positiontag_name(self):
         """Return suffixed POSITION tag name."""
@@ -1396,8 +1415,8 @@ class Score(SharedTextScore, BlankText):
         self._force_newline = 0
 
         # With get_current_...() methods as well do not need self._vartag
-        # self._ravtag and self._choicetag state attributes.
-        self._vartag, self._ravtag = self.get_rav_tag_names()
+        # and self._choicetag state attributes.
+        self._vartag = self.get_variation_tag_name()
         self._choicetag = self.get_choice_tag_name()
         self.gamevartag = self._vartag
 
@@ -1469,7 +1488,6 @@ class Score(SharedTextScore, BlankText):
         del self._square_piece_map
         del self._force_newline
         del self._vartag
-        del self._ravtag
         del self._choicetag
 
     def map_move_text(self, token, position):
@@ -1502,6 +1520,8 @@ class Score(SharedTextScore, BlankText):
             start, end, sepend = self.insert_token_into_text(
                 str(position[0][5])+'...', SPACE_SEP)
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+            if self._is_text_editable:
+                widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         if self._is_text_editable or self._force_newline == 1:
             widget.tag_add(FORCED_INDENT_TAG, start, end)
@@ -1532,8 +1552,8 @@ class Score(SharedTextScore, BlankText):
         """Add token to game text.  Return range and prior.
 
         Variation tags are set for guiding move navigation. self._vartag
-        self._ravtag self._token_position and self._choicetag are placed on
-        a stack for restoration at the end of the variation.
+        self._token_position and self._choicetag are placed on a stack for
+        restoration at the end of the variation.
         self._next_move_is_choice is set True indicating that the next move
         is the default selection when choosing a variation.
 
@@ -1565,9 +1585,9 @@ class Score(SharedTextScore, BlankText):
             ALL_CHOICES, self._start_latest_move, self._end_latest_move)
         widget.tag_add(
             self._choicetag, self._start_latest_move, self._end_latest_move)
-        self.varstack.append((self._vartag, self._ravtag, self._token_position))
+        self.varstack.append((self._vartag, self._token_position))
         self.choicestack.append(self._choicetag)
-        self._vartag, self._ravtag = self.get_rav_tag_names()
+        self._vartag = self.get_variation_tag_name()
         self.insert_forced_newline_into_text()
         self._force_newline = 0
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
@@ -1580,8 +1600,8 @@ class Score(SharedTextScore, BlankText):
         """Add token to game text.  Return token range.
 
         Variation tags are set for guiding move navigation. self._vartag
-        self._ravtag self._token_position and self._choicetag are restored
-        from the stack for restoration at the end of the variation.
+        self._token_position and self._choicetag are restored from the stack
+        for restoration at the end of the variation.
         (self._start_latest_move, self._end_latest_move) is set to the range
         of the move which the first move of the variation replaced.
 
@@ -1605,7 +1625,7 @@ class Score(SharedTextScore, BlankText):
         self._set_square_piece_map(position)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
-        self._vartag, self._ravtag, self._token_position = self.varstack.pop()
+        self._vartag, self._token_position = self.varstack.pop()
         self._choicetag = self.choicestack.pop()
         self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, sepend
@@ -2352,7 +2372,7 @@ class AnalysisScore(Score):
         scores, full games or otherwise.
 
         """
-        self.rav_number = 0
+        self.variation_number = 0
         self.varstack = []
         self.choice_number = 0
         self.choicestack = []
@@ -2505,8 +2525,8 @@ class AnalysisScore(Score):
         """Add token to game text.  Return range and prior.
 
         Variation tags are set for guiding move navigation. self._vartag
-        self._ravtag self._token_position and self._choicetag are placed on
-        a stack for restoration at the end of the variation.
+        self._token_position and self._choicetag are placed on a stack for
+        restoration at the end of the variation.
         self._next_move_is_choice is set True indicating that the next move
         is the default selection when choosing a variation.
 
@@ -2538,9 +2558,9 @@ class AnalysisScore(Score):
             ALL_CHOICES, self._start_latest_move, self._end_latest_move)
         widget.tag_add(
             self._choicetag, self._start_latest_move, self._end_latest_move)
-        self.varstack.append((self._vartag, self._ravtag, self._token_position))
+        self.varstack.append((self._vartag, self._token_position))
         self.choicestack.append(self._choicetag)
-        self._vartag, self._ravtag = self.get_rav_tag_names()
+        self._vartag = self.get_variation_tag_name()
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         self._next_move_is_choice = True
@@ -2550,8 +2570,8 @@ class AnalysisScore(Score):
         """Add token to game text. position is ignored. Return token range.
 
         Variation tags are set for guiding move navigation. self._vartag
-        self._ravtag self._token_position and self._choicetag are restored
-        from the stack for restoration at the end of the variation.
+        self._token_position and self._choicetag are restored from the stack
+        to reconstruct the position at the end of the variation.
         (self._start_latest_move, self._end_latest_move) is set to the range
         of the move which the first move of the variation replaced.
 
@@ -2565,7 +2585,7 @@ class AnalysisScore(Score):
              self._end_latest_move) = (tkinter.END, tkinter.END)
         start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
-        self._vartag, self._ravtag, self._token_position = self.varstack.pop()
+        self._vartag, self._token_position = self.varstack.pop()
         self._choicetag = self.choicestack.pop()
         return start, end, sepend
 

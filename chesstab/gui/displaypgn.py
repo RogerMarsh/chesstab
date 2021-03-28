@@ -324,7 +324,10 @@ class InsertPGN(InsertText):
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label)
         self.add_pgn_insert_to_submenu_of_popup(
-            popup, include_ooo=True, index=self.analyse_popup_label)
+            popup,
+            include_ooo=True,
+            include_move_rav=True,
+            index=self.analyse_popup_label)
         self.add_close_item_entry_to_popup(popup)
         return popup
         

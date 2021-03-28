@@ -95,7 +95,6 @@ from .constants import (
     END_EDIT_MARK,
     PGN_TAG,
     MOVES_PLAYED_IN_GAME_FONT,
-    VARIATION_TAG,
     RAV_END_TAG,
     TERMINATION_TAG,
     SPACE_SEP,
@@ -104,6 +103,7 @@ from .constants import (
     FORCED_NEWLINE_TAG,
     FORCE_NEWLINE_AFTER_FULLMOVES,
     FORCED_INDENT_TAG,
+    SELECTION,
     )
 from ..core import exporters
 
@@ -267,6 +267,7 @@ class GameEdit(Game):
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
         super().__init__(gameclass=gameclass, **ka)
+        self.ravstack = []
 
         # Do another way to avoid reliance on classes being in same module.
         subclass_RepertoireEdit = issubclass(self.__class__, RepertoireEdit)
@@ -544,10 +545,23 @@ class GameEdit(Game):
             switch=switch,
             popup_top_left=self.post_start_rav_menu_at_top_left,
             popup_pointer=self.post_start_rav_menu)
-        self.set_event_bindings_score((
-            (EventSpec.gameedit_add_char_to_token,
-             self.press_break),
-            ), switch=switch)
+        #self.set_event_bindings_score((
+        #    (EventSpec.gameedit_add_char_to_token,
+        #     self.press_break),
+        #    ), switch=switch)
+        self.set_keypress_binding(
+            function=self.insert_rav_after_rav_start,
+            bindings=(EventSpec.gameedit_insert_rav_after_rav_start,),
+            switch=switch)
+        self.set_keypress_binding(
+            function=self.insert_rav_after_rav_start_move_or_rav,
+            bindings=(
+                EventSpec.gameedit_insert_rav_after_rav_start_move_or_rav,),
+            switch=switch)
+        self.set_keypress_binding(
+            function=self.insert_rav_after_rav_end,
+            bindings=(EventSpec.gameedit_insert_rav_after_rav_end,),
+            switch=switch)
         self.set_event_bindings_score(
             self.get_primary_activity_from_non_move_events(), switch=switch)
         self.set_event_bindings_score(
@@ -788,10 +802,20 @@ class GameEdit(Game):
         return self._first_move_rav_inserted
         
     def insert_rav(self, event):
-        """Edit game score on keyboard event."""
-        # To catch insertion when no moves, even incomplete or illegal, exist.
-        # Perhaps it is better to put this test in bind_...() methods.  Hope
-        # that will not add too many states for one rare case.
+        """Insert first character of first move in new RAV in game score.
+
+        The RAV is inserted after the move following the current move, and
+        before any existing RAVs in that place.
+
+        KeyPress events are bound to insert_rav() when a move is the current
+        token, except for the last move in the game or a RAV when these are
+        bound to insert_move().  When no moves exist, either incomplete or
+        illegal, KeyPress events are bound to insert_rav().
+
+        KeyPress events are bound to insert_move() when the first character
+        has been processed.
+
+        """
         if not self.is_at_least_one_move_in_movetext():
             return self.insert_move(event)
         if not event.char:
@@ -805,9 +829,138 @@ class GameEdit(Game):
             while not self.is_move_start_of_variation(
                 inserted_move, self.step_one_variation(self.current)):
                 pass
-            self.colour_variation()
+            self.colour_variation(self.current)
             # self.set_current() already called
         return 'break'
+
+    def insert_rav_after_rav_start(self, event):
+        """Insert first character of first move in new RAV in game score.
+
+        The RAV is inserted after the current RAV start marker, '(', and
+        before any existing move or RAVs in that place.
+
+        <Alt KeyPress> events are bound to insert_rav_after_rav_start() when
+        a RAV start marker is the current token.
+
+        KeyPress events are bound to insert_move() when the first character
+        has been processed.
+
+        """
+        if not event.char:
+            return 'break'
+        move = self.get_implied_current_move()
+        if not move:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
+        if event.char in _MOVECHARS:
+            inserted_move = self.insert_empty_rav_after_rav_start(
+                event.char.translate(_FORCECASE))
+            while not self.is_move_start_of_variation(
+                inserted_move, self.step_one_variation(move)):
+                pass
+            self.colour_variation(move)
+        return 'break'
+
+    def insert_rav_after_rav_start_move_or_rav(self, event):
+        """Insert first character of first move in new RAV in game score.
+
+        The RAV is inserted after the first move, or RAV, after the current
+        RAV start marker, '('.
+
+        <Shift KeyPress> events are bound to
+        insert_rav_after_rav_start_move_or_rav() when a RAV start marker is
+        the current token.
+
+        KeyPress events are bound to insert_move() when the first character
+        has been processed.
+
+        """
+        if not event.char:
+            return 'break'
+        move = self.get_implied_current_move()
+        if not move:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
+        if event.char in _MOVECHARS:
+            inserted_move = self.insert_empty_rav_after_rav_start_move_or_rav(
+                event.char.translate(_FORCECASE))
+            while not self.is_move_start_of_variation(
+                inserted_move, self.step_one_variation(move)):
+                pass
+            self.colour_variation(move)
+        return 'break'
+
+    def insert_rav_after_rav_end(self, event):
+        """Insert first character of first move in new RAV in game score.
+
+        The RAV is inserted after the RAV end marker, ')', paired with the
+        current RAV start marker, '('.
+
+        <KeyPress> events are bound to insert_rav_after_rav_end() when a RAV
+        start marker is the current token.
+
+        KeyPress events are bound to insert_move() when the first character
+        has been processed.
+
+        """
+        if not event.char:
+            return 'break'
+        move = self.get_implied_current_move()
+        if not move:
+            if not self.confirm_insert_rav_at_first_move():
+                return 'break'
+        if event.char in _MOVECHARS:
+            inserted_move = self.insert_empty_rav_after_rav_end(
+                event.char.translate(_FORCECASE))
+            while not self.is_move_start_of_variation(
+                inserted_move, self.step_one_variation(move)):
+                pass
+            self.colour_variation(move)
+        return 'break'
+
+    def get_implied_current_move(self):
+        """Return implied current if self.current refers to a RAV start or
+        self.current if not.
+
+        """
+        assert self.current
+        widget = self.score
+        tr = widget.tag_ranges(self.current)
+        if widget.get(*tr) == START_RAV:
+            move = None
+            for n in widget.tag_names(tr[0]):
+                if n.startswith(PRIOR_MOVE):
+                    for m in widget.tag_names(widget.tag_ranges(n)[0]):
+                        if m.startswith(POSITION):
+                            move = m
+                            break
+                    break
+        else:
+            move = self.current
+        return move
+
+    def add_move_to_moves_played_colouring_tag(self, move):
+        """Extend. Allow for '(' as surrogate for move when placing RAVs."""
+        widget = self.score
+        tr = widget.tag_ranges(move)
+        if widget.get(*tr) == START_RAV:
+            for n in widget.tag_names(tr[0]):
+                if n.startswith(PRIOR_MOVE):
+                    for m in widget.tag_names(widget.tag_ranges(n)[0]):
+                        if m.startswith(POSITION):
+                            move = m
+                            break
+                    break
+        super().add_move_to_moves_played_colouring_tag(move)
+
+    def insert_rav_command(self, event=None):
+        tkinter.messagebox.showinfo(
+            parent = self.ui.get_toplevel(),
+            title='Insert RAV',
+            message=''.join(
+                ('The menu entry exists to advertise the function.\n\n',
+                 'Type a character valid in moves to open the RAV.',
+                 )))
 
     def insert_rav_castle_queenside(self, event):
         """Insert or edit the O-O-O movetext.
@@ -827,13 +980,17 @@ class GameEdit(Game):
         if not event.char:
             return 'break'
         if not self.current:
+            move = self.current
+        else:
+            move = self.get_implied_current_move()
+        if not move:
             if not self.confirm_insert_rav_at_first_move():
                 return 'break'
         inserted_move = self.insert_empty_rav_after_next_move('O-O-O')
         while not self.is_move_start_of_variation(
-            inserted_move, self.step_one_variation(self.current)):
+            inserted_move, self.step_one_variation(move)):
             pass
-        self.colour_variation()
+        self.colour_variation(move)
         self.process_move()
         return 'break'
 
@@ -920,7 +1077,7 @@ class GameEdit(Game):
         while not self.is_move_start_of_variation(
             inserted_move, self.step_one_variation(self.current)):
             pass
-        self.colour_variation()
+        self.colour_variation(self.current)
         self.process_move()
         return 'break'
         
@@ -1006,7 +1163,17 @@ class GameEdit(Game):
         return self.delete_move_char_left(event)
 
     def insert_move(self, event):
-        """Insert first character of new move in game score."""
+        """Insert characters of new moves in game score.
+
+        KeyPress events are bound to insert_move() when the last move in the
+        game or a RAV is the current token.  When no moves exist, either
+        incomplete or illegal, KeyPress events are bound to insert_rav().
+
+        KeyPress events are bound to insert_move() when the first character
+        has been processed by insert_rav(), or it's variants for the Alt and
+        Shift modifiers.
+
+        """
         if not event.char:
             return 'break'
         if event.char in _MOVECHARS:
@@ -1232,6 +1399,14 @@ class GameEdit(Game):
             new_item=self.select_prev_token_in_game())
         return 'break'
         
+    def show_next_rav_start(self, event=None):
+        """Display next RAV Start in game score."""
+        return self.show_item(new_item=self.select_next_rav_start_in_game())
+
+    def show_prev_rav_start(self, event=None):
+        """Display previous RAV Start in game score."""
+        return self.show_item(new_item=self.select_prev_rav_start_in_game())
+
     def show_next_pgn_tag_field_name(self, event=None):
         """Display next pgn tag field name."""
         return self.show_item(new_item=self.select_next_pgn_tag_field_name())
@@ -1704,6 +1879,16 @@ class GameEdit(Game):
                             ' +',
                             str(self._lead - 1),
                             'chars')))
+
+    def get_rav_tag_name(self):
+        """Return suffixed RAV_TAG tag name.
+
+        The Score.get_variation_tag_name() is assumed to have been called
+        to increment self.variation_number and set the name of the
+        corresponding RAV_MOVES tag.
+
+        """
+        return ''.join((RAV_TAG, str(self.variation_number)))
         
     def get_insertion_point_at_end_of_rav(self, insert_point_limit):
         """Return insertion point for new move at end of RAV.
@@ -1909,7 +2094,7 @@ class GameEdit(Game):
                     self.insert_forced_newline_into_text()
             else:
                 widget.mark_set(tkinter.INSERT, tkinter.END)
-            vartag = self.get_rav_tag_names()[0]
+            vartag = self.get_variation_tag_name()
             self.gamevartag = vartag
         else:
             start_current, end_current = widget.tag_ranges(self.current)
@@ -2058,7 +2243,11 @@ class GameEdit(Game):
         return t[0]
 
     def insert_empty_rav_after_next_move(self, event_char):
-        """Insert " ( <event_char> )" sequence.
+        """Insert "(<event_char>)" after move after current move.
+
+        Both the current move and the move after may already have RAVs which
+        are their alternatives.  The insert is before any RAVs which are
+        alternatives for the move after current move.
 
         The new NAVIGATE_MOVE range becomes the current move, but because
         the move is at best valid but incomplete, the position displayed on
@@ -2088,6 +2277,35 @@ class GameEdit(Game):
                 prior = self.get_prior_tag_for_choice(choice)
             variation = self.get_variation_tag_of_index(range_[0])
             nextmove = widget.tag_nextrange(variation, range_[-1])
+
+        # Hack to enable tagging with PRIOR_MOVE tag without disturbing prior.
+        # The absence of this tagging until introduction of inserting RAVs
+        # after other RAVs, rather than just after current move, did not
+        # cause problems.
+        if not prior:
+            second_move = widget.tag_nextrange(
+                NAVIGATE_TOKEN,
+                widget.tag_nextrange(NAVIGATE_TOKEN, START_SCORE_MARK)[1])
+            first_rav_start = widget.tag_nextrange(
+                RAV_START_TAG, START_SCORE_MARK)
+            if second_move and first_rav_start:
+                if widget.compare(first_rav_start[0], '<', second_move[0]):
+                    for n in widget.tag_names(first_rav_start[0]):
+                        if n.startswith(PRIOR_MOVE):
+                            prior_tag = n
+                            break
+                else:
+                    prior_tag = self.get_prior_tag_for_choice(choice)
+            elif first_rav_start:
+                for n in widget.tag_names(first_rav_start[0]):
+                    if n.startswith(PRIOR_MOVE):
+                        prior_tag = n
+                        break
+            else:
+                prior_tag = self.get_prior_tag_for_choice(choice)
+        else:
+            prior_tag = prior
+
         # Figure point where the new empty RAV should be inserted.
         ctr = widget.tag_ranges(choice)
         if ctr:
@@ -2105,12 +2323,14 @@ class GameEdit(Game):
                 # dialogue are better options here.
                 point = widget.index(nextmove[1] + '+1char')
         colourvariation = ''.join((RAV_SEP, variation))
+
+        # Apply choice tags to next move if not already done, implied by
+        # absence of existing RAVs for move.
         if prior is None:
-            # no prior move for initial position of game
-            '''seems ok to just set these tags even if already set'''
-            start, end = nextmove
-            widget.tag_add(ALL_CHOICES, start, end)
-            widget.tag_add(choice, start, end)
+            # no prior move for initial position of game.
+            # Seems ok to just set these tags even if already set.
+            widget.tag_add(ALL_CHOICES, *nextmove)
+            widget.tag_add(choice, *nextmove)
         # Why not just test 'ctr' which is already set?
         elif not ctr:#widget.tag_nextrange(prior, '1.0'):
             assert bool(ctr) == bool(widget.tag_nextrange(prior, '1.0'))
@@ -2119,11 +2339,10 @@ class GameEdit(Game):
             # it assumes variation structure exists, if at all, for preceding
             # moves only.
             if self.current:
-                start, end = widget.tag_ranges(self.current)
-                widget.tag_add(prior, start, end)
-            start, end = nextmove
-            widget.tag_add(ALL_CHOICES, start, end)
-            widget.tag_add(choice, start, end)
+                widget.tag_add(prior, *widget.tag_ranges(self.current))
+            widget.tag_add(ALL_CHOICES, *nextmove)
+            widget.tag_add(choice, *nextmove)
+
         widget.mark_set(tkinter.INSERT, point)
         # Existence of choice implies the prior forced newline is in place.
         if not ctr:
@@ -2132,13 +2351,18 @@ class GameEdit(Game):
 
         tpm = self.tagpositionmap
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
-        vartag, ravtag = self.get_rav_tag_names()
+        vartag = self.get_variation_tag_name()
+        ravtag = self.get_rav_tag_name()
         if prior:
             tpm[positiontag] = tpm[self.current]
         else:
             tpm[positiontag] = tpm[None]
         widget.tag_add(tokentag, start, sepend)
-        for tag in ravtag, positiontag, NAVIGATE_TOKEN, RAV_START_TAG:
+        for tag in (ravtag,
+                    positiontag,
+                    NAVIGATE_TOKEN,
+                    RAV_START_TAG,
+                    prior_tag):
             widget.tag_add(tag, start, end)
         # Insert is surrounded by tagged colourvariation text unlike add at end.
         # This breaks the sequence so rest of inserts in this method do not get
@@ -2207,10 +2431,12 @@ class GameEdit(Game):
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
         tpm[positiontag] = tpm[self.nextmovetags[current][0]]
         for tag in (
+            ravtag,
             self.get_rav_tag_for_rav_moves(variation),
             positiontag,
             NAVIGATE_TOKEN,
-            RAV_END_TAG):
+            RAV_END_TAG,
+            prior_tag):
             widget.tag_add(tag, start, end)
         widget.tag_add(tokentag, start, sepend)
         self.previousmovetags[positiontag] = (
@@ -2222,6 +2448,302 @@ class GameEdit(Game):
             self.insert_forced_newline_into_text()
 
         return newmovetag
+
+    def insert_empty_rav_after_rav_start(self, event_char):
+        """Insert "(<event_char>)" before first move or "(..)" in current "(".
+
+        The new NAVIGATE_MOVE range becomes the current move, but because
+        the move is at best valid but incomplete, the position displayed on
+        board is for the move from which the variation is entered (the old
+        current move).
+
+        """
+        widget = self.score
+        tr = widget.tag_ranges(self.current)
+        tn = widget.tag_names(tr[0])
+        for n in tn:
+            if n.startswith(TOKEN):
+                insert_point = widget.tag_ranges(n)[-1]
+                break
+        return self.insert_rav_at_insert_point(
+            event_char,
+            insert_point,
+            *self.find_choice_prior_move_variation_main_move(tn),
+            newline_after_rav=True)
+
+    def insert_empty_rav_after_rav_start_move_or_rav(self, event_char):
+        """Insert "(<event_char>)" after first move or "(..)" in current "(".
+
+        The new NAVIGATE_MOVE range becomes the current move, but because
+        the move is at best valid but incomplete, the position displayed on
+        board is for the move from which the variation is entered (the old
+        current move).
+
+        """
+        widget = self.score
+        insert_point = None
+        tr = widget.tag_ranges(self.current)
+        tn = widget.tag_names(tr[0])
+        nmtnr = widget.tag_nextrange(NAVIGATE_MOVE, tr[-1])
+        rstnr = widget.tag_nextrange(RAV_START_TAG, tr[-1])
+        if rstnr and widget.compare(nmtnr[0], '>', rstnr[0]):
+            for n in widget.tag_names(rstnr[0]):
+                if n.startswith(RAV_TAG):
+                    for en in widget.tag_names(widget.tag_ranges(n)[-1]):
+                        if en.startswith(TOKEN):
+                            insert_point = widget.tag_ranges(en)[-1]
+                            break
+                    break
+        else:
+            for n in widget.tag_names(nmtnr[0]):
+                if n.startswith(TOKEN):
+                    insert_point = widget.tag_ranges(n)[-1]
+                    break
+        return self.insert_rav_at_insert_point(
+            event_char,
+            insert_point,
+            *self.find_choice_prior_move_variation_main_move(tn),
+            newline_after_rav=True)
+
+    def insert_empty_rav_after_rav_end(self, event_char):
+        """Insert "(<event_char>)" after ")" for current "(".
+
+        The new NAVIGATE_MOVE range becomes the current move, but because
+        the move is at best valid but incomplete, the position displayed on
+        board is for the move from which the variation is entered (the old
+        current move).
+
+        """
+        widget = self.score
+        tn = widget.tag_names(widget.tag_ranges(self.current)[0])
+        insert_point = None
+        for n in tn:
+            if n.startswith(RAV_TAG):
+                for en in widget.tag_names(widget.tag_ranges(n)[-1]):
+                    if en.startswith(TOKEN):
+                        insert_point = widget.tag_ranges(en)[-1]
+                        break
+                break
+        return self.insert_rav_at_insert_point(
+            event_char,
+            insert_point,
+            *self.find_choice_prior_move_variation_main_move(tn))
+
+    def find_choice_prior_move_variation_main_move(self, tag_names):
+        """Return arguments for insert_rav derived from RAV tag in tag_names.
+
+        The choice tag will be the one which tags the characters tagged by
+        the variation identifier tag with the same numeric suffix as the RAV
+        tag.  choice is set None if no match exists, and implies there is
+        something wrong and no RAV insertion should be done.
+
+        The prior_move tag is the one with the 'prior move' prefix in
+        tag_names.  prior_move is set None if this tag is absent, and implies
+        the RAV is being inserted for the first move in the game.
+
+        """
+        widget = self.score
+        variation_prefix = ''.join((RAV_SEP, RAV_MOVES))
+
+        # PRIOR_MOVE not in search because it will not be present if the
+        # RAV is for the first move.
+        search = {CHOICE}
+        search_done = False
+
+        choice = None
+        prior_move = None
+        variation_containing_choice = None
+        main_line_move = None
+        for n in tag_names:
+            if n.startswith(RAV_TAG):
+                rsrm = ''.join((variation_prefix, n.lstrip(RAV_TAG)))
+                for en in widget.tag_names(
+                    widget.tag_ranges(rsrm)[0]):
+                    if en.startswith(CHOICE):
+                        choice = en
+                        variation_containing_choice = rsrm
+                        search.remove(CHOICE)
+                        break
+                search_done = True
+                if prior_move:
+                    break
+            elif n.startswith(PRIOR_MOVE):
+                prior_move = n
+                for en in widget.tag_names(widget.tag_ranges(prior_move)[0]):
+                    if en.startswith(POSITION):
+                        main_line_move = en
+                        break
+                if search_done:
+                    break
+        if prior_move is None:
+            for n in widget.tag_names(
+                widget.tag_nextrange(NAVIGATE_TOKEN, START_SCORE_MARK)[0]):
+                if n.startswith(POSITION):
+                    main_line_move = n
+                    break
+        return choice, prior_move, variation_containing_choice, main_line_move
+
+    def insert_rav_at_insert_point(self,
+                                   event_char,
+                                   insert_point,
+                                   choice,
+                                   prior_move,
+                                   variation_containing_choice,
+                                   main_line_move,
+                                   newline_after_rav=False):
+        """Insert RAV at insert_point with event_char as first character.
+
+        event_char is a charcter valid in a move in movetext.
+        insert_point is the index at which the RAV is to be inserted.
+        choice is the tag which tags the alternative moves, including the
+        main line move, at this point.  The index range of event_char is
+        added to choice.
+        prior_move is the tag which tags the main line move and all the
+        start and end RAV markers for the alternative replies to the main
+        line move.
+        variation_containing_choice is the tag which tags all the moves in
+        the line containing the RAV.  It can be a RAV itself.
+        main_line_move tags 'm1' in '.. m1 m2 (m3 ..) (m4 ..) ..', a PGN-like
+        sequence.
+        newline_after_rav indicates whether a newline is needed after the RAV.
+        False, the default, is appropriate when the RAV is being inserted
+        after a sibling RAV.  True is appropriate when the RAV is being
+        inserted within a sibling RAV.
+
+        It is assumed the choice, prior_move, variation_containing_choice,
+        and main_line_move, arguments have been calculated by
+        find_choice_prior_move_variation_main_move().
+
+        """
+
+        # If choice is not a tag name there is something wrong: do nothing.
+        if not choice:
+            return
+
+        widget = self.score
+
+        # Move insert_point over any non-move and non-RAV marker tokens
+        # before nearest of next move and RAV marker tokens.
+        nttpr = widget.tag_prevrange(
+            NAVIGATE_TOKEN,
+            self.get_nearest_in_tags_between_point_and_end(
+                insert_point,
+                (NAVIGATE_MOVE,
+                 MOVETEXT_MOVENUMBER_TAG,
+                 RAV_START_TAG,
+                 RAV_END_TAG,
+                 EDIT_RESULT)),
+            insert_point)
+        if nttpr:
+            insert_point = nttpr[-1]
+
+        widget.mark_set(tkinter.INSERT, insert_point)
+        self.insert_forced_newline_into_text()
+        start, end, sepend = self.insert_token_into_text('(', SPACE_SEP)
+        tpm = self.tagpositionmap
+        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        vartag = self.get_variation_tag_name()
+        ravtag = self.get_rav_tag_name()
+        tpm[positiontag] = tpm[main_line_move if prior_move else None]
+        widget.tag_add(tokentag, start, sepend)
+        for tag in (ravtag,
+                    positiontag,
+                    NAVIGATE_TOKEN,
+                    RAV_START_TAG):
+            widget.tag_add(tag, start, end)
+        if prior_move:
+            widget.tag_add(prior_move, start, end)
+        # Is colourvariation wrong in insert_empty_rav_after_next_move()?
+        # There is no 'rsrmN' tag so colourvariation is not propogated.
+        # The colourvariation stuff is missing compared with
+        # insert_empty_rav_after_next_move().
+        self.previousmovetags[positiontag] = (
+            self.previousmovetags[main_line_move][0] if prior_move else None,
+            variation_containing_choice,
+            variation_containing_choice)
+        newmovetag = self.get_next_positiontag_name()
+        positiontag, tokentag, tokenmark = self.get_current_tag_and_mark_names()
+        tpm[positiontag] = tpm[main_line_move if prior_move else None]
+        self.edit_move_context[
+            positiontag] = self.create_edit_move_context(positiontag)
+        tpmpt = tpm[positiontag]
+        start, end, sepend = self.insert_token_into_text(
+            str(tpmpt[5])+('.' if tpmpt[1] == FEN_WHITE_ACTIVE else '...'),
+            SPACE_SEP)
+        widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+        widget.tag_add(FORCED_INDENT_TAG, start, end)
+        start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+
+        # event_char and separator will have been tagged for elide by enclosure
+        # if it is a black move.  The indentation tag too, but that is needed.
+        widget.tag_remove(MOVETEXT_MOVENUMBER_TAG, start, sepend)
+
+        # FORCED_INDENT_TAG is not needed, compared with
+        # insert_empty_move_after_currentmove(), because this token can only
+        # be first on a line due to word wrap.
+        for tag in (
+            positiontag,
+            vartag,
+            NAVIGATE_MOVE,
+            ALL_CHOICES,
+            self.get_selection_tag_for_choice(choice),
+            choice,
+            NAVIGATE_TOKEN,
+            MOVE_EDITED,
+            ):
+            widget.tag_add(tag, start, end)
+
+        if vartag is self.gamevartag:
+            widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
+        for tag in (
+            tokentag,
+            ''.join((RAV_SEP, vartag)),
+            LINE_TAG,
+            ):
+            widget.tag_add(tag, start, sepend)
+        widget.mark_set(tokenmark, end)
+        s, e = start, sepend
+        self.previousmovetags[positiontag] = (
+            main_line_move,
+            vartag,
+            variation_containing_choice)
+        self.nextmovetags[main_line_move][1].append(positiontag)
+        start, end, sepend = self.insert_token_into_text(')', SPACE_SEP)
+        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        tpm[positiontag] = tpm[self.nextmovetags[main_line_move][0]]
+        for tag in (
+            ravtag,
+            self.get_rav_tag_for_rav_moves(variation_containing_choice),
+            positiontag,
+            NAVIGATE_TOKEN,
+            RAV_END_TAG):
+            widget.tag_add(tag, start, end)
+        if prior_move:
+            widget.tag_add(prior_move, start, end)
+        widget.tag_add(tokentag, start, sepend)
+        self.previousmovetags[positiontag] = (
+            main_line_move,
+            variation_containing_choice,
+            variation_containing_choice)
+        if newline_after_rav:
+            self.insert_forced_newline_into_text()
+
+        return newmovetag
+
+    def get_nearest_in_tags_between_point_and_end(self, point, tags):
+        """Return nearest index of a tag in tags after point.
+
+        tkinter.END is returned if no ranges are found after point in any of
+        the tags. 
+
+        """
+        widget = self.score
+        nearest = tkinter.END
+        for tag in tags:
+            nr = widget.tag_nextrange(tag, point)
+            if nr and widget.compare(nr[0], '<', nearest):
+                nearest = nr[0]
+        return nearest
 
     def is_currentmove_in_edit_move(self):
         """Return True if current move is editable.
@@ -2334,7 +2856,6 @@ class GameEdit(Game):
                     widget.tag_nextrange(n, start)[1])
         raise GameEditException('Unable to find position for end RAV')
 
-    # Override Score version because GameEdit inserts and Score appends.
     # Unwanted tags can be inherited from surrounding characters.
     def map_move_text(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
@@ -2347,20 +2868,27 @@ class GameEdit(Game):
         self._token_position = self.tagpositionmap[positiontag]
         return token_indicies
 
-    # Override Score version because GameEdit inserts and Score appends.
     # Unwanted tags can be inherited from surrounding characters.
     def map_start_rav(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Extend to tag token for single-step navigation and game editing.
+
+        ravtag is placed on a stack so it can be recovered when the
+        matching RAV end appears for tagging.  The tag marks two of the
+        places where new variations may be inserted.
+
+        """
         token_indicies = super().map_start_rav(token, position)
+        ravtag = self.get_rav_tag_name()
+        self.ravstack.append(ravtag)
         prior = self.get_prior_tag_for_choice(self._choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
             self._token_position = self.tagpositionmap[
                 self.get_position_tag_of_index(prior_range[0])]
-            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_START_TAG, prior)
+            tags = (ravtag, NAVIGATE_TOKEN, RAV_START_TAG, prior)
         else:
             self._token_position = self.tagpositionmap[None]
-            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_START_TAG)
+            tags = (ravtag, NAVIGATE_TOKEN, RAV_START_TAG)
         positiontag, token_indicies = self.tag_token_for_editing(
             token_indicies,
             self.get_tag_and_mark_names,
@@ -2372,20 +2900,26 @@ class GameEdit(Game):
         return token_indicies
 
     def map_end_rav(self, token, position):
-        """Extend to tag token for single-step navigation and game editing."""
+        """Extend to tag token for single-step navigation and game editing.
+
+        ravtag is recovered from the stack to tag the end of RAV, one
+        of the points where new variations can be inserted.
+
+        """
         # last move in rav is editable
         self.add_move_to_editable_moves(self._vartag)
         token_indicies = super().map_end_rav(token, position)
+        ravtag = self.ravstack.pop()
         prior = self.get_prior_tag_for_choice(self._choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
             self._token_position = self.tagpositionmap[
                 self.get_position_tag_of_index(
                     self.get_range_of_main_move_for_rav(prior_range[0])[0])]
-            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_END_TAG, prior)
+            tags = (ravtag, NAVIGATE_TOKEN, RAV_END_TAG, prior)
         else:
             self._token_position = self.tagpositionmap[None]
-            tags = (self._ravtag, NAVIGATE_TOKEN, RAV_END_TAG)
+            tags = (ravtag, NAVIGATE_TOKEN, RAV_END_TAG)
         positiontag, token_indicies = self.tag_token_for_editing(
             token_indicies,
             self.get_tag_and_mark_names,
@@ -2764,65 +3298,77 @@ class GameEdit(Game):
         self._allowed_chars_in_token = ''
         return None
 
-    def select_first_comment_in_game(self):
-        """Return POSITION tag associated with first comment in game"""
+    def select_first_item_in_game(self, item):
+        """Return POSITION tag associated with first item in game"""
         widget = self.score
-        try:
-            index = widget.tag_nextrange(NAVIGATE_COMMENT, '1.0')[0]
-            for tn in widget.tag_names(index):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
+        tr = widget.tag_nextrange(item, '1.0')
+        if not tr:
             return None
+        for tn in widget.tag_names(tr[0]):
+            if tn.startswith(POSITION):
+                return tn
         return None
+
+    def select_last_item_in_game(self, item):
+        """Return POSITION tag associated with last item in game"""
+        widget = self.score
+        tr = widget.tag_prevrange(item, tkinter.END)
+        if not tr:
+            return None
+        for tn in widget.tag_names(tr[0]):
+            if tn.startswith(POSITION):
+                return tn
+        return None
+
+    def select_next_item_in_game(self, item):
+        """Return POSITION tag associated with item after current in game."""
+        widget = self.score
+        oldtr = widget.tag_ranges(MOVE_TAG)
+        if oldtr:
+            tr = widget.tag_nextrange(item, oldtr[-1])
+        else:
+            tr = widget.tag_nextrange(item, tkinter.INSERT)
+        if not tr:
+            return self.select_first_item_in_game(item)
+        for tn in widget.tag_names(tr[0]):
+            if tn.startswith(POSITION):
+                return tn
+        return self.select_first_item_in_game(item)
+
+    def select_prev_item_in_game(self, item):
+        """Return POSITION tag associated with item before current in game."""
+        widget = self.score
+        if self.current:
+            oldtr = widget.tag_ranges(self.current)
+        else:
+            oldtr = widget.tag_ranges(MOVE_TAG)
+        if oldtr:
+            tr = widget.tag_prevrange(item, oldtr[0])
+        else:
+            tr = widget.tag_prevrange(item, tkinter.END)
+        if not tr:
+            return self.select_last_item_in_game(item)
+        for tn in widget.tag_names(tr[0]):
+            if tn.startswith(POSITION):
+                return tn
+        return self.select_last_item_in_game(item)
+
+    def select_first_comment_in_game(self):
+        """Return POSITION tag associated with first comment in game."""
+        return self.select_first_item_in_game(NAVIGATE_COMMENT)
 
     def select_last_comment_in_game(self):
-        """Return POSITION tag associated with last comment in game"""
-        widget = self.score
-        try:
-            index = widget.tag_prevrange(NAVIGATE_COMMENT, tkinter.END)[0]
-            for tn in widget.tag_names(index):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return None
-        return None
+        """Return POSITION tag associated with last comment in game."""
+        return self.select_last_item_in_game(NAVIGATE_COMMENT)
 
     def select_next_comment_in_game(self):
-        """Return POSITION tag associated with comment after current in game"""
-        widget = self.score
-        try:
-            oldtr = widget.tag_ranges(MOVE_TAG)
-            if oldtr:
-                tr = widget.tag_nextrange(NAVIGATE_COMMENT, oldtr[-1])
-            else:
-                tr = widget.tag_nextrange(NAVIGATE_COMMENT, tkinter.INSERT)
-            for tn in widget.tag_names(tr[0]):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return self.select_first_comment_in_game()
-        return None
+        """Return POSITION tag associated with comment after current in game."""
+        return self.select_next_item_in_game(NAVIGATE_COMMENT)
 
     def select_prev_comment_in_game(self):
-        """Return POSITION tag associated with comment before current in game"""
-        # Hack copied from select_prev_token_in_game
-        widget = self.score
-        try:
-            if self.current:
-                oldtr = widget.tag_ranges(self.current)
-            else:
-                oldtr = widget.tag_ranges(MOVE_TAG)
-            if oldtr:
-                index = widget.tag_prevrange(NAVIGATE_COMMENT, oldtr[0])[0]
-            else:
-                return None
-            for tn in widget.tag_names(index):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return None
-        return None
+        """Return POSITION tag associated with comment before current in game.
+        """
+        return self.select_prev_item_in_game(NAVIGATE_COMMENT)
 
     def select_next_pgn_tag_field_name(self):
         """Return POSITION tag for nearest following PGN Tag field"""
@@ -2870,66 +3416,28 @@ class GameEdit(Game):
         return self.current
 
     def select_first_token_in_game(self):
-        """Return POSITION tag associated with first token in game"""
-        widget = self.score
-        try:
-            index = widget.tag_nextrange(NAVIGATE_TOKEN, '1.0')[0]
-            for tn in widget.tag_names(index):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return None
-        return None
+        """Return POSITION tag associated with first token in game."""
+        return self.select_first_item_in_game(NAVIGATE_TOKEN)
 
     def select_last_token_in_game(self):
-        """Return POSITION tag associated with last token in game"""
-        widget = self.score
-        try:
-            index = widget.tag_prevrange(NAVIGATE_TOKEN, tkinter.END)[0]
-            for tn in widget.tag_names(index):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return None
-        return None
+        """Return POSITION tag associated with last token in game."""
+        return self.select_last_item_in_game(NAVIGATE_TOKEN)
 
     def select_next_token_in_game(self):
-        """Return POSITION tag associated with token after current in game"""
-        widget = self.score
-        try:
-            oldtr = widget.tag_ranges(MOVE_TAG)
-            if oldtr:
-                tr = widget.tag_nextrange(NAVIGATE_TOKEN, oldtr[-1])
-            else:
-                tr = widget.tag_nextrange(NAVIGATE_TOKEN, tkinter.INSERT)
-            for tn in widget.tag_names(tr[0]):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return self.select_first_token_in_game()
-        return None
+        """Return POSITION tag associated with token after current in game."""
+        return self.select_next_item_in_game(NAVIGATE_TOKEN)
 
     def select_prev_token_in_game(self):
-        """Return POSITION tag associated with token before current in game"""
-        # Hack find prev token.  Needs to be in in prev comment as well.
-        # And done properly.  Prev move ok as no lead chars to be left out
-        # of MOVE_TAG when editing.
-        widget = self.score
-        tag = self.current
-        if not tag:
-            tag = MOVE_TAG
-        try:
-            oldtr = widget.tag_ranges(tag)
-            if oldtr:
-                tr = widget.tag_prevrange(NAVIGATE_TOKEN, oldtr[0])
-            else:
-                tr = widget.tag_prevrange(NAVIGATE_TOKEN, tkinter.INSERT)
-            for tn in widget.tag_names(tr[0]):
-                if tn.startswith(POSITION):
-                    return tn
-        except IndexError:
-            return self.select_last_token_in_game()
-        return None
+        """Return POSITION tag associated with token before current in game."""
+        return self.select_prev_item_in_game(NAVIGATE_TOKEN)
+
+    def select_next_rav_start_in_game(self):
+        """Return POSITION tag associated with RAV after current in game."""
+        return self.select_next_item_in_game(RAV_START_TAG)
+
+    def select_prev_rav_start_in_game(self):
+        """Return POSITION tag associated with RAV before current in game."""
+        return self.select_prev_item_in_game(RAV_START_TAG)
 
     def set_insert_mark_at_end_of_token(self):
         """"""
@@ -3297,7 +3805,14 @@ class GameEdit(Game):
             self.nag_popup, self.create_nag_popup, event=event)
         
     def create_start_rav_popup(self):
-        popup = self.create_non_move_popup(self.start_rav_popup)
+        popup = self.create_popup(
+            self.start_rav_popup,
+            move_navigation=self.get_primary_activity_from_non_move_events)
+        self.add_pgn_navigation_to_submenu_of_popup(
+            popup, index=self.export_popup_label)
+        self.add_pgn_insert_to_submenu_of_popup(
+            popup, include_rav_start_rav=True, index=self.export_popup_label)
+        self.create_widget_navigation_submenu_for_popup(popup)
         self.start_rav_popup = popup
         return popup
 
@@ -3460,10 +3975,19 @@ class GameEdit(Game):
                              submenu,
                              include_ooo=False,
                              include_tags=False,
-                             include_movetext=True):
+                             include_movetext=True,
+                             include_rav_start_rav=False,
+                             include_move_rav=False):
+        assert not (include_rav_start_rav and include_move_rav)
         if include_movetext:
             self.set_popup_bindings(
                 submenu, self.get_insert_pgn_in_movetext_events())
+        if include_rav_start_rav:
+            self.set_popup_bindings(
+                submenu, self.get_insert_pgn_rav_in_movetext_events())
+        if include_move_rav:
+            self.set_popup_bindings(
+                submenu, self.get_insert_rav_in_movetext_events())
         if include_tags:
             self.set_popup_bindings(
                 submenu, self.get_insert_pgn_in_tags_events())
@@ -3483,6 +4007,8 @@ class GameEdit(Game):
                                            include_ooo=False,
                                            include_tags=False,
                                            include_movetext=True,
+                                           include_rav_start_rav=False,
+                                           include_move_rav=False,
                                            index=tkinter.END):
         """Add non-move PGN insertion to a submenu of popup.
 
@@ -3498,7 +4024,9 @@ class GameEdit(Game):
         self.populate_pgn_submenu(pgn_submenu,
                                   include_ooo=include_ooo,
                                   include_tags=include_tags,
-                                  include_movetext=include_movetext)
+                                  include_movetext=include_movetext,
+                                  include_rav_start_rav=include_rav_start_rav,
+                                  include_move_rav=include_move_rav)
         popup.insert_cascade(index=index, label='PGN', menu=pgn_submenu)
         
     def get_navigate_score_events(self):
@@ -3511,6 +4039,10 @@ class GameEdit(Game):
 
         """
         return (
+            (EventSpec.gameedit_show_previous_rav_start,
+             self.show_prev_rav_start),
+            (EventSpec.gameedit_show_next_rav_start,
+             self.show_next_rav_start),
             (EventSpec.gameedit_show_previous_token, self.show_prev_token),
             (EventSpec.gameedit_show_next_token, self.show_next_token),
             (EventSpec.gameedit_show_first_token, self.show_first_token),
@@ -3527,9 +4059,11 @@ class GameEdit(Game):
         """Return tuple of event definitions for inserting PGN constructs.
 
         Inserting RAVs and adding of moves at end of game is allowed only when
-        the current token is a move.  The relevant characters are defined
-        elsewhere, including the O-O-O shortcut convenient when both O-O-O and
-        O-O are legal moves.
+        the current token is a move or a RAV start token.  The relevant
+        characters are defined elsewhere, including the O-O-O shortcut
+        convenient when both O-O-O and O-O are legal moves.
+
+        The bindings for inserting RAVs are defined in other methods.
 
         """
         return (
@@ -3545,6 +4079,25 @@ class GameEdit(Game):
             (EventSpec.gameedit_insert_black_win, self.insert_result_loss),
             (EventSpec.gameedit_insert_other_result,
              self.insert_result_termination),
+            )
+        
+    # Use in creating popup menus only, where the entries exist to
+    # advertise the options.
+    def get_insert_pgn_rav_in_movetext_events(self):
+        return (
+            (EventSpec.gameedit_insert_rav_after_rav_end,
+             self.insert_rav_command),
+            (EventSpec.gameedit_insert_rav_after_rav_start_move_or_rav,
+             self.insert_rav_command),
+            (EventSpec.gameedit_insert_rav_after_rav_start,
+             self.insert_rav_command),
+            )
+        
+    # Use in creating popup menus only, where the entries exist to
+    # advertise the options.
+    def get_insert_rav_in_movetext_events(self):
+        return (
+            (EventSpec.gameedit_insert_rav, self.insert_rav_command),
             )
         
     def get_insert_pgn_in_tags_events(self):
