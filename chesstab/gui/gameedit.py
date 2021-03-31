@@ -2760,7 +2760,7 @@ class GameEdit(Game):
                     start)
             if n.startswith(PRIOR_MOVE):
                 return widget.tag_nextrange(n, START_SCORE_MARK)
-        raise GameEditException('Unable to find prior move for RAV')
+        return None
 
     def get_range_of_main_move_for_rav(self, start):
         """Return range of move for which start index ends a RAV."""
