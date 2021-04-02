@@ -1520,7 +1520,7 @@ class Score(SharedTextScore, BlankText):
             start, end, sepend = self.insert_token_into_text(
                 str(position[0][5])+'...', SPACE_SEP)
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-            if self._is_text_editable:
+            if self._is_text_editable or self._force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         if self._is_text_editable or self._force_newline == 1:
@@ -1588,8 +1588,14 @@ class Score(SharedTextScore, BlankText):
         self.varstack.append((self._vartag, self._token_position))
         self.choicestack.append(self._choicetag)
         self._vartag = self.get_variation_tag_name()
-        self.insert_forced_newline_into_text()
-        self._force_newline = 0
+        nttpr = widget.tag_prevrange(BUILD_TAG, widget.index(tkinter.END))
+        if nttpr:
+            if widget.get(*nttpr) != '(':
+                self.insert_forced_newline_into_text()
+                self._force_newline = 0
+        else:
+            self.insert_forced_newline_into_text()
+            self._force_newline = 0
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         self._next_move_is_choice = True

@@ -1574,6 +1574,152 @@ class GameEdit(Game):
         self.add_position_tag_to_pgntag_tags(positiontag, start, end)
         return start, end, sepend
 
+    def delete_forced_newlines_adjacent_to_rav_and_termination(self, index):
+        """Delete newlines adjacent to RAV markers to fit layout rules.
+
+        This method is called by delete_forced_newlines_adjacent_to_rav which
+        is assumed to have set range_ to the final RAV end marker, ')', in a
+        RAV which contained RAVs before deletion started.
+
+        """
+        widget = self.score
+        while True:
+            fnl = widget.tag_nextrange(FORCED_NEWLINE_TAG, index)
+            if not fnl:
+                break
+            widget.delete(*fnl)
+
+    def delete_forced_newlines_adjacent_to_rav(self, range_):
+        """Delete newlines adjacent to RAV markers to fit layout rules.
+
+        There will be at least one move token before the RAV being deleted,
+        and possibly some other tokens, including RAV start and end markers,
+        too.
+
+        """
+        widget = self.score
+        nttpr = widget.tag_prevrange(NAVIGATE_TOKEN, range_[0])
+        for n in widget.tag_names(nttpr[0]):
+            if n == RAV_START_TAG:
+                nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, range_[-1])
+                nltnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, range_[-1])
+                if nttnr and nltnr and widget.compare(nttnr[0], '>', nltnr[0]):
+                    widget.delete(*nltnr)
+                break
+            if n == RAV_END_TAG:
+                nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, range_[-1])
+                nltnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, range_[-1])
+                if nttnr:
+                    while nltnr:
+                        nltnnr = widget.tag_nextrange(
+                            FORCED_NEWLINE_TAG, nltnr[-1])
+                        if nltnnr and widget.compare(nttnr[0], '>', nltnnr[0]):
+                            widget.delete(*nltnr)
+                            nltnr = nltnnr
+                            continue
+                        break
+                else:
+                    while nltnr:
+                        nltnnr = widget.tag_nextrange(
+                            FORCED_NEWLINE_TAG, nltnr[-1])
+                        if nltnnr:
+                            widget.delete(*nltnr)
+                        nltnr = nltnnr
+                    break
+        else:
+            nltnr = widget.tag_nextrange(FORCED_NEWLINE_TAG,
+                                         nttpr[-1],
+                                         widget.index(tkinter.INSERT))
+            while nltnr:
+                nltnnr = widget.tag_nextrange(FORCED_NEWLINE_TAG, nltnr[-1])
+                widget.delete(nltnr[0], widget.index(tkinter.INSERT))
+                nltnr = nltnnr
+                continue
+            nttpr = widget.tag_prevrange(NAVIGATE_TOKEN,
+                                         widget.index(tkinter.INSERT))
+            if nttpr:
+                nltpr = widget.tag_prevrange(FORCED_NEWLINE_TAG,
+                                             widget.index(tkinter.INSERT))
+                while nltpr:
+                    nltppr = widget.tag_prevrange(FORCED_NEWLINE_TAG,
+                                                  widget.index(tkinter.INSERT))
+                    if widget.compare(nttpr[0], '<', nltppr[0]):
+                        widget.delete(*nltpr)
+                        nltpr = nltppr
+                        continue
+                    break
+
+        # If the RAV deletion has left a sequence of less than 20 fullmoves,
+        # without any non-move tokens interrupting the sequence, delete any
+        # forced newlines left over from the deletion.
+        nttppr = widget.tag_prevrange(NAVIGATE_TOKEN,
+                                      widget.index(tkinter.INSERT))
+        if nttppr:
+            for n in widget.tag_names(nttppr[0]):
+                if n == NAVIGATE_MOVE:
+                    break
+            else:
+                if widget.tag_nextrange(NAVIGATE_TOKEN, nttppr[-1]):
+                    return
+                self.delete_forced_newlines_adjacent_to_rav_and_termination(
+                    nttppr[0])
+                return
+        else:
+            return
+        nttnnr = widget.tag_nextrange(NAVIGATE_TOKEN,
+                                      widget.index(tkinter.INSERT))
+        if nttnnr:
+            for n in widget.tag_names(nttnnr[0]):
+                if n == NAVIGATE_MOVE:
+                    break
+            else:
+                if widget.tag_nextrange(NAVIGATE_TOKEN, nttnnr[-1]):
+                    return
+                self.delete_forced_newlines_adjacent_to_rav_and_termination(
+                    widget.tag_prevrange(FORCED_NEWLINE_TAG, nttnnr[0])[0])
+                return
+        else:
+            return
+        nltpr = widget.tag_prevrange(FORCED_NEWLINE_TAG,
+                                     widget.index(tkinter.INSERT))
+        if nltpr and widget.compare(nttppr[0], '<', nltpr[0]):
+            nttppr = widget.tag_prevrange(NAVIGATE_TOKEN, nltppr[0])
+        if not nttppr:
+            return
+        nltnr = widget.tag_nextrange(FORCED_NEWLINE_TAG,
+                                     widget.index(tkinter.INSERT))
+        if nltnr and widget.compare(nttnnr[0], '>', nltnr[0]):
+            nttnnr = widget.tag_nextrange(NAVIGATE_TOKEN, nttnnr[0])
+        if not nttnnr:
+            return
+        count = 0
+        nttpr = nttppr
+        while nttppr:
+            for n in widget.tag_names(nttppr[0]):
+                if n == FORCED_NEWLINE_TAG:
+                    break
+                if n == NAVIGATE_MOVE:
+                    count += 1
+                    break
+            else:
+                break
+            nttppr = widget.tag_prevrange(NAVIGATE_TOKEN, nttppr[0])
+        nttnr = nttnnr
+        while nttnnr:
+            for n in widget.tag_names(nttnnr[0]):
+                if n == FORCED_NEWLINE_TAG:
+                    break
+                if n == NAVIGATE_MOVE:
+                    count += 1
+                    break
+            else:
+                break
+            nttnnr = widget.tag_nextrange(NAVIGATE_TOKEN, nttnnr[-1])
+        if count < FORCE_NEWLINE_AFTER_FULLMOVES:
+            dfnl = widget.tag_nextrange(FORCED_NEWLINE_TAG, nttpr[-1], nttnr[0])
+            if dfnl:
+                widget.delete(*dfnl)
+
     def delete_forced_newline_token_prefix(self, tag, range_):
         """Delete nearest newline in tag before range_ keeping lines short.
 
@@ -1706,7 +1852,11 @@ class GameEdit(Game):
                 widget.delete(*move_number_indicator)
             widget.delete(*widget.tag_ranges(self.get_token_tag_of_index(
                 widget.tag_nextrange(ravtag, '1.0')[0])))
-            self.delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr)
+
+            # This should be a method for newlines before and after RAV,
+            # perhaps called before the two preceding deletes.
+            self.delete_forced_newlines_adjacent_to_rav(tr)
+
         else:
             widget.delete(tr[0], tr[1])
             if move_number_indicator:
@@ -2380,7 +2530,7 @@ class GameEdit(Game):
             event_char,
             insert_point,
             *self.find_choice_prior_move_variation_main_move(tn),
-            newline_after_rav=True)
+            newline_before_rav=False)
 
     def insert_empty_rav_after_rav_start_move_or_rav(self, event_char):
         """Insert "(<event_char>)" after first move or "(..)" in current "(".
@@ -2398,6 +2548,7 @@ class GameEdit(Game):
         nmtnr = widget.tag_nextrange(NAVIGATE_MOVE, tr[-1])
         rstnr = widget.tag_nextrange(RAV_START_TAG, tr[-1])
         if rstnr and widget.compare(nmtnr[0], '>', rstnr[0]):
+            insert_after = False
             for n in widget.tag_names(rstnr[0]):
                 if n.startswith(RAV_TAG):
                     for en in widget.tag_names(widget.tag_ranges(n)[-1]):
@@ -2410,11 +2561,17 @@ class GameEdit(Game):
                 if n.startswith(TOKEN):
                     insert_point = widget.tag_ranges(n)[-1]
                     break
+            insert_after = widget.tag_nextrange(NAVIGATE_TOKEN, insert_point)
+        if insert_after:
+            for n in widget.tag_names(insert_after[0]):
+                if n.startswith(RAV_END_TAG):
+                    insert_after = False
+                    break
         return self.insert_rav_at_insert_point(
             event_char,
             insert_point,
             *self.find_choice_prior_move_variation_main_move(tn),
-            newline_after_rav=True)
+            newline_after_rav=bool(insert_after))
 
     def insert_empty_rav_after_rav_end(self, event_char):
         """Insert "(<event_char>)" after ")" for current "(".
@@ -2438,7 +2595,8 @@ class GameEdit(Game):
         return self.insert_rav_at_insert_point(
             event_char,
             insert_point,
-            *self.find_choice_prior_move_variation_main_move(tn))
+            *self.find_choice_prior_move_variation_main_move(tn),
+            newline_after_rav=False)
 
     def find_choice_prior_move_variation_main_move(self, tag_names):
         """Return arguments for insert_rav derived from RAV tag in tag_names.
@@ -2501,7 +2659,8 @@ class GameEdit(Game):
                                    prior_move,
                                    variation_containing_choice,
                                    main_line_move,
-                                   newline_after_rav=False):
+                                   newline_before_rav=True,
+                                   newline_after_rav=True):
         """Insert RAV at insert_point with event_char as first character.
 
         event_char is a charcter valid in a move in movetext.
@@ -2516,10 +2675,11 @@ class GameEdit(Game):
         the line containing the RAV.  It can be a RAV itself.
         main_line_move tags 'm1' in '.. m1 m2 (m3 ..) (m4 ..) ..', a PGN-like
         sequence.
-        newline_after_rav indicates whether a newline is needed after the RAV.
-        False, the default, is appropriate when the RAV is being inserted
-        after a sibling RAV.  True is appropriate when the RAV is being
-        inserted within a sibling RAV.
+        newline_before_rav indicates whether to insert a newline before RAV.
+        newline_after_rav indicates whether to insert a newline after RAV.
+
+        The newline flags are intended to control newlines in sequences of
+        start RAV or end RAV markers not interrupted by other tokens.
 
         It is assumed the choice, prior_move, variation_containing_choice,
         and main_line_move, arguments have been calculated by
@@ -2554,7 +2714,8 @@ class GameEdit(Game):
                 insert_point = nttpr[-1]
 
         widget.mark_set(tkinter.INSERT, insert_point)
-        self.insert_forced_newline_into_text()
+        if newline_before_rav:
+            self.insert_forced_newline_into_text()
         start, end, sepend = self.insert_token_into_text('(', SPACE_SEP)
         tpm = self.tagpositionmap
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
