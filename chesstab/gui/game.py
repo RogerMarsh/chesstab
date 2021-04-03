@@ -9,20 +9,12 @@ game, and any analysis of the current position by chess engines.
 
 The Game class displays a game of chess.
 
-The Repertoire class displays PGN text representing an opening repertoire.
-
-Repertoire is a subclass of Game.
-
 Instances of Game have an instance of score.Score as an attribute to display
 chess engine analysis as well as inheriting much of their function from the
 Score class.
 
-These classes differ in the requirements placed on the pgn package to import,
-store, and export, PGN text.
-
-An instance of these classes fits into the user interface in two ways: as an
-item in a panedwindow of the main widget, or as the only item in a new toplevel
-widget.
+An instance of Game fits into the user interface in two ways: as an item in a
+panedwindow of the main widget, or as the only item in a new toplevel widget.
 
 """
 # Obsolete comment, but the idea is being realised through the displaypgn and
@@ -48,11 +40,9 @@ from pgn_read.core.game import generate_fen_for_position
 from ..core.pgn import (
     GameDisplayMoves,
     GameAnalysis,
-    GameRepertoireDisplayMoves,
     )
 from .board import Board
 from .score import Score, AnalysisScore, ScoreNoGameException
-from ..core import exporters
 from .constants import (
     ANALYSIS_INDENT_TAG,
     ANALYSIS_PGN_TAGS_TAG,
@@ -72,7 +62,6 @@ from ..core.constants import (
     START_TAG,
     BOARDSIDE,
     NOPIECE,
-    REPERTOIRE_TAG_ORDER,
     )
 
 
@@ -668,49 +657,4 @@ class Game(Score):
             '  '.join(
                 [tags.get(k, '')
                  for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]))
-
-
-class Repertoire(Game):
-
-    """Chess repertoire game widget composed from Board and Text widgets.
-
-    gameclass is passed to the superclass as the gameclass argument.  It
-    defaults to GameDisplayMoves.
-
-    Attribute tags_displayed_last is the PGN tags, in order, to be displayed
-    immediately before the movetext.  It exists so Game*, Repertoire*, and
-    AnalysisScore*, instances can use identical code to display PGN tags.  It
-    is the PGN repertoire tags defined in ChessTab.
-
-    Attribute pgn_export_type is a tuple with the name of the type of data and
-    the class used to generate export PGN.  It exists so Game*, Repertoire*,
-    and AnalysisScore*, instances can use identical code to display PGN tags.
-    It is ('Repertoire', GameRepertoireDisplayMoves).
-
-    """
-    # Override methods referring to Seven Tag Roster
-
-    tags_displayed_last = REPERTOIRE_TAG_ORDER
-    pgn_export_type = 'Repertoire', GameRepertoireDisplayMoves
-
-    # gameclass=GameRepertoireDisplayMoves surely?
-    # Then maybe do not need pgn_export_type for 'export_..' methods in Score.
-    # Otherwise there is no point to this __init__ method.
-    def __init__(self, gameclass=GameDisplayMoves, **ka):
-        """Extend to display repertoire game."""
-        super(Repertoire, self).__init__(gameclass=gameclass, **ka)
-        
-    # There is no point to a repertoire without RAVs so the options suppressing
-    # RAVs are absent.
-    def get_all_export_events(self):
-        return (
-            (EventSpec.pgn_export_format_no_comments,
-             self.export_pgn_no_comments),
-            (EventSpec.pgn_export_format,
-             self.export_pgn),
-            (EventSpec.pgn_import_format,
-             self.export_pgn_import_format),
-            (EventSpec.text_internal_format,
-             self.export_text),
-            )
 

@@ -96,6 +96,84 @@ class GameMove(Game):
         return self._set_initial_position_state
 
 
+class GameAnalysis(GameDisplayMoves):
+    """Generate data to display Chess Engine analysis without ability to edit.
+
+    The notion of mandatory PGN tags, like the 'seven tag roster', is removed
+    from the GameDisplayMoves class.  Section 8.1.1: Seven Tag Roster of the
+    PGN specification starts: 'There is a set of tags defined for mandatory
+    use for archival storage of PGN data.  This is the STR (Seven Tag Roster)'.
+    Thus the absence of all the STR tags does not prevent data from being
+    called PGN data.  In particular the Result tag is not present fitting the
+    Game Termination Marker '*' assigned to all analysis.
+
+    Subclasses may use the PGN tag structure to manage analysis, but exactly
+    what tags are defined is up to them.
+
+    A single main move is required; to which chess engine analysis is attached
+    as a sequence of RAVs, each RAV corresponding to one PV in a PV or multiPV
+    response from a chess engine.
+
+    """
+    
+    def is_tag_roster_valid(self):
+        """Return True if the game's tag roster is valid."""
+        tags = self._tags
+        for v in tags.values():
+            if len(v) == 0:
+                # Tag value must not be null
+                return False
+        return True
+
+
+def get_position_string(board,
+                        active_color,
+                        castling_availability,
+                        en_passant_target_square,
+                        halfmove_clock,
+                        fullmove_number):
+    """Return position string for description of board.
+    
+    Format of position string is (I say bytes even though a str is returned):
+    8 bytes with each set bit representing an occupied square from a8 to h1.
+    n bytes corresponding to n set bits for occupied squares naming the piece
+    on the square.
+    1 byte value 'w' or 'b' naming side to move.
+    1 or 2 bytes naming the square to which a pawn may move by capturing en
+    passant. The only 1 byte value allowed is '-' meaning no en passant capture
+    is possible.  The allowed 2 byte values are 'a6' to 'h6' and 'a3' to 'h3'.
+    1 to 4 bytes indicating the castling moves possible if the appropriate side
+    has the move.  Thus 'KQkq' means all four castling moves are possible and
+    '-' indicates no casting moves are possible.  The other allowed value are
+    obtained by removing one or more bytes from the original 'KQkq' without
+    changing the order of those remaining.
+
+    These values are intended as keys in an index and this structure puts keys
+    for similar positions, specifically for castling and en passant differences,
+    near each other.  En passant is before castling because the meaning of 'b',
+    'Q', and 'q', can be decided without using the 8 byte bit pattern: piece
+    name or en passant or castling or whose move.
+    
+    """
+    squares = Squares.squares
+    for s, p in board.items():
+        p.set_square(s)
+    return (sum(squares[s].bit for s in board
+                ).to_bytes(8, 'big').decode('iso-8859-1') +
+            ''.join(p.name for p in sorted(board.values())) +
+            active_color +
+            en_passant_target_square +
+            castling_availability)
+
+
+# The classes and functions above this comment are used in, or via, the Game,
+# GameEdit, and Score, classes.  Those below this comment are used in, or via,
+# the Repertoire, RepertoireEdit, and database update, classes only.  The
+# order has been changed to ease a potential split in ChessTab to provide a
+# 'ChessView' subset capable of viewing PGN files without the database update
+# options.
+
+
 class GameRepertoireDisplayMoves(GameDisplayMoves):
     """Generate data to display a repertoire without ability to edit.
 
@@ -388,36 +466,6 @@ class GameRepertoireTags(GameTags):
         return True
 
 
-class GameAnalysis(GameDisplayMoves):
-    """Generate data to display Chess Engine analysis without ability to edit.
-
-    The notion of mandatory PGN tags, like the 'seven tag roster', is removed
-    from the GameDisplayMoves class.  Section 8.1.1: Seven Tag Roster of the
-    PGN specification starts: 'There is a set of tags defined for mandatory
-    use for archival storage of PGN data.  This is the STR (Seven Tag Roster)'.
-    Thus the absence of all the STR tags does not prevent data from being
-    called PGN data.  In particular the Result tag is not present fitting the
-    Game Termination Marker '*' assigned to all analysis.
-
-    Subclasses may use the PGN tag structure to manage analysis, but exactly
-    what tags are defined is up to them.
-
-    A single main move is required; to which chess engine analysis is attached
-    as a sequence of RAVs, each RAV corresponding to one PV in a PV or multiPV
-    response from a chess engine.
-
-    """
-    
-    def is_tag_roster_valid(self):
-        """Return True if the game's tag roster is valid."""
-        tags = self._tags
-        for v in tags.values():
-            if len(v) == 0:
-                # Tag value must not be null
-                return False
-        return True
-
-
 class GameUpdate(Game):
     """Prepare indicies after each token has been processed."""
 
@@ -546,79 +594,6 @@ class GameUpdateEstimate(GameUpdate):
         if not len(self._tags):
             self.start_char = match.start()
         super().append_bad_tag_and_set_error(match)
-
-
-def get_position_string(description):
-    """Return position string for description of board.
-    
-    Format of position string is (I say bytes even though a str is returned):
-    8 bytes with each set bit representing an occupied square from a8 to h1.
-    n bytes corresponding to n set bits for occupied squares naming the piece
-    on the square.
-    1 byte value 'w' or 'b' naming side to move.
-    1 or 2 bytes naming the square to which a pawn may move by capturing en
-    passant. The only 1 byte value allowed is '-' meaning no en passant capture
-    is possible.  The allowed 2 byte values are 'a6' to 'h6' and 'a3' to 'h3'.
-    1 to 4 bytes indicating the castling moves possible if the appropriate side
-    has the move.  Thus 'KQkq' means all four castling moves are possible and
-    '-' indicates no casting moves are possible.  The other allowed value are
-    obtained by removing one or more bytes from the original 'KQkq' without
-    changing the order of those remaining.
-
-    These values are intended as keys in an index and this structure puts keys
-    for similar positions, specifically for castling and en passant differences,
-    near each other.  En passant is before castling because the meaning of 'b',
-    'Q', and 'q', can be decided without using the 8 byte bit pattern: piece
-    name or en passant or castling or whose move.
-    
-    """
-    board, side_to_move, castle_options, ep_square = description[:4]
-    return (sum(SQUARE_BITS[e] for e, p in enumerate(board) if p
-                ).to_bytes(8, 'big').decode('iso-8859-1') +
-            ''.join(p for p in board) +
-            FEN_TOMOVE[side_to_move] +
-            ep_square +
-            castle_options)
-
-
-def get_position_string(board,
-                        active_color,
-                        castling_availability,
-                        en_passant_target_square,
-                        halfmove_clock,
-                        fullmove_number):
-    """Return position string for description of board.
-    
-    Format of position string is (I say bytes even though a str is returned):
-    8 bytes with each set bit representing an occupied square from a8 to h1.
-    n bytes corresponding to n set bits for occupied squares naming the piece
-    on the square.
-    1 byte value 'w' or 'b' naming side to move.
-    1 or 2 bytes naming the square to which a pawn may move by capturing en
-    passant. The only 1 byte value allowed is '-' meaning no en passant capture
-    is possible.  The allowed 2 byte values are 'a6' to 'h6' and 'a3' to 'h3'.
-    1 to 4 bytes indicating the castling moves possible if the appropriate side
-    has the move.  Thus 'KQkq' means all four castling moves are possible and
-    '-' indicates no casting moves are possible.  The other allowed value are
-    obtained by removing one or more bytes from the original 'KQkq' without
-    changing the order of those remaining.
-
-    These values are intended as keys in an index and this structure puts keys
-    for similar positions, specifically for castling and en passant differences,
-    near each other.  En passant is before castling because the meaning of 'b',
-    'Q', and 'q', can be decided without using the 8 byte bit pattern: piece
-    name or en passant or castling or whose move.
-    
-    """
-    squares = Squares.squares
-    for s, p in board.items():
-        p.set_square(s)
-    return (sum(squares[s].bit for s in board
-                ).to_bytes(8, 'big').decode('iso-8859-1') +
-            ''.join(p.name for p in sorted(board.values())) +
-            active_color +
-            en_passant_target_square +
-            castling_availability)
 
 
 def _convert_integer_to_length_hex(i):

@@ -9,8 +9,8 @@ used in the repertoiredbdelete, repertoiredbedit, and repertoiredbshow,
 modules.
 
 """
-from .game import Repertoire
-from .gameedit import RepertoireEdit
+from .repertoire import Repertoire
+from .repertoireedit import RepertoireEdit
 from .toplevelpgn import ToplevelPGN
 
 

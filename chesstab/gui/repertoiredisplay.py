@@ -28,8 +28,8 @@ from solentware_grid.core.dataclient import DataNotify
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.constants import TAG_OPENING
-from .game import Repertoire
-from .gameedit import RepertoireEdit
+from .repertoire import Repertoire
+from .repertoireedit import RepertoireEdit
 from ..core.chessrecord import ChessDBrecordRepertoireUpdate
 from .eventspec import EventSpec
 from .display import Display
