@@ -14,7 +14,7 @@ python setup.py install will have installed these packages:
 - chessql-2.0
 - chesstab-5.0.dev1
 - pgn-read-2.1.dev1
-- solentware-grid-2.1.1
+- solentware-grid-2.1.2
 - solentware-misc-1.3
 - uci-net-1.2
 
