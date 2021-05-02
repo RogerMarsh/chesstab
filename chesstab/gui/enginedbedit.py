@@ -4,7 +4,6 @@
 
 """Customise edit toplevel to edit or insert chess engine definition record.
 """
-from urllib.parse import urlsplit, parse_qs
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
@@ -119,115 +118,12 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
                                  'command to run the engine.',
                                  )))
             return False
-        url = urlsplit(self.newobject.value.get_engine_command_text())
-        try:
-            url.port
-        except ValueError as exc:
+        url = self.newobject.value.engine_url_or_error_message()
+        if isinstance(url, str):
             tkinter.messagebox.showerror(
-                parent = self.parent,
+                parent=self.parent,
                 title=title,
-                message=''.join(('Invalid chess engine definition given.\n\n',
-                                 'The reported error for the port is:\n\n',
-                                 str(exc),
-                                 )))
-            return False
-        if url.hostname or url.port:
-            if url.path and url.query:
-                tkinter.messagebox.showerror(
-                    parent = self.parent,
-                    title=title,
-                    message=''.join(
-                        ('Give engine as query with hostname or port.\n\n',
-                         "Path is: '", url.path, "'.\n\n",
-                         "Query is: '", url.query, "'.\n",
-                         )))
-                return False
-            elif url.path:
-                tkinter.messagebox.showerror(
-                    parent = self.parent,
-                    title=title,
-                    message=''.join(
-                        ('Give engine as query with hostname or port.\n\n',
-                         "Path is: '", url.path, "'.\n",
-                         )))
-                return False
-            elif not url.query:
-                tkinter.messagebox.showerror(
-                    parent = self.parent,
-                    title=title,
-                    message='Give engine as query with hostname or port.\n\n')
-                return False
-            else:
-                try:
-                    query = parse_qs(url.query, strict_parsing=True)
-                except ValueError as exc:
-                    tkinter.messagebox.showerror(
-                        parent = self.parent,
-                        title=title,
-                        message=''.join(
-                            ("Problem specifying chess engine.  The reported ",
-                             "error is:\n\n'",
-                             str(exc), "'.\n",
-                             )))
-                    return False
-                if len(query) > 1:
-                    tkinter.messagebox.showerror(
-                        parent = self.parent,
-                        title=title,
-                        message=''.join(
-                            ("Give engine as single 'key=value' or ",
-                             "'value'.\n\n",
-                             "Query is: '", url.query, "'.\n",
-                             )))
-                    return False
-                elif len(query) == 1:
-                    for k, v in query.items():
-                        if k != 'name':
-                            tkinter.messagebox.showerror(
-                                parent = self.parent,
-                                title=title,
-                                message=''.join(
-                                    ("Give engine as single 'key=value' or ",
-                                     "'value'.\n\n",
-                                     "Query is: '", url.query, "'\n\nand use ",
-                                     "'name' as key.\n",
-                                     )))
-                            return False
-                        elif len(v) > 1:
-                            tkinter.messagebox.showerror(
-                                parent = self.parent,
-                                title=title,
-                                message=''.join(
-                                    ("Give engine as single 'key=value' or ",
-                                     "'value'.\n\n",
-                                     "Query is: '", url.query, "' with more ",
-                                     "than one 'value'\n",
-                                     )))
-                            return False
-        elif url.path and url.query:
-            tkinter.messagebox.showerror(
-                parent = self.parent,
-                title=title,
-                message=''.join(
-                    ('Give engine as path without hostname or port.\n\n',
-                     "Path is: '", url.path, "'.\n\n",
-                     "Query is: '", url.query, "'.\n",
-                     )))
-            return False
-        elif url.query:
-            tkinter.messagebox.showerror(
-                parent = self.parent,
-                title=title,
-                message=''.join(
-                    ('Give engine as path without hostname or port.\n\n',
-                     "Query is: '", url.query, "'.\n",
-                     )))
-            return False
-        elif not url.path:
-            tkinter.messagebox.showerror(
-                parent = self.parent,
-                title=title,
-                message='Give engine as path without hostname or port.\n')
+                message=url)
             return False
         return super().dialog_ok()
 

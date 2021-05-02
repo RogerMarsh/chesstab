@@ -7,7 +7,7 @@
 
 import tkinter
 import tkinter.messagebox
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlunsplit
 
 from solentware_grid.datagrid import DataGrid
 
@@ -372,138 +372,25 @@ class EngineGrid(EngineListGrid):
         #             'this is expected if running under Wine.')))
         #    return
 
-        url = urlsplit(definition.get_engine_command_text())
-        try:
-            url.port
-        except ValueError as exc:
+        url = definition.engine_url_or_error_message()
+        if isinstance(url, str):
             tkinter.messagebox.showerror(
                 parent=self.parent,
                 title='Run Engine',
-                message=''.join(('The port in the chess engine definition is ',
-                                 'invalid.\n\n',
-                                 'The reported error for the port is:\n\n',
-                                 str(exc),
-                                 )))
+                message=url)
             return
-        if not definition.get_engine_command_text():
-            tkinter.messagebox.showinfo(
-                parent=self.parent,
-                title='Run Engine',
-                message=''.join((
-                    'The engine definition does not have a command to ',
-                    'run chess engine.',
-                    )))
-            return
-        elif not (url.port or url.hostname):
-            if not definition.is_run_engine_command():
-                tkinter.messagebox.showinfo(
-                    parent=self.parent,
-                    title='Run Engine',
-                    message=''.join((
-                        'The engine definition command to run a chess engine ',
-                        'does not name a file.',
-                        )))
-                return
-        if url.hostname or url.port:
-            if url.path and url.query:
-                tkinter.messagebox.showerror(
-                    parent=self.parent,
-                    title='Run Engine',
-                    message=''.join(
-                        ('Engine must be query with hostname or port.\n\n',
-                         "Path is: '", url.path, "'.\n\n",
-                         "Query is: '", url.query, "'.\n",
-                         )))
-                return
-            elif url.path:
-                tkinter.messagebox.showerror(
-                    parent=self.parent,
-                    title='Run Engine',
-                    message=''.join(
-                        ('Engine must be query with hostname or port.\n\n',
-                         "Path is: '", url.path, "'.\n",
-                         )))
-                return
-            elif not url.query:
-                tkinter.messagebox.showerror(
-                    parent=self.parent,
-                    title='Run Engine',
-                    message='Engine must be query with hostname or port.\n\n')
-                return
+        if url.query:
+            self.ui.run_engine(urlunsplit(url))
+        elif url.path:
+            command = url.path.split(' ', 1)
+            if len(command) == 1:
+                self.ui.run_engine(command[0])
             else:
-                try:
-                    query = parse_qs(url.query, strict_parsing=True)
-                except ValueError as exc:
-                    tkinter.messagebox.showerror(
-                        parent=self.parent,
-                        title='Run Engine',
-                        message=''.join(
-                            ("Problem in chess engine specification.  ",
-                             "The reported error is:\n\n'",
-                             str(exc), "'.\n",
-                             )))
-                    return
-                if len(query) > 1:
-                    tkinter.messagebox.showerror(
-                        parent=self.parent,
-                        title='Run Engine',
-                        message=''.join(
-                            ("Engine must be single 'key=value' or ",
-                             "'value'.\n\n",
-                             "Query is: '", url.query, "'.\n",
-                             )))
-                    return
-                elif len(query) == 1:
-                    for k, v in query.items():
-                        if k != 'name':
-                            tkinter.messagebox.showerror(
-                                parent=self.parent,
-                                title='Run Engine',
-                                message=''.join(
-                                    ("Engine must be single 'key=value' or ",
-                                     "'value'.\n\n",
-                                     "Query is: '", url.query, "'\n\nand use ",
-                                     "'name' as key.\n",
-                                     )))
-                            return
-                        elif len(v) > 1:
-                            tkinter.messagebox.showerror(
-                                parent=self.parent,
-                                title='Run Engine',
-                                message=''.join(
-                                    ("Engine must be single 'key=value' or ",
-                                     "'value'.\n\n",
-                                     "Query is: '", url.query, "' with more ",
-                                     "than one 'value'\n",
-                                     )))
-                            return
-        elif url.path and url.query:
-            tkinter.messagebox.showerror(
-                parent=self.parent,
-                title='Run Engine',
-                message=''.join(
-                    ('Engine must be path without hostname or port.\n\n',
-                     "Path is: '", url.path, "'.\n\n",
-                     "Query is: '", url.query, "'.\n",
-                     )))
-            return
-        elif url.query:
-            tkinter.messagebox.showerror(
-                parent=self.parent,
-                title='Run Engine',
-                message=''.join(
-                    ('Engine must be path without hostname or port.\n\n',
-                     "Query is: '", url.query, "'.\n",
-                     )))
-            return
-        elif not url.path:
-            tkinter.messagebox.showerror(
-                parent=self.parent,
-                title='Run Engine',
-                message='Engine must be path without hostname or port.\n')
-            return
-        command = definition.get_engine_command_text().split(' ', 1)
-        if len(command) == 1:
-            self.ui.run_engine(command[0])
+                self.ui.run_engine(command[0], args=command[1].strip())
         else:
-            self.ui.run_engine(command[0], args=command[1].strip())
+            tkinter.messagebox.showerror(
+                parent=self.parent,
+                title='Run Engine',
+                message=''.join(
+                    ('Unable to run engine for\n\n',
+                     definition.get_engine_command_text())))

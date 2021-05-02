@@ -7,7 +7,7 @@
 
 import tkinter
 import tkinter.messagebox
-from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
 
 from ..core.engine import Engine
 from .eventspec import EventSpec
@@ -142,51 +142,25 @@ class EngineText(SharedTextEngineText, BlankText):
         #             'this is expected if running under Wine.')))
         #    return
 
-        url = urlsplit(self.definition.get_engine_command_text())
-        try:
-            url.port
-        except ValueError as exc:
+        url = self.definition.engine_url_or_error_message()
+        if isinstance(url, str):
             tkinter.messagebox.showerror(
-                parent=self.panel,
+                parent=self.parent,
                 title='Run Engine',
-                message=''.join(('The port in the chess engine definition is ',
-                                 'invalid.\n\n',
-                                 'The reported error for the port is:\n\n',
-                                 str(exc),
-                                 'but neither hostname nor port may be given ',
-                                 'here.\n',
-                                 )))
+                message=url)
             return
-        if not self.definition.get_engine_command_text():
-            tkinter.messagebox.showinfo(
-                parent=self.panel,
-                title='Run Engine',
-                message=''.join((
-                    'The engine definition does not have a command to ',
-                    'run chess engine.',
-                    )))
-            return
-        elif url.port or url.hostname:
-            tkinter.messagebox.showinfo(
-                parent=self.panel,
+        if url.query:
+            self.ui.run_engine(urlunsplit(url))
+        elif url.path:
+            command = url.path.split(' ', 1)
+            if len(command) == 1:
+                self.ui.run_engine(command[0])
+            else:
+                self.ui.run_engine(command[0], args=command[1].strip())
+        else:
+            tkinter.messagebox.showerror(
+                parent=self.parent,
                 title='Run Engine',
                 message=''.join(
-                    ('Neither hostname nor port may be given here.\n',
-                     "Hostname is: '", url.hostname, "'.\n\n",
-                     "Port is: '", url.port, "'.\n",
-                     )))
-            return
-        elif not self.definition.is_run_engine_command():
-            tkinter.messagebox.showinfo(
-                parent=self.panel,
-                title='Run Engine',
-                message=''.join((
-                    'The engine definition command to run a chess engine ',
-                    'does not name a file.',
-                    )))
-            return
-        command = self.definition.get_engine_command_text().split(' ', 1)
-        if len(command) == 1:
-            self.ui.run_engine(command[0])
-        else:
-            self.ui.run_engine(command[0], args=command[1].strip())
+                    ('Unable to run engine for\n\n',
+                     self.definition.get_engine_command_text())))

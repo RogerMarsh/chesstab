@@ -5,6 +5,7 @@
 """Chess engine program definition.
 """
 import os.path
+from urllib.parse import urlsplit, parse_qs
 
 from .constants import  NAME_DELIMITER
 
@@ -81,3 +82,85 @@ class Engine(object):
         if not self._run_engine_string:
             return False
         return os.path.isfile(self._run_engine_string.split()[0])
+
+    def engine_url_or_error_message(self):
+        """Return message string if invalid or urlsplit() object if valid."""
+        url = urlsplit(self._run_engine_string)
+        try:
+            url.port
+        except ValueError as exc:
+            return ''.join(('The port in the chess engine definition is ',
+                            'invalid.\n\n',
+                            'The reported error for the port is:\n\n',
+                            str(exc),
+                            ))
+        if not self._run_engine_string:
+            return ''.join((
+                'The engine definition does not have a command to ',
+                'run chess engine.',
+                ))
+        elif not (url.port or url.hostname):
+            if not self.is_run_engine_command():
+                return ''.join((
+                    'The engine definition command to run a chess engine ',
+                    'does not name a file.',
+                    ))
+        if url.hostname or url.port:
+            if url.path and url.query:
+                return ''.join(
+                    ('Engine must be query with hostname or port.\n\n',
+                     "Path is: '", url.path, "'.\n\n",
+                     "Query is: '", url.query, "'.\n",
+                     ))
+            elif url.path:
+                return ''.join(
+                    ('Engine must be query with hostname or port.\n\n',
+                     "Path is: '", url.path, "'.\n",
+                     ))
+            elif not url.query:
+                return 'Engine must be query with hostname or port.\n\n'
+            else:
+                try:
+                    query = parse_qs(url.query, strict_parsing=True)
+                except ValueError as exc:
+                    return ''.join(
+                        ("Problem in chess engine specification.  ",
+                         "The reported error is:\n\n'",
+                         str(exc), "'.\n",
+                         ))
+                if len(query) > 1:
+                    return ''.join(
+                        ("Engine must be single 'key=value' or ",
+                         "'value'.\n\n",
+                         "Query is: '", url.query, "'.\n",
+                         ))
+                elif len(query) == 1:
+                    for k, v in query.items():
+                        if k != 'name':
+                            return ''.join(
+                                ("Engine must be single 'key=value' or ",
+                                 "'value'.\n\n",
+                                 "Query is: '", url.query, "'\n\nand use ",
+                                 "'name' as key.\n",
+                                 ))
+                        elif len(v) > 1:
+                            return ''.join(
+                                ("Engine must be single 'key=value' or ",
+                                 "'value'.\n\n",
+                                 "Query is: '", url.query, "' with more ",
+                                 "than one 'value'\n",
+                                 ))
+        elif url.path and url.query:
+            return ''.join(
+                ('Engine must be path without hostname or port.\n\n',
+                 "Path is: '", url.path, "'.\n\n",
+                 "Query is: '", url.query, "'.\n",
+                 ))
+        elif url.query:
+            return ''.join(
+                ('Engine must be path without hostname or port.\n\n',
+                 "Query is: '", url.query, "'.\n",
+                 ))
+        elif not url.path:
+            return 'Engine must be path without hostname or port.\n'
+        return url
