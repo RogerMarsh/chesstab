@@ -23,12 +23,12 @@ if __name__ == '__main__':
     except Exception as error:
         import tkinter.messagebox
         try:
-           tkinter.messagebox.showerror(
-               title='Start Exception',
-               message='.\n\nThe reported exception is:\n\n'.join(
-                   ('Unable to import solentware_misc.gui.startstop module',
-                    str(error))),
-               )
+            tkinter.messagebox.showerror(
+                title='Start Exception',
+                message='.\n\nThe reported exception is:\n\n'.join(
+                    ('Unable to import solentware_misc.gui.startstop module',
+                     str(error))),
+                )
         except:
             pass
         raise SystemExit('Unable to import start application utilities')

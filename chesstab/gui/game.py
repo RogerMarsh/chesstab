@@ -46,27 +46,21 @@ from .score import Score, AnalysisScore, ScoreNoGameException
 from .constants import (
     ANALYSIS_INDENT_TAG,
     ANALYSIS_PGN_TAGS_TAG,
-    POSITION,
     MOVETEXT_INDENT_TAG,
     FORCED_INDENT_TAG,
     MOVETEXT_MOVENUMBER_TAG,
     STATUS_SEVEN_TAG_ROSTER_PLAYERS,
     )
 from .eventspec import EventSpec
-from ..core.filespec import ANALYSIS_FILE_DEF
 from ..core.analysis import Analysis
 from ..core.constants import (
-    REPERTOIRE_GAME_TAGS,
     UNKNOWN_RESULT,
     END_TAG,
     START_TAG,
-    BOARDSIDE,
-    NOPIECE,
     )
 
 
 class Game(Score):
-
     """Chess game widget composed from Board and Text widgets.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -99,6 +93,7 @@ class Game(Score):
     modules.
 
     """
+
     # Some menu popup entries in the Game hierarchy declare their location
     # as 'before Analyse' or 'before Export'.  This is a convenient way of
     # getting the popup entries in the desired order, taking order of
@@ -118,9 +113,7 @@ class Game(Score):
         items_manager=None,
         itemgrid=None,
         **ka):
-        """Create Frame and Board and delegate to superclass, then set grid
-        geometry.
-        """
+        """Create Frame and Board, then delegate, then set grid geometry."""
         self.ui = ui
         panel = tkinter.Frame(
             master,
@@ -132,7 +125,7 @@ class Game(Score):
             panel,
             boardfont=boardfont,
             ui=ui)
-        super(Game, self).__init__(
+        super().__init__(
             panel,
             board,
             tags_variations_comments_font=tags_variations_comments_font,
@@ -182,17 +175,13 @@ class Game(Score):
         self.game_analysis_in_progress = False
         self.takefocus_widget = self.score
         self.analysis_data_source = None
-        
-    def get_top_widget(self):
-        """Return topmost widget for game display.
 
-        The topmost widget is put in a container widget in some way
-        """
+    def get_top_widget(self):
+        """Return topmost widget for game display."""
         return self.panel
 
     def destroy_widget(self):
         """Destroy the widget displaying game."""
-
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
         # Assume all later Pythons are affected because they do not install
@@ -222,21 +211,20 @@ class Game(Score):
         # Here extra first event has width=1 height=1 followed up by event
         # with required dimensions.
         self.panel.bind('<Configure>', self.try_event(self.on_configure))
-        
+
     def on_configure(self, event=None):
         """Reconfigure board and score after container has been resized."""
         self.configure_game_widget()
         self.see_current_move()
-        
+
     def _analyse_position(self, *position):
-        """"""
-        pa = self.get_analysis(*position)
-        self.refresh_analysis_widget_from_database(pa)
+        analysis = self.get_analysis(*position)
+        self.refresh_analysis_widget_from_database(analysis)
         if self.game_analysis_in_progress:
             if not self.ui.uci.uci.is_positions_pending_empty():
                 return
             self.game_analysis_in_progress = False
-        pa.variations.clear()
+        analysis.variations.clear()
 
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
@@ -254,8 +242,8 @@ class Game(Score):
         #except AttributeError:
         #    if self.ui.uci.uci.uci_drivers_reply is not None:
         #        raise
-        self.ui.uci.uci.ui_analysis_queue.put((self.analysis.score, pa))
-        
+        self.ui.uci.uci.ui_analysis_queue.put((self.analysis.score, analysis))
+
     def set_game_board(self):
         """Set board to show position after highlighted move."""
         # Assume setting new position implies analysis is out of date.
@@ -270,10 +258,9 @@ class Game(Score):
         else:
             position = self.tagpositionmap[self.current]
         self._analyse_position(*position)
-        
+
     def set_and_tag_item_text(self, reset_undo=False):
-        """Delegate to superclass method and queue analysis request to engines.
-        """
+        """Delegate then queue analysis request to chess engines."""
         try:
             super().set_and_tag_item_text(reset_undo=reset_undo)
         except ScoreNoGameException:
@@ -287,9 +274,9 @@ class Game(Score):
         sas = self.analysis.score
         sga = self.get_analysis
         self.game_analysis_in_progress = True
-        for v in self.tagpositionmap.values():
-            pa = sga(*v)
-            pa.variations.clear()
+        for value in self.tagpositionmap.values():
+            analysis = sga(*value)
+            analysis.variations.clear()
 
             # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3
             # running under Wine on FreeBSD 10.1 by disabling the UCI functions.
@@ -308,7 +295,7 @@ class Game(Score):
             #    if uci.uci_drivers_reply is not None:
             #        raise
             #    break
-            uci.ui_analysis_queue.put((sas, pa))
+            uci.ui_analysis_queue.put((sas, analysis))
 
     def hide_game_analysis(self):
         """Hide the widgets which show analysis from chess engines."""
@@ -356,28 +343,28 @@ class Game(Score):
 
     def toggle_analysis_fen(self):
         """Toggle display of FEN in analysis widgets."""
-        s = self.analysis.score
-        if int(s.tag_cget(ANALYSIS_PGN_TAGS_TAG, 'elide')):
-            s.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.FALSE)
+        widget = self.analysis.score
+        if int(widget.tag_cget(ANALYSIS_PGN_TAGS_TAG, 'elide')):
+            widget.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.FALSE)
         else:
-            s.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.TRUE)
+            widget.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.TRUE)
         self.see_current_move()
 
     def toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
-        s = self.score
-        if int(s.tag_cget(MOVETEXT_MOVENUMBER_TAG, 'elide')):
-            s.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
+        widget = self.score
+        if int(widget.tag_cget(MOVETEXT_MOVENUMBER_TAG, 'elide')):
+            widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
         else:
-            s.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.TRUE)
+            widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.TRUE)
         self.see_current_move()
 
     def refresh_analysis_widget_from_engine(self, analysis):
         """Refresh game widget with updated chess engine analysis."""
-        u = self.ui.uci.uci
+        uci = self.ui.uci.uci
         move_played = self.get_move_for_start_of_analysis()
-        if analysis.position in u.position_analysis:
-            new_text = u.position_analysis[
+        if analysis.position in uci.position_analysis:
+            new_text = uci.position_analysis[
                 analysis.position].translate_analysis_to_pgn(
                     move_played=move_played)
         else:
@@ -390,39 +377,39 @@ class Game(Score):
                                     (START_TAG, TAG_FEN, '"',
                                      analysis.position,
                                      END_TAG.join('"\n'))))
-            new_text = ''.join(new_text) 
-        a = self.analysis
-        if new_text == a.analysis_text:
+            new_text = ''.join(new_text)
+        if new_text == self.analysis.analysis_text:
             return
 
         # Assume TypeError exception happens because analysis is being shown
         # for a position which is checkmate or stalemate.
         try:
-            a.collected_game = next(
-                PGN(game_class=a.gameclass
+            self.analysis.collected_game = next(
+                PGN(game_class=self.analysis.gameclass
                     ).read_games(new_text))
         except TypeError:
             pass
 
         # Assume analysis movetext problems occur only if editing moves.
         #if not pgn.is_movetext_valid():
-        if not a.collected_game.is_movetext_valid():
+        if not self.analysis.collected_game.is_movetext_valid():
             return
-        
-        a.clear_score()
-        a.set_score(new_text)
+
+        self.analysis.clear_score()
+        self.analysis.set_score(new_text)
         try:
-            fmog = a.select_first_move_of_game()
+            fmog = self.analysis.select_first_move_of_game()
         except tkinter.TclError:
             fmog = False
         if fmog:
-            sa = a.score
-            sa.tag_add(ANALYSIS_INDENT_TAG, sa.tag_ranges(fmog)[0], tkinter.END)
-            sa.tag_add(ANALYSIS_PGN_TAGS_TAG, '1.0', sa.tag_ranges(fmog)[0])
+            widget = self.analysis.score
+            widget.tag_add(
+                ANALYSIS_INDENT_TAG, widget.tag_ranges(fmog)[0], tkinter.END)
+            widget.tag_add(
+                ANALYSIS_PGN_TAGS_TAG, '1.0', widget.tag_ranges(fmog)[0])
 
     def refresh_analysis_widget_from_database(self, analysis):
         """Refresh game widget with updated chess engine analysis."""
-
         # When a database is open the analysis is refreshed from the database
         # while checking if that analysis is up-to-date compared with the depth
         # and multiPV parameters held in self.uci.uci UCI object.
@@ -436,60 +423,60 @@ class Game(Score):
             new_text = analysis.translate_analysis_to_pgn(
                 self.get_move_for_start_of_analysis())
         except TypeError:
-            new_text == self.analysis_text
+            return
 
-        a = self.analysis
-        if new_text == a.analysis_text:
+        if new_text == self.analysis.analysis_text:
             return
 
         # Assume TypeError exception happens because analysis is being shown
         # for a position which is checkmate or stalemate.
         try:
-            a.collected_game = next(
-                PGN(game_class=a.gameclass
+            self.analysis.collected_game = next(
+                PGN(game_class=self.analysis.gameclass
                     ).read_games(new_text))
         except TypeError:
             pass
-        
-        a.clear_score()
-        a.set_score(new_text)
+
+        self.analysis.clear_score()
+        self.analysis.set_score(new_text)
         try:
-            fmog = a.select_first_move_of_game()
+            fmog = self.analysis.select_first_move_of_game()
         except tkinter.TclError:
             fmog = False
         if fmog:
-            sa = a.score
-            sa.tag_add(ANALYSIS_INDENT_TAG, sa.tag_ranges(fmog)[0], tkinter.END)
-            sa.tag_add(ANALYSIS_PGN_TAGS_TAG, '1.0', sa.tag_ranges(fmog)[0])
+            widget = self.analysis.score
+            widget.tag_add(
+                ANALYSIS_INDENT_TAG, widget.tag_ranges(fmog)[0], tkinter.END)
+            widget.tag_add(
+                ANALYSIS_PGN_TAGS_TAG, '1.0', widget.tag_ranges(fmog)[0])
 
     def refresh_analysis_widget(self, analysis):
         """Refresh game widget with new chess engine analysis."""
-
         # This method called at regular intervals to cope with fresh analysis
         # of displayed positions due to changes in engine parameters (depth
         # and multiPV). Need a set of new analysis since last call.
         self.refresh_analysis_widget_from_database(analysis)
-        
+
     def configure_game_widget(self):
         """Configure board and score widgets for a game display."""
-        cw = self.panel.winfo_width()
-        ch = self.panel.winfo_height()
-        bd = self.panel.cget('borderwidth')
+        width = self.panel.winfo_width()
+        height = self.panel.winfo_height()
+        borderwidth = self.panel.cget('borderwidth')
         if self.ui.show_analysis:
-            a = (ch - bd * 2) // 2
-            b = cw - a
+            row_minsize = (height - borderwidth * 2) // 2
+            column_minsize = width - row_minsize
         else:
-            a = ch - bd * 2
-            b = cw - bd * 2
-            x = (a + b) // 3
-            if x * 3 > b * 2:
-                x = (b * 2) // 3
-            elif x > a:
-                x = a
-            a = a - x
-            b = b - x
-        self.panel.grid_rowconfigure(1, minsize=a)
-        self.panel.grid_columnconfigure(1, minsize=b)
+            row_minsize = height - borderwidth * 2
+            column_minsize = width - borderwidth * 2
+            measure = (row_minsize + column_minsize) // 3
+            if measure * 3 > column_minsize * 2:
+                measure = (column_minsize * 2) // 3
+            elif measure > row_minsize:
+                measure = row_minsize
+            row_minsize = row_minsize - measure
+            column_minsize = column_minsize - measure
+        self.panel.grid_rowconfigure(1, minsize=row_minsize)
+        self.panel.grid_columnconfigure(1, minsize=column_minsize)
         self.panel.grid_rowconfigure(0, weight=1)
         self.panel.grid_rowconfigure(1, weight=1)
         self.panel.grid_columnconfigure(0, weight=1)
@@ -497,11 +484,7 @@ class Game(Score):
         self.panel.grid_columnconfigure(2, weight=0)
 
     def set_primary_activity_bindings(self, switch=True):
-        """Delegate to toggle other relevant bindings and switch board pointer
-        bindings for traversing moves between the game or repertoire and
-        engine analysis.
-
-        """
+        """Delegate then set board pointer move navigation bindings."""
         super().set_primary_activity_bindings(switch=switch)
         if self.score is self.takefocus_widget:
             self.set_board_pointer_move_bindings(switch=switch)
@@ -509,11 +492,7 @@ class Game(Score):
             self.analysis.set_board_pointer_move_bindings(switch=switch)
 
     def set_select_variation_bindings(self, switch=True):
-        """Delegate to toggle other relevant bindings and switch board pointer
-        bindings for selecting a variation between the game or repertoire and
-        engine analysis.
-
-        """
+        """Delegate then set board pointer select variation bindings."""
         super().set_select_variation_bindings(switch=switch)
         if self.score is self.takefocus_widget:
             self.set_board_pointer_select_variation_bindings(switch=switch)
@@ -527,6 +506,7 @@ class Game(Score):
     # Database and Close Item refer to the item, game or repertoire, not the
     # engine analysis.
     def set_database_navigation_close_item_bindings(self, switch=True):
+        """Enable or disable bindings for navigation and database selection."""
         self.set_event_bindings_score(
             self.get_database_events(), switch=switch)
         self.set_event_bindings_score(
@@ -606,11 +586,12 @@ class Game(Score):
 
         """
         if sbg:
-            for w in self, self.analysis:
-                w.score.tag_configure('l_color', background=w.l_color)
-                w.score.tag_configure('m_color', background=w.m_color)
-                w.score.tag_configure('am_color', background=w.am_color)
-                w.score.tag_configure('v_color', background=w.v_color)
+            for widget in self, self.analysis:
+                widget.score.tag_configure('l_color', background=widget.l_color)
+                widget.score.tag_configure('m_color', background=widget.m_color)
+                widget.score.tag_configure('am_color',
+                                           background=widget.am_color)
+                widget.score.tag_configure('v_color', background=widget.v_color)
         if bbg:
             self.board.set_color_scheme()
         if bfg:
@@ -622,30 +603,46 @@ class Game(Score):
             self.analysis_data_source = None
             return
         self.analysis_data_source = self.ui.make_position_analysis_data_source()
-        
+
     def get_analysis(self, *a):
-        """Return database analysis for position or empty position Analysis."""
+        """Return database analysis for position or empty position Analysis.
+
+        get_analysis is not interested in the arguments, which are passed on
+        to self.generate_fen_for_position().
+
+        """
         if self.analysis_data_source:
             return self.analysis_data_source.get_position_analysis(
                 self.generate_fen_for_position(*a))
-        else:
-            return Analysis(position=self.generate_fen_for_position(*a))
+        return Analysis(position=self.generate_fen_for_position(*a))
 
     @staticmethod
     def generate_fen_for_position(squares, *a):
-        for s, p in squares.items():
-            p.set_square(s)
+        """Return FEN for current position.
+
+        Ensure the Piece instances in the squares dictionary reference their
+        squares key value in the Piece.square attribute before calling the
+        generate_fen_for_position() function imported from pgn_read.core.game.
+
+        These can be different while choosing which of the pieces of a type,
+        usually two, can make the move specified in the PGN.
+
+        """
+        for square, piece in squares.items():
+            piece.set_square(square)
         return generate_fen_for_position(squares.values(), *a)
-        
+
     def create_primary_activity_popup(self):
+        """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.set_popup_bindings(popup,
                                 ((EventSpec.analyse_game, self.analyse_game),),
                                 index=self.export_popup_label)
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup
-        
+
     def create_select_move_popup(self):
+        """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_select_move_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup
@@ -657,4 +654,3 @@ class Game(Score):
             '  '.join(
                 [tags.get(k, '')
                  for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]))
-

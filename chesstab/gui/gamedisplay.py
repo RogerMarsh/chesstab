@@ -19,9 +19,6 @@ main display (that includes widgets displaying text).
 
 """
 
-import tkinter
-import tkinter.messagebox
-
 from solentware_grid.core.dataclient import DataNotify
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
@@ -36,7 +33,6 @@ from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
 class _GameDisplay(ExceptionHandler, Display):
-    
     """Extend and link PGN game text to database.
 
     sourceobject - link to database.
@@ -96,18 +92,20 @@ class _GameDisplay(ExceptionHandler, Display):
         if self.ui.base_games.datasource:
             self.set_data_source(self.ui.base_games.get_data_source())
         self.sourceobject = sourceobject
-        
+
     # Could be put in game.Game class, but score.Score seems too deep.
     # Here can be justified because purpose is allow some methods to be moved
     # to displaypgn.ShowPGN class.
     @property
     def ui_displayed_items(self):
+        """Return the displayed games."""
         return self.ui.game_items
-        
+
     # Defined so cycle_item and give_focus_to_widget methods can be shared by
     # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay classes.
     @property
     def ui_configure_item_list_grid(self):
+        """Return method to configure game grid widget."""
         return self.ui.configure_game_grid
 
     # ui_base_table and mark_partial_positions_to_be_recalculated defined
@@ -117,13 +115,16 @@ class _GameDisplay(ExceptionHandler, Display):
 
     @property
     def ui_base_table(self):
+        """Return grid widget for database games."""
         return self.ui.base_games
 
     @property
     def ui_items_in_toplevels(self):
+        """Return game and repertoire items in Toplevels."""
         return self.ui.games_and_repertoires_in_toplevels
 
     def mark_partial_positions_to_be_recalculated(self, datasource=None):
+        """Mark ChessQL statements, in datasource, to be recalculated."""
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
 
     def get_navigation_events(self):
@@ -176,19 +177,20 @@ class _GameDisplay(ExceptionHandler, Display):
             self.patch_pgn_score_to_fit_record_change_and_refresh_grid(
                 self.ui.game_games,
                 instance)
-        
+
     def generate_popup_navigation_maps(self):
+        """Return tuple of widget navigation map and switch to analysis map."""
         navigation_map = {k:v for k, v in self.get_navigation_events()}
         local_map = {
             EventSpec.scoresheet_to_analysis:
             self.analysis_current_item,
             }
         return navigation_map, local_map
-        
+
 
 class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
-    
     """Display a chess game from a database allowing delete and insert."""
+
     # Notes here because GameDisplay instances used extensively to diagnose
     # problem.
     # Open a game with variations.  Analysis is affected too.
@@ -209,21 +211,24 @@ class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
     # Existence of this method prevents delete_game_database being used by
     # instances of superclasses of RepertoireDisplay, emulating the
     # behaviour before introduction of displaypgn module.
-    def pgn_score_original_value(self, original_value):
-
+    @staticmethod
+    def pgn_score_original_value(original_value):
+        """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has no
         # attribute 'gamesource'.
         #original.value.set_game_source(self.sourceobject.value.gamesource)
         #original.value.set_game_source('Copy, possibly edited')
         if original_value.is_error_comment_present():
             original_value.set_game_source('Editor')
-        
+
     def create_primary_activity_popup(self):
+        """Delegate then add close item entry and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_select_move_popup(self):
+        """Delegate then add close item entry and return popup menu."""
         popup = super().create_select_move_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
@@ -234,16 +239,14 @@ class GameDisplayInsert(_GameDisplay,
                         ShowPGN,
                         GameEdit,
                         DataNotify):
-    
     """Display a chess game from a database allowing insert.
 
     GameEdit provides the widget and _GameDisplay the database interface.
-    
+
     """
 
 
 class GameDisplayEdit(EditPGN, GameDisplayInsert):
-    
     """Display a chess game from a database allowing edit and insert."""
 
     # Allow for structure difference between GameDisplay and RepertoireDisplay
@@ -252,8 +255,9 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
     # Existence of this method prevents delete_game_database being used by
     # instances of superclasses of RepertoireDisplay, emulating the behaviour
     # before introduction of displaypgn module.
-    def pgn_score_original_value(self, original_value):
-
+    @staticmethod
+    def pgn_score_original_value(original_value):
+        """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
         #original.value.set_game_source(self.sourceobject.value.gamesource)
@@ -266,5 +270,5 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
     # gamedisplay.GameDisplayEdit classes.
     # See class attributes pgn_score_name and pgn_score_source_name too.
     def set_properties_on_grids(self, newkey):
+        """Set properties of widgets for newkey on all grids."""
         self.ui.set_properties_on_all_game_grids(newkey)
-

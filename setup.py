@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     setup(
         name='chesstab',
-        version='5.0.1',
+        version='5.0.2.dev0',
         description='Database for chess games',
         author='Roger Marsh',
         author_email='roger.marsh@solentware.co.uk',
@@ -28,7 +28,7 @@ if __name__ == '__main__':
             ],
         package_data={
             'chesstab.fonts': ['*.TTF', '*.zip'],
-            'chesstab.help': ['*.rst', '*.html'],
+            'chesstab.help': ['*.rst'],
             },
         long_description=long_description,
         license='BSD',
@@ -36,6 +36,7 @@ if __name__ == '__main__':
             'License :: OSI Approved :: BSD License',
             'Programming Language :: Python :: 3.7',
             'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
             'Operating System :: OS Independent',
             'Topic :: Games/Entertainment :: Board Games',
             'Intended Audience :: End Users/Desktop',
@@ -43,18 +44,18 @@ if __name__ == '__main__':
             ],
         install_requires=[
             'solentware-base==4.1.4',
-            'chessql==2.0',
+            'chessql==2.0.1.dev0',
             'solentware-grid==2.1.2',
-            'pgn-read==2.1',
+            'pgn-read==2.1.1.dev0',
             'solentware-misc==1.3',
-            'uci-net==1.2.1',
+            'uci-net==1.2.2.dev0',
             ],
         dependency_links=[
             'http://solentware.co.uk/files/solentware-base-4.1.4.tar.gz',
-            'http://solentware.co.uk/files/chessql-2.0.tar.gz',
+            'http://solentware.co.uk/files/chessql-2.0.1.dev0.tar.gz',
             'http://solentware.co.uk/files/solentware-grid-2.1.2.tar.gz',
-            'http://solentware.co.uk/files/pgn-read-2.1.tar.gz',
+            'http://solentware.co.uk/files/pgn-read-2.1.1.dev0.tar.gz',
             'http://solentware.co.uk/files/solentware-misc-1.3.tar.gz',
-            'http://solentware.co.uk/files/uci-net-1.2.1.tar.gz',
+            'http://solentware.co.uk/files/uci-net-1.2.2.dev0.tar.gz',
             ],
         )

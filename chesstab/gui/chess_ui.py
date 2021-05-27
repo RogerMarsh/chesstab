@@ -38,16 +38,13 @@ from .game import Game
 from .board import Board
 from .cqlgrid import CQLGrid
 from . import constants, fonts
-from . import colourscheme
 from ..core.filespec import (
     GAMES_FILE_DEF,
     PARTIAL_FILE_DEF,
     REPERTOIRE_FILE_DEF,
     ANALYSIS_FILE_DEF,
     VARIATION_FIELD_DEF,
-    ANALYSIS_FIELD_DEF,
     SELECTION_FILE_DEF,
-    SELECTION_FIELD_DEF,
     RULE_FIELD_DEF,
     EVENT_FIELD_DEF,
     SITE_FIELD_DEF,
@@ -57,7 +54,6 @@ from ..core.filespec import (
     BLACK_FIELD_DEF,
     RESULT_FIELD_DEF,
     OPENING_FIELD_DEF,
-    RULE_FIELD_DEF,
     PARTIALPOSITION_NAME_FIELD_DEF,
     )
 from .displayitems import DisplayItems
@@ -68,11 +64,10 @@ from .score import ScoreNoGameException
 
 
 class ChessUIError(Exception):
-    pass
+    """Raise exception in chess_ui module."""
 
 
 class ChessUI(ExceptionHandler):
-    
     """Define widgets which form the User Interface."""
 
     allow_filter = {EVENT_FIELD_DEF,
@@ -147,9 +142,8 @@ class ChessUI(ExceptionHandler):
         (self.tags_variations_comments_font,
          self.moves_played_in_game_font,
          self.boardfont,
-         self.wildpieces) = [
-            f for f in fonts.make_chess_fonts(panel.winfo_toplevel())]
-        
+         self.wildpieces) = fonts.make_chess_fonts(panel.winfo_toplevel())
+
         # The top pane has four panes arranged in columns.
         # Selection rules, database games list, displayed games, and analysis:
         # panes appear in this order from left to right when visible.
@@ -170,13 +164,13 @@ class ChessUI(ExceptionHandler):
             #background='yellow',
             #opaqueresize=tkinter.FALSE,
             orient=tkinter.VERTICAL)
-        
+
         self.pw_parent_map[self.selections_pw] = self.top_pw
         self.pw_parent_map[self.list_games_pw] = self.top_pw
         self.pw_parent_map[self.view_games_pw] = self.top_pw
         self.pw_parent_map[self.analysis_pw] = self.top_pw
-        
-        # The analysis pane has two panes arranged in rows
+
+        # The analysis pane has two panes arranged in rows.
         self.repertoires_display_pw = tkinter.ttk.PanedWindow(
             self.analysis_pw, orient=tkinter.VERTICAL)
         self.partials_display_pw = tkinter.ttk.PanedWindow(
@@ -184,7 +178,7 @@ class ChessUI(ExceptionHandler):
         self.pw_parent_map[self.repertoires_display_pw] = self.analysis_pw
         self.pw_parent_map[self.partials_display_pw] = self.analysis_pw
 
-        # The lowest level PanedWindows
+        # The lowest level PanedWindows.
         self.games_pw = tkinter.ttk.PanedWindow(
             self.list_games_pw, orient=tkinter.VERTICAL)
         self.position_games_pw = tkinter.ttk.PanedWindow(
@@ -235,10 +229,11 @@ class ChessUI(ExceptionHandler):
         self.repertoire_games = RepertoirePositionGames(self)
         self.partial_games = PartialPositionGames(self)
 
-        def add_panedwindow(pw, weight):
-            self.pw_current_weights[pw] = 0
-            self.pw_parent_map[pw].add(pw, weight=self.pw_current_weights[pw])
-            self.pw_weights[pw] = weight
+        def add_panedwindow(widget, weight):
+            self.pw_current_weights[widget] = 0
+            self.pw_parent_map[widget].add(
+                widget, weight=self.pw_current_weights[widget])
+            self.pw_weights[widget] = weight
 
         # Selection columnn
         add_panedwindow(self.selections_pw, 1)
@@ -396,9 +391,8 @@ class ChessUI(ExceptionHandler):
 
     def add_repertoire_to_display(self, item):
         """Add repertoire item to GUI."""
-        ri = self.repertoire_items
-        ri.add_item_to_display(item)
-        if ri.contains_one_item():
+        self.repertoire_items.add_item_to_display(item)
+        if self.repertoire_items.contains_one_item():
 
             # Call may not be necessary.
             #item.set_score_pointer_widget_navigation_bindings(True)
@@ -413,9 +407,8 @@ class ChessUI(ExceptionHandler):
 
     def add_selection_rule_to_display(self, item):
         """Add selection rule item to GUI."""
-        si = self.selection_items
-        si.add_item_to_display(item)
-        if si.contains_one_item():
+        self.selection_items.add_item_to_display(item)
+        if self.selection_items.contains_one_item():
 
             # Call may not be necessary.
             item.set_score_pointer_widget_navigation_bindings(True)
@@ -426,14 +419,13 @@ class ChessUI(ExceptionHandler):
             item, callback=item.on_selection_change)
         self.set_game_change_notifications(item, callback=item.on_game_change)
         self.show_selection_rule_games()
-        
+
     def configure_game_grid(self):
         """Adjust game grid row sizes after navigate add or delete."""
         self.game_items.configure_items_grid(self.view_games_pw)
-        
+
     def configure_partial_grid(self):
         """Adjust partial grid row sizes after navigate add or delete."""
-
         # If the constant is 2, like in configure_game_grid, sizing enters an
         # infinite loop if the first Partial Position is added when one or
         # more Repertoires are present.  The effect changes with constant, but
@@ -462,15 +454,15 @@ class ChessUI(ExceptionHandler):
 
         self.partial_items.configure_items_grid(
             self.view_partials_pw, active_weight=active_weight)
-        
+
     def configure_repertoire_grid(self):
         """Adjust repertoire grid row sizes after navigate add or delete."""
         self.repertoire_items.configure_items_grid(self.view_repertoires_pw)
-        
+
     def configure_selection_grid(self):
         """Adjust selection grid row sizes after navigate add or delete."""
         self.selection_items.configure_items_grid(self.view_selection_rules_pw)
-        
+
     def delete_game_view(self, item):
         """Remove (game) panel from GUI on 'delete' event from panel."""
         views = self.game_items
@@ -479,15 +471,15 @@ class ChessUI(ExceptionHandler):
             self.set_properties_on_all_game_grids(grid_item)
         had_focus = item.has_focus()
         was_active = views.delete_item(item)
-        
+
         self.configure_game_grid()
         self.view_games_pw.grid_rowconfigure(
             len(views.order), weight=0, uniform='')
-        
+
         # To refresh grid if current key is first after next database open.
-        if self.database is None:
-            if self.game_games.partial not in (None, False):
-                self.game_games.set_partial_key()
+        if (self.database is None and
+            self.game_games.partial not in (None, False)):
+            self.game_games.set_partial_key()
 
         if views.count_items_in_stack():
             if was_active:
@@ -511,14 +503,12 @@ class ChessUI(ExceptionHandler):
             self.configure_panedwindows()
             self.hide_game_games()
             if self.database is not None:
-                if self.base_games:
-                    if self.base_games.is_visible():
-                        self.base_games.frame.focus_set()
-                        return
-                if self.base_partials:
-                    if self.base_partials.is_visible():
-                        self.base_partials.frame.focus_set()
-                        return
+                if self.base_games and self.base_games.is_visible():
+                    self.base_games.frame.focus_set()
+                    return
+                if self.base_partials and self.base_partials.is_visible():
+                    self.base_partials.frame.focus_set()
+                    return
             if self.partial_items.count_items_in_stack() != 0:
 
                 # BUG start
@@ -535,11 +525,11 @@ class ChessUI(ExceptionHandler):
                 self.base_partials.set_properties(grid_item)
         had_focus = item.has_focus()
         was_active = views.delete_item(item)
-        
+
         self.configure_partial_grid()
         self.view_partials_pw.grid_rowconfigure(
             len(views.order), weight=0, uniform='')
-        
+
         # To refresh grid if current key is first after next database open.
         if self.database is None:
             if self.partial_games.partial not in (None, False):
@@ -548,18 +538,18 @@ class ChessUI(ExceptionHandler):
         if views.count_items_in_stack():
             if was_active:
                 self._set_find_partial_name_games(-1)
-                ap = views.active_item.panel
-                ap.after(
+                widget = views.active_item.panel
+                widget.after(
                     1,
                     func=self.try_command(
-                        views.active_item.refresh_game_list, ap))
-                ap.after(
-                    2, func=self.try_command(self._set_partial_name, ap))
+                        views.active_item.refresh_game_list, widget))
+                widget.after(
+                    2, func=self.try_command(self._set_partial_name, widget))
             if had_focus:
                 views.active_item.takefocus_widget.focus_set()
         elif self.database is not None:
             self.hide_partial_position_games()
-        
+
     def delete_repertoire_view(self, item):
         """Remove (game) panel from GUI on 'delete' event from panel."""
         views = self.repertoire_items
@@ -569,11 +559,11 @@ class ChessUI(ExceptionHandler):
                 self.base_repertoires.set_properties(grid_item)
         had_focus = item.has_focus()
         was_active = views.delete_item(item)
-        
+
         self.configure_repertoire_grid()
         self.view_repertoires_pw.grid_rowconfigure(
             len(views.order), weight=0, uniform='')
-        
+
         # To refresh grid if current key is first after next database open.
         if self.database is None:
             if self.repertoire_games.partial not in (None, False):
@@ -586,7 +576,7 @@ class ChessUI(ExceptionHandler):
                 views.active_item.takefocus_widget.focus_set()
         elif self.database is not None:
             self.hide_repertoire_games()
-        
+
     def delete_selection_rule_view(self, item):
         """Remove (selection rule) panel on 'delete' event from panel."""
         views = self.selection_items
@@ -596,11 +586,11 @@ class ChessUI(ExceptionHandler):
                 self.base_selections.set_properties(grid_item)
         had_focus = item.has_focus()
         was_active = views.delete_item(item)
-        
+
         self.configure_selection_grid()
         self.view_selection_rules_pw.grid_rowconfigure(
             len(views.order), weight=0, uniform='')
-        
+
         if views.count_items_in_stack():
             if was_active:
                 views.active_item.refresh_game_list()
@@ -614,24 +604,24 @@ class ChessUI(ExceptionHandler):
         """Set status text to partial position name being searched."""
         self.statusbar.set_status_text(
             self.partial_items.get_stack_item(index).get_text_for_statusbar())
-        
+
     def _set_partial_name(self):
         """Set status text to active partial position name."""
         self.statusbar.set_status_text(
             self.partial_items.active_item.get_text_for_statusbar())
-        
+
     def _set_selection_name(self):
         """Set status text to active selection rule name."""
         self.statusbar.set_status_text(
             self.selection_items.active_item.get_text_for_statusbar())
-    
+
     def get_active_game_move(self):
         """Return current move context of game being navigated."""
         try:
             return self.game_items.active_item.get_current_move_context()
         except IndexError:
             return None
-    
+
     def get_active_repertoire_move(self):
         """Return current move context of repertoire being navigated."""
         try:
@@ -680,7 +670,7 @@ class ChessUI(ExceptionHandler):
         ## hide_repertoire_games?
         ## Problem surfaces when games shown again.
         ## Only style of the three which works here.
-            
+
         self.calculate_payload_availability()
         self.configure_panedwindows()
         self.reset_focus_on_hide_widget()
@@ -783,9 +773,8 @@ class ChessUI(ExceptionHandler):
         self.configure_panedwindows()
         self.reset_focus_on_hide_widget()
 
-    def reset_focus_on_hide_widget(self, preferences=()):
+    def reset_focus_on_hide_widget(self):
         """Switch focus when widget with focus is hidden."""
-
         # BUG start
         # There was a comment here on a problem whose detail was not recorded.
         # But if sashes have been dragged such that the widget being hidden
@@ -897,15 +886,16 @@ class ChessUI(ExceptionHandler):
                       self.games_and_repertoires_in_toplevels,
                       self.partials_in_toplevels,
                       ):
-            for g in games:
+            for item in games:
                 try:
-                    capobftf(g.board.font)
+                    capobftf(item.board.font)
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((item, games))
+        for item, games in exceptions:
+            games.remove(item)
 
-    def set_data_change_notifications(self, widget, notifiers, callback=None):
+    @staticmethod
+    def set_data_change_notifications(widget, notifiers, callback=None):
         """Enable or disable database update notifications for widget.
 
         widget - object to be notified
@@ -922,32 +912,28 @@ class ChessUI(ExceptionHandler):
                 widget.register_in(grid.get_data_source(), callback)
 
     def set_game_change_notifications(self, widget, callback=None):
-        """Set or unset game update notifications to widget.
-        """
+        """Set or unset game update notifications to widget."""
         self.set_data_change_notifications(
             widget,
             (self.base_games, self.game_games, self.partial_games),
             callback)
 
     def set_partial_change_notifications(self, widget, callback=None):
-        """Set or unset partial position update notifications to widget.
-        """
+        """Set or unset partial position update notifications to widget."""
         self.set_data_change_notifications(
             widget,
             (self.base_partials,),
             callback)
 
     def set_repertoire_change_notifications(self, widget, callback=None):
-        """Set or unset partial position update notifications to widget.
-        """
+        """Set or unset partial position update notifications to widget."""
         self.set_data_change_notifications(
             widget,
             (self.base_repertoires,),
             callback)
 
     def set_selection_rule_change_notifications(self, widget, callback=None):
-        """Set or unset selection rule update notifications to widget.
-        """
+        """Set or unset selection rule update notifications to widget."""
         self.set_data_change_notifications(
             widget,
             (self.base_selections,),
@@ -1115,8 +1101,9 @@ class ChessUI(ExceptionHandler):
             if self.base_games.get_frame().winfo_width() != 1:
                 self.games_pw.after_idle(self.base_games.load_new_index)
 
-    def _show_active_item_position_games(self, active):
-        """Show list for current position in active item"""
+    @staticmethod
+    def _show_active_item_position_games(active):
+        """Show list for current position in active item."""
         if not active:
             return
 
@@ -1172,7 +1159,7 @@ class ChessUI(ExceptionHandler):
         self._show_base_selection_rules()
 
         # All the active items except selection_items, which is excluded so all
-        # games in database are listed when database is opened. 
+        # games in database are listed when database is opened.
         self._show_active_item_position_games(
             self.game_items.active_item)
         self._show_active_item_position_games(
@@ -1250,7 +1237,7 @@ class ChessUI(ExceptionHandler):
     def show_selection_rule_games(self):
         """List games containing position in active repertoire."""
         if not self.selection_items.count_items_in_stack():
-            if not self.top_pw.pane(self.selection_pw, 'weight'):
+            if not self.top_pw.pane(self.selections_pw, 'weight'):
                 return
 
         ## Hack to cope with GUI use while Import in progress.
@@ -1380,10 +1367,11 @@ class ChessUI(ExceptionHandler):
             1000,
             self.process_uci_commands_from_engines_and_analysis_requests)
 
-    def _configure_font(self, target, source):
+    @staticmethod
+    def _configure_font(target, source):
         """Set target font properties from source font."""
-        for f in 'family', 'weight', 'slant', 'size':
-            target[f] = source[f]
+        for property_ in 'family', 'weight', 'slant', 'size':
+            target[property_] = source[property_]
 
     def _set_board_colours(self, sbg, bbg, bfg):
         """Set colours and fonts used to display games.
@@ -1400,13 +1388,13 @@ class ChessUI(ExceptionHandler):
                       self.games_and_repertoires_in_toplevels,
                       self.partials_in_toplevels,
                       ):
-            for g in games:
+            for item in games:
                 try:
-                    g.set_colours(sbg, bbg, bfg)
+                    item.set_colours(sbg, bbg, bfg)
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((item, games))
+        for item, games in exceptions:
+            games.remove(item)
 
     def get_export_filename(self, datatype, pgn=True):
         """Return filename to contain export of datatype or None."""
@@ -1416,7 +1404,7 @@ class ChessUI(ExceptionHandler):
                 parent=self.get_toplevel(),
                 title=title,
                 message='An import of data is in progress')
-            return
+            return None
         if not self.database:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
@@ -1424,7 +1412,7 @@ class ChessUI(ExceptionHandler):
                 message=''.join(
                     ('Open the database from which the export is to be done.',
                      )))
-            return
+            return None
         return self._get_export_filename(datatype, pgn, title)
 
     def get_export_filename_for_single_item(self, datatype, pgn=True):
@@ -1442,7 +1430,7 @@ class ChessUI(ExceptionHandler):
                 parent=self.get_toplevel(),
                 title=title,
                 message='An import of data is in progress')
-            return
+            return None
         if not self.database:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
@@ -1450,7 +1438,7 @@ class ChessUI(ExceptionHandler):
                 message=''.join(
                     ('Open the database from which the export is to be done.',
                      )))
-            return
+            return None
         filename = tkinter.filedialog.askdirectory(
             parent=self.get_toplevel(),
             title=title,
@@ -1460,7 +1448,7 @@ class ChessUI(ExceptionHandler):
                 parent=self.get_toplevel(),
                 title=title,
                 message='Database not exported')
-            return
+            return None
         bfn = os.path.basename(filename)
         fns = (
             os.path.join(filename, ''.join((bfn, '_games', '.txt'))),
@@ -1476,18 +1464,18 @@ class ChessUI(ExceptionHandler):
                  '\n\nprovided none of these already exist.\n',
                  )),
             ):
-            return
-        for f in fns:
-            if os.path.exists(f):
+            return None
+        for filename in fns:
+            if os.path.exists(filename):
                 tkinter.messagebox.showinfo(
                     parent=self.get_toplevel(),
                     title=title,
                     message='\n'.join(
                         ('Cannot export because file\n',
-                         f,
+                         filename,
                          '\nalready exists.\n',
                          )))
-                return
+                return None
         return fns
 
     def _get_export_filename(self, datatype, pgn, title):
@@ -1506,7 +1494,7 @@ class ChessUI(ExceptionHandler):
                 parent=self.get_toplevel(),
                 title=title,
                 message=' '.join((datatype, 'file not saved')))
-            return
+            return None
         return filename
 
     def refresh_analysis_widgets(self):
@@ -1516,22 +1504,23 @@ class ChessUI(ExceptionHandler):
                       self.repertoire_items.order,
                       self.games_and_repertoires_in_toplevels,
                       ):
-            for g in games:
+            for item in games:
                 try:
-                    if g.current is None:
+                    if item.current is None:
                         try:
-                            position = g.fen_tag_tuple_square_piece_map()
+                            position = item.fen_tag_tuple_square_piece_map()
                         except ScoreNoGameException:
                             continue
                     else:
-                        position = g.tagpositionmap[g.current]
-                    g.refresh_analysis_widget(g.get_analysis(*position))
+                        position = item.tagpositionmap[item.current]
+                    item.refresh_analysis_widget(item.get_analysis(*position))
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((item, games))
+        for item, games in exceptions:
+            games.remove(item)
 
-    def _give_focus(self, current, traverse):
+    @staticmethod
+    def _give_focus(current, traverse):
         """Give focus to adjacent widget type in traversal order."""
         give = current
         while True:
@@ -1554,8 +1543,8 @@ class ChessUI(ExceptionHandler):
         """Show all panes with weights prior to toggle to single pane view."""
         if not self.single_view:
             return
-        for pw, parent in self.pw_parent_map.items():
-            parent.pane(pw, weight=self.pw_current_weights[pw])
+        for widget, parent in self.pw_parent_map.items():
+            parent.pane(widget, weight=self.pw_current_weights[widget])
         self.single_view = False
         self.configure_game_grid()
         self.configure_partial_grid()
@@ -1565,16 +1554,17 @@ class ChessUI(ExceptionHandler):
     def show_just_panedwindow_with_focus(self, gainfocus):
         """Show pane containing widget with focus and hide the other panes."""
         ppmi = {v:k for k, v in self.payload_parent_map.items()}
-        w = gainfocus
+        widget = gainfocus
         while True:
-            if w in ppmi:
-                if w in self.pw_parent_map:
+            if widget in ppmi:
+                if widget in self.pw_parent_map:
                     self.single_view = True
-                    self.single_view = self.show_payload_panedwindows(ppmi[w])
+                    self.single_view = self.show_payload_panedwindows(
+                        ppmi[widget])
                 break
-            if w is self.top_pw:
+            if widget is self.top_pw:
                 break
-            w = self.top_pw.nametowidget(w.winfo_parent())
+            widget = self.top_pw.nametowidget(widget.winfo_parent())
         if self.single_view:
             self.configure_game_grid()
             self.configure_partial_grid()
@@ -1586,60 +1576,61 @@ class ChessUI(ExceptionHandler):
             return False
         if not self.payload_available[payload]:
             return False
-        for pw, parent in self.pw_parent_map.items():
-            parent.pane(pw, weight=0)
-        pw = self.payload_parent_map[payload]
+        for ppw, parent in self.pw_parent_map.items():
+            parent.pane(ppw, weight=0)
+        ppw = self.payload_parent_map[payload]
         while True:
-            if pw not in self.pw_parent_map:
+            if ppw not in self.pw_parent_map:
                 break
-            self.pw_parent_map[pw].pane(pw, weight=1)
-            pw = self.pw_parent_map[pw]
+            self.pw_parent_map[ppw].pane(ppw, weight=1)
+            ppw = self.pw_parent_map[ppw]
         return True
 
     def calculate_payload_availability(self):
         """Calculate availability of data for display."""
-        pa = self.payload_available
+        pla = self.payload_available
         ppm = self.payload_parent_map
         pwpm = self.pw_parent_map
         pwcw = self.pw_current_weights
         pww = self.pw_weights
-        for p in pa:
-            pa[p] = p.is_payload_available()
-            w = ppm[p]
-            while w in pwpm:
-                pwcw[w] = 0
-                w = pwpm[w]
-        for k, v in pa.items():
-            w = ppm[k]
-            while w in pwpm:
-                if v:
-                    pwcw[w] = pww[w]
-                w = pwpm[w]
+        for payload in pla:
+            pla[payload] = payload.is_payload_available()
+            widget = ppm[payload]
+            while widget in pwpm:
+                pwcw[widget] = 0
+                widget = pwpm[widget]
+        for key, value in pla.items():
+            widget = ppm[key]
+            while widget in pwpm:
+                if value:
+                    pwcw[widget] = pww[widget]
+                widget = pwpm[widget]
         if pwcw[ppm[self.base_games]]:
             if pwcw[ppm[self.game_items]]:
                 # Same parent tree as base_games so just do child.
-                w = ppm[self.game_games]
-                pwcw[w] = pww[w]
+                widget = ppm[self.game_games]
+                pwcw[widget] = pww[widget]
             if pwcw[ppm[self.repertoire_items]]:
                 # Same parent tree as repertoire_items so just do child.
-                w = ppm[self.repertoire_games]
-                pwcw[w] = pww[w]
+                widget = ppm[self.repertoire_games]
+                pwcw[widget] = pww[widget]
             if pwcw[ppm[self.partial_items]]:
                 # Same parent tree as partial_items so just do child.
-                w = ppm[self.partial_games]
-                pwcw[w] = pww[w]
+                widget = ppm[self.partial_games]
+                pwcw[widget] = pww[widget]
 
     def configure_panedwindows(self):
         """Display available panedwindows subject to single_view status."""
-        for k, v in self.payload_available.items():
-            w = self.payload_parent_map[k]
-            if self.pw_current_weights[w]:
-                k.insert_payload(w)
-            elif k in w.panes():
-                k.forget_payload(w)
-            while w in self.pw_parent_map:
-                self.pw_parent_map[w].pane(w, weight=self.pw_current_weights[w])
-                w = self.pw_parent_map[w]
+        for k in self.payload_available:
+            widget = self.payload_parent_map[k]
+            if self.pw_current_weights[widget]:
+                k.insert_payload(widget)
+            elif k in widget.panes():
+                k.forget_payload(widget)
+            while widget in self.pw_parent_map:
+                self.pw_parent_map[widget].pane(
+                    widget, weight=self.pw_current_weights[widget])
+                widget = self.pw_parent_map[widget]
 
     def set_properties_on_all_game_grids(self, game):
         """Set properties for game on all grids where it is visible."""
@@ -1684,11 +1675,11 @@ class ChessUI(ExceptionHandler):
                       self.repertoire_items.order,
                       self.games_and_repertoires_in_toplevels,
                       ):
-            for si in items:
-                si.set_position_analysis_data_source()
+            for item in items:
+                item.set_position_analysis_data_source()
 
     def make_position_analysis_data_source(self):
-        """"""
+        """Create a new DataSource for stored chess engine analysis."""
         if self.database:
 
             # Without the 'is not None' seems unreliable at 08 Nov 2015.
@@ -1697,12 +1688,12 @@ class ChessUI(ExceptionHandler):
             # Not yet known what happens with sqlite3 and so forth.
             if self.database.is_database_file_active(ANALYSIS_FILE_DEF
                                                      ) is not None:
-                
                 return self.engineanalysisds(
                     self.database,
                     ANALYSIS_FILE_DEF,
                     VARIATION_FIELD_DEF,
                     newrow=ChessDBrecordAnalysis)
+        return None
 
     def _create_selection_rules_datasource(self, database):
         """Create a new DataSource for list of selection rules."""
@@ -1752,8 +1743,8 @@ class ChessUI(ExceptionHandler):
     def set_toolbarframe_disabled(self):
         """Set state for widgets in toolbar frame."""
         self.tb_entry.configure(state=tkinter.DISABLED)
-        for w in (self.tb_moveto, self.tb_filter):
-            w.configure(state=tkinter.DISABLED, command='')
+        for widget in (self.tb_moveto, self.tb_filter):
+            widget.configure(state=tkinter.DISABLED, command='')
 
     def set_toolbarframe_normal(self, move_to, filter_):
         """Set state for widgets in toolbar frame."""
@@ -1762,26 +1753,26 @@ class ChessUI(ExceptionHandler):
         self.tb_filter.configure(state=tkinter.NORMAL, command=filter_)
 
     def move_to_game(self):
-        """"""
+        """Move to first game with PGN Tag value starting text in filter."""
         self.base_games.move_to_row_in_grid(self.tb_entry.get())
 
     def move_to_partial(self):
-        """"""
+        """Move to first ChessQL statement with name starting text in filter."""
         self.base_partials.move_to_row_in_grid(self.tb_entry.get())
 
     def move_to_repertoire(self):
-        """"""
+        """Move to first repertoire with name starting text in filter."""
         self.base_repertoires.move_to_row_in_grid(self.tb_entry.get())
 
     def move_to_selection(self):
-        """"""
+        """Move to first query with name starting text in filter."""
         self.base_selections.move_to_row_in_grid(self.tb_entry.get())
 
     def filter_game(self):
-        """"""
-        t = self.tb_entry.get()
+        """Show games with PGN Tag value starting text in filter."""
+        text = self.tb_entry.get()
         self.base_games.record_count = None
-        self.base_games.set_partial_key(t if len(t) else None)
+        self.base_games.set_partial_key(text if len(text) else None)
 
         # Not yet sure if other three filter_* methods need fill_view() call to
         # populate widget without an explicit scroll action by user.
@@ -1794,37 +1785,37 @@ class ChessUI(ExceptionHandler):
         try:
             self.base_games.fill_view()
         except KeyError:
-            if '*' in t:
+            if '*' in text:
                 tkinter.messagebox.showwarning(
                     parent=self.get_toplevel(),
                     title='Filter Games',
                     message=''.join((
-                        "Filter '", t, "' contains a '*'.\n\nThis warning is ",
-                        "expected to appear if the database engine is ",
+                        "Filter '", text, "' contains a '*'.\n\nThis warning ",
+                        "is expected to appear if the database engine is ",
                         "SQLite3 and means an attempt to scroll the list of ",
                         "games will cause a program crash.\n\nA known way ",
                         "to avoid this is menu option 'Select | Game'.\n\n",
                         "Assuming the filter was enabled by menu option ",
                         "'Select | White' the filter can be done by 'Select ",
-                        "| Rule', typing 'White starts ", t, "', followed ",
+                        "| Rule', typing 'White starts ", text, "', followed ",
                         "by 'Ctrl + Enter'.\n\nIf the filter was enabled by ",
                         "'Select | Result' the appropriate rule is likely ",
                         "to be 'Result eq *'.")))
 
     def filter_partial(self):
-        """"""
-        t = self.tb_entry.get()
-        self.base_partials.load_new_partial_key(t if len(t) else None)
+        """Show ChessQL statements with name starting text in filter."""
+        text = self.tb_entry.get()
+        self.base_partials.load_new_partial_key(text if len(text) else None)
 
     def filter_repertoire(self):
-        """"""
-        t = self.tb_entry.get()
-        self.base_repertoires.load_new_partial_key(t if len(t) else None)
+        """Show repertoires with name starting text in filter."""
+        text = self.tb_entry.get()
+        self.base_repertoires.load_new_partial_key(text if len(text) else None)
 
     def filter_selection(self):
-        """"""
-        t = self.tb_entry.get()
-        self.base_selections.load_new_partial_key(t if len(t) else None)
+        """Show query statements with name starting text in filter."""
+        text = self.tb_entry.get()
+        self.base_selections.load_new_partial_key(text if len(text) else None)
 
     def hide_scrollbars(self):
         """Hide the scrollbars in the game display widgets."""
@@ -1867,6 +1858,7 @@ class ChessUI(ExceptionHandler):
             items.remove(i)
 
     def export_report(self, result, title):
+        """Show a report dialogue if some game scores could not be exported."""
         if result is None:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
