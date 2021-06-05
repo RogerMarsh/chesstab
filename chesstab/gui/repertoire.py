@@ -20,7 +20,7 @@ widget.
 from ..core.pgn import (
     GameDisplayMoves,
     GameRepertoireDisplayMoves,
-    )
+)
 from .eventspec import EventSpec
 from ..core.constants import REPERTOIRE_TAG_ORDER
 from .game import Game
@@ -44,10 +44,11 @@ class Repertoire(Game):
     It is ('Repertoire', GameRepertoireDisplayMoves).
 
     """
+
     # Override methods referring to Seven Tag Roster
 
     tags_displayed_last = REPERTOIRE_TAG_ORDER
-    pgn_export_type = 'Repertoire', GameRepertoireDisplayMoves
+    pgn_export_type = "Repertoire", GameRepertoireDisplayMoves
 
     # gameclass=GameRepertoireDisplayMoves surely?
     # Then maybe do not need pgn_export_type for 'export_..' methods in Score.
@@ -55,18 +56,16 @@ class Repertoire(Game):
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend to display repertoire game."""
         super(Repertoire, self).__init__(gameclass=gameclass, **ka)
-        
+
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.
     def get_all_export_events(self):
         return (
-            (EventSpec.pgn_export_format_no_comments,
-             self.export_pgn_no_comments),
-            (EventSpec.pgn_export_format,
-             self.export_pgn),
-            (EventSpec.pgn_import_format,
-             self.export_pgn_import_format),
-            (EventSpec.text_internal_format,
-             self.export_text),
-            )
-
+            (
+                EventSpec.pgn_export_format_no_comments,
+                self.export_pgn_no_comments,
+            ),
+            (EventSpec.pgn_export_format, self.export_pgn),
+            (EventSpec.pgn_import_format, self.export_pgn_import_format),
+            (EventSpec.text_internal_format, self.export_text),
+        )

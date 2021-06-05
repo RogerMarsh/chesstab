@@ -14,7 +14,7 @@ module like all the other engines.
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import tkinter
     import os
@@ -24,7 +24,6 @@ if __name__ == '__main__':
 
     from ..dpt.chessdptdu import ChessDatabase
     from ..core.chessrecord import ChessDBrecordGameImport
-
 
     def file_du(database, dbpath, pgnpath):
         """Open database, import games and close database.
@@ -36,32 +35,30 @@ if __name__ == '__main__':
         cdb = database(dbpath, allowcreate=True)
         importer = ChessDBrecordGameImport()
         cdb.open_database()
-        s = open(pgnpath, 'r', encoding='iso-8859-1')
+        s = open(pgnpath, "r", encoding="iso-8859-1")
         importer.import_pgn(cdb, s, pgnpath)
         s.close()
         cdb.close_database_contexts()
 
-
     class FileWidget:
-
         def __init__(self, database, engine_name):
             root = tkinter.Tk()
-            root.wm_title(string=' - '.join((engine_name,
-                                             'Import PGN file')))
+            root.wm_title(string=" - ".join((engine_name, "Import PGN file")))
             root.wm_iconify()
             dbdir = tkinter.filedialog.askdirectory(
-                title=' - '.join((engine_name, 'Open ChessTab database')))
+                title=" - ".join((engine_name, "Open ChessTab database"))
+            )
             if dbdir:
                 filename = tkinter.filedialog.askopenfilename(
-                    title='PGN file of Games',
-                    defaultextension='.pgn',
-                    filetypes=(('PGN Chess Games', '*.pgn'),))
+                    title="PGN file of Games",
+                    defaultextension=".pgn",
+                    filetypes=(("PGN Chess Games", "*.pgn"),),
+                )
                 if filename:
                     if tkinter.messagebox.askyesno(
-                        title='Import Games',
-                        message='Proceed with import'):
+                        title="Import Games", message="Proceed with import"
+                    ):
                         file_du(database, dbdir, filename)
             root.destroy()
 
-
-    FileWidget(ChessDatabase, 'dpt')
+    FileWidget(ChessDatabase, "dpt")

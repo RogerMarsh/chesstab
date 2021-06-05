@@ -25,13 +25,13 @@ GameDialogue, and RepertoireDialogue, now removed from those classes.
 
 
 class ScorePGN:
-    
+
     """Mixin providing methods shared by the displaypgn.ShowPGN and
     toplevelpgn.ToplevelPGN classes.
 
     These methods display the game or repertoire PGN score, or the engine
     analysis for the PGN score.
-    
+
     """
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces

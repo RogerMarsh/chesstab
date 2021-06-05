@@ -13,13 +13,13 @@ from solentware_grid.gui.datarow import (
     WIDGET_CONFIGURE,
     WIDGET,
     ROW,
-    )
+)
 
 from pgn_read.core.constants import (
     TAG_RESULT,
     IFG_TAG_NAME,
     IFG_TAG_VALUE,
-    )
+)
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordRepertoireTags
@@ -29,7 +29,7 @@ from .repertoiredbshow import RepertoireDbShow
 from . import constants
 from ..core.constants import TAG_OPENING, REPERTOIRE_GAME_TAGS
 
-ON_DISPLAY_COLOUR = '#eba610' # a pale orange
+ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
@@ -38,24 +38,35 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
     Add row methods to the chess game record definition.
 
     """
+
     header_specification = [
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_OPENING, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='player'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_RESULT, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='result'),
-         ROW: 0,
-         },
-        ]
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_OPENING,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="player"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_RESULT,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="result"),
+            ROW: 0,
+        },
+    ]
 
     def __init__(self, database=None, ui=None):
         """Extend and associate record definition with database.
@@ -68,26 +79,30 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            ]
-        
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
+                ROW: 0,
+            },
+        ]
+
     def show_row(self, dialog, oldobject):
         """Return a RepertoireDbShow toplevel for instance.
 
@@ -96,7 +111,7 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
 
         """
         return RepertoireDbShow(dialog, oldobject, ui=self.ui)
-        
+
     def delete_row(self, dialog, oldobject):
         """Return a RepertoireDbDelete toplevel for instance.
 
@@ -115,11 +130,9 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return RepertoireDbEdit(newobject,
-                                dialog,
-                                oldobject,
-                                showinitial=showinitial,
-                                ui=self.ui)
+        return RepertoireDbEdit(
+            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+        )
 
     def grid_row(self, **kargs):
         """Return customized super(ChessDBrowRepertoire, self).grid_row(...).
@@ -130,11 +143,12 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         tags = self.value.collected_game._tags
         return super(ChessDBrowRepertoire, self).grid_row(
             textitems=(
-                tags.get(TAG_OPENING, '?'),
-                tags.get(TAG_RESULT, '?'),
-                ),
-            **kargs)
-        
+                tags.get(TAG_OPENING, "?"),
+                tags.get(TAG_RESULT, "?"),
+            ),
+            **kargs
+        )
+
     def get_tags_display_order(self, pgn):
         """Return Tags not given their own column in display order"""
         tag_values = []
@@ -155,6 +169,8 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
 
 def make_ChessDBrowRepertoire(chessui):
     """Make ChessDBrowRepertoire with reference to ChessUI instance"""
+
     def make_position(database=None):
         return ChessDBrowRepertoire(database=database, ui=chessui)
+
     return make_position

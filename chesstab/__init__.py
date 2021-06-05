@@ -29,34 +29,34 @@ from solentware_base.core.constants import (
     VEDIS_MODULE,
     GNU_MODULE,
     NDBM_MODULE,
-    )
+)
 
-APPLICATION_NAME = 'ChessTab'
-ERROR_LOG = 'ErrorLog'
+APPLICATION_NAME = "ChessTab"
+ERROR_LOG = "ErrorLog"
 
 # Berkeley DB interface module name
-_DBCHESS = __name__ + '.db.chessdb'
+_DBCHESS = __name__ + ".db.chessdb"
 
 # DPT interface module name
-_DPTCHESS = __name__ + '.dpt.chessdpt'
+_DPTCHESS = __name__ + ".dpt.chessdpt"
 
 # sqlite3 interface module name
-_SQLITE3CHESS = __name__ + '.sqlite.chesssqlite3'
+_SQLITE3CHESS = __name__ + ".sqlite.chesssqlite3"
 
 # apsw interface module name
-_APSWCHESS = __name__ + '.apsw.chessapsw'
+_APSWCHESS = __name__ + ".apsw.chessapsw"
 
 # unqlite interface module name
-_UNQLITECHESS = __name__ + '.unqlite.chessunqlite'
+_UNQLITECHESS = __name__ + ".unqlite.chessunqlite"
 
 # vedis interface module name
-_VEDISCHESS = __name__ + '.vedis.chessvedis'
+_VEDISCHESS = __name__ + ".vedis.chessvedis"
 
 # dbm.gnu interface module name
-_GNUCHESS = __name__ + '.gnu.chessgnu'
+_GNUCHESS = __name__ + ".gnu.chessgnu"
 
 # dbm.ndbm interface module name
-_NDBMCHESS = __name__ + '.ndbm.chessndbm'
+_NDBMCHESS = __name__ + ".ndbm.chessndbm"
 
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {
@@ -69,13 +69,13 @@ APPLICATION_DATABASE_MODULE = {
     VEDIS_MODULE: _VEDISCHESS,
     GNU_MODULE: _GNUCHESS,
     NDBM_MODULE: _NDBMCHESS,
-    }
+}
 
 # Default partial position dataset module name
-_DEFAULTPARTIALPOSITION = __name__ + '.basecore.cqlds'
+_DEFAULTPARTIALPOSITION = __name__ + ".basecore.cqlds"
 
 # DPT partial position dataset module name
-_DPTPARTIALPOSITION = __name__ + '.dpt.cqlds'
+_DPTPARTIALPOSITION = __name__ + ".dpt.cqlds"
 
 # Map database module names to partial position dataset module
 PARTIAL_POSITION_MODULE = {
@@ -88,13 +88,13 @@ PARTIAL_POSITION_MODULE = {
     VEDIS_MODULE: _DEFAULTPARTIALPOSITION,
     GNU_MODULE: _DEFAULTPARTIALPOSITION,
     NDBM_MODULE: _DEFAULTPARTIALPOSITION,
-    }
+}
 
 # Default full position dataset module name
-_DEFAULTFULLPOSITION = __name__ + '.basecore.fullpositionds'
+_DEFAULTFULLPOSITION = __name__ + ".basecore.fullpositionds"
 
 # DPT full dataset module name
-_DPTFULLPOSITION = __name__ + '.dpt.fullpositionds'
+_DPTFULLPOSITION = __name__ + ".dpt.fullpositionds"
 
 # Map database module names to full position dataset module
 FULL_POSITION_MODULE = {
@@ -107,13 +107,13 @@ FULL_POSITION_MODULE = {
     VEDIS_MODULE: _DEFAULTFULLPOSITION,
     GNU_MODULE: _DEFAULTFULLPOSITION,
     NDBM_MODULE: _DEFAULTFULLPOSITION,
-    }
+}
 
 # Default analysis dataset module name
-_DEFAULTANALYSIS = __name__ + '.basecore.analysisds'
+_DEFAULTANALYSIS = __name__ + ".basecore.analysisds"
 
 # DPT analysis dataset module name
-_DPTANALYSIS = __name__ + '.dpt.analysisds'
+_DPTANALYSIS = __name__ + ".dpt.analysisds"
 
 # Map database module names to analysis dataset module
 ANALYSIS_MODULE = {
@@ -126,13 +126,13 @@ ANALYSIS_MODULE = {
     VEDIS_MODULE: _DEFAULTANALYSIS,
     GNU_MODULE: _DEFAULTANALYSIS,
     NDBM_MODULE: _DEFAULTANALYSIS,
-    }
+}
 
 # Default selection rules dataset module name
-_DEFAULTSELECTION = __name__ + '.basecore.selectionds'
+_DEFAULTSELECTION = __name__ + ".basecore.selectionds"
 
 # DPT selection rules dataset module name
-_DPTSELECTION = __name__ + '.dpt.selectionds'
+_DPTSELECTION = __name__ + ".dpt.selectionds"
 
 # Map database module names to selection rules dataset module
 SELECTION_MODULE = {
@@ -145,4 +145,4 @@ SELECTION_MODULE = {
     VEDIS_MODULE: _DEFAULTSELECTION,
     GNU_MODULE: _DEFAULTSELECTION,
     NDBM_MODULE: _DEFAULTSELECTION,
-    }
+}

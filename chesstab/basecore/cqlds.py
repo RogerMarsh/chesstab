@@ -20,6 +20,5 @@ from .cqlgames import ChessQLGames
 
 
 class ChessQueryLanguageDS(ChessQLGames, DataSourceCursor):
-    
-    """Combine a standard DataSourceCursor with ChessQLGames.
-    """
+
+    """Combine a standard DataSourceCursor with ChessQLGames."""

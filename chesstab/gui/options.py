@@ -10,13 +10,15 @@ import os
 from . import constants
 from . import fonts
 
-font_names = {constants.MOVES_PLAYED_IN_GAME_FONT,
-     constants.PIECES_ON_BOARD_FONT,
-     constants.WILDPIECES_ON_BOARD_FONT,
-     constants.LISTS_OF_GAMES_FONT,
-     constants.TAGS_VARIATIONS_COMMENTS_FONT,}
+font_names = {
+    constants.MOVES_PLAYED_IN_GAME_FONT,
+    constants.PIECES_ON_BOARD_FONT,
+    constants.WILDPIECES_ON_BOARD_FONT,
+    constants.LISTS_OF_GAMES_FONT,
+    constants.TAGS_VARIATIONS_COMMENTS_FONT,
+}
 
-_options_filename = 'options'
+_options_filename = "options"
 
 
 def get_saved_options(folder):
@@ -29,7 +31,7 @@ def get_saved_options(folder):
     if not os.path.isfile(optionsfilename):
         return
     try:
-        optionsfile = open(optionsfilename, 'r')
+        optionsfile = open(optionsfilename, "r")
     except:
         return
     defaults = dict()
@@ -56,7 +58,7 @@ def save_options(folder, changes):
         if not os.path.isfile(optionsfilename):
             return
     try:
-        optionsfile = open(optionsfilename, 'a+')
+        optionsfile = open(optionsfilename, "a+")
         defaults = _extract_options(optionsfile)
     except:
         return
@@ -78,14 +80,14 @@ def save_options(folder, changes):
         newlines = []
         for k, v in newdefaults.items():
             if k in font_names:
-                newlines.append(''.join((k, '\n')))
+                newlines.append("".join((k, "\n")))
                 for ak, av in v.items():
                     if ak in fonts.integer_attributes:
-                        newlines.append(''.join((ak, '=', str(av), '\n')))
+                        newlines.append("".join((ak, "=", str(av), "\n")))
                     else:
-                        newlines.append(''.join((ak, '=', av, '\n')))
+                        newlines.append("".join((ak, "=", av, "\n")))
             else:
-                newlines.append(''.join((k, '=', v, '\n')))
+                newlines.append("".join((k, "=", v, "\n")))
         if newlines:
             optionsfile.writelines(newlines)
     finally:
@@ -113,18 +115,18 @@ def _extract_options(fileid):
         constants.WILDPIECES_ON_BOARD_FONT: dict(),
         constants.LISTS_OF_GAMES_FONT: dict(),
         constants.TAGS_VARIATIONS_COMMENTS_FONT: dict(),
-        }
+    }
     for fa in fonts.modify_font_attributes:
         defaults[fa] = None
     font_details = False
     for line in fileid.readlines():
         text = line.strip()
-        if text.startswith('#'):
+        if text.startswith("#"):
             continue
         try:
-            k, v = text.split('=', 1)
+            k, v = text.split("=", 1)
         except:
-            k, v = text, ''
+            k, v = text, ""
         key = k.strip()
         if key in defaults:
             if key in fonts.modify_font_attributes:

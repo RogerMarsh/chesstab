@@ -7,11 +7,11 @@
 
 import re
 
-from pgn_read.core.constants import (TAG_WHITE, TAG_BLACK)
+from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from solentware_base.core.where import LIKE
 
-from .constants import  NAME_DELIMITER
+from .constants import NAME_DELIMITER
 
 # Normalize player names for index consistency.
 # Format defined in the PGN specification is 'surname, forename I.J.' assuming
@@ -20,7 +20,7 @@ from .constants import  NAME_DELIMITER
 # Names like 'surname, I. forename J.' may occur.
 # Index values are created by replacing all sequences containing just commas,
 # periods, and whitespace, by a single space.
-re_normalize_player_name = re.compile('([^,\.\s]+)(?:[,\.\s]*)')
+re_normalize_player_name = re.compile("([^,\.\s]+)(?:[,\.\s]*)")
 
 
 class QueryStatementError(Exception):
@@ -31,11 +31,11 @@ class QueryStatement(object):
     """Game selection rule parser.
 
     Parse text for a game selection rule specification.
-    
+
     """
 
     def __init__(self):
-        """"""
+        """ """
         super().__init__()
         self._dbset = None
 
@@ -44,8 +44,8 @@ class QueryStatement(object):
         # This attribute should not be used for anything else.
         self.__database = None
 
-        self._description_string = ''
-        self._query_statement_string = ''
+        self._description_string = ""
+        self._query_statement_string = ""
         self._where_error = None
 
         self._reset_rule_state()
@@ -57,8 +57,8 @@ class QueryStatement(object):
 
         """
         self.where = None
-        self.textok = ''
-        self.texterror = ''
+        self.textok = ""
+        self.texterror = ""
 
     @property
     def where_error(self):
@@ -74,12 +74,17 @@ class QueryStatement(object):
             self._dbset = value
         elif self._dbset != value:
             raise QueryStatementError(
-                ''.join(("Database file name already set to ",
-                         repr(self._dbset),
-                         ", cannot change to ",
-                         repr(value),
-                         ".")))
-    
+                "".join(
+                    (
+                        "Database file name already set to ",
+                        repr(self._dbset),
+                        ", cannot change to ",
+                        repr(value),
+                        ".",
+                    )
+                )
+            )
+
     def process_query_statement(self, text):
         """Process selection rule in text.
 
@@ -94,10 +99,12 @@ class QueryStatement(object):
         # Assume no error, but set False indicating process_query_statement
         # has been called.
         self._where_error = False
-        
-        for rule in (('', text.strip()),
-                     [t.strip() for t in text.split(NAME_DELIMITER, 1)]):
-            
+
+        for rule in (
+            ("", text.strip()),
+            [t.strip() for t in text.split(NAME_DELIMITER, 1)],
+        ):
+
             if len(rule) == 1:
 
                 # The second element of rule is being processed and the text in
@@ -116,20 +123,23 @@ class QueryStatement(object):
                 continue
             self.where = w
             self.textok = self._query_statement_string
-            self.texterror = ''
+            self.texterror = ""
             self._where_error = False
             for n in w.node.get_clauses_from_root_in_walk_order():
                 if n.field in (TAG_WHITE, TAG_BLACK):
                     if n.condition == LIKE:
                         continue
                     if not isinstance(n.value, tuple):
-                        n.value = ' '.join(
-                            re_normalize_player_name.findall(n.value))
+                        n.value = " ".join(
+                            re_normalize_player_name.findall(n.value)
+                        )
                     else:
                         n.value = tuple(
-                            [' '.join(
-                                re_normalize_player_name.findall(nv))
-                             for nv in n.value])
+                            [
+                                " ".join(re_normalize_player_name.findall(nv))
+                                for nv in n.value
+                            ]
+                        )
             return True
 
         # self._where_error is not bound to a WhereStatementError instance.
@@ -142,9 +152,11 @@ class QueryStatement(object):
     def get_name_query_statement_text(self):
         """Return name and position text."""
         return NAME_DELIMITER.join(
-            (self._description_string,
-             self._query_statement_string,
-             ))
+            (
+                self._description_string,
+                self._query_statement_string,
+            )
+        )
 
     def get_query_statement_text(self):
         """Return position text."""
@@ -153,4 +165,3 @@ class QueryStatement(object):
     def set_database(self, database=None):
         """Set Database instance to which selection rule is applied."""
         self.__database = database
-

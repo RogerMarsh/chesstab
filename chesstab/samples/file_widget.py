@@ -24,7 +24,7 @@ def file_du(database, dbpath, pgnpath):
     importer = ChessDBrecordGameImport()
     cdb.open_database()
     cdb.set_defer_update()
-    s = open(pgnpath, 'r', encoding='iso-8859-1')
+    s = open(pgnpath, "r", encoding="iso-8859-1")
     importer.import_pgn(cdb, s, pgnpath)
     s.close()
     cdb.do_final_segment_deferred_updates()
@@ -33,22 +33,22 @@ def file_du(database, dbpath, pgnpath):
 
 
 class FileWidget:
-
     def __init__(self, database, engine_name):
         root = tkinter.Tk()
-        root.wm_title(string=' - '.join((engine_name,
-                                         'Import PGN file')))
+        root.wm_title(string=" - ".join((engine_name, "Import PGN file")))
         root.wm_iconify()
         dbdir = tkinter.filedialog.askdirectory(
-            title=' - '.join((engine_name, 'Open ChessTab database')))
+            title=" - ".join((engine_name, "Open ChessTab database"))
+        )
         if dbdir:
             filename = tkinter.filedialog.askopenfilename(
-                title='PGN file of Games',
-                defaultextension='.pgn',
-                filetypes=(('PGN Chess Games', '*.pgn'),))
+                title="PGN file of Games",
+                defaultextension=".pgn",
+                filetypes=(("PGN Chess Games", "*.pgn"),),
+            )
             if filename:
                 if tkinter.messagebox.askyesno(
-                    title='Import Games',
-                    message='Proceed with import'):
+                    title="Import Games", message="Proceed with import"
+                ):
                     file_du(database, dbdir, filename)
         root.destroy()

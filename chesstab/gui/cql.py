@@ -28,7 +28,7 @@ import tkinter
 
 from .cqltext import CQLText
 from .eventspec import EventSpec
-    
+
 
 class CQL(CQLText):
 
@@ -51,23 +51,18 @@ class CQL(CQLText):
         ui=None,
         items_manager=None,
         itemgrid=None,
-        **ka):
+        **ka
+    ):
         """Create Frame and delegate to superclass, then set grid geometry
         manager.
         """
 
-        panel = tkinter.Frame(
-            master,
-            borderwidth=2,
-            relief=tkinter.RIDGE)
-        panel.bind('<Configure>', self.try_event(self.on_configure))
+        panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
+        panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
         super().__init__(
-            panel,
-            ui=ui,
-            items_manager=items_manager,
-            itemgrid=itemgrid,
-            **ka)
+            panel, ui=ui, items_manager=items_manager, itemgrid=itemgrid, **ka
+        )
         self.scrollbar.grid(column=1, row=0, rowspan=1, sticky=tkinter.NSEW)
         self.score.grid(column=0, row=0, rowspan=1, sticky=tkinter.NSEW)
         if not ui.visible_scrollbars:
@@ -76,12 +71,12 @@ class CQL(CQLText):
 
         # The popup menus specific to CQL (placed same as Game equivalent)
 
-        #self.primary_activity_popup.add_cascade(
+        # self.primary_activity_popup.add_cascade(
         #    label='Database', menu=self.database_popup)
 
         # For compatibility with Game when testing if item has focus.
         self.takefocus_widget = self.score
-        
+
     def destroy_widget(self):
         """Destroy the widget displaying ChessQL statement."""
         self.panel.destroy()
@@ -96,7 +91,7 @@ class CQL(CQLText):
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
         self.configure_cql_statement_widget()
-        
+
     def configure_cql_statement_widget(self):
         """Configure widgets for a ChessQL statement display."""
         self.panel.grid_rowconfigure(0, weight=1)
@@ -121,27 +116,32 @@ class CQL(CQLText):
         # Hack because I misunderstood meaning of takefocus: FALSE does not
         # stop the widget taking focus, just stops tab traversal.
         if take:
-            #self.takefocus_widget.configure(takefocus=tkinter.TRUE)
+            # self.takefocus_widget.configure(takefocus=tkinter.TRUE)
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
         else:
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
 
     def set_database_navigation_close_item_bindings(self, switch=True):
         self.set_event_bindings_score(
-            self.get_database_events(), switch=switch)
+            self.get_database_events(), switch=switch
+        )
         self.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch)
+            self.get_navigation_events(), switch=switch
+        )
         self.set_event_bindings_score(
-            self.get_close_item_events(), switch=switch)
+            self.get_close_item_events(), switch=switch
+        )
 
     def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""
         self.set_event_bindings_score(
-            ((EventSpec.control_buttonpress_1, ''),
-             (EventSpec.buttonpress_1, self.give_focus_to_widget),
-             (EventSpec.buttonpress_3, self.post_inactive_menu),
-             ),
-            switch=switch)
+            (
+                (EventSpec.control_buttonpress_1, ""),
+                (EventSpec.buttonpress_1, self.give_focus_to_widget),
+                (EventSpec.buttonpress_3, self.post_inactive_menu),
+            ),
+            switch=switch,
+        )
 
     def set_colours(self, sbg, bbg, bfg):
         """Set colours and fonts used to display ChessQL statement.
@@ -151,7 +151,7 @@ class CQL(CQLText):
         bfg == True - set board piece colours
 
         """
-        
+
     def create_primary_activity_popup(self):
         popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
@@ -160,6 +160,8 @@ class CQL(CQLText):
     def export_partial(self, event=None):
         """Export displayed partial position definition."""
         exporters.export_single_position(
-            self.score.get('1.0', tkinter.END),
+            self.score.get("1.0", tkinter.END),
             self.ui.get_export_filename_for_single_item(
-                'Partial Position', pgn=False))
+                "Partial Position", pgn=False
+            ),
+        )

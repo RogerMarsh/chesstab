@@ -23,7 +23,7 @@ from pgn_read.core.constants import (
     FEN_BLACK_KNIGHT,
     FEN_BLACK_PAWN,
     FEN_WHITE_ACTIVE,
-    )
+)
 
 from chessql.core.constants import ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME
 
@@ -32,7 +32,7 @@ from .constants import (
     REPERTOIRE_TAG_ORDER,
     REPERTOIRE_GAME_TAGS,
     MOVE_NUMBER_KEYS,
-    )
+)
 
 MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
     FEN_WHITE_KING: ANY_WHITE_PIECE_NAME,
@@ -47,7 +47,7 @@ MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
     FEN_BLACK_BISHOP: ANY_BLACK_PIECE_NAME,
     FEN_BLACK_KNIGHT: ANY_BLACK_PIECE_NAME,
     FEN_BLACK_PAWN: ANY_BLACK_PIECE_NAME,
-    }
+}
 
 
 class GameDisplayMoves(GameIndicateCheck):
@@ -69,8 +69,7 @@ class GameDisplayMoves(GameIndicateCheck):
             self.moves = [(None, self._ravstack[-1][-1])]
 
     def modify_board_state(self, position_delta):
-        """Delegate to superclass then append entry to moves.
-        """
+        """Delegate to superclass then append entry to moves."""
         super().modify_board_state(position_delta)
         self.moves.append((self._text[-1], self._ravstack[-1][-1]))
 
@@ -83,9 +82,10 @@ class GameMove(Game):
     to PGN needs the data structures set by the set_initial_position() call.
 
     GameMove allows this call to be done before processing the first movetext
-    and supresses the call usually done with first movetext. 
+    and supresses the call usually done with first movetext.
 
     """
+
     def __init__(self):
         super().__init__()
         self._set_initial_position_state = None
@@ -115,7 +115,7 @@ class GameAnalysis(GameDisplayMoves):
     response from a chess engine.
 
     """
-    
+
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
@@ -126,14 +126,16 @@ class GameAnalysis(GameDisplayMoves):
         return True
 
 
-def get_position_string(board,
-                        active_color,
-                        castling_availability,
-                        en_passant_target_square,
-                        halfmove_clock,
-                        fullmove_number):
+def get_position_string(
+    board,
+    active_color,
+    castling_availability,
+    en_passant_target_square,
+    halfmove_clock,
+    fullmove_number,
+):
     """Return position string for description of board.
-    
+
     Format of position string is (I say bytes even though a str is returned):
     8 bytes with each set bit representing an occupied square from a8 to h1.
     n bytes corresponding to n set bits for occupied squares naming the piece
@@ -153,17 +155,20 @@ def get_position_string(board,
     near each other.  En passant is before castling because the meaning of 'b',
     'Q', and 'q', can be decided without using the 8 byte bit pattern: piece
     name or en passant or castling or whose move.
-    
+
     """
     squares = Squares.squares
     for s, p in board.items():
         p.set_square(s)
-    return (sum(squares[s].bit for s in board
-                ).to_bytes(8, 'big').decode('iso-8859-1') +
-            ''.join(p.name for p in sorted(board.values())) +
-            active_color +
-            en_passant_target_square +
-            castling_availability)
+    return (
+        sum(squares[s].bit for s in board)
+        .to_bytes(8, "big")
+        .decode("iso-8859-1")
+        + "".join(p.name for p in sorted(board.values()))
+        + active_color
+        + en_passant_target_square
+        + castling_availability
+    )
 
 
 # The classes and functions above this comment are used in, or via, the Game,
@@ -183,6 +188,7 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
     Export methods are provided for repertoires.
 
     """
+
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
@@ -201,14 +207,14 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
         pb = []
         for t in REPERTOIRE_TAG_ORDER:
             pb.extend(
-                ['[', t, ' "',
-                 tags.get(t, REPERTOIRE_GAME_TAGS[t]),
-                 '"]\n'])
-        for t, v in sorted([tv for tv in tags.items()
-                            if tv[0] not in REPERTOIRE_GAME_TAGS]):
-            pb.extend(['[', t, ' "', v, '"]\n'])
+                ["[", t, ' "', tags.get(t, REPERTOIRE_GAME_TAGS[t]), '"]\n']
+            )
+        for t, v in sorted(
+            [tv for tv in tags.items() if tv[0] not in REPERTOIRE_GAME_TAGS]
+        ):
+            pb.extend(["[", t, ' "', v, '"]\n'])
         pb.append(self.get_all_movetext_in_pgn_export_format())
-        return ''.join(pb)
+        return "".join(pb)
 
     def get_repertoire_pgn_no_comments(self):
         """Return export format PGN for repertoire excluding comments."""
@@ -216,19 +222,19 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
         pb = []
         for t in REPERTOIRE_TAG_ORDER:
             pb.extend(
-                ['[', t, ' "',
-                 tags.get(t, REPERTOIRE_GAME_TAGS[t]),
-                 '"]\n'])
-        for t, v in sorted([tv for tv in tags.items()
-                            if tv[0] not in REPERTOIRE_GAME_TAGS]):
-            pb.extend(['[', t, ' "', v, '"]\n'])
+                ["[", t, ' "', tags.get(t, REPERTOIRE_GAME_TAGS[t]), '"]\n']
+            )
+        for t, v in sorted(
+            [tv for tv in tags.items() if tv[0] not in REPERTOIRE_GAME_TAGS]
+        ):
+            pb.extend(["[", t, ' "', v, '"]\n'])
         pb.append(self.get_movetext_without_comments_in_pgn_export_format())
-        return ''.join(pb)
+        return "".join(pb)
 
 
 class GameRepertoireUpdate(Game):
     """Generate data structures to Update a repertoire on a database."""
-    
+
     def is_tag_roster_valid(self):
         """Return True if the repertoire's tag roster is valid."""
         tags = self._tags
@@ -252,7 +258,7 @@ class GameTags(Game):
     PGN._disambiguate_move is never called.
 
     PGN._collecting_non_whitespace_while_searching is correct in this class too.
-    
+
     """
 
     def append_token_and_set_error(self, match):
@@ -270,7 +276,7 @@ class GameTags(Game):
         if self._movetext_offset is None:
             self._ravstack.append(None)
             self._movetext_offset = len(self._text)
-            self._text.append('')
+            self._text.append("")
 
     def append_pawn_move(self, match):
         """Ignore pawn move token and update board state with null.
@@ -283,7 +289,7 @@ class GameTags(Game):
         if self._movetext_offset is None:
             self._ravstack.append(None)
             self._movetext_offset = len(self._text)
-            self._text.append('')
+            self._text.append("")
 
     def append_pawn_promote_move(self, match):
         """Ignore pawn promotion move token and update board state with null.
@@ -294,7 +300,7 @@ class GameTags(Game):
         if self._movetext_offset is None:
             self._ravstack.append(None)
             self._movetext_offset = len(self._text)
-            self._text.append('')
+            self._text.append("")
 
     def append_castles(self, match):
         """Ignore castling move token and update board state with null.
@@ -305,7 +311,7 @@ class GameTags(Game):
         if self._movetext_offset is None:
             self._ravstack.append(None)
             self._movetext_offset = len(self._text)
-            self._text.append('')
+            self._text.append("")
 
     def append_game_termination(self, match):
         """Append game termination token to game score and update game state.
@@ -393,7 +399,7 @@ class GameTags(Game):
         removed from PGN movetext.  This method processes the 'c2' when it is
         consumed from the input: 'c2' is processed by peeking at the input when
         processing the 'Qb3'.
-        
+
         """
 
     def append_token_after_error(self, match):
@@ -452,7 +458,7 @@ class GameRepertoireTags(GameTags):
     TAG_OPENING tag.
 
     """
-    
+
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
@@ -495,8 +501,9 @@ class GameUpdate(Game):
         else:
             self.halfmovenumber = [self._fullmove_number * 2 - 1]
         self.variationnumber = [0]
-        self._variation = ''.join(_convert_integer_to_length_hex(i)
-                                  for i in self.variationnumber)
+        self._variation = "".join(
+            _convert_integer_to_length_hex(i) for i in self.variationnumber
+        )
 
     def reset_board_state(self, position_delta):
         """Delegate to superclass then append initial variation number for this
@@ -514,13 +521,13 @@ class GameUpdate(Game):
         example: '... Ba7 ) ( Nf4 ...'.
         """
         super().set_board_state(position_delta)
-        self.variationnumber[len(self._ravstack)-1] += 1
-        self._variation = ''.join(_convert_integer_to_length_hex(i)
-                                  for i in self.variationnumber)
+        self.variationnumber[len(self._ravstack) - 1] += 1
+        self._variation = "".join(
+            _convert_integer_to_length_hex(i) for i in self.variationnumber
+        )
 
     def modify_board_state(self, position_delta):
-        """Delegate to superclass then modify board state and add index entries.
-        """
+        """Delegate to superclass then modify board state and add index entries."""
         super().modify_board_state(position_delta)
         if len(self._ravstack) != len(self.halfmovenumber):
             while len(self._ravstack) < len(self.halfmovenumber):
@@ -529,14 +536,15 @@ class GameUpdate(Game):
             while len(self._ravstack) > len(self.halfmovenumber):
                 self.halfmovenumber.append(self.halfmovenumber[-1])
                 self.variationnumber.append(0)
-            self._variation = ''.join(_convert_integer_to_length_hex(i)
-                                      for i in self.variationnumber)
+            self._variation = "".join(
+                _convert_integer_to_length_hex(i) for i in self.variationnumber
+            )
         self.halfmovenumber[-1] += 1
         movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
         piecesquaremovekeys = self.piecesquaremovekeys
         piecemovekeys = self.piecemovekeys
         squaremovekeys = self.squaremovekeys
-        pieces = [''] * 64
+        pieces = [""] * 64
         bits = []
         mv = movenumber + self._variation
         for piece in self._piece_placement_data.values():
@@ -546,26 +554,30 @@ class GameUpdate(Game):
             pieces[piece_square.number] = piece_name
             bits.append(piece_square.bit)
 
-            #piecesquaremovekeys.append(mv + piece_name + square_name)
-            #squaremovekeys.append(mv + mp[piece_name] + square_name)
+            # piecesquaremovekeys.append(mv + piece_name + square_name)
+            # squaremovekeys.append(mv + mp[piece_name] + square_name)
 
             # If 'square piece' is better order than 'piece square'
             piecesquaremovekeys.append(mv + square_name + piece_name)
             squaremovekeys.append(
-                (mv +
-                 square_name +
-                 MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]))
+                (
+                    mv
+                    + square_name
+                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                )
+            )
 
-        pieces = ''.join(pieces)
+        pieces = "".join(pieces)
         for piece_name in set(pieces):
             piecemovekeys.append(mv + piece_name)
         bs = position_delta[1]
         self.positionkeys.append(
-            sum(bits).to_bytes(8, 'big').decode('iso-8859-1') +
-            pieces +
-            bs[1] +
-            bs[3] +
-            bs[2])
+            sum(bits).to_bytes(8, "big").decode("iso-8859-1")
+            + pieces
+            + bs[1]
+            + bs[3]
+            + bs[2]
+        )
 
 
 class GameUpdateEstimate(GameUpdate):
@@ -602,6 +614,4 @@ def _convert_integer_to_length_hex(i):
         return MOVE_NUMBER_KEYS[i]
     except IndexError:
         c = hex(i)
-        return str(len(c)-2) + c[2:]
-
-
+        return str(len(c) - 2) + c[2:]

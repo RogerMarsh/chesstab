@@ -35,9 +35,12 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
     to be expressed identically and defined once.
 
     """
-    text_name = 'Engine Definition'
 
-    def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
+    text_name = "Engine Definition"
+
+    def __init__(
+        self, newobject, parent, oldobject, showinitial=True, ui=None
+    ):
         """Extend and create toplevel to edit or insert chess engine definition.
 
         ui should be a UCI instance.
@@ -50,10 +53,11 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
             parent,
             oldobject,
             EngineToplevelEdit(master=parent, ui=ui),
-            '',
-            oldview=EngineToplevel(master=parent,
-                                   ui=ui) if showinitial else showinitial,
-            )
+            "",
+            oldview=EngineToplevel(master=parent, ui=ui)
+            if showinitial
+            else showinitial,
+        )
         self.initialize()
 
     def get_title_for_object(self, object_=None):
@@ -66,11 +70,14 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         if object_ is None:
             object_ = self.oldobject
         if object_:
-            return '  '.join((
-                self.text_name.join(('Edit ', ':')),
-                object_.value.get_name_text()))
+            return "  ".join(
+                (
+                    self.text_name.join(("Edit ", ":")),
+                    object_.value.get_name_text(),
+                )
+            )
         else:
-            return ''.join(('Insert ', self.text_name))
+            return "".join(("Insert ", self.text_name))
 
     @property
     def ui_base_table(self):
@@ -87,7 +94,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
     def set_item(self, view, object_):
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)
-        
+
     def dialog_ok(self):
         """Update record and return update action response (True for updated).
 
@@ -96,34 +103,41 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
 
         """
         ed = self.newview.get_name_engine_definition_dict()
-        title = self.get_title_for_object(),
+        title = (self.get_title_for_object(),)
         if not ed:
             tkinter.messagebox.showerror(
-                parent = self.parent,
+                parent=self.parent,
                 title=title,
-                message=''.join(('No chess engine definition given.\n\n',
-                                 'Name of chess engine definition must be ',
-                                 'first line, and subsequent lines the ',
-                                 'command to run the engine.',
-                                 )))
+                message="".join(
+                    (
+                        "No chess engine definition given.\n\n",
+                        "Name of chess engine definition must be ",
+                        "first line, and subsequent lines the ",
+                        "command to run the engine.",
+                    )
+                ),
+            )
             return False
         self.newobject.value.load(repr(ed))
         if not self.newobject.value.get_engine_command_text():
             tkinter.messagebox.showerror(
-                parent = self.parent,
+                parent=self.parent,
                 title=title,
-                message=''.join(('No chess engine definition given.\n\n',
-                                 'Name of chess engine definition must be ',
-                                 'first line, and subsequent lines the ',
-                                 'command to run the engine.',
-                                 )))
+                message="".join(
+                    (
+                        "No chess engine definition given.\n\n",
+                        "Name of chess engine definition must be ",
+                        "first line, and subsequent lines the ",
+                        "command to run the engine.",
+                    )
+                ),
+            )
             return False
         url = self.newobject.value.engine_url_or_error_message()
         if isinstance(url, str):
             tkinter.messagebox.showerror(
-                parent=self.parent,
-                title=title,
-                message=url)
+                parent=self.parent, title=title, message=url
+            )
             return False
         return super().dialog_ok()
 

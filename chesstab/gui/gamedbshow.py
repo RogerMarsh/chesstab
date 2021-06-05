@@ -18,7 +18,7 @@ from .toplevelpgn import ShowPGN
 
 
 class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
-    
+
     """Show PGN text for game from database.
 
     parent is used as the master argument in a GameToplevel call.
@@ -36,15 +36,15 @@ class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
     to be expressed identically and defined once.
 
     """
-    pgn_score_name = 'Game'
+
+    pgn_score_name = "Game"
 
     def __init__(self, parent, oldobject, ui=None):
         """Extend and create toplevel widget for displaying chess game."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         GameToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, GameToplevel(master=parent, ui=ui), ""
+        )
         self.initialize()
 
     @property
@@ -63,7 +63,8 @@ class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
         self.set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+        )
         view.set_and_tag_item_text()
 
     def get_title_for_object(self, object_=None):
@@ -76,18 +77,20 @@ class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
             object_ = self.object
         try:
             tags = object_.value.collected_game._tags
-            return '  '.join((
-                self.pgn_score_name.join(('Show ', ':')),
-                ' - '.join((
-                    tags[TAG_WHITE],
-                    tags[TAG_BLACK])),
-                ))
+            return "  ".join(
+                (
+                    self.pgn_score_name.join(("Show ", ":")),
+                    " - ".join((tags[TAG_WHITE], tags[TAG_BLACK])),
+                )
+            )
         except TypeError:
             return self.pgn_score_name.join(
-                ('Show ', ' - names unknown or invalid'))
+                ("Show ", " - names unknown or invalid")
+            )
         except KeyError:
             return self.pgn_score_name.join(
-                ('Show ', ' - names unknown or invalid'))
+                ("Show ", " - names unknown or invalid")
+            )
 
     def set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Game object_.

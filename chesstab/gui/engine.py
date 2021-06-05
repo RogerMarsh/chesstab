@@ -25,7 +25,7 @@ to allow deletion of chess engine definitions from a database.
 import tkinter
 
 from .enginetext import EngineText
-    
+
 
 class Engine(EngineText):
 
@@ -39,7 +39,7 @@ class Engine(EngineText):
     See superclass for ui, items_manager, and itemgrid, arguments.  These may
     be, or have been, absorbed into **ka argument.
 
-    
+
     """
 
     def __init__(
@@ -49,21 +49,16 @@ class Engine(EngineText):
         ui=None,
         items_manager=None,
         itemgrid=None,
-        **ka):
+        **ka
+    ):
         """Create widgets to display chess engine definition."""
 
-        panel = tkinter.Frame(
-            master,
-            borderwidth=2,
-            relief=tkinter.RIDGE)
-        panel.bind('<Configure>', self.try_event(self.on_configure))
+        panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
+        panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
         super(Engine, self).__init__(
-            panel,
-            ui=ui,
-            items_manager=items_manager,
-            itemgrid=itemgrid,
-            **ka)
+            panel, ui=ui, items_manager=items_manager, itemgrid=itemgrid, **ka
+        )
         self.scrollbar.grid(column=1, row=0, rowspan=1, sticky=tkinter.NSEW)
         self.score.grid(column=0, row=0, rowspan=1, sticky=tkinter.NSEW)
         if not ui.visible_scrollbars:
@@ -72,7 +67,7 @@ class Engine(EngineText):
 
         # For compatibility with Game when testing if item has focus.
         self.takefocus_widget = self.score
-        
+
     def destroy_widget(self):
         """Destroy the widget displaying chess engine definition."""
         self.panel.destroy()
@@ -87,7 +82,7 @@ class Engine(EngineText):
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
         self.configure_selection_widget()
-        
+
     def configure_selection_widget(self):
         """Configure widgets for a chess engine definition display."""
         self.panel.grid_rowconfigure(0, weight=1)
@@ -112,7 +107,7 @@ class Engine(EngineText):
         # Hack because I misunderstood meaning of takefocus: FALSE does not
         # stop the widget taking focus, just stops tab traversal.
         if take:
-            #self.takefocus_widget.configure(takefocus=tkinter.TRUE)
+            # self.takefocus_widget.configure(takefocus=tkinter.TRUE)
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
         else:
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)

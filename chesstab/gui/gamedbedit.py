@@ -21,7 +21,7 @@ from .constants import EMPTY_SEVEN_TAG_ROSTER
 
 
 class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
-    
+
     """Edit PGN text for game on database, or insert a new record.
 
     parent is used as the master argument in GameToplevel calls.
@@ -48,11 +48,14 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
     to be expressed identically and defined once.
 
     """
-    pgn_score_name = 'Game'
-    pgn_score_tags = EMPTY_SEVEN_TAG_ROSTER
-    pgn_score_source = 'Editor'
 
-    def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
+    pgn_score_name = "Game"
+    pgn_score_tags = EMPTY_SEVEN_TAG_ROSTER
+    pgn_score_source = "Editor"
+
+    def __init__(
+        self, newobject, parent, oldobject, showinitial=True, ui=None
+    ):
         """Extend and create dialogue widget to edit or insert chess game."""
         if not oldobject:
             showinitial = False
@@ -61,10 +64,11 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
             parent,
             oldobject,
             GameToplevelEdit(master=parent, ui=ui),
-            '',
-            oldview=GameToplevel(master=parent,
-                                 ui=ui) if showinitial else showinitial,
-            )
+            "",
+            oldview=GameToplevel(master=parent, ui=ui)
+            if showinitial
+            else showinitial,
+        )
         self.initialize()
 
     @property
@@ -83,7 +87,8 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         self.set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+        )
         view.set_and_tag_item_text()
 
     def get_title_for_object(self, object_=None):
@@ -97,20 +102,22 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         if object_:
             tags = object_.value.collected_game._tags
             try:
-                return '  '.join((
-                    self.pgn_score_name.join(('Edit ', ':')),
-                    ' - '.join((
-                        tags[TAG_WHITE],
-                        tags[TAG_BLACK])),
-                    ))
+                return "  ".join(
+                    (
+                        self.pgn_score_name.join(("Edit ", ":")),
+                        " - ".join((tags[TAG_WHITE], tags[TAG_BLACK])),
+                    )
+                )
             except TypeError:
                 return self.pgn_score_name.join(
-                    ('Edit ', ' - names unknown or invalid'))
+                    ("Edit ", " - names unknown or invalid")
+                )
             except KeyError:
                 return self.pgn_score_name.join(
-                    ('Edit ', ' - names unknown or invalid'))
+                    ("Edit ", " - names unknown or invalid")
+                )
         else:
-            return ''.join(('Insert ', self.pgn_score_name))
+            return "".join(("Insert ", self.pgn_score_name))
 
     def set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Game object_.
@@ -124,7 +131,7 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
 
         """
         pass
-        
+
     def put(self):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()

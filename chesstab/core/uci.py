@@ -33,7 +33,7 @@ from uci_net.engine import (
     SetoptionSubCommands,
     InfoParameters,
     ScoreInfoValueNames,
-    )
+)
 
 from .uci_to_pgn import generate_pgn_for_uci_moves_in_position
 from .chessrecord import ChessDBrecordAnalysis
@@ -59,12 +59,12 @@ class UCI(object):
         # At Python3.5 running under Wine on FreeBSD 10.1, get() does not wait
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
-        #try:
+        # try:
         #    self.uci_drivers_reply = multiprocessing.Queue()
-        #except OSError:
+        # except OSError:
         #    self.uci_drivers_reply = None
         self.uci_drivers_reply = multiprocessing.Queue()
-            
+
         self.uci_drivers = dict()
         self.uci_drivers_fen = dict()
         self.uci_active_engines = dict()
@@ -88,7 +88,7 @@ class UCI(object):
         self.set_option_on_empty_queues = set()
 
     def kill_engine(self, number):
-        """Attempt to kill engine and return True if successful."""        
+        """Attempt to kill engine and return True if successful."""
         ui_name = self.uci_drivers_index[number]
         ei = self.uci_drivers[ui_name]
         try:
@@ -115,7 +115,7 @@ class UCI(object):
         return True
 
     def quit_all_engines(self):
-        """Attempt to kill all engines and return list of those not killed."""        
+        """Attempt to kill all engines and return list of those not killed."""
         joiners = []
         non_joiners = []
         for ui_name, ei in self.uci_drivers.items():
@@ -150,29 +150,34 @@ class UCI(object):
         # At Python3.5 running under Wine on FreeBSD 10.1, get() does not wait
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
-        #if self.uci_drivers_reply is None:
+        # if self.uci_drivers_reply is None:
         #    return
 
         self.engine_counter += 1
-        ui_name = ': '.join(
-            (str(self.engine_counter),
-             os.path.splitext(os.path.basename(program_file_name))[0],
-             ))
+        ui_name = ": ".join(
+            (
+                str(self.engine_counter),
+                os.path.splitext(os.path.basename(program_file_name))[0],
+            )
+        )
         to_driver_queue = multiprocessing.Queue()
         driver = multiprocessing.Process(
             target=run_driver,
-            args=(to_driver_queue,
-                  self.uci_drivers_reply,
-                  program_file_name,
-                  args,
-                  ui_name),
-            )
+            args=(
+                to_driver_queue,
+                self.uci_drivers_reply,
+                program_file_name,
+                args,
+                ui_name,
+            ),
+        )
         driver.start()
         self.uci_drivers[ui_name] = EngineInterface(
             driver=driver,
             program_file_name=program_file_name,
             to_driver_queue=to_driver_queue,
-            parser=Engine())
+            parser=Engine(),
+        )
         self.uci_drivers_index[self.engine_counter] = ui_name
         self.uci_drivers_fen[ui_name] = None
         self.clear_hash_after_bestmove[ui_name] = False
@@ -210,7 +215,7 @@ class UCI(object):
             self.uci_drivers[ui_name].parser.process_engine_commands(response)
         except:
             return
-        
+
         c = commands[-1].split(None, maxsplit=1)[0]
         if c == CommandsFromEngine.bestmove:
             self.bestmove(ui_name)
@@ -227,8 +232,10 @@ class UCI(object):
 
     def get_analysis_requests(self):
         """Add requests for analysis of positions to engine queues."""
-        if (self.set_option_on_empty_queues and
-            self.is_positions_pending_empty()):
+        if (
+            self.set_option_on_empty_queues
+            and self.is_positions_pending_empty()
+        ):
             if ReservedOptionNames.Hash in self.set_option_on_empty_queues:
 
                 # Postpone Hash action until all engines ready.
@@ -236,7 +243,7 @@ class UCI(object):
                     eip = ei.parser
                     if eip.readyok_expected or eip.uciok_expected is not False:
                         return
-                    
+
                 for ei in self.uci_drivers.values():
                     eip = ei.parser
                     eipoh = eip.options.get(ReservedOptionNames.Hash)
@@ -251,18 +258,25 @@ class UCI(object):
                         max_ = eipoh[1].get(OptionParameters.max_)
                         if min_ is None or max_ is None:
                             continue
-                        newhash = max(min(self.hash_size, int(max_)), int(min_))
+                        newhash = max(
+                            min(self.hash_size, int(max_)), int(min_)
+                        )
                     ei.to_driver_queue.put(
-                        ' '.join(
-                            (CommandsToEngine.setoption,
-                             SetoptionSubCommands.name,
-                             ReservedOptionNames.Hash,
-                             SetoptionSubCommands.value,
-                             str(newhash))))
+                        " ".join(
+                            (
+                                CommandsToEngine.setoption,
+                                SetoptionSubCommands.name,
+                                ReservedOptionNames.Hash,
+                                SetoptionSubCommands.value,
+                                str(newhash),
+                            )
+                        )
+                    )
                     ei.to_driver_queue.put(CommandsToEngine.isready)
                     ei.parser.readyok_expected = True
                 self.set_option_on_empty_queues.discard(
-                    ReservedOptionNames.Hash)
+                    ReservedOptionNames.Hash
+                )
             return
 
         requests = {}
@@ -287,7 +301,7 @@ class UCI(object):
                 else:
                     v.append(game)
         for v in positions_pending.values():
-            v.update({rk:rv.copy() for rk, rv in requests.items()})
+            v.update({rk: rv.copy() for rk, rv in requests.items()})
 
         uci_drivers_fen = self.uci_drivers_fen
         for k, ei in self.uci_drivers.items():
@@ -341,9 +355,13 @@ class UCI(object):
                     return False
                 multipv = 1
             else:
-                mpv = min(max(int(udpo[ronmpv][1][OptionParameters.min_]),
-                              self._multipv),
-                          int(udpo[ronmpv][1][OptionParameters.max_]))
+                mpv = min(
+                    max(
+                        int(udpo[ronmpv][1][OptionParameters.min_]),
+                        self._multipv,
+                    ),
+                    int(udpo[ronmpv][1][OptionParameters.max_]),
+                )
                 if depth >= self._go_depth and multipv >= mpv:
                     return False
                 if mpv < multipv:
@@ -354,22 +372,28 @@ class UCI(object):
         # as high as possible given requested value.
         if ronmpv in udpo:
             ei.to_driver_queue.put(
-                ' '.join(
-                    (CommandsToEngine.setoption,
-                     SetoptionSubCommands.name,
-                     ronmpv,
-                     SetoptionSubCommands.value,
-                     str(max(multipv, self._multipv)))))
+                " ".join(
+                    (
+                        CommandsToEngine.setoption,
+                        SetoptionSubCommands.name,
+                        ronmpv,
+                        SetoptionSubCommands.value,
+                        str(max(multipv, self._multipv)),
+                    )
+                )
+            )
         ei.to_driver_queue.put(
-            ' '.join(
-                (CommandsToEngine.position,
-                 PositionSubCommands.fen,
-                 fen)))
+            " ".join((CommandsToEngine.position, PositionSubCommands.fen, fen))
+        )
         ei.to_driver_queue.put(
-            ' '.join(
-                (CommandsToEngine.go,
-                 GoSubCommands.depth,
-                 str(max(self.go_depth, depth)))))
+            " ".join(
+                (
+                    CommandsToEngine.go,
+                    GoSubCommands.depth,
+                    str(max(self.go_depth, depth)),
+                )
+            )
+        )
         return True
 
     def uciok(self, ui_name):
@@ -394,11 +418,15 @@ class UCI(object):
             # Assume all engines have the 'Clear Hash' option.
             # Partly to avoid changing uci package right now to ask.
             ei.to_driver_queue.put(
-                ' '.join(
-                    (CommandsToEngine.setoption,
-                     SetoptionSubCommands.name,
-                     ReservedOptionNames.clear_hash)))
-            
+                " ".join(
+                    (
+                        CommandsToEngine.setoption,
+                        SetoptionSubCommands.name,
+                        ReservedOptionNames.clear_hash,
+                    )
+                )
+            )
+
             self.clear_hash_after_bestmove[ui_name] = False
             return
         ei.parser.readyok_expected = False
@@ -421,14 +449,18 @@ class UCI(object):
             self.clear_hash_after_bestmove[ui_name] = True
 
     def copyprotection(self, ui_name):
-        """"""
-        print(CommandsFromEngine.copyprotection,
-              self.uci_drivers[ui_name].parser.copyprotection)
+        """ """
+        print(
+            CommandsFromEngine.copyprotection,
+            self.uci_drivers[ui_name].parser.copyprotection,
+        )
 
     def registration(self, ui_name):
-        """"""
-        print(CommandsFromEngine.registration,
-              self.uci_drivers[ui_name].parser.registration)
+        """ """
+        print(
+            CommandsFromEngine.registration,
+            self.uci_drivers[ui_name].parser.registration,
+        )
 
     @property
     def use_ucinewgame(self):
@@ -503,26 +535,29 @@ class UCI(object):
         mate = ScoreInfoValueNames.mate
         lines = []
         for k, v in snapshot.pv_group.items():
-            lines.append([int(k) if k else 0,
-                          None,
-                          v[InfoParameters.depth],
-                          generate_pgn_for_uci_moves_in_position(
-                              v[InfoParameters.pv][0],
-                              fen),
-                         ])
+            lines.append(
+                [
+                    int(k) if k else 0,
+                    None,
+                    v[InfoParameters.depth],
+                    generate_pgn_for_uci_moves_in_position(
+                        v[InfoParameters.pv][0], fen
+                    ),
+                ]
+            )
             if cp in v[score]:
                 lines[-1][1] = v[score][cp]
             elif mate in v[score]:
-                lines[-1][1] = v[score][mate] + '0000'
+                lines[-1][1] = v[score][mate] + "0000"
             else:
                 lines[-1][1] = 0
-        lines = sorted(lines)[:int(multipv) if multipv is not None else 1]
+        lines = sorted(lines)[: int(multipv) if multipv is not None else 1]
 
         a = Analysis()
         a.scale = {engine_name: (min([int(d[2]) for d in lines]), len(lines))}
         a.position = fen
         a.variations = {engine_name: [(d[1], d[3]) for d in lines]}
-        
+
         # The write to analysis file will be done here.
         asd = self.analysis_data_source
         if asd:
@@ -554,8 +589,9 @@ class UCI(object):
                     inserter = RecordEdit(self.analysis_record, None)
                     inserter.set_data_source(asd, None)
                     self.analysis_record.set_database(
-                        inserter.get_data_source().dbhome)
-                    self.analysis_record.key.recno = None#0
+                        inserter.get_data_source().dbhome
+                    )
+                    self.analysis_record.key.recno = None  # 0
                     inserter.put()
         else:
             pa = self.position_analysis.setdefault(a.position, a)
@@ -581,15 +617,14 @@ class UCI(object):
 
 
 def run_driver(to_driver_queue, to_ui_queue, path, args, ui_name):
-    """Start UCI chess engine and enter loop sending queued resuests to engine.
-    """
+    """Start UCI chess engine and enter loop sending queued resuests to engine."""
     driver = UCIDriverOverTCP(to_ui_queue, ui_name)
     try:
         driver.start_engine(path, args)
     except:
-        to_ui_queue.put(('start failed', (ui_name,)))
+        to_ui_queue.put(("start failed", (ui_name,)))
         return
-    to_ui_queue.put(('started', (ui_name,)))
+    to_ui_queue.put(("started", (ui_name,)))
     while True:
         command = to_driver_queue.get()
         if command == CommandsToEngine.quit_:

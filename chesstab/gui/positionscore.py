@@ -22,7 +22,7 @@ from pgn_read.core.constants import (
     TAG_WHITE,
     TAG_BLACK,
     TAG_RESULT,
-    )
+)
 from pgn_read.core.parser import PGN
 from pgn_read.core.squares import Squares
 
@@ -60,15 +60,14 @@ from .constants import (
     NEWLINE_SEP,
     NULL_SEP,
     MOVETEXT_MOVENUMBER_TAG,
-    )
+)
 
 
 # May need to make this a superclass of Tkinter.Text because DataRow method
 # make_row_widgets expects to be able to call Tkinter widget methods.
 class PositionScore(ExceptionHandler):
 
-    """Chess game score widget composed from a Text widget.    
-    """
+    """Chess game score widget composed from a Text widget."""
 
     m_color = MOVE_COLOR
     am_color = ALTERNATIVE_MOVE_COLOR
@@ -84,7 +83,8 @@ class PositionScore(ExceptionHandler):
         tags_variations_comments_font=None,
         moves_played_in_game_font=None,
         ui=None,
-        **ka):
+        **ka
+    ):
         """Extend with widgets to display game.
 
         widget - Tkinter.Text instance to contain game score
@@ -108,16 +108,17 @@ class PositionScore(ExceptionHandler):
         self.score = widget
         widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
         widget.tag_configure(
-            MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font)
+            MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font
+        )
         # Order is MOVE_TAG ALTERNATIVE_MOVE_TAG VARIATION_TAG so that correct
         # colour has highest priority as moves are added to and removed from
         # tags.
         widget.tag_configure(MOVE_TAG, background=self.m_color)
         widget.tag_configure(ALTERNATIVE_MOVE_TAG, background=self.am_color)
         widget.tag_configure(VARIATION_TAG, background=self.v_color)
-        widget.bind('<Map>', self.try_event(self.on_map))
+        widget.bind("<Map>", self.try_event(self.on_map))
         # None implies initial position and is deliberately not a valid Tk tag.
-        self.current = None # Tk tag of current move
+        self.current = None  # Tk tag of current move
         self._clear_tag_maps()
         self.collected_game = None
         # map_game uses self._force_movenumber to insert movenumber before
@@ -140,7 +141,7 @@ class PositionScore(ExceptionHandler):
 
         Instances of PositionScore are reused as games are navigated and not
         necessarely for the game already in the instance.
-        
+
         """
         # Mappings tagpositionmap, fullpositions, positiontags, and recently
         # added varmovetags, are removed because the compare_two_positions()
@@ -150,20 +151,20 @@ class PositionScore(ExceptionHandler):
         self.variation_number = 0
         self.varstack = []
         self.position_number = 0
-        
+
     def process_score(self, text=None, context=None):
         """Wrapper for Tkinter.Text configure method for score attribute"""
         if text:
             self._clear_tag_maps()
             self.collected_game = next(
-                PGN(game_class=GameDisplayMoves
-                    ).read_games(text))
+                PGN(game_class=GameDisplayMoves).read_games(text)
+            )
             self._context = context
             try:
                 self.set_and_tag_item_text()
             finally:
                 del self._context
-        
+
     def get_top_widget(self):
         """Return topmost widget for game display.
 
@@ -174,20 +175,20 @@ class PositionScore(ExceptionHandler):
     def destroy_widget(self):
         """Destroy the widget displaying game."""
         self.score.destroy()
-        
+
     def set_and_tag_item_text(self, reset_undo=False):
         """Display the game as board and moves.
 
         reset_undo causes the undo redo stack to be cleared if True.  Set True
         on first display of a game for editing so that repeated Ctrl-Z in text
         editing mode recovers the original score.
-        
+
         """
         self.score.configure(state=tkinter.NORMAL)
-        self.score.delete('1.0', tkinter.END)
+        self.score.delete("1.0", tkinter.END)
         self.map_game()
         self.score.configure(state=tkinter.DISABLED)
-        
+
     def clear_current_range(self):
         """Remove existing MOVE_TAG ranges."""
         tr = self.score.tag_ranges(MOVE_TAG)
@@ -225,7 +226,7 @@ class PositionScore(ExceptionHandler):
             if t in tags:
                 tag_values.append((t, tags[t]))
         return tag_values
-    
+
     def get_variation_tag_names(self):
         """Return suffixed RAV_MOVES tag names.
 
@@ -236,12 +237,12 @@ class PositionScore(ExceptionHandler):
         """
         self.variation_number += 1
         suffix = str(self.variation_number)
-        return ''.join((RAV_MOVES, suffix))
+        return "".join((RAV_MOVES, suffix))
 
     def get_next_positiontag_name(self):
         """Return suffixed POSITION tag name."""
         self.position_number += 1
-        return ''.join((POSITION, str(self.position_number)))
+        return "".join((POSITION, str(self.position_number)))
 
     def get_position_tag_of_index(self, index):
         """Return Tk tag name if index is in a position tag"""
@@ -253,7 +254,7 @@ class PositionScore(ExceptionHandler):
     def get_current_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names."""
         suffix = str(self.position_number)
-        return [''.join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
+        return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
     def get_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names.
@@ -268,7 +269,7 @@ class PositionScore(ExceptionHandler):
         """
         self.position_number += 1
         suffix = str(self.position_number)
-        return [''.join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
+        return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
     def insert_token_into_text(self, token, separator):
         """Insert token and separator in widget.  Return boundary indicies.
@@ -289,21 +290,22 @@ class PositionScore(ExceptionHandler):
     def is_currentmove_in_main_line(self):
         """Return True if currentmove is in the main line tag"""
         return self.is_index_in_main_line(
-            self.score.tag_ranges(self.current)[0])
+            self.score.tag_ranges(self.current)[0]
+        )
 
     def is_index_in_main_line(self, index):
         """Return True if index is in the main line tag"""
-        return bool(self.score.tag_nextrange(
-            self.gamevartag,
-            index,
-            ''.join((str(index), '+1 chars'))))
+        return bool(
+            self.score.tag_nextrange(
+                self.gamevartag, index, "".join((str(index), "+1 chars"))
+            )
+        )
 
     def is_move_in_main_line(self, move):
         """Return True if move is in the main line"""
-        return self.is_index_in_main_line(
-            self.score.tag_ranges(move)[0])
+        return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
 
-    '''At present both POSITION<suffix> and TOKEN<suffix> tags exist.
+    """At present both POSITION<suffix> and TOKEN<suffix> tags exist.
 
     Now that setting MOVE_TAG has been moved to token-type specific code there
     is probably no need for both.  TOKEN marks the active text of a POSITION,
@@ -315,7 +317,7 @@ class PositionScore(ExceptionHandler):
     methods do not need to loop through tag names for TOKEN because it starts
     from a POSITION tag name.
 
-    '''
+    """
 
     def _set_square_piece_map(self, position):
         assert len(position) == 1
@@ -347,7 +349,7 @@ class PositionScore(ExceptionHandler):
         self.gamevartag = self._vartag
 
         self._square_piece_map = {}
-        
+
         cg = self.collected_game
         spm = self._square_piece_map
         for p, s in cg._initial_position[0]:
@@ -355,28 +357,31 @@ class PositionScore(ExceptionHandler):
         assert len(cg._text) == len(cg._position_deltas)
         for text, delta in zip(cg._text, cg._position_deltas):
             t0 = text[0]
-            if t0 in 'abcdefghKQRBNkqrnO':
+            if t0 in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, delta)
-            elif t0 == '(':
+            elif t0 == "(":
                 self.map_start_rav(text, delta)
-            elif t0 == ')':
+            elif t0 == ")":
                 self.map_end_rav(text, delta)
-            elif t0 in '10*':
+            elif t0 in "10*":
                 self.map_termination(text)
             else:
                 self.map_non_move(text)
         self.insert_token_into_text(
-            cg._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP)
+            cg._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
+        )
         self.insert_token_into_text(
-            cg._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP)
+            cg._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
+        )
         self.insert_token_into_text(
-            cg._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP)
+            cg._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
+        )
 
-        tr = self.score.tag_nextrange(NAVIGATE_MOVE, '1.0')
+        tr = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
         if tr:
             self.score.mark_set(START_SCORE_MARK, str(tr[0]))
         else:
-            self.score.mark_set(START_SCORE_MARK, '1.0')
+            self.score.mark_set(START_SCORE_MARK, "1.0")
 
         # Delete the attributes used to build the self.score Text widget.
         del self._square_piece_map
@@ -418,9 +423,11 @@ class PositionScore(ExceptionHandler):
         # position in self._context?
         prev_position = (self._square_piece_map.copy(),) + delta[0][1:]
         prev_match_prevcontext = self.compare_two_positions(
-            prev_position, prevcontext)
+            prev_position, prevcontext
+        )
         prev_match_currcontext = self.compare_two_positions(
-            prev_position, currcontext)
+            prev_position, currcontext
+        )
 
         self._modify_square_piece_map(delta)
 
@@ -428,21 +435,29 @@ class PositionScore(ExceptionHandler):
         # position in self._context?
         curr_position = (self._square_piece_map.copy(),) + delta[1][1:]
         curr_match_currcontext = self.compare_two_positions(
-            curr_position, currcontext)
+            curr_position, currcontext
+        )
         next_match_nextcontext = self.compare_two_positions(
-            curr_position, nextcontext)
+            curr_position, nextcontext
+        )
 
-        if not (prev_match_prevcontext or prev_match_currcontext or
-                curr_match_currcontext or next_match_nextcontext):
+        if not (
+            prev_match_prevcontext
+            or prev_match_currcontext
+            or curr_match_currcontext
+            or next_match_nextcontext
+        ):
             return
         widget = self.score
         if delta[1][1] != FEN_WHITE_ACTIVE:
             start, end, sepend = self.insert_token_into_text(
-                str(delta[1][5])+'.', SPACE_SEP)
+                str(delta[1][5]) + ".", SPACE_SEP
+            )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         elif self._force_movenumber:
             start, end, sepend = self.insert_token_into_text(
-                str(delta[0][5])+'...', SPACE_SEP)
+                str(delta[0][5]) + "...", SPACE_SEP
+            )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         self._force_movenumber = False
         positiontag = self.get_next_positiontag_name()
@@ -451,7 +466,7 @@ class PositionScore(ExceptionHandler):
             widget.tag_add(tag, start, end)
         if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
+        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
         if not (prev_match_prevcontext or prev_match_currcontext):
             # token is move to reach position and different from context
             widget.tag_add(VARIATION_TAG, start, end)
@@ -507,7 +522,7 @@ class PositionScore(ExceptionHandler):
 
     def map_non_move(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        #self.insert_token_into_text(token, SPACE_SEP)
+        # self.insert_token_into_text(token, SPACE_SEP)
 
     def set_current(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.

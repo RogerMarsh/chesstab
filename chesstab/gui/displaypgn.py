@@ -54,10 +54,10 @@ from .displaytext import ShowText, DisplayText, EditText, InsertText
 # ShowText before ScorePGN because identical methods in ShowPGN and ShowText
 # are deleted from ShowPGN.
 class ShowPGN(ShowText, ScorePGN):
-    
+
     """Mixin providing methods shared by the gamedisplay._GameDisplay and
     repertoiredisplay.RepertoreDisplay classes.
-    
+
     Provide focus switching and widget visibility methods for widgets which
     display Portable Game Notation (PGN) text.
 
@@ -95,12 +95,11 @@ class ShowPGN(ShowText, ScorePGN):
         self.set_board_pointer_widget_navigation_bindings(True)
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
-        
+
     # Probably becomes set_item(), but stays here rather than moved to each
     # subclass: see displaytext.ShowText version.
     def set_and_tag_item_text(self, reset_undo=False):
-        """Delegate to superclass method and set PGN score inactive.
-        """
+        """Delegate to superclass method and set PGN score inactive."""
 
         # Superclass may set self._most_recent_bindings but test below must be
         # against current value.
@@ -150,12 +149,13 @@ class ShowPGN(ShowText, ScorePGN):
         """Select PGN score on display by mouse click."""
         self.ui.set_bindings_on_item_losing_focus_by_pointer_click()
         losefocus, gainfocus = self.ui_displayed_items.give_focus_to_widget(
-            event.widget)
+            event.widget
+        )
         if losefocus is not gainfocus:
             self.ui_configure_item_list_grid()
             gainfocus.set_game_list()
-        return 'break'
-        
+        return "break"
+
     # The insert_game_database method, coerced into sameness from the methods
     # in gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay with
     # class attibutes pgn_score_name, pgn_score_source_name, pgn_score_tags,
@@ -167,51 +167,63 @@ class ShowPGN(ShowText, ScorePGN):
     # to each subclass: see displaytext.ShowText version.
     def insert_item_database(self, event=None):
         """Add PGN score to database on request from item display."""
-        title = ' '.join(('Insert', self.pgn_score_name.title()))
+        title = " ".join(("Insert", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui_displayed_items.active_item is None:
             tkinter.messagebox.showerror(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('No active ', ' to insert into database.')))
+                message=mt.join(("No active ", " to insert into database.")),
+            )
             return
 
         # This should see if game with same PGN Tags already exists,
         # after checking for database open, and offer option to insert anyway.
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot add ', ':\n\nNo database open.')))
+                message=mt.join(("Cannot add ", ":\n\nNo database open.")),
+            )
             return
-        
+
         datasource = self.ui_base_table.get_data_source()
         if datasource is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot add ', ':\n\n', ' list hidden.')))
+                message=mt.join(("Cannot add ", ":\n\n", " list hidden.")),
+            )
             return
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(('Confirm request to add ', ' to database'))):
+            message=mt.join(("Confirm request to add ", " to database")),
+        ):
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Add ', ' to database abandonned.')))
+                message=mt.join(("Add ", " to database abandonned.")),
+            )
             return
-        updater = self.game_updater(repr(self.score.get('1.0', tkinter.END)))
+        updater = self.game_updater(repr(self.score.get("1.0", tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
                 message=mt.join(
-                    ('The new ',
-                     ''.join((' score contains at least one illegal move in ',
-                              'PGN.\n\nPlease re-confirm request to insert ')),
-                     '.',
-                     ))):
+                    (
+                        "The new ",
+                        "".join(
+                            (
+                                " score contains at least one illegal move in ",
+                                "PGN.\n\nPlease re-confirm request to insert ",
+                            )
+                        ),
+                        ".",
+                    )
+                ),
+            ):
                 return
             updater.value.set_game_source(self.pgn_score_source_name)
         editor = RecordEdit(updater, None)
@@ -222,17 +234,22 @@ class ShowPGN(ShowText, ScorePGN):
         editor.put()
         tags = updater.value.collected_game._tags
         tkinter.messagebox.showinfo(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=''.join((mt.title(), ' "',
-                             '  '.join([tags.get(k, '')
-                                        for k in self.pgn_score_tags]),
-                             '" added to database.')))
+            message="".join(
+                (
+                    mt.title(),
+                    ' "',
+                    "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
+                    '" added to database.',
+                )
+            ),
+        )
         return True
 
 
 class DisplayPGN(DisplayText):
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplay
     and repertoiredisplay.RepertoireDisplay classes.
 
@@ -247,47 +264,62 @@ class DisplayPGN(DisplayText):
 
     def delete_item_database(self, event=None):
         """Remove PGN score from database on request from item display."""
-        title = ' '.join(('Delete', self.pgn_score_name.title()))
+        title = " ".join(("Delete", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot delete ', ':\n\nNo database open.')))
+                message=mt.join(("Cannot delete ", ":\n\nNo database open.")),
+            )
             return
         datasource = self.ui_base_table.get_data_source()
         if datasource is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot delete ', ':\n\n', ' list hidden.')))
+                message=mt.join(("Cannot delete ", ":\n\n", " list hidden.")),
+            )
             return
         if self.sourceobject is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join((
-                    'Cannot delete ',
-                    ''.join((':\n\nDatabase has been closed since this copy ',
-                             'displayed.')))))
+                message=mt.join(
+                    (
+                        "Cannot delete ",
+                        "".join(
+                            (
+                                ":\n\nDatabase has been closed since this copy ",
+                                "displayed.",
+                            )
+                        ),
+                    )
+                ),
+            )
             return
         if self.blockchange:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join((
-                    'Cannot delete ',
-                    ':\n\nRecord has been amended since this copy displayed.')))
+                message=mt.join(
+                    (
+                        "Cannot delete ",
+                        ":\n\nRecord has been amended since this copy displayed.",
+                    )
+                ),
+            )
             return
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(('Confirm request to delete ', ' from database'))):
+            message=mt.join(("Confirm request to delete ", " from database")),
+        ):
             return
         original = self.pgn_score_updater()
         original.load_record(
-            (self.sourceobject.key.recno,
-             self.sourceobject.srvalue))
+            (self.sourceobject.key.recno, self.sourceobject.srvalue)
+        )
         self.pgn_score_original_value(original.value)
         editor = RecordDelete(original)
         editor.set_data_source(datasource, editor.on_data_change)
@@ -295,19 +327,24 @@ class DisplayPGN(DisplayText):
         editor.delete()
         tags = original.value.collected_game._tags
         tkinter.messagebox.showinfo(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=''.join((mt.title(), ' "',
-                             '  '.join([tags.get(k, '')
-                                        for k in self.pgn_score_tags]),
-                             '" deleted from database.')))
+            message="".join(
+                (
+                    mt.title(),
+                    ' "',
+                    "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
+                    '" deleted from database.',
+                )
+            ),
+        )
 
 
 class InsertPGN(InsertText):
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplayInsert
     and repertoiredisplay.RepertoireDisplayInsert classes.
-    
+
     Provide methods involved in generating popup menus relevant to PGN score
     editing when inserting records.
 
@@ -318,59 +355,61 @@ class InsertPGN(InsertText):
     # than 'game' or 'repertoire'.  Perhaps 'pgn_score' is better, except
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
-        
+
     def create_primary_activity_popup(self):
         popup = super().create_primary_activity_popup()
         self.add_pgn_navigation_to_submenu_of_popup(
-            popup, index=self.analyse_popup_label)
+            popup, index=self.analyse_popup_label
+        )
         self.add_pgn_insert_to_submenu_of_popup(
             popup,
             include_ooo=True,
             include_move_rav=True,
-            index=self.analyse_popup_label)
+            index=self.analyse_popup_label,
+        )
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_select_move_popup(self):
         popup = super().create_select_move_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_pgn_tag_popup(self):
         popup = super().create_pgn_tag_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_comment_popup(self):
         popup = super().create_comment_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_nag_popup(self):
         popup = super().create_nag_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_start_rav_popup(self):
         popup = super().create_start_rav_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_end_rav_popup(self):
         popup = super().create_end_rav_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_comment_to_end_of_line_popup(self):
         popup = super().create_comment_to_end_of_line_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_escape_whole_line_popup(self):
         popup = super().create_escape_whole_line_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
-        
+
     def create_reserved_popup(self):
         popup = super().create_reserved_popup()
         self.add_close_item_entry_to_popup(popup)
@@ -386,10 +425,10 @@ class InsertPGN(InsertText):
 
 
 class EditPGN(EditText):
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplayEdit
     and repertoiredisplay.RepertoireDisplayEdit classes.
-    
+
     Provide methods involved in generating popup menus relevant to PGN score
     editing when editing records.
 
@@ -397,47 +436,62 @@ class EditPGN(EditText):
 
     def update_item_database(self, event=None):
         """Modify existing PGN score record."""
-        title = ' '.join(('Edit', self.pgn_score_name.title()))
+        title = " ".join(("Edit", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot edit ', ':\n\nNo database open.')))
+                message=mt.join(("Cannot edit ", ":\n\nNo database open.")),
+            )
             return
         datasource = self.ui_base_table.get_data_source()
         if datasource is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(('Cannot edit ', ':\n\n', ' list hidden.')))
+                message=mt.join(("Cannot edit ", ":\n\n", " list hidden.")),
+            )
             return
         if self.sourceobject is None:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join((
-                    'Cannot edit ',
-                    ''.join((':\n\nDatabase has been closed since this copy ',
-                             'displayed.')))))
+                message=mt.join(
+                    (
+                        "Cannot edit ",
+                        "".join(
+                            (
+                                ":\n\nDatabase has been closed since this copy ",
+                                "displayed.",
+                            )
+                        ),
+                    )
+                ),
+            )
             return
         if self.blockchange:
             tkinter.messagebox.showinfo(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join((
-                    'Cannot edit ',
-                    ':\n\nRecord has been amended since this copy displayed.')))
+                message=mt.join(
+                    (
+                        "Cannot edit ",
+                        ":\n\nRecord has been amended since this copy displayed.",
+                    )
+                ),
+            )
             return
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(('Confirm request to edit ', '.'))):
+            message=mt.join(("Confirm request to edit ", ".")),
+        ):
             return
         original = self.pgn_score_updater()
         original.load_record(
-            (self.sourceobject.key.recno,
-             self.sourceobject.srvalue))
+            (self.sourceobject.key.recno, self.sourceobject.srvalue)
+        )
         self.pgn_score_original_value(original.value)
 
         # is it better to use DataClient directly?
@@ -450,14 +504,21 @@ class EditPGN(EditText):
         updater.set_database(editor.get_data_source().dbhome)
         if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent = self.ui.get_toplevel(),
+                parent=self.ui.get_toplevel(),
                 title=title,
                 message=mt.join(
-                    ('The edited ',
-                     ''.join((' score contains at least one illegal move in ',
-                              'PGN.\n\nPlease re-confirm request to edit ')),
-                     '.',
-                     ))):
+                    (
+                        "The edited ",
+                        "".join(
+                            (
+                                " score contains at least one illegal move in ",
+                                "PGN.\n\nPlease re-confirm request to edit ",
+                            )
+                        ),
+                        ".",
+                    )
+                ),
+            ):
                 return
             updater.value.set_game_source(self.pgn_score_source_name)
         original.set_database(editor.get_data_source().dbhome)
@@ -470,9 +531,14 @@ class EditPGN(EditText):
                 self.set_properties_on_grids(newkey)
         tags = original.value.collected_game._tags
         tkinter.messagebox.showinfo(
-            parent = self.ui.get_toplevel(),
+            parent=self.ui.get_toplevel(),
             title=title,
-            message=''.join((mt.title(), ' "',
-                             '  '.join([tags.get(k, '')
-                                        for k in self.pgn_score_tags]),
-                             '" amended on database.')))
+            message="".join(
+                (
+                    mt.title(),
+                    ' "',
+                    "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
+                    '" amended on database.',
+                )
+            ),
+        )

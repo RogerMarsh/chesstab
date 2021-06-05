@@ -15,9 +15,9 @@ too.
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from .directory_widget import DirectoryWidget
     from ..ndbm.chessndbmdu import chess_ndbmdu
 
-    DirectoryWidget(chess_ndbmdu, 'dbm.ndbm')
+    DirectoryWidget(chess_ndbmdu, "dbm.ndbm")

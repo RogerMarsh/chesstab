@@ -13,14 +13,14 @@ rollback journals are disabled.
 
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    #run by subprocess.popen from ../core/chess.py
+    # run by subprocess.popen from ../core/chess.py
     import sys
     import os
     import importlib
 
-    if sys.platform.startswith('openbsd'):
+    if sys.platform.startswith("openbsd"):
 
         # The default user class is limited to 512Mb memory but imports need
         # ~550Mb at Python3.6 for unqlite.
@@ -30,13 +30,15 @@ if __name__ == '__main__':
         # these login classes.  The staff login class is one of these.
         # At time of writing the soft limit is doubled from 512Mb to 1024Mb.
         try:
-            b' ' * 1000000000
+            b" " * 1000000000
         except MemoryError:
             import resource
+
             soft, hard = resource.getrlimit(resource.RLIMIT_DATA)
             try:
-                resource.setrlimit(resource.RLIMIT_DATA,
-                                   (min(soft * 2, hard), hard))
+                resource.setrlimit(
+                    resource.RLIMIT_DATA, (min(soft * 2, hard), hard)
+                )
             except:
                 try:
                     chesssdu.write_error_to_log()
@@ -51,14 +53,16 @@ if __name__ == '__main__':
         # containing chesstab at front of sys.path on the assumption all the
         # sibling packages are there too.
         try:
-            sp = sys.path[-1].replace('\\\\', '\\')
+            sp = sys.path[-1].replace("\\\\", "\\")
             packageroot = os.path.dirname(os.path.dirname(__file__))
             if sp != packageroot:
                 sys.path.insert(0, os.path.dirname(packageroot))
             chessunqlitedu = importlib.import_module(
-                os.path.basename(packageroot) + '.unqlite.chessunqlitedu')
+                os.path.basename(packageroot) + ".unqlite.chessunqlitedu"
+            )
             chessdu = importlib.import_module(
-                os.path.basename(packageroot) + '.gui.chessdu')
+                os.path.basename(packageroot) + ".gui.chessdu"
+            )
         except NameError as msg:
             # When run in the py2exe generated executable the module will
             # not have the __file__ attribute.
@@ -70,7 +74,8 @@ if __name__ == '__main__':
 
         cdu = chessdu.ChessDeferredUpdate(
             deferred_update_method=chessunqlitedu.chess_unqlitedu,
-            database_class=chessunqlitedu.ChessDatabase)
+            database_class=chessunqlitedu.ChessDatabase,
+        )
     except:
         try:
             chessdu.write_error_to_log()

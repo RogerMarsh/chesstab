@@ -52,10 +52,10 @@ from .score import NonTagBind
 # because selection rules, CQL statements, and run engine commands, do not
 # have 'analysis'.
 class ShowText:
-    
+
     """Mixin providing methods shared by the cqldisplay._CQLDisplay and
     querydisplay.QueryDisplay classes.
-    
+
     Provide focus switching and widget visibility methods for widgets which
     display plain text.
 
@@ -79,15 +79,11 @@ class ShowText:
         self.set_score_pointer_item_navigation_bindings(True)
 
     def bind_for_widget_navigation(self):
-        """Set bindings to give focus to this text statement on pointer click.
-        """
+        """Set bindings to give focus to this text statement on pointer click."""
         self.set_score_pointer_widget_navigation_bindings(True)
 
     def get_close_item_events(self):
-        return (
-            (EventSpec.display_dismiss,
-             self.delete_item_view),
-            )
+        return ((EventSpec.display_dismiss, self.delete_item_view),)
 
     def set_insert_or_delete(self):
         """Convert edit display to insert display.
@@ -95,13 +91,12 @@ class ShowText:
         PGN scores displayed for editing from a database are not closed if the
         database is closed.  They are converted to insert displays and can
         be used to add new records to databases opened later.
-        
+
         """
         self.sourceobject = None
-        
+
     def set_and_tag_item_text(self, reset_undo=False):
-        """Delegate to superclass method and set PGN score inactive.
-        """
+        """Delegate to superclass method and set PGN score inactive."""
 
         # Superclass may set self._most_recent_bindings but test below must be
         # against current value.
@@ -111,7 +106,7 @@ class ShowText:
         if mrb != NonTagBind.NO_EDITABLE_TAGS:
             for es in (self.get_inactive_button_events(),):
                 self.set_event_bindings_score(es, switch=True)
-        
+
     def create_database_submenu(self, menu):
         submenu = tkinter.Menu(master=menu, tearoff=False)
         self.set_popup_bindings(submenu, self.get_database_events())
@@ -127,7 +122,7 @@ class ShowText:
         self.set_database_navigation_close_item_bindings(switch=switch)
 
     # Not relevant away from displaypgn.ShowPGN.
-    #def set_select_variation_bindings(self, switch=True):
+    # def set_select_variation_bindings(self, switch=True):
     #    """Delegate to toggle other relevant bindings and toggle bindings for
     #    database actions, navigation to other widgets, and close widget.
 
@@ -138,7 +133,7 @@ class ShowText:
     # The methods identical except for docstrings, and references to
     # self.ui.game_items or self.ui.repertoire_items replaced by property
     # self.ui_displayed_items.
-        
+
     def next_item(self, event=None):
         """Select next item on display.
 
@@ -158,7 +153,8 @@ class ShowText:
         if self.ui_displayed_items.count_items_in_stack() > 1:
             self.ui_set_find_item_games(-2)
             self.score.after(
-                1, self.try_command(self.cycle_item, self.score), True)
+                1, self.try_command(self.cycle_item, self.score), True
+            )
 
     # What about current_pgn_score call?
     def current_item(self, event=None):
@@ -178,13 +174,13 @@ class ShowText:
         """Give focus to previous widget type in traversal order."""
         self.set_score_pointer_widget_navigation_bindings(True)
         self.ui.give_focus_backward(self.ui_displayed_items)
-        return 'break'
+        return "break"
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order."""
         self.set_score_pointer_widget_navigation_bindings(True)
         self.ui.give_focus_forward(self.ui_displayed_items)
-        return 'break'
+        return "break"
 
     # The methods identical except for docstrings, and references to
     # self.ui.configure_game_grid or self.ui.configure_repertoire_grid
@@ -207,17 +203,19 @@ class ShowText:
         """Select text item on display by mouse click."""
         self.ui.set_bindings_on_item_losing_focus_by_pointer_click()
         losefocus, gainfocus = self.ui_displayed_items.give_focus_to_widget(
-            event.widget)
+            event.widget
+        )
         if losefocus is not gainfocus:
             self.ui_configure_item_list_grid()
             self.score.after(
-                0,
-                func=self.try_command(self.ui_set_item_name, self.score))
+                0, func=self.try_command(self.ui_set_item_name, self.score)
+            )
             self.score.after(
                 0,
-                func=self.try_command(gainfocus.refresh_game_list, self.score))
-        return 'break'
-        
+                func=self.try_command(gainfocus.refresh_game_list, self.score),
+            )
+        return "break"
+
     # The insert_game_database method, coerced into sameness from the methods
     # in gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay with
     # class attibutes pgn_score_name, pgn_score_source_name, pgn_score_tags,
@@ -227,7 +225,7 @@ class ShowText:
 
     # Probably becomes insert_item_database() in each subclass like in
     # cqldbshow and all other *db* calls like it.
-        
+
     # This was not going to be moved to displaypgn except insert_game_database,
     # which uses the class attribute pgn_score_updater, was moved.
     # Both game_updater and pgn_score_updater need more generic names.
@@ -241,9 +239,9 @@ class ShowText:
     # _RepertoireDisplay.
     # Replace _pgn_score_ with _item_ to fit with displaypgn.ShowPGN perhaps,
     # but this one will be moved to subclasses.
-    def patch_pgn_score_to_fit_record_change_and_refresh_grid(self,
-                                                              grid,
-                                                              instance):
+    def patch_pgn_score_to_fit_record_change_and_refresh_grid(
+        self, grid, instance
+    ):
         if self.ui_displayed_items.is_item_panel_active(self):
             # Patch data structure to look as though the edited record has
             # been read from disk.  That means DataGrid, DisplayItems, and
@@ -264,7 +262,7 @@ class ShowText:
 
 
 class DisplayText:
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplay
     and repertoiredisplay.RepertoireDisplay classes.
 
@@ -276,22 +274,20 @@ class DisplayText:
     in the InsertPGN line.
 
     """
-        
+
     def get_database_events(self):
         """Return event description tuple for PGN score database actions."""
         return (
-            (EventSpec.display_insert,
-             self.insert_item_database),
-            (EventSpec.display_delete,
-             self.delete_item_database),
-            )
+            (EventSpec.display_insert, self.insert_item_database),
+            (EventSpec.display_delete, self.delete_item_database),
+        )
 
 
 class InsertText:
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplayInsert
     and repertoiredisplay.RepertoireDisplayInsert classes.
-    
+
     Provide methods involved in generating popup menus relevant to PGN score
     editing when inserting records.
 
@@ -302,13 +298,10 @@ class InsertText:
     # than 'game' or 'repertoire'.  Perhaps 'pgn_score' is better, except
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
-        
+
     def get_database_events(self):
         """Return event description tuple for PGN score database actions."""
-        return (
-            (EventSpec.display_insert,
-             self.insert_item_database),
-            )
+        return ((EventSpec.display_insert, self.insert_item_database),)
 
 
 # Introduced to remove create_primary_activity_popup method from InsertText
@@ -324,15 +317,15 @@ class InsertText:
 # In the PGN classes the demand is always implicit in making a token current,
 # so there is no PGN equivalent of ListGamesText.
 class ListGamesText:
-    
+
     """Mixin providing methods shared by the cqldisplay._CQLDisplay and
     and querydisplay._QueryDisplay classes.
-    
+
     Provide methods involved in generating popup menus relevant to display
     of game lists when editing records.
 
     """
-        
+
     def create_primary_activity_popup(self):
         popup = super().create_primary_activity_popup()
         self.add_list_games_entry_to_popup(popup)
@@ -340,10 +333,10 @@ class ListGamesText:
 
 
 class EditText:
-    
+
     """Mixin providing methods shared by the gamedisplay.GameDisplayEdit
     and repertoiredisplay.RepertoireDisplayEdit classes.
-    
+
     Provide methods involved in generating popup menus relevant to PGN score
     editing when editing records.
 
@@ -354,15 +347,13 @@ class EditText:
     # than 'game' or 'repertoire'.  Perhaps 'pgn_score' is better, except
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
-        
+
     def get_database_events(self):
         """Return event description tuple for PGN score database actions."""
         return (
-            (EventSpec.display_insert,
-             self.insert_item_database),
-            (EventSpec.display_update,
-             self.update_item_database),
-            )
+            (EventSpec.display_insert, self.insert_item_database),
+            (EventSpec.display_update, self.update_item_database),
+        )
 
     # update_game_database becomes update_item_database in cqldispaly and
     # querydisplay.

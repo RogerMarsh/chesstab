@@ -26,68 +26,78 @@ from ..core import filespec
 # Non-zero elements in MAP_RAY_TO_LINE[n][m] are the internal piece designator
 # in the ray.
 MAP_RAY_TO_LINE = [
-    [[0, 0, 0, 0, 0, 0]], # ray ( a A )
-    [[1, 0, 0, 0, 0, 0],  # ray ( a A K )
-     [0, 1, 0, 0, 0, 0],
-     [0, 0, 1, 0, 0, 0],
-     [0, 0, 0, 1, 0, 0],
-     [0, 0, 0, 0, 1, 0],
-     [0, 0, 0, 0, 0, 1]],
-    [[1, 2, 0, 0, 0, 0],  # ray ( a Q b K )
-     [1, 0, 2, 0, 0, 0],
-     [0, 1, 2, 0, 0, 0],
-     [1, 0, 0, 2, 0, 0],
-     [0, 1, 0, 2, 0, 0],
-     [0, 0, 1, 2, 0, 0],
-     [1, 0, 0, 0, 2, 0],
-     [0, 1, 0, 0, 2, 0],
-     [0, 0, 1, 0, 2, 0],
-     [0, 0, 0, 1, 2, 0],
-     [1, 0, 0, 0, 0, 2],
-     [0, 1, 0, 0, 0, 2],
-     [0, 0, 1, 0, 0, 2],
-     [0, 0, 0, 1, 0, 2],
-     [0, 0, 0, 0, 1, 2]],
-    [[1, 2, 3, 0, 0, 0],  # ray ( a Q b N K )
-     [1, 2, 0, 3, 0, 0],
-     [1, 0, 2, 3, 0, 0],
-     [0, 1, 2, 3, 0, 0],
-     [1, 2, 0, 0, 3, 0],
-     [1, 0, 2, 0, 3, 0],
-     [1, 0, 0, 2, 3, 0],
-     [0, 1, 2, 0, 3, 0],
-     [0, 0, 1, 2, 3, 0],
-     [1, 2, 0, 0, 0, 3],
-     [1, 0, 2, 0, 0, 3],
-     [1, 0, 0, 2, 0, 3],
-     [1, 0, 0, 0, 2, 3],
-     [0, 1, 2, 0, 0, 3],
-     [0, 0, 1, 2, 0, 3],
-     [0, 0, 1, 0, 2, 3],
-     [0, 0, 0, 1, 2, 3]],
-    [[1, 2, 3, 4, 0, 0],  # ray ( a Q b N p K )
-     [1, 2, 3, 0, 4, 0],
-     [1, 2, 0, 3, 4, 0],
-     [1, 0, 2, 3, 4, 0],
-     [0, 1, 2, 3, 4, 0],
-     [1, 2, 3, 0, 0, 4],
-     [1, 2, 0, 3, 0, 4],
-     [1, 2, 0, 0, 3, 4],
-     [1, 0, 2, 3, 0, 4],
-     [1, 0, 2, 0, 3, 4],
-     [1, 0, 0, 2, 3, 4],
-     [0, 1, 2, 3, 0, 4],
-     [0, 1, 2, 0, 3, 4],
-     [0, 1, 0, 2, 3, 4],
-     [0, 0, 1, 2, 3, 4]],
-    [[1, 2, 3, 4, 5, 0],  # ray ( a Q b N p p K )
-     [1, 2, 3, 4, 0, 5],
-     [1, 2, 3, 0, 4, 5],
-     [1, 2, 0, 3, 4, 5],
-     [1, 0, 2, 3, 4, 5],
-     [0, 1, 2, 3, 4, 5]],
+    [[0, 0, 0, 0, 0, 0]],  # ray ( a A )
+    [
+        [1, 0, 0, 0, 0, 0],  # ray ( a A K )
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 1],
+    ],
+    [
+        [1, 2, 0, 0, 0, 0],  # ray ( a Q b K )
+        [1, 0, 2, 0, 0, 0],
+        [0, 1, 2, 0, 0, 0],
+        [1, 0, 0, 2, 0, 0],
+        [0, 1, 0, 2, 0, 0],
+        [0, 0, 1, 2, 0, 0],
+        [1, 0, 0, 0, 2, 0],
+        [0, 1, 0, 0, 2, 0],
+        [0, 0, 1, 0, 2, 0],
+        [0, 0, 0, 1, 2, 0],
+        [1, 0, 0, 0, 0, 2],
+        [0, 1, 0, 0, 0, 2],
+        [0, 0, 1, 0, 0, 2],
+        [0, 0, 0, 1, 0, 2],
+        [0, 0, 0, 0, 1, 2],
+    ],
+    [
+        [1, 2, 3, 0, 0, 0],  # ray ( a Q b N K )
+        [1, 2, 0, 3, 0, 0],
+        [1, 0, 2, 3, 0, 0],
+        [0, 1, 2, 3, 0, 0],
+        [1, 2, 0, 0, 3, 0],
+        [1, 0, 2, 0, 3, 0],
+        [1, 0, 0, 2, 3, 0],
+        [0, 1, 2, 0, 3, 0],
+        [0, 0, 1, 2, 3, 0],
+        [1, 2, 0, 0, 0, 3],
+        [1, 0, 2, 0, 0, 3],
+        [1, 0, 0, 2, 0, 3],
+        [1, 0, 0, 0, 2, 3],
+        [0, 1, 2, 0, 0, 3],
+        [0, 0, 1, 2, 0, 3],
+        [0, 0, 1, 0, 2, 3],
+        [0, 0, 0, 1, 2, 3],
+    ],
+    [
+        [1, 2, 3, 4, 0, 0],  # ray ( a Q b N p K )
+        [1, 2, 3, 0, 4, 0],
+        [1, 2, 0, 3, 4, 0],
+        [1, 0, 2, 3, 4, 0],
+        [0, 1, 2, 3, 4, 0],
+        [1, 2, 3, 0, 0, 4],
+        [1, 2, 0, 3, 0, 4],
+        [1, 2, 0, 0, 3, 4],
+        [1, 0, 2, 3, 0, 4],
+        [1, 0, 2, 0, 3, 4],
+        [1, 0, 0, 2, 3, 4],
+        [0, 1, 2, 3, 0, 4],
+        [0, 1, 2, 0, 3, 4],
+        [0, 1, 0, 2, 3, 4],
+        [0, 0, 1, 2, 3, 4],
+    ],
+    [
+        [1, 2, 3, 4, 5, 0],  # ray ( a Q b N p p K )
+        [1, 2, 3, 4, 0, 5],
+        [1, 2, 3, 0, 4, 5],
+        [1, 2, 0, 3, 4, 5],
+        [1, 0, 2, 3, 4, 5],
+        [0, 1, 2, 3, 4, 5],
+    ],
     [[1, 2, 3, 4, 5, 6]],  # ray ( a Q b N p p N K )
-    ]
+]
 
 
 class RayFilterError(Exception):
@@ -113,27 +123,39 @@ class RayFilter:
     """
 
     def __init__(self, filter_, move_number, variation_code):
-        """"""
+        """ """
         if filter_.tokendef not in {Token.BETWEEN, Token.RAY}:
             raise RayFilterError(
-                ''.join(("Filter '",
-                         filter_.name,
-                         "' does not support rays.",
-                         )))
+                "".join(
+                    (
+                        "Filter '",
+                        filter_.name,
+                        "' does not support rays.",
+                    )
+                )
+            )
 
         # Is this really needed!
         if len(filter_.children) != 1:
             raise RayFilterError(
-                ''.join(("Filter '",
-                         filter_.name,
-                         "' format not correct.",
-                         )))
+                "".join(
+                    (
+                        "Filter '",
+                        filter_.name,
+                        "' format not correct.",
+                    )
+                )
+            )
         if filter_.children[0].tokendef is not Token.LEFTPARENTHESIS:
             raise RayFilterError(
-                ''.join(("Filter '",
-                         filter_.name,
-                         "' format not correct.",
-                         )))
+                "".join(
+                    (
+                        "Filter '",
+                        filter_.name,
+                        "' format not correct.",
+                    )
+                )
+            )
 
         self.move_number = move_number
         self.variation_code = variation_code
@@ -147,7 +169,9 @@ class RayFilter:
                 if stack[-1].tokendef is Token.PIECE_DESIGNATOR:
                     designator_set.update(
                         piece_square_to_index(
-                            stack[-1].data.designator_set, mvi))
+                            stack[-1].data.designator_set, mvi
+                        )
+                    )
                     stack.pop()
                     continue
                 sp = stack.pop()
@@ -162,8 +186,9 @@ class RayFilter:
 
     def prune_end_squares(self, database):
         """Remove ray-end squares with no game references"""
-        anypiece = (constants.ANY_WHITE_PIECE_NAME +
-                    constants.ANY_BLACK_PIECE_NAME)
+        anypiece = (
+            constants.ANY_WHITE_PIECE_NAME + constants.ANY_BLACK_PIECE_NAME
+        )
         nopiece = constants.EMPTY_SQUARE_NAME
         fd = filespec.PIECESQUAREMOVE_FIELD_DEF, filespec.SQUAREMOVE_FIELD_DEF
         values_finder = database.values_finder(finder.dbset)
@@ -171,18 +196,21 @@ class RayFilter:
         nextmove = move_number_str(self.move_number + 1)
         psmwhere, smwhere = [
             database.values_selector(
-                ' '.join((f, 'from', move, 'below', nextmove)))
-            for f in fd]
+                " ".join((f, "from", move, "below", nextmove))
+            )
+            for f in fd
+        ]
         for w in psmwhere, smwhere:
             w.lex()
             w.parse()
             w.evaluate(values_finder)
         moveindex = set(psmwhere.node.result + smwhere.node.result)
         for end in 0, -1:
-            if nopiece in ''.join(self.raycomponents[end]):
+            if nopiece in "".join(self.raycomponents[end]):
                 emptyset = self.emptycomponents[end]
-                empty = [s[:-1] for s in self.raycomponents[end]
-                         if nopiece in s]
+                empty = [
+                    s[:-1] for s in self.raycomponents[end] if nopiece in s
+                ]
                 for p in anypiece:
                     for e in empty:
                         if e + p in moveindex:
@@ -209,20 +237,31 @@ class RayFilter:
                 final_square = f[-3:-1]
                 if final_square not in rs:
                     continue
-                for ps in s, f,:
+                for ps in (
+                    s,
+                    f,
+                ):
                     if ps not in piece_square_games:
                         if ps[-1] in anypiece:
                             w = record_selector(
-                                ' '.join((filespec.SQUAREMOVE_FIELD_DEF,
-                                          'eq',
-                                          ps,
-                                          )))
+                                " ".join(
+                                    (
+                                        filespec.SQUAREMOVE_FIELD_DEF,
+                                        "eq",
+                                        ps,
+                                    )
+                                )
+                            )
                         else:
                             w = record_selector(
-                                ' '.join((filespec.PIECESQUAREMOVE_FIELD_DEF,
-                                          'eq',
-                                          ps,
-                                          )))
+                                " ".join(
+                                    (
+                                        filespec.PIECESQUAREMOVE_FIELD_DEF,
+                                        "eq",
+                                        ps,
+                                    )
+                                )
+                            )
                         w.lex()
                         w.parse()
                         w.evaluate(finder)
@@ -230,7 +269,8 @@ class RayFilter:
                         recordset_cache[ps] = w.node.result.answer
                 i = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], i, finder)
+                    recordset_cache[s], recordset_cache[f], i, finder
+                )
         start = self.emptycomponents[0]
         final = self.emptycomponents[-1]
         for s in start:
@@ -240,18 +280,25 @@ class RayFilter:
                 final_square = f[-2:]
                 if final_square not in rs:
                     continue
-                for ps in s, f,:
+                for ps in (
+                    s,
+                    f,
+                ):
                     if ps not in empty_square_games:
                         w = record_selector(
-                            ' '.join(('not',
-                                      '(',
-                                      filespec.SQUAREMOVE_FIELD_DEF,
-                                      'eq',
-                                      ps + anywhitepiece,
-                                      'or',
-                                      ps + anyblackpiece,
-                                      ')',
-                                      )))
+                            " ".join(
+                                (
+                                    "not",
+                                    "(",
+                                    filespec.SQUAREMOVE_FIELD_DEF,
+                                    "eq",
+                                    ps + anywhitepiece,
+                                    "or",
+                                    ps + anyblackpiece,
+                                    ")",
+                                )
+                            )
+                        )
                         w.lex()
                         w.parse()
                         w.evaluate(finder)
@@ -259,7 +306,8 @@ class RayFilter:
                         recordset_cache[ps] = w.node.result.answer
                 i = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], i, finder)
+                    recordset_cache[s], recordset_cache[f], i, finder
+                )
         start = self.raycomponents[0]
         final = self.raycomponents[-1]
         for e in self.emptycomponents[0]:
@@ -283,8 +331,7 @@ class RayFilter:
                 i = start_square, final_square
                 self._add_recordset_to_ray_games(sc, fc, i, finder)
 
-    def _add_recordset_to_ray_games(
-        self, start, final, rayindex, finder):
+    def _add_recordset_to_ray_games(self, start, final, rayindex, finder):
         """Remove ray-end squares with no game references"""
         rg = start & final
         if rg.count_records():
@@ -307,7 +354,7 @@ class RayFilter:
         raycomponents = self.raycomponents
         internal_raycomponents = raycomponents[1:-1]
         mvi = move_number_str(self.move_number) + self.variation_code
-        c_sqi = [{}] # Maybe the empty square index values?
+        c_sqi = [{}]  # Maybe the empty square index values?
         for e, rc in enumerate(internal_raycomponents):
             sqi = {}
             c_sqi.append(sqi)
@@ -320,11 +367,11 @@ class RayFilter:
             mapraytoline = MAP_RAY_TO_LINE[len(internal_raycomponents)]
             raygames = []
             for mrtl in mapraytoline:
-                if len(line) < 6: # mapraytoline[7] = 0 avoids this test.
+                if len(line) < 6:  # mapraytoline[7] = 0 avoids this test.
                     if mrtl[len(line)]:
                         break
                 linesets = []
-                for e, v in enumerate(mrtl[:len(line)]):
+                for e, v in enumerate(mrtl[: len(line)]):
                     if line[e] not in c_sqi[v]:
                         if v:
                             linesets.clear()
@@ -341,15 +388,19 @@ class RayFilter:
                             continue
                         if i[-1] == nopiece:
                             w = record_selector(
-                                ' '.join(('not',
-                                          '(',
-                                          filespec.SQUAREMOVE_FIELD_DEF,
-                                          'eq',
-                                          i[:-1] + anywhitepiece,
-                                          'or',
-                                          i[:-1] + anyblackpiece,
-                                          ')',
-                                          )))
+                                " ".join(
+                                    (
+                                        "not",
+                                        "(",
+                                        filespec.SQUAREMOVE_FIELD_DEF,
+                                        "eq",
+                                        i[:-1] + anywhitepiece,
+                                        "or",
+                                        i[:-1] + anyblackpiece,
+                                        ")",
+                                    )
+                                )
+                            )
                             w.lex()
                             w.parse()
                             w.evaluate(finder)
@@ -358,16 +409,24 @@ class RayFilter:
                             continue
                         if i[-1] in anypiece:
                             w = record_selector(
-                                ' '.join((filespec.SQUAREMOVE_FIELD_DEF,
-                                          'eq',
-                                          i,
-                                          )))
+                                " ".join(
+                                    (
+                                        filespec.SQUAREMOVE_FIELD_DEF,
+                                        "eq",
+                                        i,
+                                    )
+                                )
+                            )
                         else:
                             w = record_selector(
-                                ' '.join((filespec.PIECESQUAREMOVE_FIELD_DEF,
-                                          'eq',
-                                          i,
-                                          )))
+                                " ".join(
+                                    (
+                                        filespec.PIECESQUAREMOVE_FIELD_DEF,
+                                        "eq",
+                                        i,
+                                    )
+                                )
+                            )
                         w.lex()
                         w.parse()
                         w.evaluate(finder)
@@ -385,7 +444,8 @@ class RayFilter:
                 self.ray_games[start, final].replace_records(rayset)
             else:
                 self.ray_games[start, final].replace_records(
-                    finder.db.recordlist_nil(finder.dbset))
+                    finder.db.recordlist_nil(finder.dbset)
+                )
 
 
 # This function belong in, and has been moved to, a chesstab module.  It came
@@ -407,12 +467,17 @@ def piece_square_to_index(designator_set, index_prefix):
         if len(ps) != 1:
             ds.add(index_prefix + ps)
         else:
-            ds.update({index_prefix + ps + s
-                       for s in ecs(
-                           FILE_NAMES[0],
-                           FILE_NAMES[-1],
-                           RANK_NAMES[0],
-                           RANK_NAMES[-1])})
+            ds.update(
+                {
+                    index_prefix + ps + s
+                    for s in ecs(
+                        FILE_NAMES[0],
+                        FILE_NAMES[-1],
+                        RANK_NAMES[0],
+                        RANK_NAMES[-1],
+                    )
+                }
+            )
     return ds
 
 
@@ -431,12 +496,17 @@ def piece_square_to_index(designator_set, index_prefix):
         if len(ps) != 1:
             ds.add(index_prefix + ps[1:] + ps[0])
         else:
-            ds.update({index_prefix + s + ps
-                       for s in ecs(
-                           FILE_NAMES[0],
-                           FILE_NAMES[-1],
-                           RANK_NAMES[0],
-                           RANK_NAMES[-1])})
+            ds.update(
+                {
+                    index_prefix + s + ps
+                    for s in ecs(
+                        FILE_NAMES[0],
+                        FILE_NAMES[-1],
+                        RANK_NAMES[0],
+                        RANK_NAMES[-1],
+                    )
+                }
+            )
     return ds
 
 
@@ -449,4 +519,4 @@ def move_number_str(move_number):
         return MOVE_NUMBER_KEYS[move_number]
     except IndexError:
         c = hex(move_number)
-        return str(len(c)-2) + c[2:]
+        return str(len(c) - 2) + c[2:]

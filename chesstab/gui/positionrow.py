@@ -16,7 +16,7 @@ from solentware_grid.gui.datarow import (
     WIDGET_CONFIGURE,
     WIDGET,
     ROW,
-    )
+)
 
 from .datarow import DataRow
 from . import constants
@@ -26,26 +26,32 @@ from .gamedbedit import GameDbEdit
 from .gamedbdelete import GameDbDelete
 from .gamedbshow import GameDbShow
 
-ON_DISPLAY_COLOUR = '#eba610' # a pale orange
+ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
-    
+
     """Define row in list of games for given position.
 
     Add row methods to the chess game record definition.
-    
+
     """
+
     header_specification = [
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text='Transposition', anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='move'),
-         ROW: 0,
-         },
-        ]
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text="Transposition",
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="move"),
+            ROW: 0,
+        },
+    ]
 
     def __init__(self, database=None, ui=None):
         """Extend and associate record definition with database.
@@ -59,19 +65,20 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         self.set_database(database)
         self.score = None
         self.row_specification = [
-            {WIDGET: tkinter.Text,
-             WIDGET_CONFIGURE: dict(
-                 height=0,
-                 relief=tkinter.FLAT,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 wrap=tkinter.NONE,
-                 borderwidth=2, # hack to fill cell to row height from labels
-                 ),
-             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            ]
-        
+            {
+                WIDGET: tkinter.Text,
+                WIDGET_CONFIGURE: dict(
+                    height=0,
+                    relief=tkinter.FLAT,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    wrap=tkinter.NONE,
+                    borderwidth=2,  # hack to fill cell to row height from labels
+                ),
+                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                ROW: 0,
+            },
+        ]
+
     def show_row(self, dialog, oldobject):
         """Return a GameDbShow toplevel for instance.
 
@@ -80,7 +87,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
 
         """
         return GameDbShow(dialog, oldobject, ui=self.ui)
-        
+
     def delete_row(self, dialog, oldobject):
         """Return a GameDbDelete toplevel for instance.
 
@@ -99,11 +106,9 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return GameDbEdit(newobject,
-                          dialog,
-                          oldobject,
-                          showinitial=showinitial,
-                          ui=self.ui)
+        return GameDbEdit(
+            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+        )
 
     def grid_row(self, position=None, context=(None, None, None), **kargs):
         """Return super().grid_row(textitems=(...), **kargs).
@@ -111,12 +116,10 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         Create textitems argument for ChessDBrowPosition instance.
 
         """
-        self.row_specification[0][WIDGET_CONFIGURE]['context'] = context
+        self.row_specification[0][WIDGET_CONFIGURE]["context"] = context
         return super(ChessDBrowPosition, self).grid_row(
-            textitems=(
-                literal_eval(self.srvalue),
-                ),
-            **kargs)
+            textitems=(literal_eval(self.srvalue),), **kargs
+        )
 
     def grid_row_on_display(self, **kargs):
         self._current_row_background = ON_DISPLAY_COLOUR
@@ -134,7 +137,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
 
         """
         for w, rs in zip(widgets, self.row_specification):
-            if 'background' not in rs[WIDGET_CONFIGURE]:
+            if "background" not in rs[WIDGET_CONFIGURE]:
                 w[0].configure(background=background)
 
     def set_background_on_display(self, widgets):
@@ -145,7 +148,8 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         """Wrapper for Tkinter.Text configure method for score attribute"""
         if isinstance(widget, tkinter.Label):
             super(ChessDBrowPosition, self).populate_widget(
-                widget, text=text, **kw)
+                widget, text=text, **kw
+            )
             return
         # This is the place to implement a pool of pre-processed PositionScore
         # instances which only need to call the colour_score() method rather
@@ -157,12 +161,14 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
             if self.score is None:
                 self.score = PositionScore(widget, ui=self.ui, **kw)
             self.score.process_score(text=text, context=context)
-        kw['width'] = self.score.score.count('1.0', tkinter.END, 'chars')[0]
+        kw["width"] = self.score.score.count("1.0", tkinter.END, "chars")[0]
         widget.configure(cnf=cnf, **kw)
 
 
 def make_ChessDBrowPosition(chessui):
     """Make ChessDBrowPosition with reference to ChessUI instance"""
+
     def make_position(database=None):
         return ChessDBrowPosition(database=database, ui=chessui)
+
     return make_position

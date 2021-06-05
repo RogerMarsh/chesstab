@@ -13,7 +13,7 @@ from solentware_grid.gui.datarow import (
     WIDGET_CONFIGURE,
     WIDGET,
     ROW,
-    )
+)
 
 from pgn_read.core.constants import (
     TAG_WHITE,
@@ -25,7 +25,7 @@ from pgn_read.core.constants import (
     DEFAULT_TAG_VALUE,
     DEFAULT_TAG_DATE_VALUE,
     DEFAULT_TAG_RESULT_VALUE,
-    )
+)
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordGameTags
@@ -34,7 +34,7 @@ from .gamedbdelete import GameDbDelete
 from .gamedbshow import GameDbShow
 from . import constants
 
-ON_DISPLAY_COLOUR = '#eba610' # a pale orange
+ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
@@ -43,56 +43,87 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
     Add row methods to the chess game record definition.
 
     """
+
     header_specification = [
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_WHITE, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='player'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_RESULT, anchor=tkinter.CENTER, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='score'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_BLACK, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='player'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_EVENT, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='event'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text=TAG_DATE, anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='date'),
-         ROW: 0,
-         },
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text='Tags', anchor=tkinter.W, padx=10, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=4, uniform='tags'),
-         ROW: 0,
-         },
-        ]
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_WHITE,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="player"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_RESULT,
+                anchor=tkinter.CENTER,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="score"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_BLACK,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="player"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_EVENT,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="event"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text=TAG_DATE,
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="date"),
+            ROW: 0,
+        },
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text="Tags",
+                anchor=tkinter.W,
+                padx=10,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=4, uniform="tags"),
+            ROW: 0,
+        },
+    ]
 
     def __init__(self, database=None, ui=None):
         """Extend and associate record definition with database.
@@ -105,62 +136,74 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.CENTER,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=10),
-             GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            ]
-        
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.CENTER,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=2, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=3, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=4, sticky=tkinter.EW),
+                ROW: 0,
+            },
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=10,
+                ),
+                GRID_CONFIGURE: dict(column=5, sticky=tkinter.EW),
+                ROW: 0,
+            },
+        ]
+
     def show_row(self, dialog, oldobject):
         """Return a GameDbShow toplevel for instance.
 
@@ -169,7 +212,7 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
 
         """
         return GameDbShow(dialog, oldobject, ui=self.ui)
-        
+
     def delete_row(self, dialog, oldobject):
         """Return a GameDbDelete toplevel for instance.
 
@@ -188,11 +231,9 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         showintial == True - show both original and edited data
 
         """
-        return GameDbEdit(newobject,
-                          dialog,
-                          oldobject,
-                          showinitial=showinitial,
-                          ui=self.ui)
+        return GameDbEdit(
+            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+        )
 
     def grid_row(self, **kargs):
         """Return super(ChessDBrowGame,).grid_row(textitems=(...), **kargs).
@@ -208,13 +249,18 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
                 tags.get(TAG_BLACK, DEFAULT_TAG_VALUE),
                 tags.get(TAG_EVENT, DEFAULT_TAG_VALUE),
                 tags.get(TAG_DATE, DEFAULT_TAG_DATE_VALUE),
-                '  '.join(
-                    [''.join((tag, ' "', value, '"'))
-                     for tag, value
-                     in self.get_tags_display_order(self.value)]),
+                "  ".join(
+                    [
+                        "".join((tag, ' "', value, '"'))
+                        for tag, value in self.get_tags_display_order(
+                            self.value
+                        )
+                    ]
                 ),
-            **kargs)
-        
+            ),
+            **kargs
+        )
+
     def get_tags_display_order(self, pgn):
         str_tags = []
         other_tags = []
@@ -238,6 +284,8 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
 
 def make_ChessDBrowGame(chessui):
     """Make ChessDBrowGame with reference to ChessUI instance"""
+
     def make_position(database=None):
         return ChessDBrowGame(database=database, ui=chessui)
+
     return make_position

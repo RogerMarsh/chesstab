@@ -11,7 +11,7 @@ from .eventspec import DummyEvent
 
 
 class Display(object):
-    
+
     """Mixin providing focus switching and widget visibility methods.
 
     The User Interface has sets of related widgets: each set has a widget to:
@@ -23,7 +23,7 @@ class Display(object):
     switchers check the target is available before switching.  Transitions
     exist where this is not strictly necessary, but it is assumed cheaper to
     ask anyway than check if asking is essential first as well.
-    
+
     """
 
     def bind_for_widget_navigation(self):
@@ -88,7 +88,8 @@ class Display(object):
             return
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partialpanel_item(
-            event=DummyEvent(item.get_top_widget()))
+            event=DummyEvent(item.get_top_widget())
+        )
 
     def set_focus_gamepanel_item(self, event=None):
         """Give game at top of stack the focus."""
@@ -104,7 +105,8 @@ class Display(object):
             return
         self.bind_for_widget_navigation()
         return self.ui.set_focus_gamepanel_item(
-            event=DummyEvent(items.get_active_item_top_widget()))
+            event=DummyEvent(items.get_active_item_top_widget())
+        )
 
     # The alternative name set_focus_game_game_grid fits style of other names.
     def set_focus_position_grid(self, event=None):
@@ -142,7 +144,8 @@ class Display(object):
             return
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoirepanel_item(
-            event=DummyEvent(item.get_top_widget()))
+            event=DummyEvent(item.get_top_widget())
+        )
 
     def set_focus_panel_item_command(self):
         """Give self the focus."""
@@ -153,21 +156,21 @@ class Display(object):
 
         Subclasses shall override if required."""
         # Do nothing.
-        return 'break'
+        return "break"
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order.
 
         Subclasses shall override if required."""
         # Do nothing.
-        return 'break'
+        return "break"
 
     def traverse_round(self, event=None):
         """Give focus to next widget within active item in traversal order.
 
         Subclasses shall override if required."""
         # Do nothing.
-        return 'break'
+        return "break"
 
     def forget_payload(self, parent):
         """Remove payload widget from it's parent panedwindow."""
@@ -198,4 +201,5 @@ class Display(object):
             return
         self.bind_for_widget_navigation()
         return self.ui.set_focus_selectionpanel_item(
-            event=DummyEvent(item.get_top_widget()))
+            event=DummyEvent(item.get_top_widget())
+        )

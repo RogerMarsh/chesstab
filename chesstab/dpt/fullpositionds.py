@@ -18,6 +18,5 @@ from ..basecore.fullposition import FullPosition
 
 
 class FullPositionDS(FullPosition, DataSourceCursor):
-    
-    """Combine a DPT DataSourceCursor with FullPosition.
-    """
+
+    """Combine a DPT DataSourceCursor with FullPosition."""

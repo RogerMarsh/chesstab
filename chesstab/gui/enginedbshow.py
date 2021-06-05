@@ -31,7 +31,8 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
     to be expressed identically and defined once.
 
     """
-    text_name = 'Engine Definition'
+
+    text_name = "Engine Definition"
 
     def __init__(self, parent, oldobject, ui=None):
         """Create toplevel widget for showing chess engine definition.
@@ -40,10 +41,9 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
 
         """
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         EngineToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, EngineToplevel(master=parent, ui=ui), ""
+        )
         self.initialize()
 
     def get_title_for_object(self, object_=None):
@@ -55,9 +55,12 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
         """
         if object_ is None:
             object_ = self.object
-        return '  '.join((
-            self.text_name.join(('Show ', ':')),
-            object_.value.get_name_text()))
+        return "  ".join(
+            (
+                self.text_name.join(("Show ", ":")),
+                object_.value.get_name_text(),
+            )
+        )
 
     @property
     def ui_base_table(self):

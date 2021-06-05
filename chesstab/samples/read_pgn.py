@@ -9,6 +9,6 @@ from pgn_read.samples._utilities import main
 from ..core.pgn import GameUpdate
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    main(game_class=GameUpdate, samples_title='Sample ChessTab Update Report')
+    main(game_class=GameUpdate, samples_title="Sample ChessTab Update Report")

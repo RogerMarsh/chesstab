@@ -17,6 +17,5 @@ from .selection import Selection
 
 
 class SelectionDS(Selection, DataSourceCursor):
-    
-    """Combine a standard DataSourceCursor with Selection.
-    """
+
+    """Combine a standard DataSourceCursor with Selection."""

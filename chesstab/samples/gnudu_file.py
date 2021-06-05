@@ -5,9 +5,9 @@
 """Import PGN file with gnu.chessgnudu to database."""
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from .file_widget import FileWidget
     from ..gnu.chessgnudu import ChessDatabase
 
-    FileWidget(ChessDatabase, 'dbm.gnu')
+    FileWidget(ChessDatabase, "dbm.gnu")

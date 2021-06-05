@@ -13,19 +13,19 @@ from ..core.filespec import (
     NEWGAMES_FIELD_DEF,
     NEWGAMES_FIELD_VALUE,
     PARTIAL_FILE_DEF,
-    )
+)
 from .. import APPLICATION_NAME, ERROR_LOG
 
 
 class Database:
-    
-    """"""
+
+    """ """
 
     def use_deferred_update_process(self, **kargs):
         """Return path to deferred update module.
 
         **kargs - soak up any arguments other database engines need.
-        
+
         """
         return self._deferred_update_process
 
@@ -38,9 +38,9 @@ class Database:
         """Dump database in compressed files."""
         for n in names:
             c = bz2.BZ2Compressor()
-            archivename = '.'.join((n, 'broken', 'bz2'))
-            fi = open(n, 'rb')
-            fo = open(archivename, 'wb')
+            archivename = ".".join((n, "broken", "bz2"))
+            fi = open(n, "rb")
+            fo = open(archivename, "wb")
             try:
                 inp = fi.read(10000000)
                 while inp:
@@ -58,8 +58,8 @@ class Database:
     def delete_backups(self, names=()):
         """Delete backup files."""
         for n in names:
-            archiveguard = '.'.join((n, 'grd'))
-            archivename = '.'.join((n, 'bz2'))
+            archiveguard = ".".join((n, "grd"))
+            archivename = ".".join((n, "bz2"))
             try:
                 os.remove(archiveguard)
             except:
@@ -73,9 +73,9 @@ class Database:
         """Restore database from backup files."""
         for n in names:
             c = bz2.BZ2Decompressor()
-            archivename = '.'.join((n, 'bz2'))
-            fi = open(archivename, 'rb')
-            fo = open(n, 'wb')
+            archivename = ".".join((n, "bz2"))
+            fi = open(archivename, "rb")
+            fo = open(n, "wb")
             try:
                 inp = fi.read(1000000)
                 while inp:
@@ -95,12 +95,16 @@ class Database:
         if ERROR_LOG in listnames:
             homenames.add(os.path.join(self.home_directory, ERROR_LOG))
         if len(listnames - set(os.path.basename(h) for h in homenames)):
-            message = ''.join(
-                ('There is at least one file or folder in\n\n',
-                 self.home_directory,
-                 '\n\nwhich may not be part of the database.  These items ',
-                 'have not been deleted by ', APPLICATION_NAME, '.',
-                 ))
+            message = "".join(
+                (
+                    "There is at least one file or folder in\n\n",
+                    self.home_directory,
+                    "\n\nwhich may not be part of the database.  These items ",
+                    "have not been deleted by ",
+                    APPLICATION_NAME,
+                    ".",
+                )
+            )
         else:
             message = None
         self.close_database()
@@ -117,12 +121,12 @@ class Database:
 
     def get_archive_names(self, files=()):
         """Return names and operating system files for archives and guards"""
-        names = self.database_file,
+        names = (self.database_file,)
         archives = dict()
         guards = dict()
         for n in names:
-            archiveguard = '.'.join((n, 'grd'))
-            archivefile = '.'.join((n, 'bz2'))
+            archiveguard = ".".join((n, "grd"))
+            archivefile = ".".join((n, "bz2"))
             for d, f in ((archives, archivefile), (guards, archiveguard)):
                 if os.path.exists(f):
                     d[n] = f
@@ -171,6 +175,6 @@ class Database:
             NEWGAMES_FIELD_DEF,
             allrecords,
             self.encode_record_selector(NEWGAMES_FIELD_VALUE),
-            )
+        )
         allrecords.close()
         self.commit()

@@ -13,7 +13,7 @@ from solentware_grid.gui.datarow import (
     WIDGET_CONFIGURE,
     WIDGET,
     ROW,
-    )
+)
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordQuery
@@ -22,27 +22,32 @@ from .querydbdelete import QueryDbDelete
 from .querydbshow import QueryDbShow
 from . import constants
 
-ON_DISPLAY_COLOUR = '#eba610' # a pale orange
+ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
-    
+
     """Define row in list of game selection rules.
 
     Add row methods to the game selection rule record definition.
-    
+
     """
 
     header_specification = [
-        {WIDGET: tkinter.Label,
-         WIDGET_CONFIGURE: dict(
-             text='Description', anchor=tkinter.W, padx=0, pady=1,
-             font='TkDefaultFont'),
-         GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-         GRID_COLUMNCONFIGURE: dict(weight=1, uniform='pp'),
-         ROW: 0,
-         },
-        ]
+        {
+            WIDGET: tkinter.Label,
+            WIDGET_CONFIGURE: dict(
+                text="Description",
+                anchor=tkinter.W,
+                padx=0,
+                pady=1,
+                font="TkDefaultFont",
+            ),
+            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="pp"),
+            ROW: 0,
+        },
+    ]
 
     def __init__(self, database=None, ui=None):
         """Extend and associate record definition with database.
@@ -55,17 +60,19 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
-            {WIDGET: tkinter.Label,
-             WIDGET_CONFIGURE: dict(
-                 anchor=tkinter.W,
-                 font=constants.LISTS_OF_GAMES_FONT,
-                 pady=1,
-                 padx=0),
-             GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-             ROW: 0,
-             },
-            ]
-        
+            {
+                WIDGET: tkinter.Label,
+                WIDGET_CONFIGURE: dict(
+                    anchor=tkinter.W,
+                    font=constants.LISTS_OF_GAMES_FONT,
+                    pady=1,
+                    padx=0,
+                ),
+                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                ROW: 0,
+            },
+        ]
+
     def show_row(self, dialog, oldobject):
         """Return a QueryDbShow toplevel for oldobject.
 
@@ -74,7 +81,7 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
 
         """
         return QueryDbShow(dialog, oldobject, ui=self.ui)
-        
+
     def delete_row(self, dialog, oldobject):
         """Return a QueryDbDelete dialog for oldobject.
 
@@ -95,11 +102,8 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
 
         """
         return QueryDbEdit(
-            newobject,
-            dialog,
-            oldobject,
-            showinitial=showinitial,
-            ui=self.ui)
+            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+        )
 
     def grid_row(self, **kargs):
         """Return super().grid_row(textitems=(...), **kargs).
@@ -110,9 +114,10 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         return super().grid_row(
             textitems=(
                 self.value.get_name_text(),
-                #self.value.get_selection_rule_text(),
-                ),
-            **kargs)
+                # self.value.get_selection_rule_text(),
+            ),
+            **kargs
+        )
 
     def grid_row_on_display(self, **kargs):
         self._current_row_background = ON_DISPLAY_COLOUR
@@ -125,6 +130,8 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
 
 def make_ChessDBrowQuery(chessui):
     """Make ChessDBrowQuery with reference to ChessUI instance"""
+
     def make_selection(database=None):
         return ChessDBrowQuery(database=database, ui=chessui)
+
     return make_selection

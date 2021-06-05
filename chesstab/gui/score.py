@@ -39,7 +39,7 @@ from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     FEN_WHITE_ACTIVE,
     PGN_DOT,
-    )
+)
 from pgn_read.core.parser import PGN
 
 from ..core.pgn import GameDisplayMoves, GameAnalysis
@@ -74,7 +74,7 @@ from .constants import (
     FORCED_INDENT_TAG,
     MOVETEXT_MOVENUMBER_TAG,
     FORCED_NEWLINE_TAG,
-    )
+)
 from .eventspec import EventSpec
 from ..core.pgn import get_position_string
 from ..core import exporters
@@ -172,7 +172,7 @@ class Score(SharedTextScore, BlankText):
     moves_played_in_game_font = MOVES_PLAYED_IN_GAME_FONT
 
     tags_displayed_last = SEVEN_TAG_ROSTER
-    pgn_export_type = 'Game', GameDisplayMoves
+    pgn_export_type = "Game", GameDisplayMoves
 
     # Indicate the most recent set of bindings applied to score attribute.
     # There will be some implied bindings to the board attribute, but board
@@ -192,7 +192,8 @@ class Score(SharedTextScore, BlankText):
         gameclass=GameDisplayMoves,
         items_manager=None,
         itemgrid=None,
-        **ka):
+        **ka
+    ):
         """Create widgets to display game score."""
         super().__init__(panel, items_manager=items_manager, **ka)
         self.itemgrid = itemgrid
@@ -203,19 +204,24 @@ class Score(SharedTextScore, BlankText):
         self.board = board
         self.score.configure(
             font=self.tags_variations_comments_font,
-            selectbackground=self.score.cget('background'),
-            inactiveselectbackground='')
+            selectbackground=self.score.cget("background"),
+            inactiveselectbackground="",
+        )
         self.score.tag_configure(
-            MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font)
+            MOVES_PLAYED_IN_GAME_FONT, font=self.moves_played_in_game_font
+        )
 
         # Order is ALTERNATIVE_MOVE_TAG LINE_TAG VARIATION_TAG LINE_END_TAG
         # MOVE_TAG so that correct colour has highest priority as moves are
         # added to and removed from tags.
-        self.score.tag_configure(ALTERNATIVE_MOVE_TAG, background=self.am_color)
+        self.score.tag_configure(
+            ALTERNATIVE_MOVE_TAG, background=self.am_color
+        )
         self.score.tag_configure(LINE_TAG, background=self.l_color)
         self.score.tag_configure(VARIATION_TAG, background=self.v_color)
         self.score.tag_configure(
-            LINE_END_TAG, background=self.score.cget('background'))
+            LINE_END_TAG, background=self.score.cget("background")
+        )
         self.score.tag_configure(MOVE_TAG, background=self.m_color)
 
         # The popup menus for the game score.
@@ -223,7 +229,7 @@ class Score(SharedTextScore, BlankText):
         self.select_move_popup = None
 
         # None implies initial position and is deliberately not a valid Tk tag.
-        self.current = None # Tk tag of current move
+        self.current = None  # Tk tag of current move
 
         # These attributes replace the structure used with wxWidgets controls.
         # Record the structure by tagging text in the Tk Text widget.
@@ -258,7 +264,7 @@ class Score(SharedTextScore, BlankText):
         ste = self.try_event
         sbbv = self.board.boardsquares.values
         for sequence, function in bindings:
-            stef = ste(function) if switch and function else ''
+            stef = ste(function) if switch and function else ""
             for widget in sbbv():
                 widget.bind(sequence[0], stef)
 
@@ -288,34 +294,42 @@ class Score(SharedTextScore, BlankText):
     def set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing moves on or off."""
         self.set_event_bindings_score(
-            self.get_primary_activity_events(),
-            switch=switch)
+            self.get_primary_activity_events(), switch=switch
+        )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(self.post_move_menu_at_top_left,
-                                      self.post_move_menu),
-            switch=switch)
+            self.get_F10_popup_events(
+                self.post_move_menu_at_top_left, self.post_move_menu
+            ),
+            switch=switch,
+        )
         self.set_event_bindings_score(
-            self.get_all_export_events(),
-            switch=switch)
+            self.get_all_export_events(), switch=switch
+        )
         self.set_event_bindings_score(
-            self.get_primary_activity_button_events(),
-            switch=switch)
+            self.get_primary_activity_button_events(), switch=switch
+        )
 
     # Renamed from '_bind_select_variation' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
     def set_select_variation_bindings(self, switch=True):
         """Switch bindings for selecting a variation on or off."""
         self.set_event_bindings_score(
-            self.get_select_move_events(),
-            switch=switch)
+            self.get_select_move_events(), switch=switch
+        )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(self.post_select_move_menu_at_top_left,
-                                      self.post_select_move_menu),
-            switch=switch)
+            self.get_F10_popup_events(
+                self.post_select_move_menu_at_top_left,
+                self.post_select_move_menu,
+            ),
+            switch=switch,
+        )
         self.set_event_bindings_score(
-            self.get_button_events(buttonpress1=self.variation_cancel,
-                                   buttonpress3=self.post_select_move_menu),
-            switch=switch)
+            self.get_button_events(
+                buttonpress1=self.variation_cancel,
+                buttonpress3=self.post_select_move_menu,
+            ),
+            switch=switch,
+        )
 
     # This method may have independence from set_primary_activity_bindings when the
     # control_buttonpress_1 event is fired.
@@ -324,8 +338,8 @@ class Score(SharedTextScore, BlankText):
     def set_score_pointer_item_navigation_bindings(self, switch):
         """Set or unset pointer bindings for game navigation."""
         self.set_event_bindings_score(
-            self.get_primary_activity_button_events(),
-            switch=switch)
+            self.get_primary_activity_button_events(), switch=switch
+        )
 
     # Not yet used.
     # Recently added to game.py but moved here because it makes more sense to
@@ -336,27 +350,31 @@ class Score(SharedTextScore, BlankText):
     def set_board_pointer_select_variation_bindings(self, switch):
         """Enable or disable bindings for variation selection."""
         self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(),
-            switch=switch)
+            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        )
         self.set_event_bindings_board(
-            ((EventSpec.buttonpress_1, self.variation_cancel),
-             (EventSpec.buttonpress_3, self.show_next_in_variation),
-             (EventSpec.shift_buttonpress_3, self.show_variation),
-             ),
-            switch=switch)
+            (
+                (EventSpec.buttonpress_1, self.variation_cancel),
+                (EventSpec.buttonpress_3, self.show_next_in_variation),
+                (EventSpec.shift_buttonpress_3, self.show_variation),
+            ),
+            switch=switch,
+        )
 
     # There is no equivalent of set_primary_activity_bindings to contain this.
     def set_board_pointer_move_bindings(self, switch):
         """Enable or disable bindings for game navigation."""
         self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(),
-            switch=switch)
+            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        )
         self.set_event_bindings_board(
-            ((EventSpec.buttonpress_1, self.show_prev_in_line),
-             (EventSpec.shift_buttonpress_1, self.show_prev_in_variation),
-             (EventSpec.buttonpress_3, self.show_next_in_variation),
-             ),
-            switch=switch)
+            (
+                (EventSpec.buttonpress_1, self.show_prev_in_line),
+                (EventSpec.shift_buttonpress_1, self.show_prev_in_variation),
+                (EventSpec.buttonpress_3, self.show_next_in_variation),
+            ),
+            switch=switch,
+        )
 
     def get_keypress_suppression_events(self):
         """Return tuple of bindings to ignore all key presses.
@@ -365,9 +383,7 @@ class Score(SharedTextScore, BlankText):
         menubar.
 
         """
-        return (
-            (EventSpec.score_disable_keypress, self.press_break),
-            )
+        return ((EventSpec.score_disable_keypress, self.press_break),)
 
     # May become an eight argument ButtonPress event handler setter method
     # because it is always associated with settings for ButtonPress-1 and
@@ -386,7 +402,7 @@ class Score(SharedTextScore, BlankText):
             (EventSpec.shift_buttonpress_3, self.press_break),
             (EventSpec.alt_buttonpress_1, self.press_break),
             (EventSpec.alt_buttonpress_3, self.press_break),
-            )
+        )
 
     # A Game widget has one Board widget and two Score widgets.  Each Score
     # widget has a Text widget but only one of these can have the focus.
@@ -396,8 +412,9 @@ class Score(SharedTextScore, BlankText):
     # Text widget, but is not set yet.
     def get_primary_activity_button_events(self):
         """Return tuple of button presses and callbacks for game navigation."""
-        return self.get_button_events(buttonpress1=self.go_to_token,
-                                      buttonpress3=self.post_move_menu)
+        return self.get_button_events(
+            buttonpress1=self.go_to_token, buttonpress3=self.post_move_menu
+        )
 
     # Subclasses which need non-move PGN navigation should call this method.
     # Intended for editors.
@@ -410,7 +427,8 @@ class Score(SharedTextScore, BlankText):
         navigate_score_submenu = tkinter.Menu(master=popup, tearoff=False)
         self.populate_navigate_score_submenu(navigate_score_submenu)
         popup.insert_cascade(
-            index=index, label='Navigate Score', menu=navigate_score_submenu)
+            index=index, label="Navigate Score", menu=navigate_score_submenu
+        )
 
     # These get_xxx_events methods are used by event bind and popup creation
     # methods.
@@ -418,26 +436,36 @@ class Score(SharedTextScore, BlankText):
     def get_select_move_events(self):
         """Return tuple of variation selection keypresses and callbacks."""
         return (
-            (EventSpec.score_cycle_selection_to_next_variation,
-             self.variation_cycle),
+            (
+                EventSpec.score_cycle_selection_to_next_variation,
+                self.variation_cycle,
+            ),
             (EventSpec.score_show_selected_variation, self.show_variation),
-            (EventSpec.score_cancel_selection_of_variation,
-             self.variation_cancel),
-            )
+            (
+                EventSpec.score_cancel_selection_of_variation,
+                self.variation_cancel,
+            ),
+        )
 
     def get_all_export_events(self):
         """Return tuple of PGN export keypresses and callbacks."""
         return (
-            (EventSpec.pgn_reduced_export_format,
-             self.export_pgn_reduced_export_format),
-            (EventSpec.pgn_export_format_no_comments_no_ravs,
-             self.export_pgn_no_comments_no_ravs),
-            (EventSpec.pgn_export_format_no_comments,
-             self.export_pgn_no_comments),
+            (
+                EventSpec.pgn_reduced_export_format,
+                self.export_pgn_reduced_export_format,
+            ),
+            (
+                EventSpec.pgn_export_format_no_comments_no_ravs,
+                self.export_pgn_no_comments_no_ravs,
+            ),
+            (
+                EventSpec.pgn_export_format_no_comments,
+                self.export_pgn_no_comments,
+            ),
             (EventSpec.pgn_export_format, self.export_pgn),
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
             (EventSpec.text_internal_format, self.export_text),
-            )
+        )
 
     # These are the event bindings to traverse moves in PGN movetext.
     # The method name emphasizes the connection with implementation of main
@@ -447,16 +475,20 @@ class Score(SharedTextScore, BlankText):
         """Return tuple of game navigation keypresses and callbacks."""
         return (
             (EventSpec.score_show_next_in_line, self.show_next_in_line),
-            (EventSpec.score_show_next_in_variation,
-             self.show_next_in_variation),
+            (
+                EventSpec.score_show_next_in_variation,
+                self.show_next_in_variation,
+            ),
             (EventSpec.score_show_previous_in_line, self.show_prev_in_line),
-            (EventSpec.score_show_previous_in_variation,
-             self.show_prev_in_variation),
+            (
+                EventSpec.score_show_previous_in_variation,
+                self.show_prev_in_variation,
+            ),
             (EventSpec.score_show_first_in_game, self.show_first_in_game),
             (EventSpec.score_show_last_in_game, self.show_last_in_game),
             (EventSpec.score_show_first_in_line, self.show_first_in_line),
             (EventSpec.score_show_last_in_line, self.show_last_in_line),
-            )
+        )
 
     # Analysis subclasses override method to exclude the first four items.
     # Repertoire subclasses override method to exclude the first two items.
@@ -469,14 +501,14 @@ class Score(SharedTextScore, BlankText):
         popup = super().create_primary_activity_popup()
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self.populate_export_submenu(export_submenu)
-        index = 'Database'
+        index = "Database"
         try:
             popup.index(index)
         except tkinter.TclError as exc:
             if str(exc) != index.join(('bad menu entry index "', '"')):
                 raise
             index = tkinter.END
-        popup.insert_cascade(label='Export', menu=export_submenu, index=index)
+        popup.insert_cascade(label="Export", menu=export_submenu, index=index)
         return popup
 
     def create_select_move_popup(self):
@@ -486,10 +518,10 @@ class Score(SharedTextScore, BlankText):
         self.set_popup_bindings(popup, self.get_select_move_events())
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self.populate_export_submenu(export_submenu)
-        popup.add_cascade(label='Export', menu=export_submenu)
+        popup.add_cascade(label="Export", menu=export_submenu)
         database_submenu = self.create_database_submenu(popup)
         if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
+            popup.add_cascade(label="Database", menu=database_submenu)
         self.select_move_popup = popup
         return popup
 
@@ -499,7 +531,8 @@ class Score(SharedTextScore, BlankText):
             self.primary_activity_popup,
             self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
-            event=event)
+            event=event,
+        )
 
     def post_move_menu_at_top_left(self, event=None):
         """Show the popup menu for game score navigation."""
@@ -507,7 +540,8 @@ class Score(SharedTextScore, BlankText):
             self.primary_activity_popup,
             self.create_primary_activity_popup,
             allowed=self.is_active_item_mapped(),
-            event=event)
+            event=event,
+        )
 
     def post_select_move_menu(self, event=None):
         """Show the popup menu for variation selection in game score."""
@@ -515,7 +549,8 @@ class Score(SharedTextScore, BlankText):
             self.select_move_popup,
             self.create_select_move_popup,
             allowed=self.is_active_item_mapped(),
-            event=event)
+            event=event,
+        )
 
     def post_select_move_menu_at_top_left(self, event=None):
         """Show the popup menu for variation selection in game score."""
@@ -523,7 +558,8 @@ class Score(SharedTextScore, BlankText):
             self.select_move_popup,
             self.create_select_move_popup,
             allowed=self.is_active_item_mapped(),
-            event=event)
+            event=event,
+        )
 
     def colour_variation(self, move):
         """Colour variation and display its initial position.
@@ -540,7 +576,8 @@ class Score(SharedTextScore, BlankText):
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self.get_choice_tag_of_move(
-                self.select_first_move_of_game())
+                self.select_first_move_of_game()
+            )
             selection = self.get_selection_tag_for_choice(choice)
 
         else:
@@ -548,7 +585,9 @@ class Score(SharedTextScore, BlankText):
             choice = self.get_choice_tag_for_prior(prior)
             selection = self.get_selection_tag_for_prior(prior)
         self.clear_variation_choice_colouring_tag(choice)
-        selected_first_move = self.select_first_move_of_selected_line(selection)
+        selected_first_move = self.select_first_move_of_selected_line(
+            selection
+        )
         if self.is_move_in_main_line(selected_first_move):
             self.clear_moves_played_in_variation_colouring_tag()
             self.clear_variation_colouring_tag()
@@ -562,7 +601,7 @@ class Score(SharedTextScore, BlankText):
 
     def is_game_in_text_edit_mode(self):
         """Return True if current state of score widget is 'normal'."""
-        return self.score.cget('state') == tkinter.NORMAL
+        return self.score.cget("state") == tkinter.NORMAL
 
     def see_first_move(self):
         """Make first move visible on navigation to initial position.
@@ -587,18 +626,26 @@ class Score(SharedTextScore, BlankText):
 
         """
         try:
-            return {square: piece
-                    for piece, square
-                    in self.collected_game._initial_position[0]}
+            return {
+                square: piece
+                for piece, square in self.collected_game._initial_position[0]
+            }
         except TypeError:
             raise ScoreNoGameException(
-                'No initial position: probably text has no PGN elements')
+                "No initial position: probably text has no PGN elements"
+            )
 
     def fen_tag_tuple_square_piece_map(self):
         """Return FEN tag as tuple with pieces in square to piece mapping."""
         cgip = self.collected_game._initial_position
-        return (self.fen_tag_square_piece_map(),
-                cgip[1], cgip[2], cgip[3], cgip[4], cgip[5])
+        return (
+            self.fen_tag_square_piece_map(),
+            cgip[1],
+            cgip[2],
+            cgip[3],
+            cgip[4],
+            cgip[5],
+        )
 
     def set_game_board(self):
         """Show position after highlighted move and return True if it exists.
@@ -637,14 +684,19 @@ class Score(SharedTextScore, BlankText):
         """
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
-        self.score.delete('1.0', tkinter.END)
+        self.score.delete("1.0", tkinter.END)
         try:
             self.map_game()
         except ScoreNoGameException:
             self.score.insert(
                 tkinter.END,
-                ''.join(('The following text was probably found between two ',
-                         'games in a file expected to be in PGN format.\n\n')))
+                "".join(
+                    (
+                        "The following text was probably found between two ",
+                        "games in a file expected to be in PGN format.\n\n",
+                    )
+                ),
+            )
             self.score.insert(tkinter.END, self.collected_game._text)
 
             # Must be replaced because bind_for_primary_activity() sets the
@@ -678,7 +730,7 @@ class Score(SharedTextScore, BlankText):
     def show_first_in_line(self, event=None):
         """Display initial position of line containing current move."""
         if self.current is None:
-            return 'break'
+            return "break"
         if self.is_currentmove_in_main_line():
             return self.show_first_in_game()
         selected_first_move = self.select_first_move_in_line(self.current)
@@ -686,19 +738,20 @@ class Score(SharedTextScore, BlankText):
         self.set_current()
         self.set_variation_tags_from_currentmove()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def show_variation(self, event=None):
         """Enter selected variation and display its initial position."""
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_primary_activity()
         self.colour_variation(self.current)
-        return 'break'
+        return "break"
 
     def show_last_in_game(self, event=None):
         """Display final position of game score."""
         return self.show_new_current(
-            new_current=self.select_last_move_played_in_game())
+            new_current=self.select_last_move_played_in_game()
+        )
 
     def show_last_in_line(self, event=None):
         """Display final position of line containing current move."""
@@ -710,7 +763,7 @@ class Score(SharedTextScore, BlankText):
         self.add_variation_before_move_to_colouring_tag(self.current)
         self.set_current()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def show_next_in_line(self, event=None):
         """Display next position of selected line."""
@@ -722,7 +775,7 @@ class Score(SharedTextScore, BlankText):
             self.current = self.select_next_move_in_line()
         self.set_current()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def show_next_in_variation(self, event=None):
         """Display choices if these exist or next position of selected line."""
@@ -731,7 +784,8 @@ class Score(SharedTextScore, BlankText):
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self.get_choice_tag_of_move(
-                self.select_first_move_of_game())
+                self.select_first_move_of_game()
+            )
             if choice is None:
                 return self.show_next_in_line()
             selection = self.get_selection_tag_for_choice(choice)
@@ -751,23 +805,23 @@ class Score(SharedTextScore, BlankText):
         self.set_variation_selection_tags(prior, choice, selection, variation)
         if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
             self.bind_for_select_variation()
-        return 'break'
+        return "break"
 
     def show_prev_in_line(self, event=None):
         """Display previous position of selected line."""
         if self.current is None:
-            return 'break'
+            return "break"
         if not self.is_currentmove_in_main_line():
             self.remove_currentmove_from_moves_played_in_variation()
         self.current = self.select_prev_move_in_line()
         self.set_current()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def show_prev_in_variation(self, event=None):
         """Display choices in previous position of selected line."""
         if self.current is None:
-            return 'break'
+            return "break"
         if not self.is_currentmove_in_main_line():
             self.remove_currentmove_from_moves_played_in_variation()
             if self.is_currentmove_start_of_variation():
@@ -777,17 +831,19 @@ class Score(SharedTextScore, BlankText):
                 self.set_game_board()
                 if self.current is None:
                     self.clear_moves_played_in_variation_colouring_tag()
-                elif self.get_prior_to_variation_tag_of_move(
-                    self.current) is None:
-                    return 'break'
+                elif (
+                    self.get_prior_to_variation_tag_of_move(self.current)
+                    is None
+                ):
+                    return "break"
                 if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
                     self.bind_for_select_variation()
                 self.variation_cycle()
-                return 'break'
+                return "break"
         self.current = self.select_prev_move_in_line()
         self.set_current()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def step_one_variation(self, move):
         """Highlight next variation in choices at current position."""
@@ -796,7 +852,8 @@ class Score(SharedTextScore, BlankText):
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self.get_choice_tag_of_move(
-                self.select_first_move_of_game())
+                self.select_first_move_of_game()
+            )
             selection = self.get_selection_tag_for_choice(choice)
 
         else:
@@ -819,7 +876,8 @@ class Score(SharedTextScore, BlankText):
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self.get_choice_tag_of_move(
-                self.select_first_move_of_game())
+                self.select_first_move_of_game()
+            )
 
         else:
             prior = self.get_prior_to_variation_tag_of_move(self.current)
@@ -831,31 +889,38 @@ class Score(SharedTextScore, BlankText):
                 self.add_currentmove_variation_to_colouring_tag()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_primary_activity()
-        return 'break'
+        return "break"
 
     def variation_cycle(self, event=None):
         """Highlight next variation in choices at current position."""
         self.step_one_variation(self.current)
-        return 'break'
+        return "break"
 
     def add_move_to_moves_played_colouring_tag(self, move):
         """Add move to colouring tag for moves played in variation."""
         widget = self.score
-        tag_range = widget.tag_nextrange(move, '1.0')
+        tag_range = widget.tag_nextrange(move, "1.0")
         widget.tag_add(VARIATION_TAG, tag_range[0], tag_range[1])
 
     def add_currentmove_variation_to_colouring_tag(self):
         """Add current move variation to selected variation colouring tag."""
         widget = self.score
         for tag_name in widget.tag_names(
-            widget.tag_nextrange(self.current, '1.0')[0]):
+            widget.tag_nextrange(self.current, "1.0")[0]
+        ):
             if tag_name.startswith(RAV_SEP):
                 self._add_tag_ranges_to_color_tag(tag_name, LINE_TAG)
                 widget.tag_add(
                     LINE_END_TAG,
-                    ''.join((
-                        str(widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]),
-                        '-1 chars')))
+                    "".join(
+                        (
+                            str(
+                                widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]
+                            ),
+                            "-1 chars",
+                        )
+                    ),
+                )
                 return
 
     def add_pgntag_to_map(self, name, value):
@@ -867,22 +932,23 @@ class Score(SharedTextScore, BlankText):
 
         """
         widget = self.score
-        widget.insert(tkinter.INSERT, '[')
+        widget.insert(tkinter.INSERT, "[")
         name_tag = self.add_text_pgntag_or_pgnvalue(
-            ''.join((' ', name)),
+            "".join((" ", name)),
             tagset=(TAGS_VARIATIONS_COMMENTS_FONT,),
-            )
+        )
         name_suffix = self.position_number
         value_tag = self.add_text_pgntag_or_pgnvalue(
-            ''.join(('"', value)),
+            "".join(('"', value)),
             tagset=(TAGS_VARIATIONS_COMMENTS_FONT,),
-            separator='"')
+            separator='"',
+        )
         value_suffix = self.position_number
-        widget.insert(tkinter.INSERT, ' ]\n')
+        widget.insert(tkinter.INSERT, " ]\n")
         widget.mark_set(START_SCORE_MARK, tkinter.INSERT)
         return ((name_suffix, name_tag), (value_suffix, value_tag))
 
-    def add_text_pgntag_or_pgnvalue(self, token, separator=' ', **k):
+    def add_text_pgntag_or_pgnvalue(self, token, separator=" ", **k):
         """Insert token and separator text. Return start and end indicies.
 
         token is ' 'text or '"'text.  The trailing ' ' or '"' required in the
@@ -895,10 +961,10 @@ class Score(SharedTextScore, BlankText):
     def add_variation_before_move_to_colouring_tag(self, move):
         """Add variation before current move to moves played colouring tag."""
         widget = self.score
-        index = widget.tag_nextrange(move, '1.0')[0]
+        index = widget.tag_nextrange(move, "1.0")[0]
         for ctn in widget.tag_names(index):
             if ctn.startswith(RAV_MOVES):
-                tag_range = widget.tag_nextrange(ctn, '1.0', index)
+                tag_range = widget.tag_nextrange(ctn, "1.0", index)
                 while tag_range:
                     widget.tag_add(VARIATION_TAG, tag_range[0], tag_range[1])
                     tag_range = widget.tag_nextrange(ctn, tag_range[1], index)
@@ -924,15 +990,13 @@ class Score(SharedTextScore, BlankText):
 
     def clear_moves_played_in_variation_colouring_tag(self):
         """Clear the colouring tag for moves played in variation."""
-        self.score.tag_remove(VARIATION_TAG, '1.0', tkinter.END)
+        self.score.tag_remove(VARIATION_TAG, "1.0", tkinter.END)
 
     def clear_choice_colouring_tag(self):
         """Clear the colouring tag for variation choice."""
-        self.score.tag_remove(ALTERNATIVE_MOVE_TAG, '1.0', tkinter.END)
+        self.score.tag_remove(ALTERNATIVE_MOVE_TAG, "1.0", tkinter.END)
 
-    def clear_variation_choice_colouring_tag(
-        self,
-        first_moves_in_variations):
+    def clear_variation_choice_colouring_tag(self, first_moves_in_variations):
         """Remove ranges in first_moves_in_variations from colour tag.
 
         The colour tag is ALTERNATIVE_MOVE_TAG which should contain just the
@@ -942,13 +1006,13 @@ class Score(SharedTextScore, BlankText):
 
         """
         self._remove_tag_ranges_from_color_tag(
-            first_moves_in_variations,
-            ALTERNATIVE_MOVE_TAG)
+            first_moves_in_variations, ALTERNATIVE_MOVE_TAG
+        )
 
     def clear_variation_colouring_tag(self):
         """Clear the colouring tag for moves in variation."""
-        self.score.tag_remove(LINE_TAG, '1.0', tkinter.END)
-        self.score.tag_remove(LINE_END_TAG, '1.0', tkinter.END)
+        self.score.tag_remove(LINE_TAG, "1.0", tkinter.END)
+        self.score.tag_remove(LINE_END_TAG, "1.0", tkinter.END)
 
     def get_range_of_prior_move(self, start):
         """Return range of PRIOR_MOVE tag before start.
@@ -965,12 +1029,13 @@ class Score(SharedTextScore, BlankText):
         """
         widget = self.score
         for name in widget.tag_names(
-            self.get_range_for_prior_move_before_insert()[0]):
+            self.get_range_for_prior_move_before_insert()[0]
+        ):
             if name.startswith(CHOICE):
                 return widget.tag_prevrange(
-                    self.get_prior_tag_for_choice(name),
-                    start)
-        raise ScoreException('Unable to find prior move for RAV')
+                    self.get_prior_tag_for_choice(name), start
+                )
+        raise ScoreException("Unable to find prior move for RAV")
 
     def create_previousmovetag(self, positiontag, start):
         """Create previous move tag reference for positiontag."""
@@ -985,7 +1050,8 @@ class Score(SharedTextScore, BlankText):
             self.previousmovetags[positiontag] = (
                 self.get_position_tag_of_index(tag_range[0]),
                 self._vartag,
-                self._vartag)
+                self._vartag,
+            )
         else:
             varstack = list(self.varstack)
             while varstack:
@@ -1007,7 +1073,8 @@ class Score(SharedTextScore, BlankText):
                     self.previousmovetags[positiontag] = (
                         self.get_position_tag_of_index(tag_range[0]),
                         self._vartag,
-                        var)
+                        var,
+                    )
                     break
             else:
                 if self._vartag is self.gamevartag:
@@ -1026,15 +1093,15 @@ class Score(SharedTextScore, BlankText):
         if selection is None:
             return
         widget = self.score
-        choice_tnr = widget.tag_nextrange(choice, '1.0')
+        choice_tnr = widget.tag_nextrange(choice, "1.0")
         if not choice_tnr:
             return
         if not widget.tag_nextrange(ALTERNATIVE_MOVE_TAG, choice_tnr[0]):
             return
         selection_tnr = widget.tag_nextrange(
-            choice,
-            widget.tag_nextrange(selection, '1.0')[1])
-        widget.tag_remove(selection, '1.0', tkinter.END)
+            choice, widget.tag_nextrange(selection, "1.0")[1]
+        )
+        widget.tag_remove(selection, "1.0", tkinter.END)
         if selection_tnr:
             widget.tag_add(selection, selection_tnr[0], selection_tnr[1])
         else:
@@ -1095,7 +1162,7 @@ class Score(SharedTextScore, BlankText):
                 # tags refer to a '(' range only, for example.  'rt2' has the
                 # '(' for 'rt1'.
                 # Basically the RAV_TAG structure was rubbish.
-                #if tag_name.startswith(RAV_TAG):
+                # if tag_name.startswith(RAV_TAG):
                 #    start_search = widget.tag_ranges(tag_name)[0]
                 #    skip_move_before_rav = True
                 #    break
@@ -1109,7 +1176,7 @@ class Score(SharedTextScore, BlankText):
     def get_range_next_move_in_variation(self):
         """Return range of move after current move in variation."""
         if self.current is None:
-            tnr = self.score.tag_nextrange(NAVIGATE_MOVE, '1.0')
+            tnr = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
             if tnr:
                 return tnr
             return None
@@ -1127,7 +1194,8 @@ class Score(SharedTextScore, BlankText):
         # one call.
         try:
             prevpos = self.tagpositionmap[
-                self.previousmovetags[self.current][0]]
+                self.previousmovetags[self.current][0]
+            ]
         except KeyError:
 
             # The result at the end of an editable game score for example
@@ -1149,7 +1217,8 @@ class Score(SharedTextScore, BlankText):
         if self.current is None:
             return self.tagpositionmap[None]
         return self.get_position_for_text_index(
-            self.score.tag_ranges(self.current)[0])
+            self.score.tag_ranges(self.current)[0]
+        )
 
     def get_position_for_text_index(self, index):
         """Return position associated with index in game score text widget."""
@@ -1230,34 +1299,35 @@ class Score(SharedTextScore, BlankText):
     def get_prior_to_variation_tag_of_move(self, move):
         """Return Tk tag name if currentmove is prior to a variation."""
         return self.get_prior_to_variation_tag_of_index(
-            self.score.tag_ranges(move)[0])
+            self.score.tag_ranges(move)[0]
+        )
 
     @staticmethod
     def get_choice_tag_for_prior(prior):
         """Return Tk tag name for choice with same suffix as prior."""
-        return ''.join((CHOICE, prior[len(PRIOR_MOVE):]))
+        return "".join((CHOICE, prior[len(PRIOR_MOVE) :]))
 
     def get_choice_tag_of_move(self, move):
         """Return Tk tag name if move is first move of a variation choice."""
         if move:
-            return self.get_choice_tag_of_index(
-                self.score.tag_ranges(move)[0])
+            return self.get_choice_tag_of_index(self.score.tag_ranges(move)[0])
         return None
 
     @staticmethod
     def get_selection_tag_for_choice(choice):
         """Return Tk tag name for selection with same suffix as choice."""
-        return ''.join((SELECTION, choice[len(CHOICE):]))
+        return "".join((SELECTION, choice[len(CHOICE) :]))
 
     @staticmethod
     def get_selection_tag_for_prior(prior):
         """Return Tk tag name for selection with same suffix as prior."""
-        return ''.join((SELECTION, prior[len(PRIOR_MOVE):]))
+        return "".join((SELECTION, prior[len(PRIOR_MOVE) :]))
 
     def get_colouring_variation_tag_for_selection(self, selection):
         """Return Tk tag name for variation associated with selection."""
         return self.get_colouring_variation_tag_of_index(
-            self.score.tag_ranges(selection)[0])
+            self.score.tag_ranges(selection)[0]
+        )
 
     def get_choice_tag_name(self):
         """Return suffixed CHOICE tag name.
@@ -1269,7 +1339,7 @@ class Score(SharedTextScore, BlankText):
         """
         self.choice_number += 1
         suffix = str(self.choice_number)
-        return ''.join((CHOICE, suffix))
+        return "".join((CHOICE, suffix))
 
     def get_variation_tag_name(self):
         """Return suffixed RAV_MOVES tag name.
@@ -1280,17 +1350,17 @@ class Score(SharedTextScore, BlankText):
 
         """
         self.variation_number += 1
-        return ''.join((RAV_MOVES, str(self.variation_number)))
+        return "".join((RAV_MOVES, str(self.variation_number)))
 
     def get_next_positiontag_name(self):
         """Return suffixed POSITION tag name."""
         self.position_number += 1
-        return ''.join((POSITION, str(self.position_number)))
+        return "".join((POSITION, str(self.position_number)))
 
     def get_current_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names."""
         suffix = str(self.position_number)
-        return [''.join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
+        return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
     def get_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names.
@@ -1305,7 +1375,7 @@ class Score(SharedTextScore, BlankText):
         """
         self.position_number += 1
         suffix = str(self.position_number)
-        return [''.join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
+        return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
     def insert_token_into_text(self, token, separator):
         """Insert token and separator in widget.  Return boundary indicies.
@@ -1337,14 +1407,16 @@ class Score(SharedTextScore, BlankText):
             start = widget.index(tkinter.INSERT)
             widget.insert(tkinter.INSERT, NEWLINE_SEP)
             widget.tag_add(
-                FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
+                FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT)
+            )
         else:
             self.score.insert(tkinter.INSERT, NEWLINE_SEP)
 
     def is_currentmove_in_main_line(self):
         """Return True if currentmove is in the main line tag."""
         return self.is_index_in_main_line(
-            self.score.tag_ranges(self.current)[0])
+            self.score.tag_ranges(self.current)[0]
+        )
 
     def is_currentmove_start_of_variation(self):
         """Return True if currentmove is at start of a variation tag."""
@@ -1367,15 +1439,15 @@ class Score(SharedTextScore, BlankText):
 
     def is_index_in_main_line(self, index):
         """Return True if index is in the main line tag."""
-        return bool(self.score.tag_nextrange(
-            self.gamevartag,
-            index,
-            ''.join((str(index), '+1 chars'))))
+        return bool(
+            self.score.tag_nextrange(
+                self.gamevartag, index, "".join((str(index), "+1 chars"))
+            )
+        )
 
     def is_move_in_main_line(self, move):
         """Return True if move is in the main line."""
-        return self.is_index_in_main_line(
-            self.score.tag_ranges(move)[0])
+        return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
 
     def is_variation_entered(self):
         """Return True if currentmove is, or about to be, in variation.
@@ -1387,7 +1459,7 @@ class Score(SharedTextScore, BlankText):
         ahead of time in this case to enable the test.
 
         """
-        if self.score.tag_nextrange(LINE_TAG, '1.0'):
+        if self.score.tag_nextrange(LINE_TAG, "1.0"):
             return True
         return False
 
@@ -1421,14 +1493,14 @@ class Score(SharedTextScore, BlankText):
         self._choicetag = self.get_choice_tag_name()
         self.gamevartag = self._vartag
 
-        self._start_latest_move = ''
-        self._end_latest_move = ''
+        self._start_latest_move = ""
+        self._end_latest_move = ""
         self._next_move_is_choice = False
         self._unresolved_choice_count = 0
         self._token_position = None
         self._square_piece_map = {}
 
-        self.score.mark_set(START_SCORE_MARK, '1.0')
+        self.score.mark_set(START_SCORE_MARK, "1.0")
         self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
         game = self.collected_game
         spm = self._square_piece_map
@@ -1436,35 +1508,35 @@ class Score(SharedTextScore, BlankText):
             for piece, square in game._initial_position[0]:
                 spm[square] = piece
         except TypeError:
-            raise ScoreMapToBoardException('Unable to map text to board')
+            raise ScoreMapToBoardException("Unable to map text to board")
         assert len(game._text) == len(game._position_deltas)
         tags_displayed = self.map_tags_display_order()
         for text, position in zip(game._text, game._position_deltas):
             first_char = text[0]
-            if first_char in 'abcdefghKQRBNkqrnO':
+            if first_char in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, position)
-            elif first_char == '[':
+            elif first_char == "[":
                 if not tags_displayed:
                     self.map_tag(text)
-            elif first_char == '{':
+            elif first_char == "{":
                 self.map_start_comment(text)
-            elif first_char == '(':
+            elif first_char == "(":
                 self.map_start_rav(text, position)
-            elif first_char == ')':
+            elif first_char == ")":
                 self.map_end_rav(text, position)
-            elif first_char in '10*':
+            elif first_char in "10*":
                 self.map_termination(text)
-            elif first_char == ';':
+            elif first_char == ";":
                 self.map_comment_to_eol(text)
-            elif first_char == '$':
+            elif first_char == "$":
                 self.map_glyph(text)
 
             # Currently ignored if present in PGN input.
-            elif first_char == '%':
+            elif first_char == "%":
                 self.map_escape_to_eol(text)
 
             # Currently not ignored if present in PGN input.
-            elif first_char == '<':
+            elif first_char == "<":
                 self.map_start_reserved(text)
 
             else:
@@ -1503,8 +1575,9 @@ class Score(SharedTextScore, BlankText):
         widget = self.score
         positiontag = self.get_next_positiontag_name()
         next_position = position[1]
-        self.tagpositionmap[
-            positiontag] = (self._square_piece_map.copy(),) + next_position[1:]
+        self.tagpositionmap[positiontag] = (
+            self._square_piece_map.copy(),
+        ) + next_position[1:]
         fwa = next_position[1] == FEN_WHITE_ACTIVE
         if not fwa:
             self._force_newline += 1
@@ -1513,13 +1586,15 @@ class Score(SharedTextScore, BlankText):
             self._force_newline = 1
         if not fwa:
             start, end, sepend = self.insert_token_into_text(
-                str(next_position[5])+'.', SPACE_SEP)
+                str(next_position[5]) + ".", SPACE_SEP
+            )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
             if self._is_text_editable or self._force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
         elif self._next_move_is_choice:
             start, end, sepend = self.insert_token_into_text(
-                str(position[0][5])+'...', SPACE_SEP)
+                str(position[0][5]) + "...", SPACE_SEP
+            )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
             if self._is_text_editable or self._force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
@@ -1530,7 +1605,7 @@ class Score(SharedTextScore, BlankText):
             widget.tag_add(tag, start, end)
         if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
+        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
         if self._next_move_is_choice:
             widget.tag_add(ALL_CHOICES, start, end)
 
@@ -1564,7 +1639,8 @@ class Score(SharedTextScore, BlankText):
         self._set_square_piece_map(position)
         widget = self.score
         if not widget.tag_nextrange(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move):
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+        ):
 
             # start_latest_move will be the second move, at earliest,
             # in current variation except if it is the first move in
@@ -1573,25 +1649,28 @@ class Score(SharedTextScore, BlankText):
             # position in which the choice of moves occurs.
             self._choicetag = self.get_choice_tag_name()
             widget.tag_add(
-                ''.join((SELECTION, str(self.choice_number))),
+                "".join((SELECTION, str(self.choice_number))),
                 self._start_latest_move,
-                self._end_latest_move)
+                self._end_latest_move,
+            )
             prior = self.get_range_for_prior_move_before_insert()
             if prior:
                 widget.tag_add(
-                    ''.join((PRIOR_MOVE, str(self.choice_number))),
-                    *prior)
+                    "".join((PRIOR_MOVE, str(self.choice_number))), *prior
+                )
 
         widget.tag_add(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move)
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+        )
         widget.tag_add(
-            self._choicetag, self._start_latest_move, self._end_latest_move)
+            self._choicetag, self._start_latest_move, self._end_latest_move
+        )
         self.varstack.append((self._vartag, self._token_position))
         self.choicestack.append(self._choicetag)
         self._vartag = self.get_variation_tag_name()
         nttpr = widget.tag_prevrange(BUILD_TAG, widget.index(tkinter.END))
         if nttpr:
-            if widget.get(*nttpr) != '(':
+            if widget.get(*nttpr) != "(":
                 self.insert_forced_newline_into_text()
                 self._force_newline = 0
         else:
@@ -1623,9 +1702,10 @@ class Score(SharedTextScore, BlankText):
         # file.  Probably no valid PGN tokens at all must be in the file to
         # cause this exception.
         try:
-            (self._start_latest_move,
-             self._end_latest_move) = self.score.tag_prevrange(
-                 ALL_CHOICES, tkinter.END)
+            (
+                self._start_latest_move,
+                self._end_latest_move,
+            ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
         except ValueError:
             return tkinter.END, tkinter.END, tkinter.END
 
@@ -1669,9 +1749,9 @@ class Score(SharedTextScore, BlankText):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
         start = widget.index(tkinter.INSERT)
-        widget.insert(tkinter.INSERT, token[:-1])#token)
-        end = widget.index(tkinter.INSERT)# + ' -1 chars')
-        #widget.insert(tkinter.INSERT, NULL_SEP)
+        widget.insert(tkinter.INSERT, token[:-1])  # token)
+        end = widget.index(tkinter.INSERT)  # + ' -1 chars')
+        # widget.insert(tkinter.INSERT, NULL_SEP)
         return start, end, widget.index(tkinter.INSERT)
 
     def map_comment_to_eol(self, token):
@@ -1687,15 +1767,15 @@ class Score(SharedTextScore, BlankText):
         widget = self.score
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])
-        end = widget.index(tkinter.INSERT)# + ' -1 chars')
+        end = widget.index(tkinter.INSERT)  # + ' -1 chars')
 
         # First character of this token is the newline to be tagged.
         # If necessary it is probably safe to use the commented version
         # because a forced newline will appear after the escaped line's EOL.
-        #widget.tag_add(FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
+        # widget.tag_add(FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
         widget.tag_add(FORCED_NEWLINE_TAG, start)
 
-        #widget.insert(tkinter.INSERT, NULL_SEP)
+        # widget.insert(tkinter.INSERT, NULL_SEP)
         return start, end, widget.index(tkinter.INSERT)
 
     def map_escape_to_eol(self, token):
@@ -1729,7 +1809,7 @@ class Score(SharedTextScore, BlankText):
     def remove_currentmove_from_moves_played_in_variation(self):
         """Remove current move from moves played in variation colouring tag."""
         widget = self.score
-        tag_range = widget.tag_nextrange(self.current, '1.0')
+        tag_range = widget.tag_nextrange(self.current, "1.0")
         widget.tag_remove(VARIATION_TAG, tag_range[0], tag_range[1])
 
     def select_first_move_in_line(self, move):
@@ -1743,7 +1823,7 @@ class Score(SharedTextScore, BlankText):
                 break
         else:
             return None
-        tag_range = widget.tag_nextrange(oldtn, '1.0')
+        tag_range = widget.tag_nextrange(oldtn, "1.0")
         if not tag_range:
             return move
         for tag_name in widget.tag_names(tag_range[0]):
@@ -1755,7 +1835,7 @@ class Score(SharedTextScore, BlankText):
         """Return name of tag associated with first move of game."""
         widget = self.score
         try:
-            index = widget.tag_nextrange(self.gamevartag, '1.0')[0]
+            index = widget.tag_nextrange(self.gamevartag, "1.0")[0]
         except IndexError:
             return None
         for tag_name in widget.tag_names(index):
@@ -1822,7 +1902,8 @@ class Score(SharedTextScore, BlankText):
         else:
             return None
         tag_range = widget.tag_nextrange(
-            oldtn, ''.join((str(tag_range[0]), '+1 chars')))
+            oldtn, "".join((str(tag_range[0]), "+1 chars"))
+        )
         if not tag_range:
             return self.current
         for tag_name in widget.tag_names(tag_range[0]):
@@ -1932,11 +2013,11 @@ class Score(SharedTextScore, BlankText):
 
         """
         widget = self.score
-        for vtn in widget.tag_names(widget.tag_nextrange(move, '1.0')[0]):
+        for vtn in widget.tag_names(widget.tag_nextrange(move, "1.0")[0]):
             if vtn.startswith(RAV_SEP):
                 tag_range = widget.tag_nextrange(
-                    NAVIGATE_MOVE,
-                    widget.tag_nextrange(vtn, '1.0')[0])
+                    NAVIGATE_MOVE, widget.tag_nextrange(vtn, "1.0")[0]
+                )
                 widget.tag_add(VARIATION_TAG, tag_range[0], tag_range[1])
                 break
 
@@ -1945,7 +2026,8 @@ class Score(SharedTextScore, BlankText):
         move_prior_to_choice,
         first_moves_in_variations,
         selected_first_move,
-        moves_in_variation):
+        moves_in_variation,
+    ):
         """Replace existing ranges on color tags with ranges in arguments.
 
         The replacement is applied to the right of move_prior_to_choice,
@@ -1976,7 +2058,7 @@ class Score(SharedTextScore, BlankText):
 
         widget = self.score
         if move_prior_to_choice is None:
-            index = '1.0'
+            index = "1.0"
         else:
             index = widget.tag_ranges(move_prior_to_choice)[0]
 
@@ -1988,7 +2070,8 @@ class Score(SharedTextScore, BlankText):
         widget.tag_remove(LINE_TAG, index, tkinter.END)
         widget.tag_remove(LINE_END_TAG, index, tkinter.END)
         self._add_tag_ranges_to_color_tag(
-            first_moves_in_variations, ALTERNATIVE_MOVE_TAG)
+            first_moves_in_variations, ALTERNATIVE_MOVE_TAG
+        )
         self._add_tag_ranges_to_color_tag(moves_in_variation, LINE_TAG)
 
         # In all cases but one there is nothing to remove.  But if the choice
@@ -1996,14 +2079,19 @@ class Score(SharedTextScore, BlankText):
         # when the move played is the selection.
         widget.tag_remove(
             LINE_TAG,
-            '1.0',
-            widget.tag_nextrange(first_moves_in_variations, '1.0')[0])
+            "1.0",
+            widget.tag_nextrange(first_moves_in_variations, "1.0")[0],
+        )
 
         widget.tag_add(
             LINE_END_TAG,
-            ''.join((
-                str(widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]),
-                '-1 chars')))
+            "".join(
+                (
+                    str(widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]),
+                    "-1 chars",
+                )
+            ),
+        )
 
     def set_variation_tags_from_currentmove(self):
         """Replace existing color tags ranges with those current move.
@@ -2018,12 +2106,17 @@ class Score(SharedTextScore, BlankText):
         widget.tag_remove(LINE_TAG, index, tkinter.END)
         widget.tag_remove(LINE_END_TAG, index, tkinter.END)
         self._add_tag_ranges_to_color_tag(
-            self.get_colouring_variation_tag_of_index(index), LINE_TAG)
+            self.get_colouring_variation_tag_of_index(index), LINE_TAG
+        )
         widget.tag_add(
             LINE_END_TAG,
-            ''.join((
-                str(widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]),
-                '-1 chars')))
+            "".join(
+                (
+                    str(widget.tag_prevrange(LINE_TAG, tkinter.END)[-1]),
+                    "-1 chars",
+                )
+            ),
+        )
 
     def apply_colouring_to_variation_back_to_main_line(self):
         """Apply colouring as if move navigation used to reach current move.
@@ -2044,25 +2137,27 @@ class Score(SharedTextScore, BlankText):
             self.add_variation_before_move_to_colouring_tag(move)
             first_move_of_variation = self.select_first_move_in_line(move)
             choice = self.get_choice_tag_of_move(first_move_of_variation)
-            prior = self.score.tag_ranges(self.get_prior_tag_for_choice(choice))
+            prior = self.score.tag_ranges(
+                self.get_prior_tag_for_choice(choice)
+            )
             if not prior:
                 move = None
                 break
             move = self.get_position_tag_of_index(prior[0])
             selection = self.get_selection_tag_for_choice(choice)
             if selection:
-                self.score.tag_remove(selection, '1.0', tkinter.END)
+                self.score.tag_remove(selection, "1.0", tkinter.END)
                 self.score.tag_add(
-                    selection,
-                    *self.score.tag_ranges(first_move_of_variation))
-        if self.score.tag_nextrange(VARIATION_TAG, '1.0'):
+                    selection, *self.score.tag_ranges(first_move_of_variation)
+                )
+        if self.score.tag_nextrange(VARIATION_TAG, "1.0"):
             if move:
                 self.add_move_to_moves_played_colouring_tag(move)
 
     @staticmethod
     def get_prior_tag_for_choice(choice):
         """Return Tk tag name for prior move with same suffix as choice."""
-        return ''.join((PRIOR_MOVE, choice[len(CHOICE):]))
+        return "".join((PRIOR_MOVE, choice[len(CHOICE) :]))
 
     # If pointer click location is between last PGN Tag and first move in
     # movetext, it would be reasonable to allow the call to reposition at
@@ -2076,13 +2171,13 @@ class Score(SharedTextScore, BlankText):
             move = widget.tag_prevrange(NAVIGATE_MOVE, index)
             if not move:
                 return None
-            if widget.compare(move[1], '<', index):
+            if widget.compare(move[1], "<", index):
                 return None
-        elif widget.compare(move[0], '>', index):
+        elif widget.compare(move[0], ">", index):
             move = widget.tag_prevrange(NAVIGATE_MOVE, move[0])
             if not move:
                 return None
-            if widget.compare(move[1], '<', index):
+            if widget.compare(move[1], "<", index):
                 return None
         selected_move = self.get_position_tag_of_index(index)
         if selected_move:
@@ -2100,9 +2195,10 @@ class Score(SharedTextScore, BlankText):
         """Highlight token at pointer in active item, and set position."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
-                return 'break'
+                return "break"
         return self.go_to_move(
-            self.score.index(''.join(('@', str(event.x), ',', str(event.y)))))
+            self.score.index("".join(("@", str(event.x), ",", str(event.y))))
+        )
 
     def show_new_current(self, new_current=None):
         """Set current to new item and adjust display."""
@@ -2112,12 +2208,12 @@ class Score(SharedTextScore, BlankText):
         self.current = new_current
         self.set_current()
         self.set_game_board()
-        return 'break'
+        return "break"
 
     def show_item(self, new_item=None):
         """Display new item if not None."""
         if not new_item:
-            return 'break'
+            return "break"
         return self.show_new_current(new_current=new_item)
 
     def set_game_list(self):
@@ -2164,7 +2260,8 @@ class Score(SharedTextScore, BlankText):
         else:
             return None
         tag_range = widget.tag_nextrange(
-            tag_name, ''.join((str(tag_range[0]), '+1 chars')))
+            tag_name, "".join((str(tag_range[0]), "+1 chars"))
+        )
         if not tag_range:
             return None
         return tag_range
@@ -2201,7 +2298,8 @@ class Score(SharedTextScore, BlankText):
         else:
             return None
         tag_range = widget.tag_nextrange(
-            oldtn, ''.join((str(tag_range[0]), '+1 chars')))
+            oldtn, "".join((str(tag_range[0]), "+1 chars"))
+        )
         if not tag_range:
             return None
         for tag_name in widget.tag_names(tag_range[0]):
@@ -2221,42 +2319,57 @@ class Score(SharedTextScore, BlankText):
         else:
             tag = self.select_move_for_start_of_analysis()
         if tag is None:
-            return ''
+            return ""
         tag_range = self.score.tag_ranges(tag)
         if not tag_range:
-            return ''
+            return ""
         return self.score.get(*tag_range)
 
     def export_pgn_reduced_export_format(self, event=None):
         """Export PGN tags and movetext in reduced export format."""
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         if not collected_game.is_pgn_valid():
             tkinter.messagebox.showinfo(
                 parent=self.board.ui.get_toplevel(),
-                title=type_name.join(('Export ', ' (reduced export format)')),
-                message=type_name+' score is not PGN export format compliant')
+                title=type_name.join(("Export ", " (reduced export format)")),
+                message=type_name
+                + " score is not PGN export format compliant",
+            )
             return
         exporters.export_single_game_pgn_reduced_export_format(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
-                type_name+' (reduced export format)', pgn=True))
+                type_name + " (reduced export format)", pgn=True
+            ),
+        )
 
     def export_pgn(self, event=None):
         """Export PGN tags and movetext in export format."""
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         if not collected_game.is_pgn_valid():
             tkinter.messagebox.showinfo(
                 parent=self.board.ui.get_toplevel(),
-                title='Export '+type_name,
-                message=type_name+' score is not PGN export format compliant')
+                title="Export " + type_name,
+                message=type_name
+                + " score is not PGN export format compliant",
+            )
             return
         exporters.export_single_game_pgn(
             collected_game,
-            self.board.ui.get_export_filename_for_single_item('Game', pgn=True))
+            self.board.ui.get_export_filename_for_single_item(
+                "Game", pgn=True
+            ),
+        )
 
     def export_pgn_no_comments_no_ravs(self, event=None):
         """Export PGN tags and moves in export format.
@@ -2265,34 +2378,48 @@ class Score(SharedTextScore, BlankText):
 
         """
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         if not collected_game.is_pgn_valid():
             tkinter.messagebox.showinfo(
                 parent=self.board.ui.get_toplevel(),
-                title=type_name.join(('Export ', ' (no comments or RAVs)')),
-                message=type_name+' score is not PGN export format compliant')
+                title=type_name.join(("Export ", " (no comments or RAVs)")),
+                message=type_name
+                + " score is not PGN export format compliant",
+            )
             return
         exporters.export_single_game_pgn_no_comments_no_ravs(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
-                type_name+' (no comments or RAVs)', pgn=True))
+                type_name + " (no comments or RAVs)", pgn=True
+            ),
+        )
 
     def export_pgn_no_comments(self, event=None):
         """Export PGN tags and movetext in export format without comments."""
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         if not collected_game.is_pgn_valid():
             tkinter.messagebox.showinfo(
                 parent=self.board.ui.get_toplevel(),
-                title=type_name.join(('Export ', ' (no comments)')),
-                message=type_name+' score is not PGN export format compliant')
+                title=type_name.join(("Export ", " (no comments)")),
+                message=type_name
+                + " score is not PGN export format compliant",
+            )
             return
         exporters.export_single_game_pgn_no_comments(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
-                type_name+' (no comments)', pgn=True))
+                type_name + " (no comments)", pgn=True
+            ),
+        )
 
     def export_pgn_import_format(self, event=None):
         """Export PGN tags and movetext in an import format.
@@ -2304,18 +2431,25 @@ class Score(SharedTextScore, BlankText):
 
         """
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         if not collected_game.is_pgn_valid():
             tkinter.messagebox.showinfo(
                 parent=self.board.ui.get_toplevel(),
-                title=type_name.join(('Export ', ' (import format)')),
-                message=type_name+' score is not PGN import format compliant')
+                title=type_name.join(("Export ", " (import format)")),
+                message=type_name
+                + " score is not PGN import format compliant",
+            )
             return
         exporters.export_single_game_pgn_import_format(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
-                type_name+' (import format)', pgn=True))
+                type_name + " (import format)", pgn=True
+            ),
+        )
 
     def export_text(self, event=None):
         """Export PGN tags and movetext as text.
@@ -2331,12 +2465,17 @@ class Score(SharedTextScore, BlankText):
 
         """
         type_name, game_class = self.pgn_export_type
-        collected_game = next(PGN(game_class=game_class).read_games(
-            self.score.get('1.0', tkinter.END)))
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
         exporters.export_single_game_text(
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(type_name,
-                                                              pgn=False))
+            self.board.ui.get_export_filename_for_single_item(
+                type_name, pgn=False
+            ),
+        )
 
 
 class AnalysisScore(Score):
@@ -2372,7 +2511,7 @@ class AnalysisScore(Score):
     # control refresh after periodic update requests.
     analysis_text = None
 
-    pgn_export_type = 'Analysis', GameAnalysis
+    pgn_export_type = "Analysis", GameAnalysis
 
     def __init__(self, *a, owned_by_game=None, **ka):
         """Delegate then set owned_by_game to game for this analysis."""
@@ -2408,9 +2547,10 @@ class AnalysisScore(Score):
         """
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item.analysis:
-                return 'break'
+                return "break"
         return self.go_to_move(
-            self.score.index(''.join(('@', str(event.x), ',', str(event.y)))))
+            self.score.index("".join(("@", str(event.x), ",", str(event.y))))
+        )
 
     def is_active_item_mapped(self):
         """Return True if self.analysis is the active item, or False if not."""
@@ -2431,7 +2571,7 @@ class AnalysisScore(Score):
         """
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
-        self.score.delete('1.0', tkinter.END)
+        self.score.delete("1.0", tkinter.END)
 
         # An attempt to insert an illegal move into a game score will cause
         # an exception when parsing the engine output.  Expected to happen when
@@ -2445,9 +2585,14 @@ class AnalysisScore(Score):
         except ScoreMapToBoardException:
             self.score.insert(
                 tkinter.END,
-                ''.join(('The analysis is attached to an illegal move, which ',
-                         'can happen while editing or inserting a game.\n\nIt ',
-                         'is displayed but cannot be played through.\n\n')))
+                "".join(
+                    (
+                        "The analysis is attached to an illegal move, which ",
+                        "can happen while editing or inserting a game.\n\nIt ",
+                        "is displayed but cannot be played through.\n\n",
+                    )
+                ),
+            )
             self.score.insert(tkinter.END, analysis_text)
 
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
@@ -2498,8 +2643,9 @@ class AnalysisScore(Score):
         self._modify_square_piece_map(position)
         widget = self.score
         positiontag = self.get_next_positiontag_name()
-        self.tagpositionmap[
-            positiontag] = (self._square_piece_map.copy(),) + position[1][1:]
+        self.tagpositionmap[positiontag] = (
+            self._square_piece_map.copy(),
+        ) + position[1][1:]
 
         # The only way found to get the move number at start of analysis.
         # Direct use of self.score.insert(...), as in insert_token_into_text,
@@ -2514,8 +2660,8 @@ class AnalysisScore(Score):
             else:
                 fullmove_number = str(fullmove_number) + PGN_DOT * 3
             start, end, sepend = self.insert_token_into_text(
-                ''.join((fullmove_number, SPACE_SEP, token)),
-                SPACE_SEP)
+                "".join((fullmove_number, SPACE_SEP, token)), SPACE_SEP
+            )
         else:
             start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
 
@@ -2523,7 +2669,7 @@ class AnalysisScore(Score):
             widget.tag_add(tag, start, end)
         if self._vartag is self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add(''.join((RAV_SEP, self._vartag)), start, sepend)
+        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
         if self._next_move_is_choice:
             widget.tag_add(ALL_CHOICES, start, end)
 
@@ -2556,7 +2702,8 @@ class AnalysisScore(Score):
         self._set_square_piece_map(position)
         widget = self.score
         if not widget.tag_nextrange(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move):
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+        ):
 
             # start_latest_move will be the second move, at earliest,
             # in current variation except if it is the first move in
@@ -2565,19 +2712,22 @@ class AnalysisScore(Score):
             # position in which the choice of moves occurs.
             self._choicetag = self.get_choice_tag_name()
             widget.tag_add(
-                ''.join((SELECTION, str(self.choice_number))),
+                "".join((SELECTION, str(self.choice_number))),
                 self._start_latest_move,
-                self._end_latest_move)
+                self._end_latest_move,
+            )
             prior = self.get_range_for_prior_move_before_insert()
             if prior:
                 widget.tag_add(
-                    ''.join((PRIOR_MOVE, str(self.choice_number))),
-                    *prior)
+                    "".join((PRIOR_MOVE, str(self.choice_number))), *prior
+                )
 
         widget.tag_add(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move)
+            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+        )
         widget.tag_add(
-            self._choicetag, self._start_latest_move, self._end_latest_move)
+            self._choicetag, self._start_latest_move, self._end_latest_move
+        )
         self.varstack.append((self._vartag, self._token_position))
         self.choicestack.append(self._choicetag)
         self._vartag = self.get_variation_tag_name()
@@ -2597,12 +2747,15 @@ class AnalysisScore(Score):
 
         """
         try:
-            (self._start_latest_move,
-             self._end_latest_move) = self.score.tag_prevrange(
-                 ALL_CHOICES, tkinter.END)
+            (
+                self._start_latest_move,
+                self._end_latest_move,
+            ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
         except:
-            (self._start_latest_move,
-             self._end_latest_move) = (tkinter.END, tkinter.END)
+            (self._start_latest_move, self._end_latest_move) = (
+                tkinter.END,
+                tkinter.END,
+            )
         start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
         self._vartag, self._token_position = self.varstack.pop()
@@ -2618,7 +2771,7 @@ class AnalysisScore(Score):
         widget = self.score
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token)
-        end = widget.index(tkinter.INSERT + ' -1 chars')
+        end = widget.index(tkinter.INSERT + " -1 chars")
         widget.insert(tkinter.INSERT, NULL_SEP)
         return start, end, widget.index(tkinter.INSERT)
 
@@ -2630,11 +2783,9 @@ class AnalysisScore(Score):
     def get_all_export_events(self):
         """Return tuple of keypress events and callbacks for PGN export."""
         return (
-            (EventSpec.pgn_import_format,
-             self.export_pgn_import_format),
-            (EventSpec.text_internal_format,
-             self.export_text),
-            )
+            (EventSpec.pgn_import_format, self.export_pgn_import_format),
+            (EventSpec.text_internal_format, self.export_text),
+        )
 
     # Analysis widget uses the associated Game method to make active or dismiss
     # item.  Some searching through the self.board.ui object is likely.
@@ -2654,18 +2805,16 @@ class AnalysisScore(Score):
         return self.get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_1, game.give_focus_to_widget),
             (EventSpec.buttonpress_3, game.post_inactive_menu),
-            )
+        )
 
     def get_inactive_events(self):
         """Return tuple of keypress events and callbacks for inactive item."""
         game = self.owned_by_game
         assert game is not None and self is game.analysis
         return (
-            (EventSpec.display_make_active,
-             game.set_focus_panel_item_command),
-            (EventSpec.display_dismiss_inactive,
-             game.delete_item_view),
-            )
+            (EventSpec.display_make_active, game.set_focus_panel_item_command),
+            (EventSpec.display_dismiss_inactive, game.delete_item_view),
+        )
 
     # Subclasses which need widget navigation in their popup menus should
     # call this method.
@@ -2678,15 +2827,21 @@ class AnalysisScore(Score):
         binding_labels iterable suitable for allowed navigation.
 
         """
-        (navigation_map,
-         local_map) = self.owned_by_game.generate_popup_navigation_maps()
+        (
+            navigation_map,
+            local_map,
+        ) = self.owned_by_game.generate_popup_navigation_maps()
         del local_map[EventSpec.scoresheet_to_analysis]
-        local_map[EventSpec.analysis_to_scoresheet
-                  ] = self.owned_by_game.current_item
+        local_map[
+            EventSpec.analysis_to_scoresheet
+        ] = self.owned_by_game.current_item
         local_map.update(navigation_map)
         self.add_cascade_menu_to_popup(
-            'Navigation', popup,
-            bindings=local_map, order=self.owned_by_game.binding_labels)
+            "Navigation",
+            popup,
+            bindings=local_map,
+            order=self.owned_by_game.binding_labels,
+        )
 
     def create_primary_activity_popup(self):
         """Delegate then add widget navigation submenu and return popup menu."""
@@ -2719,10 +2874,10 @@ class AnalysisScore(Score):
         current = self.current
         self.show_prev_in_line()
         if current != self.current:
-            return 'break'
+            return "break"
         if current is None:
-            return 'break'
+            return "break"
         return self.show_prev_in_variation()
-        #self.show_prev_in_variation()
-        #if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+        # self.show_prev_in_variation()
+        # if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
         #    self.bind_for_primary_activity()

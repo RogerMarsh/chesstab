@@ -23,12 +23,16 @@ import tkinter
 # Not yet known if 64-bit OSes in general are affected.
 # The problem code is: widget.winfo_pathname(widget.winfo_id())
 import sys
-_win32_platform = sys.platform == 'win32'
+
+_win32_platform = sys.platform == "win32"
 del sys
 import os
-_amd64 = (os.getenv('PROCESSOR_ARCHITECTURE') == 'AMD64' or
-          os.getenv('PROCESSOR_ARCHITEW6432') == 'AMD64')
-del os          
+
+_amd64 = (
+    os.getenv("PROCESSOR_ARCHITECTURE") == "AMD64"
+    or os.getenv("PROCESSOR_ARCHITEW6432") == "AMD64"
+)
+del os
 
 
 class DisplayItemsError(Exception):
@@ -36,17 +40,15 @@ class DisplayItemsError(Exception):
 
 
 class DisplayItems(object):
-    
-    """Manage set of displayed widgets.
-    
-    """
+
+    """Manage set of displayed widgets."""
 
     def __init__(self):
         """Create control data structures for  widgets."""
-        self.order = [] # items in top to bottom display order. 
-        self.stack = [] # items in most recent visit order.
-        self.panel_object_map = {} # map panel identity to object displayed
-        self.object_panel_count = {} # count panels displaying an object
+        self.order = []  # items in top to bottom display order.
+        self.stack = []  # items in most recent visit order.
+        self.panel_object_map = {}  # map panel identity to object displayed
+        self.object_panel_count = {}  # count panels displaying an object
 
     def add_item_to_display(self, item):
         """Add item widget to GUI."""
@@ -210,7 +212,7 @@ class DisplayItems(object):
         except tkinter.TclError:
             if not _win32_platform or not _amd64:
                 raise
-            gain = '.'.join((widget.winfo_parent(), widget.winfo_name()))
+            gain = ".".join((widget.winfo_parent(), widget.winfo_name()))
 
         for s in stack:
             sw = s.get_top_widget()
@@ -226,7 +228,8 @@ class DisplayItems(object):
                 if not _win32_platform or not _amd64:
                     raise
                 if gain.startswith(
-                    '.'.join((sw.winfo_parent(), sw.winfo_name()))):
+                    ".".join((sw.winfo_parent(), sw.winfo_name()))
+                ):
                     gainfocus = s
                     break
 
@@ -240,7 +243,8 @@ class DisplayItems(object):
         gainfocus.takefocus_widget.focus_set()
         if gainfocus.ui.single_view:
             gainfocus.ui.show_just_panedwindow_with_focus(
-                gainfocus.get_top_widget())
+                gainfocus.get_top_widget()
+            )
         return losefocus, gainfocus
 
     def set_focus(self):
@@ -248,28 +252,24 @@ class DisplayItems(object):
         if self.active_item:
             self.give_focus_to_widget(self.active_item.panel)
             self.active_item.set_statusbar_text()
-        
+
     def configure_items_grid(self, panel, active_weight=None):
         """Adjust items panel grid row sizes after navigate add or delete."""
         if active_weight is None:
             active_weight = max(2, len(self.order) - 1)
         for e, g in enumerate(self.order):
-            g.get_top_widget().grid(
-                row=e,
-                column=0,
-                sticky=tkinter.NSEW)
-            panel.grid_columnconfigure(0, weight=1, uniform='c')
+            g.get_top_widget().grid(row=e, column=0, sticky=tkinter.NSEW)
+            panel.grid_columnconfigure(0, weight=1, uniform="c")
 
             # next line may do as alternative to line above
-            #panel.grid_columnconfigure(0, weight=1)
+            # panel.grid_columnconfigure(0, weight=1)
 
             if g is self.active_item:
-                panel.grid_rowconfigure(e, weight=active_weight, uniform='v')
+                panel.grid_rowconfigure(e, weight=active_weight, uniform="v")
             else:
                 panel.grid_rowconfigure(
-                    e,
-                    weight=0 if g.ui.single_view else 1,
-                    uniform='v')
+                    e, weight=0 if g.ui.single_view else 1, uniform="v"
+                )
 
     def object_display_count(self, key):
         """Return count of widgets which display object of key."""
@@ -301,7 +301,7 @@ class DisplayItems(object):
 
 
 class DisplayItemsStub(object):
-    
+
     """Stub manager for set of displayed widgets.
 
     Tk Frames, each containing an item and usually called a panel in ChessTab,
@@ -319,10 +319,10 @@ class DisplayItemsStub(object):
         """Create control data structures for  widgets."""
 
         # Only stack and panel_object_map are referenced when module written.
-        #self.order = ()
+        # self.order = ()
         self.stack = (None,)
         self.panel_object_map = frozenset()
-        #self.object_panel_count = frozenset()
+        # self.object_panel_count = frozenset()
 
     @property
     def active_item(self):

@@ -55,23 +55,23 @@ class _GameDisplay(ExceptionHandler, Display):
     """
 
     binding_labels = (
-            EventSpec.navigate_to_position_grid,
-            EventSpec.gamedisplay_to_previous_game,
-            EventSpec.analysis_to_scoresheet,
-            EventSpec.gamedisplay_to_next_game,
-            EventSpec.navigate_to_game_grid,
-            EventSpec.scoresheet_to_analysis,
-            EventSpec.navigate_to_repertoire_grid,
-            EventSpec.navigate_to_active_repertoire,
-            EventSpec.navigate_to_repertoire_game_grid,
-            EventSpec.navigate_to_partial_grid,
-            EventSpec.navigate_to_active_partial,
-            EventSpec.navigate_to_partial_game_grid,
-            EventSpec.navigate_to_selection_rule_grid,
-            EventSpec.navigate_to_active_selection_rule,
-            EventSpec.tab_traverse_backward,
-            EventSpec.tab_traverse_forward,
-            )
+        EventSpec.navigate_to_position_grid,
+        EventSpec.gamedisplay_to_previous_game,
+        EventSpec.analysis_to_scoresheet,
+        EventSpec.gamedisplay_to_next_game,
+        EventSpec.navigate_to_game_grid,
+        EventSpec.scoresheet_to_analysis,
+        EventSpec.navigate_to_repertoire_grid,
+        EventSpec.navigate_to_active_repertoire,
+        EventSpec.navigate_to_repertoire_game_grid,
+        EventSpec.navigate_to_partial_grid,
+        EventSpec.navigate_to_active_partial,
+        EventSpec.navigate_to_partial_game_grid,
+        EventSpec.navigate_to_selection_rule_grid,
+        EventSpec.navigate_to_active_selection_rule,
+        EventSpec.tab_traverse_backward,
+        EventSpec.tab_traverse_forward,
+    )
 
     # These exist so the insert_game_database methods in _GameDisplay and
     # repertoiredisplay._RepertoireDisplay, and delete_game_database in
@@ -80,8 +80,8 @@ class _GameDisplay(ExceptionHandler, Display):
     # See mark_partial_positions_to_be_recalculated() method too.
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
-    pgn_score_name = 'game'
-    pgn_score_source_name = 'Editor'
+    pgn_score_name = "game"
+    pgn_score_source_name = "Editor"
     pgn_score_tags = STATUS_SEVEN_TAG_ROSTER_PLAYERS
     pgn_score_updater = ChessDBrecordGameUpdate
 
@@ -130,37 +130,46 @@ class _GameDisplay(ExceptionHandler, Display):
     def get_navigation_events(self):
         """Return event description tuple for navigation from game."""
         return (
-            (EventSpec.navigate_to_repertoire_grid,
-             self.set_focus_repertoire_grid),
-            (EventSpec.navigate_to_active_repertoire,
-             self.set_focus_repertoirepanel_item),
-            (EventSpec.navigate_to_repertoire_game_grid,
-             self.set_focus_repertoire_game_grid),
-            (EventSpec.navigate_to_partial_grid,
-             self.set_focus_partial_grid),
-            (EventSpec.navigate_to_active_partial,
-             self.set_focus_partialpanel_item),
-            (EventSpec.navigate_to_partial_game_grid,
-             self.set_focus_partial_game_grid),
-            (EventSpec.navigate_to_position_grid,
-             self.set_focus_position_grid),
-            (EventSpec.navigate_to_game_grid,
-             self.set_focus_game_grid),
-            (EventSpec.navigate_to_selection_rule_grid,
-             self.set_focus_selection_rule_grid),
-            (EventSpec.navigate_to_active_selection_rule,
-             self.set_focus_selectionpanel_item),
-            (EventSpec.gamedisplay_to_previous_game,
-             self.prior_item),
-            (EventSpec.gamedisplay_to_next_game,
-             self.next_item),
-            (EventSpec.tab_traverse_forward,
-             self.traverse_forward),
-            (EventSpec.tab_traverse_backward,
-             self.traverse_backward),
-
+            (
+                EventSpec.navigate_to_repertoire_grid,
+                self.set_focus_repertoire_grid,
+            ),
+            (
+                EventSpec.navigate_to_active_repertoire,
+                self.set_focus_repertoirepanel_item,
+            ),
+            (
+                EventSpec.navigate_to_repertoire_game_grid,
+                self.set_focus_repertoire_game_grid,
+            ),
+            (EventSpec.navigate_to_partial_grid, self.set_focus_partial_grid),
+            (
+                EventSpec.navigate_to_active_partial,
+                self.set_focus_partialpanel_item,
+            ),
+            (
+                EventSpec.navigate_to_partial_game_grid,
+                self.set_focus_partial_game_grid,
+            ),
+            (
+                EventSpec.navigate_to_position_grid,
+                self.set_focus_position_grid,
+            ),
+            (EventSpec.navigate_to_game_grid, self.set_focus_game_grid),
+            (
+                EventSpec.navigate_to_selection_rule_grid,
+                self.set_focus_selection_rule_grid,
+            ),
+            (
+                EventSpec.navigate_to_active_selection_rule,
+                self.set_focus_selectionpanel_item,
+            ),
+            (EventSpec.gamedisplay_to_previous_game, self.prior_item),
+            (EventSpec.gamedisplay_to_next_game, self.next_item),
+            (EventSpec.tab_traverse_forward, self.traverse_forward),
+            (EventSpec.tab_traverse_backward, self.traverse_backward),
             # No traverse_round because Alt-F8 toggles game and analysis.
-            )
+        )
 
     def delete_item_view(self, event=None):
         """Remove game item from screen."""
@@ -170,21 +179,22 @@ class _GameDisplay(ExceptionHandler, Display):
     def on_game_change(self, instance):
         """Prevent update from self if instance refers to same record."""
         if self.sourceobject is not None:
-            if (instance.key == self.sourceobject.key and
-                self.datasource.dbname == self.sourceobject.dbname and
-                self.datasource.dbset == self.sourceobject.dbset):
+            if (
+                instance.key == self.sourceobject.key
+                and self.datasource.dbname == self.sourceobject.dbname
+                and self.datasource.dbset == self.sourceobject.dbset
+            ):
                 self.blockchange = True
             self.patch_pgn_score_to_fit_record_change_and_refresh_grid(
-                self.ui.game_games,
-                instance)
+                self.ui.game_games, instance
+            )
 
     def generate_popup_navigation_maps(self):
         """Return tuple of widget navigation map and switch to analysis map."""
-        navigation_map = {k:v for k, v in self.get_navigation_events()}
+        navigation_map = {k: v for k, v in self.get_navigation_events()}
         local_map = {
-            EventSpec.scoresheet_to_analysis:
-            self.analysis_current_item,
-            }
+            EventSpec.scoresheet_to_analysis: self.analysis_current_item,
+        }
         return navigation_map, local_map
 
 
@@ -216,10 +226,10 @@ class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
         """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has no
         # attribute 'gamesource'.
-        #original.value.set_game_source(self.sourceobject.value.gamesource)
-        #original.value.set_game_source('Copy, possibly edited')
+        # original.value.set_game_source(self.sourceobject.value.gamesource)
+        # original.value.set_game_source('Copy, possibly edited')
         if original_value.is_error_comment_present():
-            original_value.set_game_source('Editor')
+            original_value.set_game_source("Editor")
 
     def create_primary_activity_popup(self):
         """Delegate then add close item entry and return popup menu."""
@@ -234,11 +244,9 @@ class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
         return popup
 
 
-class GameDisplayInsert(_GameDisplay,
-                        InsertPGN,
-                        ShowPGN,
-                        GameEdit,
-                        DataNotify):
+class GameDisplayInsert(
+    _GameDisplay, InsertPGN, ShowPGN, GameEdit, DataNotify
+):
     """Display a chess game from a database allowing insert.
 
     GameEdit provides the widget and _GameDisplay the database interface.
@@ -260,10 +268,10 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
         """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
-        #original.value.set_game_source(self.sourceobject.value.gamesource)
-        #original.value.set_game_source('Copy, possibly edited')
+        # original.value.set_game_source(self.sourceobject.value.gamesource)
+        # original.value.set_game_source('Copy, possibly edited')
         if original_value.is_error_comment_present():
-            original_value.set_game_source('Editor')
+            original_value.set_game_source("Editor")
 
     # set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and

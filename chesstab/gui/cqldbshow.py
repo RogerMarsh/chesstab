@@ -36,16 +36,15 @@ class CQLDbShow(ExceptionHandler, ShowText, DataShow):
     to be expressed identically and defined once.
 
     """
-    text_name = 'ChessQL Statement'
+
+    text_name = "ChessQL Statement"
 
     def __init__(self, parent, oldobject, ui=None):
-        """Extend and create toplevel widget to display ChessQL statement.
-        """
+        """Extend and create toplevel widget to display ChessQL statement."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         CQLToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, CQLToplevel(master=parent, ui=ui), ""
+        )
         self.initialize()
 
     def get_title_for_object(self, object_=None):
@@ -56,9 +55,12 @@ class CQLDbShow(ExceptionHandler, ShowText, DataShow):
         """
         if object_ is None:
             object_ = self.object
-        return '  '.join((
-            self.text_name.join(('Show ', ':')),
-            object_.value.get_name_text()))
+        return "  ".join(
+            (
+                self.text_name.join(("Show ", ":")),
+                object_.value.get_name_text(),
+            )
+        )
 
     @property
     def ui_base_table(self):

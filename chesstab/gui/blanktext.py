@@ -34,7 +34,7 @@ class NonTagBind(enum.Enum):
     # Current token is a move with variations for next move, and the attempt
     # to go to next move was intercepted to choose which one.
     SELECT_VARIATION = 6
-    
+
 
 class BlankText(ExceptionHandler):
 
@@ -55,21 +55,17 @@ class BlankText(ExceptionHandler):
 
     Attribute _most_recent_bindings is set to indicate the initial set of
     event bindings.  Instances will override this as required.
-    
+
     """
 
     # True means the content can be edited.
     _is_text_editable = False
 
     # Indicate the most recent set of bindings applied to score attribute.
-    # Values are Tk tag names or members of NonTagBind enumeration. 
+    # Values are Tk tag names or members of NonTagBind enumeration.
     _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
-    def __init__(
-        self,
-        panel,
-        items_manager=None,
-        **ka):
+    def __init__(self, panel, items_manager=None, **ka):
         """Create widgets to display chess engine definition."""
         super().__init__(**ka)
 
@@ -85,12 +81,14 @@ class BlankText(ExceptionHandler):
             height=0,
             takefocus=tkinter.FALSE,
             undo=True,
-            wrap=tkinter.WORD)
+            wrap=tkinter.WORD,
+        )
         self.scrollbar = tkinter.Scrollbar(
             master=self.panel,
             orient=tkinter.VERTICAL,
             takefocus=tkinter.FALSE,
-            command=self.score.yview)
+            command=self.score.yview,
+        )
         self.score.configure(yscrollcommand=self.scrollbar.set)
 
         # Keyboard actions do nothing by default.
@@ -99,14 +97,14 @@ class BlankText(ExceptionHandler):
 
         # The popup menus used by all subclasses.
         self.inactive_popup = None
-        
+
     def set_event_bindings_score(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
         for sequence, function in bindings:
             self.score.bind(
-                sequence[0],
-                ste(function) if switch and function else '')
+                sequence[0], ste(function) if switch and function else ""
+            )
 
     def set_keypress_binding(self, function=None, bindings=(), switch=True):
         """Set bindings to function if switch is True or disable keypress."""
@@ -121,13 +119,11 @@ class BlankText(ExceptionHandler):
 
     def get_menubar_events(self):
         """Return tuple of event binding definitions passed for menubar."""
-        return (
-            (EventSpec.score_enable_F10_menubar, self.press_none),
-            )
+        return ((EventSpec.score_enable_F10_menubar, self.press_none),)
 
     def press_break(self, event=None):
         """Do nothing and prevent event handling by next handlers."""
-        return 'break'
+        return "break"
 
     def press_none(self, event=None):
         """Do nothing and allow event to be handled by next handler."""
@@ -151,11 +147,12 @@ class BlankText(ExceptionHandler):
                 index=index,
                 label=accelerator[1],
                 command=self.try_command(function, popup),
-                accelerator=accelerator[2])
+                accelerator=accelerator[2],
+            )
 
     def give_focus_to_widget(self, event=None):
         """Do nothing and return 'break'.  Override in subclasses as needed."""
-        return 'break'
+        return "break"
 
     def get_F10_popup_events(self, top_left, pointer):
         """Return tuple of event definitions to post popup menus at top left
@@ -167,46 +164,41 @@ class BlankText(ExceptionHandler):
         return (
             (EventSpec.score_enable_F10_popupmenu_at_top_left, top_left),
             (EventSpec.score_enable_F10_popupmenu_at_pointer, pointer),
-            )
-        
+        )
+
     # Subclasses with database interfaces may override method.
     def create_database_submenu(self, menu):
         return None
-        
-    def post_menu(self,
-                  menu, create_menu,
-                  allowed=True,
-                  event=None):
+
+    def post_menu(self, menu, create_menu, allowed=True, event=None):
         if menu is None:
             menu = create_menu()
         if not allowed:
-            return 'break'
+            return "break"
         menu.tk_popup(*self.score.winfo_pointerxy())
 
         # So 'Control-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
-    def post_menu_at_top_left(self,
-                              menu,
-                              create_menu,
-                              allowed=True,
-                              event=None):
+        return "break"
+
+    def post_menu_at_top_left(
+        self, menu, create_menu, allowed=True, event=None
+    ):
         if menu is None:
             menu = create_menu()
         if not allowed:
-            return 'break'
-        menu.tk_popup(event.x_root-event.x, event.y_root-event.y)
+            return "break"
+        menu.tk_popup(event.x_root - event.x, event.y_root - event.y)
 
         # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
-        return 'break'
-        
+        return "break"
+
     def is_active_item_mapped(self):
-        """"""
+        """ """
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
                 return False
         return True
-        
+
     def bind_for_primary_activity(self, switch=True):
         """Set (switch True) or clear bindings for main actions when active.
 
@@ -217,7 +209,7 @@ class BlankText(ExceptionHandler):
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
         self.set_primary_activity_bindings(switch=switch)
-        
+
     def bind_for_initial_state(self, switch=True):
         """Clear the most recently set bindings if bool(switch) is True.
 
@@ -229,13 +221,13 @@ class BlankText(ExceptionHandler):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
-        
+
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
     token_bind_method = {
         NonTagBind.NO_EDITABLE_TAGS: bind_for_primary_activity,
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
-        }
+    }
 
     def create_primary_activity_popup(self):
         assert self.primary_activity_popup is None
@@ -243,7 +235,7 @@ class BlankText(ExceptionHandler):
         self.set_popup_bindings(popup, self.get_primary_activity_events())
         database_submenu = self.create_database_submenu(popup)
         if database_submenu:
-            popup.add_cascade(label='Database', menu=database_submenu)
+            popup.add_cascade(label="Database", menu=database_submenu)
         self.primary_activity_popup = popup
         return popup
 
@@ -260,7 +252,7 @@ class BlankText(ExceptionHandler):
         return self.get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_1, buttonpress1),
             (EventSpec.buttonpress_3, buttonpress3),
-            )
+        )
 
     # Take a snapshot of the tkinter.Text widget bound to self.score.  It is
     # intended for problem tracing.  It is saved as a sibling of ErrorLog.
@@ -268,14 +260,21 @@ class BlankText(ExceptionHandler):
     # solentware_misc.gui.exceptionhandler.ExceptionHandler class.
     def dump_text_widget(self, textwidget, filename=None):
         if filename is None:
-            filename = 'dumptextwidget'
+            filename = "dumptextwidget"
         import os
         import datetime
-        filename = '_'.join(
-            (filename,
-             datetime.datetime.now(datetime.timezone.utc).isoformat()))
-        with open(os.path.join(os.path.dirname(self.get_error_file_name()),
-                               filename),
-                  'w') as f:
-            for t in textwidget.dump('1.0', tkinter.END):
-                f.write(repr(t)+'\n')
+
+        filename = "_".join(
+            (
+                filename,
+                datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            )
+        )
+        with open(
+            os.path.join(
+                os.path.dirname(self.get_error_file_name()), filename
+            ),
+            "w",
+        ) as f:
+            for t in textwidget.dump("1.0", tkinter.END):
+                f.write(repr(t) + "\n")

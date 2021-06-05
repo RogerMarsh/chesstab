@@ -19,18 +19,19 @@ from . import engine
 from .eventspec import EventSpec
 
 import sys
-_win32_platform = (sys.platform == 'win32')
-_freebsd_platform = sys.platform.startswith('freebsd')
+
+_win32_platform = sys.platform == "win32"
+_freebsd_platform = sys.platform.startswith("freebsd")
 del sys
 
 
 class EngineEdit(engine.Engine):
-    
+
     """Display a chess engine definition with editing allowed.
 
     Attribute _is_text_editable is True meaning the statement can be
     edited.
-    
+
     """
 
     # True means selection selection can be edited
@@ -42,33 +43,36 @@ class EngineEdit(engine.Engine):
         # Context is same for each location so do not need dictionary of
         # Engine instances.
         self.engine_definition_checker = Engine()
-        
+
     def get_primary_activity_events(self):
         return (
             (EventSpec.databaseenginedisplay_run, self.run_engine),
             (EventSpec.databaseengineedit_browse, self.browse_engine),
-            )
+        )
 
     def browse_engine(self, event=None):
         """Dialogue to replace chess engine definition in editor."""
         if _win32_platform:
-            filetypes = (('Chess Engines', '*.exe'),)
+            filetypes = (("Chess Engines", "*.exe"),)
         else:
             filetypes = ()
         filename = tkinter.filedialog.askopenfilename(
             parent=self.panel.winfo_toplevel(),
-            title='Browse Chess Engine',
+            title="Browse Chess Engine",
             filetypes=filetypes,
-            initialfile='',
-            initialdir='~')
+            initialfile="",
+            initialdir="~",
+        )
         if not filename:
             return
         definition = self.definition
         definition.update_engine_definition(
-            self.get_name_engine_definition_dict())
+            self.get_name_engine_definition_dict()
+        )
         enginename = definition.get_name_text()
         if not enginename:
             enginename = os.path.splitext(os.path.basename(filename))[0]
         definition.extract_engine_definition(
-            NAME_DELIMITER.join((enginename, filename)))
+            NAME_DELIMITER.join((enginename, filename))
+        )
         self.set_engine_definition()

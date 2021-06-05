@@ -19,7 +19,7 @@ from .cql import CQL
 
 
 class CQLEdit(CQL):
-    
+
     """Display a ChessQL statement with editing allowed.
 
     Attribute _is_text_editable is True meaning the statement can be

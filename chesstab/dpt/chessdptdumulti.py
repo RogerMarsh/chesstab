@@ -17,7 +17,7 @@ from dptdb.dptapi import (
     FILEDISP_OLD,
     FISTAT_DEFERRED_UPDATES,
     APIContextSpecification,
-    )
+)
 
 from solentware_base.dptdumultiapi import DPTdumultiapi
 
@@ -27,34 +27,34 @@ from ..core.filespec import GAMES_FILE_DEF
 
 
 def chess_dptdu_multi(
-    dbpath,
-    pgnpaths,
-    file_records,
-    reporter=lambda text, timestamp=True: None):
+    dbpath, pgnpaths, file_records, reporter=lambda text, timestamp=True: None
+):
     """Open database, import games and close database."""
     cdb = ChessDatabase(
-        dbpath,
-        allowcreate=True,
-        deferupdatefiles={GAMES_FILE_DEF})
+        dbpath, allowcreate=True, deferupdatefiles={GAMES_FILE_DEF}
+    )
     importer = ChessDBrecordGameImport()
     records = file_records
     for pp in pgnpaths:
         if cdb.open_database(files=records) is True:
-            s = open(pp, 'r', encoding='iso-8859-1')
+            s = open(pp, "r", encoding="iso-8859-1")
             importer.import_pgn(cdb, s, pp, reporter=reporter)
             s.close()
             cdb.do_deferred_updates()
         cdb.close_database()
         records = None
     if reporter is not None:
-        reporter('Finishing import: please wait.')
-        reporter('', timestamp=False)
+        reporter("Finishing import: please wait.")
+        reporter("", timestamp=False)
     cdb.open_database_contexts(files=file_records)
     status = True
     for f in file_records:
-        if (0 !=
-            cdb.get_database_instance(
-                f, None).get_file_parameters(cdb.dbenv)['FISTAT'][0]):
+        if (
+            0
+            != cdb.get_database_instance(f, None).get_file_parameters(
+                cdb.dbenv
+            )["FISTAT"][0]
+        ):
             status = False
     cdb.close_database()
     return status
@@ -62,5 +62,4 @@ def chess_dptdu_multi(
 
 class ChessDatabase(ChessDatabaseDeferred, DPTdumultiapi):
 
-    """Provide multi-step deferred update for a database of games of chess.
-    """
+    """Provide multi-step deferred update for a database of games of chess."""

@@ -33,19 +33,19 @@ class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
     to be expressed identically and defined once.
 
     """
-    text_name = 'Selection Rule Statement'
+
+    text_name = "Selection Rule Statement"
 
     def __init__(self, parent, oldobject, ui=None):
-        """Extend and create toplevel widget for deleting game selection rule.
-        """
+        """Extend and create toplevel widget for deleting game selection rule."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         QueryToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, QueryToplevel(master=parent, ui=ui), ""
+        )
         if ui is not None:
             self.oldview.query_statement.set_database(
-                ui.base_games.datasource.dbhome)
+                ui.base_games.datasource.dbhome
+            )
             self.oldview.query_statement.dbset = ui.base_games.datasource.dbset
         self.initialize()
 
@@ -57,9 +57,12 @@ class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
         """
         if object_ is None:
             object_ = self.object
-        return '  '.join((
-            self.text_name.join(('Delete ', ':')),
-            object_.value.get_name_text()))
+        return "  ".join(
+            (
+                self.text_name.join(("Delete ", ":")),
+                object_.value.get_name_text(),
+            )
+        )
 
     @property
     def ui_base_table(self):

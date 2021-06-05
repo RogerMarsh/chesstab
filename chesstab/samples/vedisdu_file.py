@@ -5,9 +5,9 @@
 """Import PGN file with vedis.chessvedisdu to database."""
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from .file_widget import FileWidget
     from ..vedis.chessvedisdu import ChessDatabase
 
-    FileWidget(ChessDatabase, 'vedis')
+    FileWidget(ChessDatabase, "vedis")

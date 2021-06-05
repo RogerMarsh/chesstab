@@ -18,13 +18,13 @@ from ..core.constants import TAG_OPENING
 from .repertoiretoplevel import (
     RepertoireToplevel,
     RepertoireToplevelEdit,
-    )
+)
 from .toplevelpgn import EditPGN
 from .constants import EMPTY_REPERTOIRE_GAME
 
 
 class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
-    
+
     """Edit PGN text for repertoire on database, or insert a new record.
 
     parent is used as the master argument in RepertoireToplevel calls.
@@ -52,11 +52,14 @@ class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
     to be expressed identically and defined once.
 
     """
-    pgn_score_name = 'Repertoire'
-    pgn_score_tags = EMPTY_REPERTOIRE_GAME
-    pgn_score_source = 'No opening name'
 
-    def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
+    pgn_score_name = "Repertoire"
+    pgn_score_tags = EMPTY_REPERTOIRE_GAME
+    pgn_score_source = "No opening name"
+
+    def __init__(
+        self, newobject, parent, oldobject, showinitial=True, ui=None
+    ):
         """Extend and create toplevel to edit or insert repertoire."""
         if not oldobject:
             showinitial = False
@@ -65,10 +68,11 @@ class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
             parent,
             oldobject,
             RepertoireToplevelEdit(master=parent, ui=ui),
-            '',
-            oldview=RepertoireToplevel(master=parent,
-                                       ui=ui) if showinitial else showinitial,
-            )
+            "",
+            oldview=RepertoireToplevel(master=parent, ui=ui)
+            if showinitial
+            else showinitial,
+        )
         self.initialize()
 
     @property
@@ -87,7 +91,8 @@ class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
         self.set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+        )
         view.set_and_tag_item_text()
 
     def get_title_for_object(self, object_=None):
@@ -100,18 +105,22 @@ class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
             object_ = self.oldobject
         if object_:
             try:
-                return '  '.join((
-                    self.pgn_score_name.join(('Edit ', ':')),
-                    object_.value.collected_game._tags[TAG_OPENING],
-                    ))
+                return "  ".join(
+                    (
+                        self.pgn_score_name.join(("Edit ", ":")),
+                        object_.value.collected_game._tags[TAG_OPENING],
+                    )
+                )
             except TypeError:
                 return self.pgn_score_name.join(
-                    ('Edit ', ' - name unknown or invalid'))
+                    ("Edit ", " - name unknown or invalid")
+                )
             except KeyError:
                 return self.pgn_score_name.join(
-                    ('Edit ', ' - name unknown or invalid'))
+                    ("Edit ", " - name unknown or invalid")
+                )
         else:
-            return ''.join(('Insert ', self.pgn_score_name))
+            return "".join(("Insert ", self.pgn_score_name))
 
     def set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Repertoire object_.

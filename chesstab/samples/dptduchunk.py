@@ -11,7 +11,7 @@ or since, did spot the condition allowing DPT to flush it's buffers in time).
 """
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import tkinter
 
@@ -21,18 +21,18 @@ if __name__ == '__main__':
     from chesstab.dpt.chessdptdu import chess_dptdu_chunks
 
     root = tkinter.Tk()
-    root.wm_title(string='Test Import Chess Games')
+    root.wm_title(string="Test Import Chess Games")
     root.wm_iconify()
-    dbdir = tkinter.filedialog.askdirectory(
-        title='Open Chess database folder')
+    dbdir = tkinter.filedialog.askdirectory(title="Open Chess database folder")
     if dbdir:
         filename = tkinter.filedialog.askopenfilename(
-            title='PGN file of Games',
-            defaultextension='.pgn',
-            filetypes=(('PGN Chess Games', '*.pgn'),))
+            title="PGN file of Games",
+            defaultextension=".pgn",
+            filetypes=(("PGN Chess Games", "*.pgn"),),
+        )
         if filename:
             if tkinter.messagebox.askyesno(
-                title='Import Games',
-                message='Proceed with import'):
+                title="Import Games", message="Proceed with import"
+            ):
                 chess_dptdu_chunks(dbdir, (filename,), {})
     root.destroy()

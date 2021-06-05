@@ -1,4 +1,4 @@
-'''User interface to a chess game database.
+"""User interface to a chess game database.
 
 Module "chess" is the top-level module.
 
@@ -14,4 +14,4 @@ modules called "repertoire", "repertoireedit", and "repertoiregrid", indicates
 which ones.
 
 The remaining modules provide supporting facilities.
-'''
+"""

@@ -35,9 +35,12 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
     to be expressed identically and defined once.
 
     """
-    text_name = 'Selection Rule Statement'
 
-    def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
+    text_name = "Selection Rule Statement"
+
+    def __init__(
+        self, newobject, parent, oldobject, showinitial=True, ui=None
+    ):
         """Extend and create toplevel to edit or insert selection rule."""
         if not oldobject:
             showinitial = False
@@ -46,10 +49,11 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
             parent,
             oldobject,
             QueryToplevelEdit(master=parent, ui=ui),
-            '',
-            oldview=QueryToplevel(master=parent,
-                                  ui=ui) if showinitial else showinitial,
-            )
+            "",
+            oldview=QueryToplevel(master=parent, ui=ui)
+            if showinitial
+            else showinitial,
+        )
         if ui is not None:
             nqs = self.newview.query_statement
             nqs.set_database(ui.base_games.datasource.dbhome)
@@ -69,11 +73,14 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
         if object_ is None:
             object_ = self.oldobject
         if object_:
-            return '  '.join((
-                self.text_name.join(('Edit ', ':')),
-                object_.value.get_name_text()))
+            return "  ".join(
+                (
+                    self.text_name.join(("Edit ", ":")),
+                    object_.value.get_name_text(),
+                )
+            )
         else:
-            return ''.join(('Insert ', self.text_name))
+            return "".join(("Insert ", self.text_name))
 
     @property
     def ui_base_table(self):
@@ -90,7 +97,7 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
     def set_item(self, view, object_):
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)
-        
+
     def dialog_ok(self):
         """Return update action response (True for deleted).
 
@@ -100,24 +107,34 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
         """
         title = self.get_title_for_object()
         self.newobject.value.load(
-            repr(self.newview.get_name_query_statement_text()))
+            repr(self.newview.get_name_query_statement_text())
+        )
         if not len(self.newobject.value.get_name_text()):
             tkinter.messagebox.showerror(
                 parent=self.parent,
                 title=title,
-                message=''.join((
-                    "The selection rule has no name.\n\nPlease enter it's ",
-                    "name as the first line of text.'")))
+                message="".join(
+                    (
+                        "The selection rule has no name.\n\nPlease enter it's ",
+                        "name as the first line of text.'",
+                    )
+                ),
+            )
             return False
         if self.newobject.value.where_error:
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.parent,
                 title=title,
-                message=''.join((
-                    'Confirm request to update game selection rule named:\n\n',
-                    self.newobject.value.get_name_text(),
-                    '\n\non database.\n\n',
-                    self.newobject.value.where_error.get_error_report(
-                        self.ui.base_games.get_data_source())))):
+                message="".join(
+                    (
+                        "Confirm request to update game selection rule named:\n\n",
+                        self.newobject.value.get_name_text(),
+                        "\n\non database.\n\n",
+                        self.newobject.value.where_error.get_error_report(
+                            self.ui.base_games.get_data_source()
+                        ),
+                    )
+                ),
+            ):
                 return False
         return super().dialog_ok()

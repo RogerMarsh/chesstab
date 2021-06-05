@@ -43,8 +43,8 @@ def help_notes(master):
     help_widget(master, help_.NOTES, help_)
 
 
-if __name__=='__main__':
-    #Display all help documents without running ChessTab application
+if __name__ == "__main__":
+    # Display all help documents without running ChessTab application
 
     root = tkinter.Tk()
     help_about(root)

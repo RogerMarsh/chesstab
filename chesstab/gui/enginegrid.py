@@ -28,22 +28,23 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
     """
 
     def __init__(self, parent):
-        '''Extend with link to user interface object.
+        """Extend with link to user interface object.
 
         parent - see superclass
 
-        '''
+        """
         super(EngineListGrid, self).__init__(parent=parent)
         self.gcanvas.configure(takefocus=tkinter.FALSE)
         self.data.configure(takefocus=tkinter.FALSE)
         self.frame.configure(takefocus=tkinter.FALSE)
         self.hsbar.configure(takefocus=tkinter.FALSE)
         self.vsbar.configure(takefocus=tkinter.FALSE)
-        
+
     def set_properties(self, key, dodefaultaction=True):
         """Return True if chess engine definition properties set or False."""
         if super(EngineListGrid, self).set_properties(
-            key, dodefaultaction=False):
+            key, dodefaultaction=False
+        ):
             return True
         if dodefaultaction:
             self.objects[key].set_background_normal(self.get_row_widgets(key))
@@ -54,7 +55,8 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
     def set_row(self, key, dodefaultaction=True, **kargs):
         """Return row widget for chess engine definition key or None."""
         row = super(EngineListGrid, self).set_row(
-            key, dodefaultaction=False, **kargs)
+            key, dodefaultaction=False, **kargs
+        )
         if row is not None:
             return row
         if key not in self.keys:
@@ -68,12 +70,14 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         """Create delete dialogue."""
         oldobject = ChessDBrecordEngine()
         oldobject.load_record(
-            (self.objects[key].key.pack(), self.objects[key].srvalue))
+            (self.objects[key].key.pack(), self.objects[key].srvalue)
+        )
         self.create_delete_dialog(
             self.objects[key],
             oldobject,
             modal,
-            title='Delete Engine Definition')
+            title="Delete Engine Definition",
+        )
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
@@ -83,7 +87,8 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
             ChessDBrecordEngine(),
             False,
             modal,
-            title='Edit Engine Definition')
+            title="Edit Engine Definition",
+        )
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
@@ -93,7 +98,8 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
             ChessDBrecordEngine(),
             True,
             modal,
-            title='Edit Engine Definition')
+            title="Edit Engine Definition",
+        )
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
@@ -106,27 +112,29 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
             None,
             False,
             modal,
-            title='New Engine Definition')
+            title="New Engine Definition",
+        )
 
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
         oldobject = ChessDBrecordEngine()
         oldobject.load_record(
-            (self.objects[key].key.pack(), self.objects[key].srvalue))
+            (self.objects[key].key.pack(), self.objects[key].srvalue)
+        )
         self.create_show_dialog(
-            self.objects[key],
-            oldobject,
-            modal,
-            title='Show Engine Definition')
-        
+            self.objects[key], oldobject, modal, title="Show Engine Definition"
+        )
+
     def create_edit_dialog(
-        self, instance, newobject, oldobject, showinitial, modal, title=''):
+        self, instance, newobject, oldobject, showinitial, modal, title=""
+    ):
         """Extend to do chess initialization"""
         for x in (newobject, oldobject):
             if x:
                 x.load_record((instance.key.pack(), instance.srvalue))
         super(EngineListGrid, self).create_edit_dialog(
-            instance, newobject, oldobject, showinitial, modal, title=title)
+            instance, newobject, oldobject, showinitial, modal, title=title
+        )
 
     def fill_view(
         self,
@@ -134,7 +142,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         down=True,
         topstart=True,
         exclude=True,
-        ):
+    ):
         """Delegate to superclass if database is open otherwise do nothing."""
 
         # Intend to put this in superclass but must treat the DataClient objects
@@ -144,14 +152,14 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Used to deal with temporary closure of database to do Imports of games
         # from PGN files; which can take many hours.
-        
+
         if self.get_database() is not None:
             super(EngineListGrid, self).fill_view(
                 currentkey=currentkey,
                 down=down,
                 topstart=topstart,
                 exclude=exclude,
-                )
+            )
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
@@ -163,7 +171,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Used to deal with temporary closure of database to do Imports of games
         # from PGN files; which can take many hours.
-        
+
         if self.get_database() is not None:
             super(EngineListGrid, self).load_new_index()
 
@@ -177,7 +185,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Used to deal with temporary closure of database to do Imports of games
         # from PGN files; which can take many hours.
-        
+
         if self.get_database() is not None:
             super(EngineListGrid, self).load_new_partial_key(key)
 
@@ -191,7 +199,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Used to deal with temporary closure of database to do Imports of games
         # from PGN files; which can take many hours.
-        
+
         if self.get_database() is not None:
             super(EngineListGrid, self).on_configure_canvas(event=event)
 
@@ -205,7 +213,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Used to deal with temporary closure of database to do Imports of games
         # from PGN files; which can take many hours.
-        
+
         if self.get_database() is not None:
             super(EngineListGrid, self).on_data_change(instance)
 
@@ -240,7 +248,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
         # Nothing to do on losing focus.
         return True
-        
+
     def get_top_widget(self):
         """Return topmost widget for game display.
 
@@ -250,40 +258,36 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         # Superclass DataGrid.get_frame() method returns the relevant widget.
         # Name, get_top_widget, is compatible with Game and Partial names.
         return self.get_frame()
-        
+
 
 class EngineGrid(EngineListGrid):
 
-    """Customized EngineListGrid for list of enabled chess engines.
-    """
+    """Customized EngineListGrid for list of enabled chess engines."""
 
     def __init__(self, ui):
-        '''Extend with definition and bindings for selection rules on grid.
+        """Extend with definition and bindings for selection rules on grid.
 
         ui - container for user interface widgets and methods.
 
-        '''
+        """
         super(EngineGrid, self).__init__(ui.show_engines_toplevel)
         self.ui = ui
         self.make_header(ChessDBrowEngine.header_specification)
         self.__bind_on()
         for accelerator, function in (
-            (EventSpec.engine_grid_run,
-             self.run_engine),
-            ):
+            (EventSpec.engine_grid_run, self.run_engine),
+        ):
             self.menupopup.insert_command(
                 0,
                 label=accelerator[1],
                 command=self.try_command(function, self.menupopup),
-                accelerator=accelerator[2])
+                accelerator=accelerator[2],
+            )
 
     def bind_off(self):
         """Disable all bindings."""
         super(EngineGrid, self).bind_off()
-        for sequence, function in (
-            (EventSpec.engine_grid_run,
-             ''),
-            ):
+        for sequence, function in ((EventSpec.engine_grid_run, ""),):
             if function:
                 function = self.try_event(function)
             self.frame.bind(sequence[0], function)
@@ -296,13 +300,12 @@ class EngineGrid(EngineListGrid):
     def __bind_on(self):
         """Enable all bindings."""
         for sequence, function in (
-            (EventSpec.engine_grid_run,
-             self.run_engine),
-            ):
+            (EventSpec.engine_grid_run, self.run_engine),
+        ):
             if function:
                 function = self.try_event(function)
             self.frame.bind(sequence[0], function)
-        
+
     def on_partial_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
 
@@ -316,39 +319,43 @@ class EngineGrid(EngineListGrid):
 
     def is_visible(self):
         """Return True if list of selection rules is displayed."""
-        #return str(self.get_frame()) in self.ui.selection_rules_pw.panes()
+        # return str(self.get_frame()) in self.ui.selection_rules_pw.panes()
         return True
 
     def set_selection(self, key):
         """Hack to fix edge case when inserting records using apsw or sqlite3.
-        
+
         Workaround a KeyError exception when a record is inserted while a grid
         keyed by a secondary index with only one key value in the index is on
         display.
-        
+
         """
         try:
             super().set_selection(key)
         except KeyError:
             tkinter.messagebox.showinfo(
                 parent=self.parent,
-                title='Insert Engine Definition Workaround',
-                message=''.join(
-                    ('All records have same name on this display.\n\nThe new ',
-                     'record has been inserted but you need to Hide, and then ',
-                     'Show, the display to see the record in the list.',
-                     )))
+                title="Insert Engine Definition Workaround",
+                message="".join(
+                    (
+                        "All records have same name on this display.\n\nThe new ",
+                        "record has been inserted but you need to Hide, and then ",
+                        "Show, the display to see the record in the list.",
+                    )
+                ),
+            )
 
     def run_engine(self, event=None):
         """Run chess engine."""
         self.launch_chess_engine(self.pointer_popup_selection)
-        #self.move_selection_to_popup_selection()
+        # self.move_selection_to_popup_selection()
 
     def launch_chess_engine(self, key, modal=True):
         """Launch a chess engine."""
         oldobject = ChessDBrecordEngine()
         oldobject.load_record(
-            (self.objects[key].key.pack(), self.objects[key].srvalue))
+            (self.objects[key].key.pack(), self.objects[key].srvalue)
+        )
         definition = oldobject.value
 
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
@@ -362,7 +369,7 @@ class EngineGrid(EngineListGrid):
         # At Python3.5 running under Wine on FreeBSD 10.1, get() does not wait
         # when the queue is empty either, and ChessTab does not run under
         # Python3.3 because it uses asyncio: so no point in disabling.
-        #if self.ui.uci.uci_drivers_reply is None:
+        # if self.ui.uci.uci_drivers_reply is None:
         #    tkinter.messagebox.showinfo(
         #        parent=self.parent,
         #        title='Chesstab Restriction',
@@ -375,14 +382,13 @@ class EngineGrid(EngineListGrid):
         url = definition.engine_url_or_error_message()
         if isinstance(url, str):
             tkinter.messagebox.showerror(
-                parent=self.parent,
-                title='Run Engine',
-                message=url)
+                parent=self.parent, title="Run Engine", message=url
+            )
             return
         if url.query:
             self.ui.run_engine(urlunsplit(url))
         elif url.path:
-            command = url.path.split(' ', 1)
+            command = url.path.split(" ", 1)
             if len(command) == 1:
                 self.ui.run_engine(command[0])
             else:
@@ -390,7 +396,11 @@ class EngineGrid(EngineListGrid):
         else:
             tkinter.messagebox.showerror(
                 parent=self.parent,
-                title='Run Engine',
-                message=''.join(
-                    ('Unable to run engine for\n\n',
-                     definition.get_engine_command_text())))
+                title="Run Engine",
+                message="".join(
+                    (
+                        "Unable to run engine for\n\n",
+                        definition.get_engine_command_text(),
+                    )
+                ),
+            )

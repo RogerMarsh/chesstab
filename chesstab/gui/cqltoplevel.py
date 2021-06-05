@@ -19,15 +19,14 @@ from .topleveltext import ToplevelText
 
 
 class CQLToplevel(ToplevelText, CQL):
-    
-    """Customize CQL to be the single instance in a Toplevel widget.
-    """
+
+    """Customize CQL to be the single instance in a Toplevel widget."""
 
 
 class CQLToplevelEdit(ToplevelText, CQLEdit):
-    
-    """Customize CQLEdit to be the single instance in a Toplevel widget.
-    """
+
+    """Customize CQLEdit to be the single instance in a Toplevel widget."""
+
     # A method like GameToplevelEdit.create_primary_activity_popup is not
     # needed because the standard edit operations of Text widget are
     # sufficient.

@@ -8,9 +8,9 @@ Run as a new process from the chess GUI.
 
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    #run by subprocess.popen from ../core/chess.py
+    # run by subprocess.popen from ../core/chess.py
     import sys
     import os
 
@@ -19,9 +19,10 @@ if __name__ == '__main__':
         # containing chesstab at front of sys.path on the assumption all the
         # sibling packages are there too.
         try:
-            sp = sys.path[-1].replace('\\\\', '\\')
+            sp = sys.path[-1].replace("\\\\", "\\")
             packageroot = os.path.dirname(
-                os.path.dirname(os.path.dirname(__file__)))
+                os.path.dirname(os.path.dirname(__file__))
+            )
             if sp != packageroot:
                 sys.path.insert(0, packageroot)
         except NameError as msg:
@@ -37,7 +38,8 @@ if __name__ == '__main__':
 
         cdu = chessdu.ChessDeferredUpdate(
             deferred_update_method=chessdptdu.chess_dptdu_chunks,
-            database_class=chessdptdu.ChessDatabase)
+            database_class=chessdptdu.ChessDatabase,
+        )
     except:
         try:
             chessdu.write_error_to_log()

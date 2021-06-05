@@ -17,7 +17,7 @@ from .toplevelpgn import ShowPGN
 
 
 class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
-    
+
     """Show PGN text for repertoire from database.
 
     parent is used as the master argument in a RepertoireToplevel call.
@@ -35,15 +35,15 @@ class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
     to be expressed identically and defined once.
 
     """
-    pgn_score_name = 'Repertoire'
+
+    pgn_score_name = "Repertoire"
 
     def __init__(self, parent, oldobject, ui=None):
         """Extend and create toplevel widget for deleting chess repertoire."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         RepertoireToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, RepertoireToplevel(master=parent, ui=ui), ""
+        )
         self.initialize()
 
     @property
@@ -62,7 +62,8 @@ class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
         self.set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue()))
+            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+        )
         view.set_and_tag_item_text()
 
     def get_title_for_object(self, object_=None):
@@ -74,16 +75,20 @@ class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
         if object_ is None:
             object_ = self.object
         try:
-            return '  '.join((
-                self.pgn_score_name.join(('Show ', ':')),
-                object_.value.collected_game._tags[TAG_OPENING],
-                ))
+            return "  ".join(
+                (
+                    self.pgn_score_name.join(("Show ", ":")),
+                    object_.value.collected_game._tags[TAG_OPENING],
+                )
+            )
         except TypeError:
             return self.pgn_score_name.join(
-                ('Show ', ' - names unknown or invalid'))
+                ("Show ", " - names unknown or invalid")
+            )
         except KeyError:
             return self.pgn_score_name.join(
-                ('Show ', ' - names unknown or invalid'))
+                ("Show ", " - names unknown or invalid")
+            )
 
     def set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Repertoire object_.

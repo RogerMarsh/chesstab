@@ -5,9 +5,9 @@
 """Import directory of PGN files with vedis.chessvedisdu to database."""
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from .directory_widget import DirectoryWidget
     from ..vedis.chessvedisdu import chess_vedisdu
 
-    DirectoryWidget(chess_vedisdu, 'vedis')
+    DirectoryWidget(chess_vedisdu, "vedis")

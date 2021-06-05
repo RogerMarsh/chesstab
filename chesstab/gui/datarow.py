@@ -12,7 +12,7 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 
 class DataRow(ExceptionHandler, DataRow):
-    
+
     """Override solentware_grid.gui.datarow.DataRow methods, from the subclass
     CallbackException, with those in ExceptionHandler.
     """

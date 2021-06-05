@@ -17,16 +17,17 @@ from bsddb3.db import (
     DB_INIT_LOG,
     DB_INIT_TXN,
     DB_PRIVATE,
-    )
+)
 
 from solentware_base import bsddb3du_database
-#from solentware_base.core.constants import FILEDESC
+
+# from solentware_base.core.constants import FILEDESC
 from solentware_base.core.constants import (
     FILEDESC,
     SUBFILE_DELIMITER,
     EXISTENCE_BITMAP_SUFFIX,
     SEGMENT_SUFFIX,
-    )
+)
 from solentware_base.core.segmentsize import SegmentSize
 
 from ..core.filespec import (
@@ -36,7 +37,7 @@ from ..core.filespec import (
     DB_ENVIRONMENT_BYTES,
     DB_ENVIRONMENT_MAXLOCKS,
     SECONDARY,
-    )
+)
 from ..core.chessrecord import ChessDBrecordGameImport
 
 
@@ -45,22 +46,20 @@ class Chessbsddb3duError(Exception):
 
 
 def chess_dbdu(
-    dbpath,
-    pgnpaths,
-    file_records,
-    reporter=lambda text, timestamp=True: None):
+    dbpath, pgnpaths, file_records, reporter=lambda text, timestamp=True: None
+):
     """Open database, import games and close database."""
     cdb = ChessDatabase(dbpath, allowcreate=True)
     importer = ChessDBrecordGameImport()
     cdb.open_database()
     cdb.set_defer_update()
     for pp in pgnpaths:
-        s = open(pp, 'r', encoding='iso-8859-1')
+        s = open(pp, "r", encoding="iso-8859-1")
         importer.import_pgn(cdb, s, pp, reporter=reporter)
         s.close()
     if reporter is not None:
-        reporter('Finishing import: please wait.')
-        reporter('', timestamp=False)
+        reporter("Finishing import: please wait.")
+        reporter("", timestamp=False)
     cdb.do_final_segment_deferred_updates()
     cdb.unset_defer_update()
     cdb.close_database()
@@ -71,8 +70,8 @@ def chess_dbdu(
 
 class ChessDatabase(bsddb3du_database.Database):
 
-    """Provide custom deferred update for a database of games of chess.
-    """
+    """Provide custom deferred update for a database of games of chess."""
+
     # The optimum chunk size is the segment size.
     # Assuming 2Gb memory:
     # A default FreeBSD user process will not cause a MemoryError exception for
@@ -94,15 +93,21 @@ class ChessDatabase(bsddb3du_database.Database):
     if SegmentSize.db_segment_size > 32768:
         for f, m in ((4, 700000000), (2, 1400000000)):
             try:
-                b' ' * m
+                b" " * m
             except MemoryError:
 
                 # Override the value in the superclass.
                 deferred_update_points = frozenset(
-                    [i for i in range(65536//f-1,
-                                      SegmentSize.db_segment_size,
-                                      65536//f)])
-                
+                    [
+                        i
+                        for i in range(
+                            65536 // f - 1,
+                            SegmentSize.db_segment_size,
+                            65536 // f,
+                        )
+                    ]
+                )
+
                 break
         del f, m
 
@@ -113,47 +118,47 @@ class ChessDatabase(bsddb3du_database.Database):
         allowcreate == False - remove file descriptions from FileSpec so
         that superclass cannot create them.
         Other arguments are passed through to superclass __init__.
-        
+
         """
         names = FileSpec(**kargs)
-        environment = {'flags': (DB_CREATE |
-                                 DB_RECOVER |
-                                 DB_INIT_MPOOL |
-                                 DB_INIT_LOCK |
-                                 DB_INIT_LOG |
-                                 DB_INIT_TXN |
-                                 DB_PRIVATE),
-                       'gbytes': DB_ENVIRONMENT_GIGABYTES,
-                       'bytes': DB_ENVIRONMENT_BYTES,
-                       'maxlocks': DB_ENVIRONMENT_MAXLOCKS,
-                       }
+        environment = {
+            "flags": (
+                DB_CREATE
+                | DB_RECOVER
+                | DB_INIT_MPOOL
+                | DB_INIT_LOCK
+                | DB_INIT_LOG
+                | DB_INIT_TXN
+                | DB_PRIVATE
+            ),
+            "gbytes": DB_ENVIRONMENT_GIGABYTES,
+            "bytes": DB_ENVIRONMENT_BYTES,
+            "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
+        }
         # Deferred update for games file only
-        #for t in list(names.keys()):
+        # for t in list(names.keys()):
         #    if t != GAMES_FILE_DEF:
         #        del names[t]
 
-        if not kargs.get('allowcreate', False):
+        if not kargs.get("allowcreate", False):
             try:
                 for t in names:
                     if FILEDESC in names[t]:
                         del names[t][FILEDESC]
             except:
-                if __name__ == '__main__':
+                if __name__ == "__main__":
                     raise
                 else:
-                    raise Chessbsddb3duError('DB description invalid')
+                    raise Chessbsddb3duError("DB description invalid")
 
         try:
-            super(ChessDatabase, self).__init__(
-                names,
-                DBfile,
-                environment)
+            super(ChessDatabase, self).__init__(names, DBfile, environment)
         except Chessbsddb3duError:
-            if __name__ == '__main__':
+            if __name__ == "__main__":
                 raise
             else:
-                raise Chessbsddb3duError('DB description invalid')
-    
+                raise Chessbsddb3duError("DB description invalid")
+
     def open_context_prepare_import(self):
         """Return True
 
@@ -161,7 +166,7 @@ class ChessDatabase(bsddb3du_database.Database):
 
         """
         return True
-    
+
     def get_archive_names(self, files=()):
         """Return specified files and existing operating system files"""
         if self.home_directory is None:
@@ -174,21 +179,36 @@ class ChessDatabase(bsddb3du_database.Database):
                 ns = []
                 names[os.path.join(self.home_directory, k)] = ns
                 for i in self.specification[k][SECONDARY]:
-                    ns.append(os.path.join(
-                        self.home_directory, SUBFILE_DELIMITER.join((k, i))))
-                ns.append(os.path.join(
-                    self.home_directory,
-                    SUBFILE_DELIMITER.join((k, EXISTENCE_BITMAP_SUFFIX))))
-                ns.append(os.path.join(
-                    self.home_directory,
-                    SUBFILE_DELIMITER.join((k, SEGMENT_SUFFIX))))
-            exists = [os.path.basename(n)
-                      for n in names if os.path.exists('.'.join((n, 'zip')))]
+                    ns.append(
+                        os.path.join(
+                            self.home_directory, SUBFILE_DELIMITER.join((k, i))
+                        )
+                    )
+                ns.append(
+                    os.path.join(
+                        self.home_directory,
+                        SUBFILE_DELIMITER.join((k, EXISTENCE_BITMAP_SUFFIX)),
+                    )
+                )
+                ns.append(
+                    os.path.join(
+                        self.home_directory,
+                        SUBFILE_DELIMITER.join((k, SEGMENT_SUFFIX)),
+                    )
+                )
+            exists = [
+                os.path.basename(n)
+                for n in names
+                if os.path.exists(".".join((n, "zip")))
+            ]
             return names, exists
         else:
             names = [self.database_file]
-            exists = [os.path.basename(n)
-                      for n in names if os.path.exists('.'.join((n, 'bz2')))]
+            exists = [
+                os.path.basename(n)
+                for n in names
+                if os.path.exists(".".join((n, "bz2")))
+            ]
             return names, exists
 
     def archive(self, flag=None, names=None):
@@ -206,25 +226,26 @@ class ChessDatabase(bsddb3du_database.Database):
         if flag:
             if self._file_per_database:
                 for n in names:
-                    archiveguard = '.'.join((n, 'grd'))
-                    archivename = '.'.join((n, 'zip'))
+                    archiveguard = ".".join((n, "grd"))
+                    archivename = ".".join((n, "zip"))
                     c = zipfile.ZipFile(
                         archivename,
-                        mode='w',
+                        mode="w",
                         compression=zipfile.ZIP_DEFLATED,
-                        allowZip64=True)
+                        allowZip64=True,
+                    )
                     for s in names[n]:
                         c.write(s, arcname=os.path.basename(s))
                     c.close()
-                    c = open(archiveguard, 'wb')
+                    c = open(archiveguard, "wb")
                     c.close()
             else:
                 for n in names:
                     c = bz2.BZ2Compressor()
-                    archiveguard = '.'.join((n, 'grd'))
-                    archivename = '.'.join((n, 'bz2'))
-                    fi = open(n, 'rb')
-                    fo = open(archivename, 'wb')
+                    archiveguard = ".".join((n, "grd"))
+                    archivename = ".".join((n, "bz2"))
+                    fi = open(n, "rb")
+                    fo = open(archivename, "wb")
                     inp = fi.read(10000000)
                     while inp:
                         co = c.compress(inp)
@@ -236,7 +257,7 @@ class ChessDatabase(bsddb3du_database.Database):
                         fo.write(co)
                     fo.close()
                     fi.close()
-                    c = open(archiveguard, 'wb')
+                    c = open(archiveguard, "wb")
                     c.close()
         return True
 
@@ -250,8 +271,8 @@ class ChessDatabase(bsddb3du_database.Database):
             if self._file_per_database:
                 not_backups = []
                 for n in names:
-                    archiveguard = '.'.join((n, 'grd'))
-                    archivename = '.'.join((n, 'zip'))
+                    archiveguard = ".".join((n, "grd"))
+                    archivename = ".".join((n, "zip"))
                     if not os.path.exists(archivename):
                         try:
                             os.remove(archiveguard)
@@ -260,13 +281,16 @@ class ChessDatabase(bsddb3du_database.Database):
                         continue
                     c = zipfile.ZipFile(
                         archivename,
-                        mode='r',
+                        mode="r",
                         compression=zipfile.ZIP_DEFLATED,
-                        allowZip64=True)
+                        allowZip64=True,
+                    )
                     namelist = c.namelist()
-                    extract = [e for e in namelist
-                               if os.path.join(self.home_directory, e)
-                               in names[n]]
+                    extract = [
+                        e
+                        for e in namelist
+                        if os.path.join(self.home_directory, e) in names[n]
+                    ]
                     if len(extract) != len(namelist):
                         not_backups.append(os.path.basename(archivename))
                         c.close()
@@ -284,8 +308,8 @@ class ChessDatabase(bsddb3du_database.Database):
                     return
             else:
                 for n in names:
-                    archiveguard = '.'.join((n, 'grd'))
-                    archivename = '.'.join((n, 'bz2'))
+                    archiveguard = ".".join((n, "grd"))
+                    archivename = ".".join((n, "bz2"))
                     try:
                         os.remove(archiveguard)
                     except:
@@ -320,8 +344,8 @@ class ChessDatabase(bsddb3du_database.Database):
         """
         # See comment near end of class definition Chess in relative module
         # ..gui.chess for explanation of this change.
-        #reporter.append_text_only(''.join(
+        # reporter.append_text_only(''.join(
         #    ('The expected duration of the import may make starting ',
         #     'it now inconvenient.',
         #     )))
-        #reporter.append_text_only('')
+        # reporter.append_text_only('')

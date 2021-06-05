@@ -39,9 +39,12 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
     to be expressed identically and defined once.
 
     """
-    text_name = 'ChessQL Statement'
 
-    def __init__(self, newobject, parent, oldobject, showinitial=True, ui=None):
+    text_name = "ChessQL Statement"
+
+    def __init__(
+        self, newobject, parent, oldobject, showinitial=True, ui=None
+    ):
         """Extend and create toplevel to edit or insert ChessQL statement."""
         if not oldobject:
             showinitial = False
@@ -50,10 +53,11 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
             parent,
             oldobject,
             CQLToplevelEdit(master=parent, ui=ui),
-            '',
-            oldview=CQLToplevel(master=parent,
-                                ui=ui) if showinitial else showinitial,
-            )
+            "",
+            oldview=CQLToplevel(master=parent, ui=ui)
+            if showinitial
+            else showinitial,
+        )
         self.initialize()
 
     def get_title_for_object(self, object_=None):
@@ -65,11 +69,14 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
         if object_ is None:
             object_ = self.oldobject
         if object_:
-            return '  '.join((
-                self.text_name.join(('Edit ', ':')),
-                object_.value.get_name_text()))
+            return "  ".join(
+                (
+                    self.text_name.join(("Edit ", ":")),
+                    object_.value.get_name_text(),
+                )
+            )
         else:
-            return ''.join(('Insert ', self.text_name))
+            return "".join(("Insert ", self.text_name))
 
     @property
     def ui_base_table(self):
@@ -86,7 +93,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
     def set_item(self, view, object_):
         view.cql_statement.process_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)
-        
+
     def dialog_ok(self):
         """Return update action response (True for deleted).
 
@@ -95,43 +102,60 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
 
         """
         self.newobject.value.load(
-            repr(self.newview.get_name_cql_statement_text()))
+            repr(self.newview.get_name_cql_statement_text())
+        )
         title = self.get_title_for_object()
         if not len(self.newobject.value.get_name_text()):
             if not self.newobject.value.cql_error:
                 tkinter.messagebox.showerror(
                     parent=self.parent,
                     title=title,
-                    message=''.join((
-                        "The ChessQL statement has no name.\n\nPlease enter ",
-                        "it's name as the first line of text.'")))
+                    message="".join(
+                        (
+                            "The ChessQL statement has no name.\n\nPlease enter ",
+                            "it's name as the first line of text.'",
+                        )
+                    ),
+                )
             else:
                 tkinter.messagebox.showerror(
                     parent=self.parent,
                     title=title,
-                    message=''.join((
-                        "The text does not contain a valid ChessQL ",
-                        "statement. ")))
+                    message="".join(
+                        (
+                            "The text does not contain a valid ChessQL ",
+                            "statement. ",
+                        )
+                    ),
+                )
             return False
         elif self.newobject.value.cql_error:
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.parent,
                 title=title,
-                message=''.join((
-                    'Confirm request to update ChessQL statement named:\n\n',
-                    self.newobject.value.get_name_text(),
-                    '\n\non database.\n\n',
-                    self.newobject.value.cql_error.get_error_report()))):
+                message="".join(
+                    (
+                        "Confirm request to update ChessQL statement named:\n\n",
+                        self.newobject.value.get_name_text(),
+                        "\n\non database.\n\n",
+                        self.newobject.value.cql_error.get_error_report(),
+                    )
+                ),
+            ):
                 return False
         if self.ui.partial_items.active_item:
             if self.ui.partial_items.active_item.sourceobject is None:
                 tkinter.messagebox.showinfo(
                     parent=self.parent,
                     title=title,
-                    message=''.join((
-                        "Cannot use this insert dialogue while the active ",
-                        "item in cql queries is one opened by menu action ",
-                        "'Position | Partial'.")))
+                    message="".join(
+                        (
+                            "Cannot use this insert dialogue while the active ",
+                            "item in cql queries is one opened by menu action ",
+                            "'Position | Partial'.",
+                        )
+                    ),
+                )
                 return False
         return super().dialog_ok()
 
@@ -144,11 +168,12 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
             self.ui.base_games.datasource.dbset,
-            newrow=None)
+            newrow=None,
+        )
         cqls.update_cql_statement_games(self.newobject, commit=False)
         if commit:
             self.datasource.dbhome.commit()
-        
+
     def put(self, commit=True):
         """Delegate to superclass to insert record then insert game list."""
         if commit:
@@ -158,7 +183,8 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
             self.ui.base_games.datasource.dbset,
-            newrow=None)
+            newrow=None,
+        )
         cqls.update_cql_statement_games(self.newobject, commit=False)
         if commit:
             self.datasource.dbhome.commit()

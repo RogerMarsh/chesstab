@@ -21,6 +21,7 @@ import tkinter.font
 # /usr/local/share/fonts directory, for example, to support ChessTab on
 # unix-like systems.
 import multiprocessing
+
 try:
     multiprocessing.Queue()
     _assume_wine = False
@@ -30,9 +31,9 @@ del multiprocessing
 
 from . import constants
 
-modify_font_attributes = ('family', 'weight', 'slant', 'size')
-modify_board_font_attributes = ('family', 'weight')
-integer_attributes = {'size'}
+modify_font_attributes = ("family", "weight", "slant", "size")
+modify_board_font_attributes = ("family", "weight")
+integer_attributes = {"size"}
 
 
 def copy_board_font_attributes(source, target):
@@ -48,36 +49,36 @@ def copy_font_attributes(source, target):
 def make_chess_fonts(root, preferred_pieces=constants.PREFERRED_PIECES):
     """Create score and board fonts and return tuple of fonts."""
     default = _get_default_font_actual(tkinter.Text)
-    moves = tkinter.font.Font(root=root,
-                              name=constants.MOVES_PLAYED_IN_GAME_FONT,
-                              **default)
-    tags = tkinter.font.Font(root=root,
-                             name=constants.TAGS_VARIATIONS_COMMENTS_FONT,
-                             **default)
+    moves = tkinter.font.Font(
+        root=root, name=constants.MOVES_PLAYED_IN_GAME_FONT, **default
+    )
+    tags = tkinter.font.Font(
+        root=root, name=constants.TAGS_VARIATIONS_COMMENTS_FONT, **default
+    )
 
     # An explicit wildpieces font was not noticed to be necessary before
     # Python2.7 on Microsoft Windows.  But I had only been using 'x', for any
     # piece before and this still worked without the explicit font.
     # On FreeBSD (non-Wine) the explicit font is not needed.
-    wildpieces = tkinter.font.Font(root=root,
-                                   name=constants.WILDPIECES_ON_BOARD_FONT,
-                                   **default)
+    wildpieces = tkinter.font.Font(
+        root=root, name=constants.WILDPIECES_ON_BOARD_FONT, **default
+    )
 
     ff = set(tkinter.font.families())
     for pff in preferred_pieces:
         if pff in ff:
-            del default['family']
+            del default["family"]
             pieces = tkinter.font.Font(
                 root=root,
                 name=constants.PIECES_ON_BOARD_FONT,
                 family=pff,
-                **default)
+                **default
+            )
             break
     else:
         pieces = tkinter.font.Font(
-            root=root,
-            name=constants.PIECES_ON_BOARD_FONT,
-            **default)
+            root=root, name=constants.PIECES_ON_BOARD_FONT, **default
+        )
     moves.configure(weight=tkinter.font.BOLD)
     pieces.configure(weight=tkinter.font.BOLD)
     wildpieces.configure(weight=tkinter.font.BOLD)
@@ -86,9 +87,11 @@ def make_chess_fonts(root, preferred_pieces=constants.PREFERRED_PIECES):
 
 def make_list_fonts(root):
     """Create game list font and return font in tuple."""
-    return tkinter.font.Font(root=root,
-                             name=constants.LISTS_OF_GAMES_FONT,
-                             **_get_default_font_actual(tkinter.Text))
+    return tkinter.font.Font(
+        root=root,
+        name=constants.LISTS_OF_GAMES_FONT,
+        **_get_default_font_actual(tkinter.Text)
+    )
 
 
 def _copy_font_attributes(attributes, source, target):
@@ -101,11 +104,11 @@ def _copy_font_attributes(attributes, source, target):
 def _get_default_font_actual(widget_class):
     """Return actuals for widget_class font or Courier if it does not exist."""
     if _assume_wine:
-        return tkinter.font.Font(family='Courier').actual()
+        return tkinter.font.Font(family="Courier").actual()
 
     # On MS Windows the named font from widget_class exists at Python2.6
     # but not at Python2.5
     try:
-        return tkinter.font.nametofont(widget_class().cget('font')).actual()
+        return tkinter.font.nametofont(widget_class().cget("font")).actual()
     except tkinter.TclError:
-        return tkinter.font.Font(family='Courier').actual()
+        return tkinter.font.Font(family="Courier").actual()

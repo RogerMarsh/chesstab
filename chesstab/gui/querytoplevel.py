@@ -15,15 +15,14 @@ from .topleveltext import ToplevelText
 
 
 class QueryToplevel(ToplevelText, Query):
-    
-    """Customize Query to be the single instance in a Toplevel widget.
-    """
+
+    """Customize Query to be the single instance in a Toplevel widget."""
 
 
 class QueryToplevelEdit(ToplevelText, QueryEdit):
-    
-    """Customize QueryEdit to be the single instance in a Toplevel widget.
-    """
+
+    """Customize QueryEdit to be the single instance in a Toplevel widget."""
+
     # A method like GameToplevelEdit.create_primary_activity_popup is not
     # needed because the standard edit operations of Text widget are
     # sufficient.

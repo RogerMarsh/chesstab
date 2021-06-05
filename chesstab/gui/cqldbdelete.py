@@ -34,15 +34,15 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
     to be expressed identically and defined once.
 
     """
-    text_name = 'ChessQL Statement'
+
+    text_name = "ChessQL Statement"
 
     def __init__(self, parent, oldobject, ui=None):
         """Extend and create toplevel widget to delete ChessQL statement."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
-        super().__init__(oldobject,
-                         parent,
-                         CQLToplevel(master=parent, ui=ui),
-                         '')
+        super().__init__(
+            oldobject, parent, CQLToplevel(master=parent, ui=ui), ""
+        )
         self.initialize()
 
     def get_title_for_object(self, object_=None):
@@ -53,9 +53,12 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
         """
         if object_ is None:
             object_ = self.object
-        return '  '.join((
-            self.text_name.join(('Delete ', ':')),
-            object_.value.get_name_text()))
+        return "  ".join(
+            (
+                self.text_name.join(("Delete ", ":")),
+                object_.value.get_name_text(),
+            )
+        )
 
     @property
     def ui_base_table(self):
@@ -72,7 +75,7 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
     def set_item(self, view, object_):
         view.cql_statement.process_statement(object_.get_srvalue())
         view.set_and_tag_item_text()
-       
+
     def dialog_ok(self):
         """Return delete action response (True for deleted).
 
@@ -85,20 +88,30 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
                 tkinter.messagebox.showinfo(
                     parent=self.parent,
                     title=self.get_title_for_object(),
-                    message=''.join((
-                        "Cannot use this delete dialogue while the active ",
-                        "item in cql queries is one opened by menu action ",
-                        "'Position | Partial'.")))
+                    message="".join(
+                        (
+                            "Cannot use this delete dialogue while the active ",
+                            "item in cql queries is one opened by menu action ",
+                            "'Position | Partial'.",
+                        )
+                    ),
+                )
                 return False
-            if (self.ui.partial_items.active_item.sourceobject.key ==
-                self.object.key):
+            if (
+                self.ui.partial_items.active_item.sourceobject.key
+                == self.object.key
+            ):
                 tkinter.messagebox.showinfo(
                     parent=self.parent,
                     title=self.get_title_for_object(),
-                    message=''.join((
-                        "Cannot use this delete dialogue while the active ",
-                        "item in cql queries is one that displays the record ",
-                        "being deleted.")))
+                    message="".join(
+                        (
+                            "Cannot use this delete dialogue while the active ",
+                            "item in cql queries is one that displays the record ",
+                            "being deleted.",
+                        )
+                    ),
+                )
                 return False
         return super().dialog_ok()
 
@@ -111,7 +124,8 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
             self.ui.base_games.datasource.dbset,
-            newrow=None)
+            newrow=None,
+        )
         assert self.object.newrecord is None
         cqls.forget_cql_statement_games(self.object, commit=False)
         if commit:
