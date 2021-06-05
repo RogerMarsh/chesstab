@@ -21,6 +21,7 @@ if __name__ == "__main__":
             "chesstab.basecore",
             "chesstab.gui",
             "chesstab.help",
+            "chesstab.berkeleydb",
             "chesstab.db",
             "chesstab.dpt",
             "chesstab.sqlite",

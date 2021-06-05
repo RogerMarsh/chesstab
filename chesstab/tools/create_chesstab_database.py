@@ -27,6 +27,10 @@ try:
 except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
     chessapsw = None
 try:
+    from ..berkeleydb import chessberkeleydb
+except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
+    chessberkeleydb = None
+try:
     from ..db import chessdb
 except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
     chessdb = None
@@ -71,12 +75,20 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
             engines[chessapsw.apsw_database.apsw] = chessapsw.ChessDatabase
         if chessdb:
             engines[chessdb.bsddb3_database.bsddb3] = chessdb.ChessDatabase
+        if chessberkeleydb:
+            engines[
+                chessberkeleydb.berkeleydb_database.berkeleydb
+            ] = chessberkeleydb.ChessDatabase
         if chessdpt:
             engines[chessdpt.dpt_database._dpt.dptapi] = chessdpt.ChessDatabase
         if chessndbm:
-            engines[chessndbm.ndbm_database.dbm.ndbm] = chessndbm.ChessDatabase
+            engines[
+                chessndbm.ndbm_database.ndbm_module.dbm.ndbm
+            ] = chessndbm.ChessDatabase
         if chessgnu:
-            engines[chessgnu.gnu_database.dbm.gnu] = chessgnu.ChessDatabase
+            engines[
+                chessgnu.gnu_database.gnu_module.dbm.gnu
+            ] = chessgnu.ChessDatabase
         super().__init__(title="Create ChessTab Database", engines=engines)
 
 

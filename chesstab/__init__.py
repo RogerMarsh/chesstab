@@ -20,7 +20,7 @@ Windows.
 """
 
 from solentware_base.core.constants import (
-    BSDDB_MODULE,
+    BERKELEYDB_MODULE,
     BSDDB3_MODULE,
     DPT_MODULE,
     SQLITE3_MODULE,
@@ -34,7 +34,10 @@ from solentware_base.core.constants import (
 APPLICATION_NAME = "ChessTab"
 ERROR_LOG = "ErrorLog"
 
-# Berkeley DB interface module name
+# bsddb3 interface module name
+_BERKELEYDBCHESS = __name__ + ".berkeleydb.chessberkeleydb"
+
+# bsddb3 interface module name
 _DBCHESS = __name__ + ".db.chessdb"
 
 # DPT interface module name
@@ -60,7 +63,7 @@ _NDBMCHESS = __name__ + ".ndbm.chessndbm"
 
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {
-    BSDDB_MODULE: _DBCHESS,
+    BERKELEYDB_MODULE: _BERKELEYDBCHESS,
     BSDDB3_MODULE: _DBCHESS,
     SQLITE3_MODULE: _SQLITE3CHESS,
     APSW_MODULE: _APSWCHESS,
@@ -79,7 +82,7 @@ _DPTPARTIALPOSITION = __name__ + ".dpt.cqlds"
 
 # Map database module names to partial position dataset module
 PARTIAL_POSITION_MODULE = {
-    BSDDB_MODULE: _DEFAULTPARTIALPOSITION,
+    BERKELEYDB_MODULE: _DEFAULTPARTIALPOSITION,
     BSDDB3_MODULE: _DEFAULTPARTIALPOSITION,
     SQLITE3_MODULE: _DEFAULTPARTIALPOSITION,
     APSW_MODULE: _DEFAULTPARTIALPOSITION,
@@ -98,7 +101,7 @@ _DPTFULLPOSITION = __name__ + ".dpt.fullpositionds"
 
 # Map database module names to full position dataset module
 FULL_POSITION_MODULE = {
-    BSDDB_MODULE: _DEFAULTFULLPOSITION,
+    BERKELEYDB_MODULE: _DEFAULTFULLPOSITION,
     BSDDB3_MODULE: _DEFAULTFULLPOSITION,
     SQLITE3_MODULE: _DEFAULTFULLPOSITION,
     APSW_MODULE: _DEFAULTFULLPOSITION,
@@ -117,7 +120,7 @@ _DPTANALYSIS = __name__ + ".dpt.analysisds"
 
 # Map database module names to analysis dataset module
 ANALYSIS_MODULE = {
-    BSDDB_MODULE: _DEFAULTANALYSIS,
+    BERKELEYDB_MODULE: _DEFAULTANALYSIS,
     BSDDB3_MODULE: _DEFAULTANALYSIS,
     SQLITE3_MODULE: _DEFAULTANALYSIS,
     APSW_MODULE: _DEFAULTANALYSIS,
@@ -136,7 +139,7 @@ _DPTSELECTION = __name__ + ".dpt.selectionds"
 
 # Map database module names to selection rules dataset module
 SELECTION_MODULE = {
-    BSDDB_MODULE: _DEFAULTSELECTION,
+    BERKELEYDB_MODULE: _DEFAULTSELECTION,
     BSDDB3_MODULE: _DEFAULTSELECTION,
     SQLITE3_MODULE: _DEFAULTSELECTION,
     APSW_MODULE: _DEFAULTSELECTION,
