@@ -292,6 +292,12 @@ class _QueryDisplay(ExceptionHandler, Display):
             (EventSpec.display_list, self.process_and_set_selection_rule_list),
         )
 
+    def set_database_navigation_close_item_bindings(self, switch=True):
+        super().set_database_navigation_close_item_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self.get_list_games_events(), switch=switch
+        )
+
     def add_list_games_entry_to_popup(self, popup, index=tkinter.END):
         """Add option to list games for selection rule to popup."""
         self.set_popup_bindings(

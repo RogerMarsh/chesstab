@@ -629,6 +629,12 @@ class CQLDisplayInsert(
         """Add option to list games for selection rule to popup."""
         self.set_popup_bindings(popup, self.get_list_games_events())
 
+    def set_database_navigation_close_item_bindings(self, switch=True):
+        super().set_database_navigation_close_item_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self.get_list_games_events(), switch=switch
+        )
+
     def process_and_set_cql_statement_list(self, event=None):
         """Display games with position matching edited ChessQL statement."""
         s = CQLStatement()

@@ -1028,12 +1028,8 @@ class Chess(ExceptionHandler):
             items_manager=self.ui.partial_items,
             itemgrid=self.ui.partial_games,
         )
-
-        # Show empty title and query lines or not?
-        if self.ui.base_partials.is_visible():
-            position.cql_statement.process_statement("")
-            position.set_and_tag_item_text(reset_undo=True)
-
+        position.cql_statement.process_statement("")
+        position.set_and_tag_item_text(reset_undo=True)
         self.ui.add_partial_position_to_display(position)
         try:
             # Is new window only one available for user interaction?
@@ -1941,12 +1937,8 @@ class Chess(ExceptionHandler):
             items_manager=self.ui.selection_items,
             itemgrid=self.ui.base_games,
         )  # probably main list of games
-
-        # Show empty title and query lines or not?
-        if self.ui.base_selections.is_visible():
-            selection.query_statement.process_query_statement("")
-            selection.set_and_tag_item_text(reset_undo=True)
-
+        selection.query_statement.process_query_statement("")
+        selection.set_and_tag_item_text(reset_undo=True)
         self.ui.add_selection_rule_to_display(selection)
         try:
             # Is new window only one available for user interaction?
