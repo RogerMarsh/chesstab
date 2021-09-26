@@ -1,6 +1,7 @@
 # setup.py
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
+"""chesstab setup file."""
 
 from setuptools import setup
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
             "chessql==2.0.1.dev0",
             "solentware-grid==2.1.3.dev0",
             "pgn-read==2.1.1.dev0",
-            "solentware-misc==1.3",
+            "solentware-misc==1.3.1.dev0",
             "uci-net==1.2.2.dev0",
         ],
         dependency_links=[
@@ -63,7 +64,7 @@ if __name__ == "__main__":
             "http://solentware.co.uk/files/chessql-2.0.1.dev0.tar.gz",
             "http://solentware.co.uk/files/solentware-grid-2.1.3.dev0.tar.gz",
             "http://solentware.co.uk/files/pgn-read-2.1.1.dev0.tar.gz",
-            "http://solentware.co.uk/files/solentware-misc-1.3.tar.gz",
+            "http://solentware.co.uk/files/solentware-misc-1.3.1.dev0.tar.gz",
             "http://solentware.co.uk/files/uci-net-1.2.2.dev0.tar.gz",
         ],
     )

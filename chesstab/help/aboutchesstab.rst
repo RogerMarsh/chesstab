@@ -10,12 +10,12 @@ This is ChessTab-5.0.2.dev0
 
 python setup.py install will have installed these packages:
 
-- solentware-base-4.1.4
-- chessql-2.0
+- solentware-base-4.1.5.dev0
+- chessql-2.0.1.dev0
 - chesstab-5.0.2.dev0
 - pgn-read-2.1.1.dev0
 - solentware-grid-2.1.3.dev0
-- solentware-misc-1.3
+- solentware-misc-1.3.1.dev0
 - uci-net-1.2.2.dev0
 
 ChessTab uses features introduced at Python3.4 but declared stable at Python3.6.

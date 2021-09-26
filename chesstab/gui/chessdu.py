@@ -15,7 +15,7 @@ import tkinter.messagebox
 import queue
 import time
 
-from solentware_misc.api import callthreadqueue
+from solentware_misc.core import callthreadqueue
 from solentware_misc.gui.tasklog import LogText
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 

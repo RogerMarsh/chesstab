@@ -31,7 +31,7 @@ import gc
 from solentware_grid.core.dataclient import DataSource
 
 from solentware_base import modulequery, do_deferred_updates
-from solentware_misc.api import callthreadqueue
+from solentware_misc.core import callthreadqueue
 from solentware_misc.gui.textentry import get_text_modal
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
