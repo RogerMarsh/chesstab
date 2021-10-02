@@ -30,27 +30,13 @@ Games can be output to PGN files in `Export Format`_, `Reduced Export Format`_, 
 Installation Instructions
 =========================
 
-Install the package by typing
+This package is available on PyPI so can be installed by typing
 
-   python setup.py install
+   python -m pip install --user chesstab
 
-at the command prompt with setup.py in the current directory.
+at the command prompt.
 
-You may need to give the path and version of Python depending on your system's configuration:
-
-   <path to python>/python<version> setup.py install
-
-   For example
-
-      C:\\Python36\\python setup.py install
-
-         on Microsoft Windows or
-
-      python3.6 setup.py install
-
-         on Unix-like systems.
-
-Use `Python`_ 3.6 or later.
+See `Python`_ and `pip`_ documentation for alternatives and platform-specific points.
 
 If this installation replaces ChessTab-4.1.1 or earlier you should run:
 
@@ -76,10 +62,13 @@ The `apsw`_ interface, if installed, to Sqlite 3 is used instead of the sqlite3 
 
 New databases are accessed using these alternative interfaces if installed.
 
+* `berkeleydb`_ (replaces bsddb3 at Python 3.10)
 * `bsddb3`_
 * `dptdb`_ (Microsoft Windows only)
 
-If both alternatives are installed, chesstab will use dptdb.
+Chesstab will use dptdb if installed.
+
+berkeleydb is available for Python 3.6 and later.  It is used instead of bsddb3 if both are installed and a version of `Berkeley DB`_ supported by berkeleydb is installed.
 
 If bsddb3 is used, a version of `Berkeley DB`_ supported by bsddb3 must be installed.
 
@@ -138,18 +127,20 @@ When using the sqlite3, apsw, or `bsddb3`_ database interfaces, you may notice b
 The sqlite3 and apsw database interfaces are equivalent, but all other pairings are incompatible.
 
 
-.. _`Import Format`: http://www6.chessclub/help/PGN-spec
-.. _`seven standard tags`: http://www6.chessclub/help/PGN-spec
-.. _`Export Format`: http://www6.chessclub/help/PGN-spec
-.. _`Reduced Export Format`: http://www6.chessclub/help/PGN-spec
-.. _`Python`: https://python.org
-.. _`www.enpassant.dk/chess/fonteng.htm`: http://enpassant.dk/chess/fonteng.htm
-.. _`ftp://ftp.cis.uab.edu/pub/hyatt/pgn`: ftp://ftp.cis.uab.edu/pub/hyatt/pgn
-.. _`bitarray`: https://pypi.python.org/pypi/bitarray
-.. _`bsddb3`: https://pypi.python.org/pypi/bsddb3
-.. _`dptdb`: http://solentware.co.uk/download.html
-.. _`Berkeley DB`: http://oracle.com
-.. _`Universal Chess Interface`: http://www.shredderchess.com/div/uci.zip
-.. _`UCI entry`: https://en.wikipedia.org/wiki/Universal_Chess_Interface
-.. _`apsw`: https://github.com/rogerbinns/apsw
-.. _`solentware-base`: http://solentware.co.uk/components.html
+.. _Import Format: http://www6.chessclub/help/PGN-spec
+.. _seven standard tags: http://www6.chessclub/help/PGN-spec
+.. _Export Format: http://www6.chessclub/help/PGN-spec
+.. _Reduced Export Format: http://www6.chessclub/help/PGN-spec
+.. _Python: https://python.org
+.. _pip: https://packaging.python.org/installing
+.. _www.enpassant.dk/chess/fonteng.htm: http://enpassant.dk/chess/fonteng.htm
+.. _ftp://ftp.cis.uab.edu/pub/hyatt/pgn: ftp://ftp.cis.uab.edu/pub/hyatt/pgn
+.. _bitarray: https://pypi.python.org/pypi/bitarray
+.. _bsddb3: https://pypi.python.org/pypi/bsddb3
+.. _berkeleydb: https://pypi.org/project/berkeleydb
+.. _dptdb: http://solentware.co.uk/download.html
+.. _Berkeley DB: http://oracle.com
+.. _Universal Chess Interface: http://www.shredderchess.com/div/uci.zip
+.. _UCI entry: https://en.wikipedia.org/wiki/Universal_Chess_Interface
+.. _apsw: https://github.com/rogerbinns/apsw
+.. _solentware-base: http://solentware.co.uk/components.html

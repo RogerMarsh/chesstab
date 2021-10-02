@@ -8,10 +8,18 @@ from setuptools import setup
 if __name__ == "__main__":
 
     long_description = open("README").read()
+    install_requires = [
+        "solentware-base==4.1.6",
+        "chessql==2.0.2",
+        "solentware-grid==2.1.4",
+        "pgn-read==2.1.2",
+        "solentware-misc==1.3.2",
+        "uci-net==1.2.3",
+    ]
 
     setup(
         name="chesstab",
-        version="5.0.2",
+        version="5.0.3",
         description="Database for chess games",
         author="Roger Marsh",
         author_email="roger.marsh@solentware.co.uk",
@@ -51,20 +59,11 @@ if __name__ == "__main__":
             "Intended Audience :: End Users/Desktop",
             "Development Status :: 3 - Alpha",
         ],
-        install_requires=[
-            "solentware-base==4.1.5",
-            "chessql==2.0.1",
-            "solentware-grid==2.1.3",
-            "pgn-read==2.1.1",
-            "solentware-misc==1.3.1",
-            "uci-net==1.2.2",
-        ],
+        install_requires=install_requires,
         dependency_links=[
-            "http://solentware.co.uk/files/solentware-base-4.1.5.tar.gz",
-            "http://solentware.co.uk/files/chessql-2.0.1.tar.gz",
-            "http://solentware.co.uk/files/solentware-grid-2.1.3.tar.gz",
-            "http://solentware.co.uk/files/pgn-read-2.1.1.tar.gz",
-            "http://solentware.co.uk/files/solentware-misc-1.3.1.tar.gz",
-            "http://solentware.co.uk/files/uci-net-1.2.2.tar.gz",
+            "-".join(required.split("==")).join(
+                ("http://solentware.co.uk/files/", ".tar.gz")
+            )
+            for required in install_requires
         ],
     )
