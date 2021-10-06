@@ -1,69 +1,40 @@
 # setup.py
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
-"""chesstab setup file."""
+"""chesstab setup file.
+
+Retained so 'python setup.py ...' can be used by my build scripts until
+conversion to 'python -m pip ...'.
+
+All setup() arguments except dependency_links are set in setup.cfg file.
+"""
 
 from setuptools import setup
+import configparser
 
 if __name__ == "__main__":
 
-    long_description = open("README").read()
-    install_requires = [
-        "solentware-base==4.1.6",
-        "chessql==2.0.2",
-        "solentware-grid==2.1.4",
-        "pgn-read==2.1.2",
-        "solentware-misc==1.3.2",
-        "uci-net==1.2.3",
-    ]
+    setup_args = {}
 
-    setup(
-        name="chesstab",
-        version="5.0.3",
-        description="Database for chess games",
-        author="Roger Marsh",
-        author_email="roger.marsh@solentware.co.uk",
-        url="http://www.solentware.co.uk",
-        packages=[
-            "chesstab",
-            "chesstab.core",
-            "chesstab.basecore",
-            "chesstab.gui",
-            "chesstab.help",
-            "chesstab.berkeleydb",
-            "chesstab.db",
-            "chesstab.dpt",
-            "chesstab.sqlite",
-            "chesstab.apsw",
-            "chesstab.unqlite",
-            "chesstab.vedis",
-            "chesstab.gnu",
-            "chesstab.ndbm",
-            "chesstab.fonts",
-            "chesstab.tools",
-            "chesstab.samples",
-        ],
-        package_data={
-            "chesstab.fonts": ["*.TTF", "*.zip"],
-            "chesstab.help": ["*.rst"],
-        },
-        long_description=long_description,
-        license="BSD",
-        classifiers=[
-            "License :: OSI Approved :: BSD License",
-            "Programming Language :: Python :: 3.7",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
-            "Operating System :: OS Independent",
-            "Topic :: Games/Entertainment :: Board Games",
-            "Intended Audience :: End Users/Desktop",
-            "Development Status :: 3 - Alpha",
-        ],
-        install_requires=install_requires,
-        dependency_links=[
-            "-".join(required.split("==")).join(
-                ("http://solentware.co.uk/files/", ".tar.gz")
-            )
-            for required in install_requires
-        ],
-    )
+    # Derive dependency_links from install_requires for use by setup().
+    # dependency_links is ignored by non-legacy pip commands; and these
+    # packages have to be installed by separate commands quoting the URL
+    # in the command line.  This code works because all version conditions
+    # are '=='.
+    parser = configparser.ConfigParser()
+    parser.read("setup.cfg")
+    for section in parser.sections():
+        if section != "options":
+            continue
+        for key, value in parser.items(section):
+            if key == "install_requires":
+                install_requires = [v for v in value.splitlines() if v]
+                setup_args["dependency_links"] = [
+                    "-".join(required.split("==")).join(
+                        ("http://solentware.co.uk/files/", ".tar.gz")
+                    )
+                    for required in install_requires
+                ]
+                break
+
+    setup(**setup_args)
