@@ -66,7 +66,6 @@ from .constants import (
 # May need to make this a superclass of Tkinter.Text because DataRow method
 # make_row_widgets expects to be able to call Tkinter widget methods.
 class PositionScore(ExceptionHandler):
-
     """Chess game score widget composed from a Text widget."""
 
     m_color = MOVE_COLOR
@@ -153,7 +152,7 @@ class PositionScore(ExceptionHandler):
         self.position_number = 0
 
     def process_score(self, text=None, context=None):
-        """Wrapper for Tkinter.Text configure method for score attribute"""
+        """Populate collected_game with PGN score derived from text."""
         if text:
             self._clear_tag_maps()
             self.collected_game = next(
@@ -245,7 +244,7 @@ class PositionScore(ExceptionHandler):
         return "".join((POSITION, str(self.position_number)))
 
     def get_position_tag_of_index(self, index):
-        """Return Tk tag name if index is in a position tag"""
+        """Return Tk tag name if index is in a position tag."""
         for tn in self.score.tag_names(index):
             if tn.startswith(POSITION):
                 return tn
@@ -288,13 +287,13 @@ class PositionScore(ExceptionHandler):
         return start, end, widget.index(tkinter.INSERT)
 
     def is_currentmove_in_main_line(self):
-        """Return True if currentmove is in the main line tag"""
+        """Return True if currentmove is in the main line tag."""
         return self.is_index_in_main_line(
             self.score.tag_ranges(self.current)[0]
         )
 
     def is_index_in_main_line(self, index):
-        """Return True if index is in the main line tag"""
+        """Return True if index is in the main line tag."""
         return bool(
             self.score.tag_nextrange(
                 self.gamevartag, index, "".join((str(index), "+1 chars"))
@@ -302,7 +301,7 @@ class PositionScore(ExceptionHandler):
         )
 
     def is_move_in_main_line(self, move):
-        """Return True if move is in the main line"""
+        """Return True if move is in the main line."""
         return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
 
     """At present both POSITION<suffix> and TOKEN<suffix> tags exist.
@@ -416,7 +415,7 @@ class PositionScore(ExceptionHandler):
         return True
 
     def map_move_text(self, token, delta):
-        """Add token to game text and modify game position by delta"""
+        """Add token to game text and modify game position by delta."""
         prevcontext, currcontext, nextcontext = self._context
 
         # Does position in which move is played match the previous or current

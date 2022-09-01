@@ -2,8 +2,7 @@
 # Copyright 2013 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets that display tag roster details of repertoire.
-"""
+"""Create widgets that display tag roster details of repertoire."""
 
 import tkinter
 
@@ -135,7 +134,7 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         )
 
     def grid_row(self, **kargs):
-        """Return customized super(ChessDBrowRepertoire, self).grid_row(...).
+        """Return ChessDBrowRepertoire() with opening and result set to '?'.
 
         Create textitems argument for ChessDBrowRepertoire instance.
 
@@ -150,7 +149,7 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         )
 
     def get_tags_display_order(self, pgn):
-        """Return Tags not given their own column in display order"""
+        """Return Tags not given their own column in display order."""
         tag_values = []
         tags = self.collected_game._tags
         for tv in sorted(tags.items()):
@@ -159,16 +158,18 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         return tag_values
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowRepertoire() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
 
 def make_ChessDBrowRepertoire(chessui):
-    """Make ChessDBrowRepertoire with reference to ChessUI instance"""
+    """Make ChessDBrowRepertoire with reference to ChessUI instance."""
 
     def make_position(database=None):
         return ChessDBrowRepertoire(database=database, ui=chessui)

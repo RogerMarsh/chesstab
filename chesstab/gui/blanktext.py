@@ -25,6 +25,11 @@ from .displayitems import DisplayItemsStub
 # other subclasses do not.
 # GameEdit uses all the names.
 class NonTagBind(enum.Enum):
+    """Enumerate the tkinter.Text tag state.
+
+    The tag state is used to control the event bindings for the widget.
+    """
+
     # Current token is a move.
     NO_EDITABLE_TAGS = 1
     NO_CURRENT_TOKEN = 2
@@ -37,7 +42,6 @@ class NonTagBind(enum.Enum):
 
 
 class BlankText(ExceptionHandler):
-
     """Create Text widget with configuration shared by subclasses.
 
     The subclasses are cqltext.CQLText, querytext.QueryText, score.Score,
@@ -134,7 +138,6 @@ class BlankText(ExceptionHandler):
     # Long term, either this method or add_cascade_menu_to_popup will do all.
     def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
         """Insert bindings in popup before index in popup."""
-
         # Default index is tkinter.END which seems to mean insert at end of
         # popup, not before last entry in popup as might be expected from the
         # way expressed in the 'Tk menu manual page' for index command.  (The
@@ -155,10 +158,10 @@ class BlankText(ExceptionHandler):
         return "break"
 
     def get_F10_popup_events(self, top_left, pointer):
-        """Return tuple of event definitions to post popup menus at top left
-        of focus widget and at pointer location within application widget.
+        """Return tuple of event definitions to post popup menus.
 
-        top_left and pointer are functions.
+        top_left is a method to post the menu at top left corner of widget.
+        pointer is a method to post the menu at current pointer location.
 
         """
         return (
@@ -168,9 +171,21 @@ class BlankText(ExceptionHandler):
 
     # Subclasses with database interfaces may override method.
     def create_database_submenu(self, menu):
+        """Do nothing.
+
+        Subclasses should override this method as needed.
+
+        """
         return None
 
     def post_menu(self, menu, create_menu, allowed=True, event=None):
+        """Post the popup menu at current pointer location in widget.
+
+        create_menu creates a popup menu if menu is None.
+        event supplies the screen location for popup menu top left corner.
+        allowed is True, default, permits display of menu.
+
+        """
         if menu is None:
             menu = create_menu()
         if not allowed:
@@ -183,6 +198,13 @@ class BlankText(ExceptionHandler):
     def post_menu_at_top_left(
         self, menu, create_menu, allowed=True, event=None
     ):
+        """Post the popup menu at top left in widget.
+
+        create_menu creates a popup menu if menu is None.
+        event supplies the screen location for popup menu top left corner.
+        allowed is True, default, permits display of menu.
+
+        """
         if menu is None:
             menu = create_menu()
         if not allowed:
@@ -193,7 +215,7 @@ class BlankText(ExceptionHandler):
         return "break"
 
     def is_active_item_mapped(self):
-        """ """
+        """Return True if this widget is visible and is the active item."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
                 return False
@@ -230,6 +252,15 @@ class BlankText(ExceptionHandler):
     }
 
     def create_primary_activity_popup(self):
+        """Create and return popup menu with primary and database commands.
+
+        The primary commands are set by subclasses and should be related
+        to their main function.
+
+        By default no database commands are set.  Subclasses should
+        override the create_database_submanu method as needed.
+
+        """
         assert self.primary_activity_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_primary_activity_events())
@@ -259,6 +290,11 @@ class BlankText(ExceptionHandler):
     # At a convenient time dump_text_widget will become a method in the
     # solentware_misc.gui.exceptionhandler.ExceptionHandler class.
     def dump_text_widget(self, textwidget, filename=None):
+        """Save dump of a tkinter.Text widget in filename.
+
+        Default filename is dumptextwidget in directory of error file.
+
+        """
         if filename is None:
             filename = "dumptextwidget"
         import os

@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise show toplevel to display Chess Query Language (ChessQL) statement
-record.
+"""Customise show toplevel to display Chess Query Language (ChessQL) record.
 
 ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
 Costeff).
@@ -64,16 +63,20 @@ class CQLDbShow(ExceptionHandler, ShowText, DataShow):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface TagRosterGrid object."""
         return self.ui.base_partials
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.partials_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the CQL query extracted from object_."""
         view.cql_statement.process_statement(object_.get_srvalue())
         view.set_and_tag_item_text()

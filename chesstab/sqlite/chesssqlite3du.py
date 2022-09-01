@@ -2,8 +2,7 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for sqlite3.
-"""
+"""Chess database update using custom deferred update for sqlite3."""
 
 import os
 import bz2
@@ -20,7 +19,7 @@ from ..core.chessrecord import ChessDBrecordGameImport
 
 
 class Chesssqlite3duError(Exception):
-    pass
+    """Exception class for chesssqlite3du module."""
 
 
 def chess_sqlite3du(
@@ -47,7 +46,6 @@ def chess_sqlite3du(
 
 
 class ChessDatabase(sqlite3du_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.

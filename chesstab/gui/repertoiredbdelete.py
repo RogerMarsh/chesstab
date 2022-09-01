@@ -2,8 +2,7 @@
 # Copyright 2013 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise delete toplevel to delete repertoire record.
-"""
+"""Customise delete toplevel to delete repertoire record."""
 
 from solentware_grid.gui.datadelete import DataDelete
 
@@ -17,7 +16,6 @@ from .toplevelpgn import DeletePGN
 
 
 class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
-
     """Delete PGN text for repertoire from database.
 
     parent is used as the master argument in a RepertoireToplevel call.
@@ -48,17 +46,21 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface RepertoireGrid object."""
         return self.ui.base_repertoires
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.games_and_repertoires_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the repertoire extracted from object_."""
         self.set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(

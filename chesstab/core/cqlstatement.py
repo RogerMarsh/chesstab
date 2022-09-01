@@ -50,7 +50,7 @@ _ROTATE45_VALIDATION_TABLE = str.maketrans("12345678", "xxxxxxxx")
 
 
 class CQLStatementError(Exception):
-    pass
+    """Exception class for cqlstatement module."""
 
 
 class CQLStatement(Statement):
@@ -63,7 +63,7 @@ class CQLStatement(Statement):
     create_node = CQLNode
 
     def __init__(self):
-        """ """
+        """Delegate then initialize description and database name."""
         # Error handling is slightly different to .querystatement module.
         # The error information object is held directly here while it is held
         # in the Where instance used to calculate the query there.
@@ -89,6 +89,7 @@ class CQLStatement(Statement):
 
     @property
     def dbset(self):
+        """Return database filename."""
         return self._dbset
 
     @dbset.setter

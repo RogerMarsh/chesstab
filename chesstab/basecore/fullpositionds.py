@@ -16,5 +16,4 @@ from .fullposition import FullPosition
 
 
 class FullPositionDS(FullPosition, DataSourceCursor):
-
     """Combine a standard DataSourceCursor with FullPosition."""

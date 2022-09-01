@@ -22,7 +22,6 @@ from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
 
 
 class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
-
     """ChessQL statement widget.
 
     panel is used as the panel argument for the super().__init__ call.
@@ -83,12 +82,12 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.ui.statusbar.set_status_text(self.cql_statement.get_name_text())
 
     def get_name_cql_statement_text(self):
-        """ """
+        """Return text from CQL statement Text widget."""
         text = self.score.get("1.0", tkinter.END).strip()
         return text
 
     def map_cql_statement(self):
-        """ """
+        """Convert tokens to text and show in CQL statement Text widget."""
         # No mapping of tokens to text in widget (yet).
         self.score.insert(
             tkinter.INSERT, self.cql_statement.get_name_statement_text()

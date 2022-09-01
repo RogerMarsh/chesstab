@@ -2,8 +2,10 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide classes which define methods shared by classes in cqldisplay and
-querydisplay modules which display plain text.
+"""Provide classes which define binding and traversal methods for text.
+
+The methods are shared by classes in cqldisplay and querydisplay modules
+which display plain text.
 
 The cqldisplay module has two sets of classes: based on the _CQLDisplay and
 CQLDialogue classes.
@@ -52,18 +54,7 @@ from .score import NonTagBind
 # because selection rules, CQL statements, and run engine commands, do not
 # have 'analysis'.
 class ShowText:
-
-    """Mixin providing methods shared by the cqldisplay._CQLDisplay and
-    querydisplay.QueryDisplay classes.
-
-    Provide focus switching and widget visibility methods for widgets which
-    display plain text.
-
-    The cqldisplay.CQLDialogue and query.QueryDialogue classes are used in a
-    Toplevel which displays one ChessQL or Selection Rule statement.  The
-    focus switching provided here is not needed.
-
-    """
+    """Provide focus switching and visibility methods for text widgets."""
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces
     # 'game' and 'repertoire'.  The method names already had 'item' rather
@@ -83,6 +74,7 @@ class ShowText:
         self.set_score_pointer_widget_navigation_bindings(True)
 
     def get_close_item_events(self):
+        """Return close item event description."""
         return ((EventSpec.display_dismiss, self.delete_item_view),)
 
     def set_insert_or_delete(self):
@@ -97,7 +89,6 @@ class ShowText:
 
     def set_and_tag_item_text(self, reset_undo=False):
         """Delegate to superclass method and set PGN score inactive."""
-
         # Superclass may set self._most_recent_bindings but test below must be
         # against current value.
         mrb = self._most_recent_bindings
@@ -108,16 +99,14 @@ class ShowText:
                 self.set_event_bindings_score(es, switch=True)
 
     def create_database_submenu(self, menu):
+        """Create and return popup submenu for database events."""
         submenu = tkinter.Menu(master=menu, tearoff=False)
         self.set_popup_bindings(submenu, self.get_database_events())
         return submenu
 
     # The only active bindings compared with displaypgn.ShowPGN.
     def set_primary_activity_bindings(self, switch=True):
-        """Delegate to toggle other relevant bindings and toggle bindings for
-        database actions, navigation to other widgets, and close widget.
-
-        """
+        """Delegate then set navigation and item close bindings."""
         super().set_primary_activity_bindings(switch=switch)
         self.set_database_navigation_close_item_bindings(switch=switch)
 
@@ -159,7 +148,6 @@ class ShowText:
     # What about current_pgn_score call?
     def current_item(self, event=None):
         """Select current PGN score on display."""
-
         # cuiai should be referencing self given use of current_item() method,
         # but style of sibling *_item() methods is followed.
         # cuiai was cuigs in gamedisplay, and cuirs in repertoiredisplay,
@@ -242,6 +230,13 @@ class ShowText:
     def patch_pgn_score_to_fit_record_change_and_refresh_grid(
         self, grid, instance
     ):
+        """Adjust list of games same position if instance is for active game.
+
+        A database update has been done for instance and if that game is the
+        active game, the list of games matching the current position may be
+        out of date.
+
+        """
         if self.ui_displayed_items.is_item_panel_active(self):
             # Patch data structure to look as though the edited record has
             # been read from disk.  That means DataGrid, DisplayItems, and
@@ -262,18 +257,7 @@ class ShowText:
 
 
 class DisplayText:
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplay
-    and repertoiredisplay.RepertoireDisplay classes.
-
-    Named DisplayPGN because ShowPGN is already taken, and when created the
-    only methods in the class are delete_game_database and get_database_events.
-    Both were in GameDisplay and RepertoireDisplay originally.
-
-    insert_game_database is in ShowPGN, not here, because it is also used
-    in the InsertPGN line.
-
-    """
+    """Provide method to set database insert and delete event descriptions."""
 
     def get_database_events(self):
         """Return event description tuple for PGN score database actions."""
@@ -284,14 +268,7 @@ class DisplayText:
 
 
 class InsertText:
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplayInsert
-    and repertoiredisplay.RepertoireDisplayInsert classes.
-
-    Provide methods involved in generating popup menus relevant to PGN score
-    editing when inserting records.
-
-    """
+    """Provide method which generates database insert event descriptions."""
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces
     # 'game' and 'repertoire'.  The method names already had 'item' rather
@@ -317,30 +294,17 @@ class InsertText:
 # In the PGN classes the demand is always implicit in making a token current,
 # so there is no PGN equivalent of ListGamesText.
 class ListGamesText:
-
-    """Mixin providing methods shared by the cqldisplay._CQLDisplay and
-    and querydisplay._QueryDisplay classes.
-
-    Provide methods involved in generating popup menus relevant to display
-    of game lists when editing records.
-
-    """
+    """Provide method which creates primary activity popup menu."""
 
     def create_primary_activity_popup(self):
+        """Delegate then add list games to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_list_games_entry_to_popup(popup)
         return popup
 
 
 class EditText:
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplayEdit
-    and repertoiredisplay.RepertoireDisplayEdit classes.
-
-    Provide methods involved in generating popup menus relevant to PGN score
-    editing when editing records.
-
-    """
+    """Provide method which generates database update event descriptions."""
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces
     # 'game' and 'repertoire'.  The method names already had 'item' rather

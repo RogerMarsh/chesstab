@@ -2,8 +2,7 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB.
-"""
+"""Chess database update using custom deferred update for Berkeley DB."""
 
 import os
 import bz2
@@ -42,7 +41,7 @@ from ..core.chessrecord import ChessDBrecordGameImport
 
 
 class ChessberkeleydbduError(Exception):
-    pass
+    """Exception class for chessberkeleydbdu module."""
 
 
 def chess_dbdu(
@@ -69,7 +68,6 @@ def chess_dbdu(
 
 
 class ChessDatabase(berkeleydbdu_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.
@@ -160,7 +158,7 @@ class ChessDatabase(berkeleydbdu_database.Database):
                 raise ChessberkeleydbduError("DB description invalid")
 
     def open_context_prepare_import(self):
-        """Return True
+        """Return True.
 
         No preparation actions thet need database open for Berkeley DB.
 
@@ -168,7 +166,7 @@ class ChessDatabase(berkeleydbdu_database.Database):
         return True
 
     def get_archive_names(self, files=()):
-        """Return specified files and existing operating system files"""
+        """Return specified files and existing operating system files."""
         if self.home_directory is None:
             return None, []
         if self._file_per_database:

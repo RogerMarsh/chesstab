@@ -2,8 +2,7 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for unqlite.
-"""
+"""Chess database update using custom deferred update for unqlite."""
 
 import os
 import bz2
@@ -27,7 +26,7 @@ _python_version = ".".join(
 
 
 class ChessunqliteduError(Exception):
-    pass
+    """Exception class for chessunqlitedu module."""
 
 
 def chess_unqlitedu(
@@ -54,7 +53,6 @@ def chess_unqlitedu(
 
 
 class ChessDatabase(unqlitedu_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.

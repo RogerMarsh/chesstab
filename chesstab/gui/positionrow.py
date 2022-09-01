@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets to display tag roster details of games matching a position.
-"""
+"""Create widgets to display tag roster details of games matching position."""
 # Put transposition moves in column 0 rather than column 4.
 # Display just the moves played in, and to reach, the position.
 
@@ -30,7 +29,6 @@ ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
-
     """Define row in list of games for given position.
 
     Add row methods to the chess game record definition.
@@ -111,7 +109,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         )
 
     def grid_row(self, position=None, context=(None, None, None), **kargs):
-        """Return super().grid_row(textitems=(...), **kargs).
+        """Return ChessDBrowPosition() with row items set to query text.
 
         Create textitems argument for ChessDBrowPosition instance.
 
@@ -122,6 +120,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         )
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowPosition() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
@@ -141,11 +140,12 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
                 w[0].configure(background=background)
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
     def populate_widget(self, widget, cnf=None, text=None, context=None, **kw):
-        """Wrapper for Tkinter.Text configure method for score attribute"""
+        """Delegate for tkinter.Label widget, put text in a PositionScore."""
         if isinstance(widget, tkinter.Label):
             super(ChessDBrowPosition, self).populate_widget(
                 widget, text=text, **kw
@@ -166,7 +166,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
 
 
 def make_ChessDBrowPosition(chessui):
-    """Make ChessDBrowPosition with reference to ChessUI instance"""
+    """Make ChessDBrowPosition with reference to ChessUI instance."""
 
     def make_position(database=None):
         return ChessDBrowPosition(database=database, ui=chessui)

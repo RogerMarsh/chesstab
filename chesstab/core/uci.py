@@ -138,7 +138,6 @@ class UCI(object):
 
     def run_engine(self, program_file_name, args):
         """Start a process to run an UCI chess engine."""
-
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
         # Assume all later Pythons are affected because they do not install
@@ -449,14 +448,14 @@ class UCI(object):
             self.clear_hash_after_bestmove[ui_name] = True
 
     def copyprotection(self, ui_name):
-        """ """
+        """Print the copy protection command from the chess engine."""
         print(
             CommandsFromEngine.copyprotection,
             self.uci_drivers[ui_name].parser.copyprotection,
         )
 
     def registration(self, ui_name):
-        """ """
+        """Print the registration command from the chess engine."""
         print(
             CommandsFromEngine.registration,
             self.uci_drivers[ui_name].parser.registration,
@@ -464,7 +463,7 @@ class UCI(object):
 
     @property
     def use_ucinewgame(self):
-        """True if ucinewgame command to be used before each move."""
+        """Return True if ucinewgame command to be used before each move."""
         return self._use_ucinewgame
 
     @use_ucinewgame.setter
@@ -474,7 +473,7 @@ class UCI(object):
 
     @property
     def clear_hash(self):
-        """True if clear hash command to be used before each move."""
+        """Return True if clear hash command to be used before each move."""
         return self._clear_hash
 
     @clear_hash.setter
@@ -484,7 +483,7 @@ class UCI(object):
 
     @property
     def go_depth(self):
-        """The depth value to use in go depth commands."""
+        """Return depth value to use in go depth commands."""
         return self._go_depth
 
     @go_depth.setter
@@ -494,7 +493,7 @@ class UCI(object):
 
     @property
     def multipv(self):
-        """The value to use in setoption MultiPV commands."""
+        """Return value to use in setoption MultiPV commands."""
         return self._multipv
 
     @multipv.setter
@@ -504,7 +503,7 @@ class UCI(object):
 
     @property
     def hash_size(self):
-        """The value to use in setoption hash commands."""
+        """Return value to use in setoption hash commands."""
         return self._hash_size
 
     @hash_size.setter

@@ -31,7 +31,6 @@ from .eventspec import EventSpec
 
 
 class CQL(CQLText):
-
     """ChessQL statement widget.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -53,10 +52,7 @@ class CQL(CQLText):
         itemgrid=None,
         **ka
     ):
-        """Create Frame and delegate to superclass, then set grid geometry
-        manager.
-        """
-
+        """Create Frame and delegate to superclass, then set grid geometry."""
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
@@ -112,7 +108,6 @@ class CQL(CQLText):
 
     def takefocus(self, take=True):
         """Configure game widget takefocus option."""
-
         # Hack because I misunderstood meaning of takefocus: FALSE does not
         # stop the widget taking focus, just stops tab traversal.
         if take:
@@ -122,6 +117,7 @@ class CQL(CQLText):
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
 
     def set_database_navigation_close_item_bindings(self, switch=True):
+        """Unset navigation bindings when CQL query is closed."""
         self.set_event_bindings_score(
             self.get_database_events(), switch=switch
         )
@@ -153,6 +149,7 @@ class CQL(CQLText):
         """
 
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup

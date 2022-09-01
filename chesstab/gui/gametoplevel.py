@@ -14,15 +14,14 @@ from .toplevelpgn import ToplevelPGN
 
 
 class GameToplevel(ToplevelPGN, Game):
-
     """Customize Game to be the single instance in a Toplevel widget."""
 
 
 class GameToplevelEdit(ToplevelPGN, GameEdit):
-
     """Customize GameEdit to be the single instance in a Toplevel widget."""
 
     def create_primary_activity_popup(self):
+        """Create popup menu for a game widget."""
         popup = super().create_primary_activity_popup()
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label

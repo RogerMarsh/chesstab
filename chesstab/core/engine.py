@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess engine program definition.
-"""
+"""Chess engine program definition."""
 import os.path
 from urllib.parse import urlsplit, parse_qs
 
@@ -24,13 +23,13 @@ class Engine(object):
     """
 
     def __init__(self):
-        """ """
+        """Delegate then initialize engine description and start command."""
         super().__init__()
         self._description_string = ""
         self._run_engine_string = ""
 
     def update_engine_definition(self, attributes):
-        """Update existing self.__dict__ keys from dict attributes"""
+        """Update existing self.__dict__ keys from dict attributes."""
         for a in self.__dict__.keys():
             if a in attributes:
                 self.__dict__[a] = attributes[a]

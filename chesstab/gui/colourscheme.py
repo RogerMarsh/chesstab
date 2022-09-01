@@ -2,8 +2,7 @@
 # Copyright 2009 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""A chess board colour scheme chooser.
-"""
+"""A chess board colour scheme chooser."""
 
 import tkinter
 import tkinter.font
@@ -18,7 +17,6 @@ from . import game, board
 
 
 class _ColourScheme(ExceptionHandler):
-
     """Widgets to select fonts and colours for chess board and game score.
 
     Use the subclasses defined in this module depending on what fits on
@@ -425,7 +423,7 @@ class _ColourScheme(ExceptionHandler):
             return 3
 
     def is_ok(self):
-        """Returns True if dialogue closed using Ok button."""
+        """Return True if dialogue closed using Ok button."""
         return self.ok
 
     def on_cancel(self, event=None):
@@ -591,7 +589,6 @@ class _ColourScheme(ExceptionHandler):
 
 
 class ColourChooser(_ColourScheme):
-
     """Create a colour selection widget.
 
     Use this widget on screens up to 950 pixels high.
@@ -616,7 +613,6 @@ class ColourChooser(_ColourScheme):
 
 
 class FontChooser(_ColourScheme):
-
     """Create a font selection widget.
 
     Use this widget on screens up to 950 pixels high.
@@ -641,7 +637,6 @@ class FontChooser(_ColourScheme):
 
 
 class FontColourChooser(_ColourScheme):
-
     """Create a font and colour selection widget.
 
     Use this widget on screens over 950 pixels high.
@@ -667,7 +662,6 @@ class FontColourChooser(_ColourScheme):
 
 
 class ChessColourSlider(ColourSlider):
-
     """Create colour selection widget containing Red Green and Blue sliders."""
 
     def __init__(

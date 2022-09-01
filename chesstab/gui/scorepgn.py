@@ -2,32 +2,16 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide classes which define methods shared by classes in the displaypgn
-and toplevelpgn modules which display Portable Game Notation (PGN) text.
+"""Provide class which switches board display between game score and analysis.
 
-The displaypgn module has classes used as superclasses in the gamedisplay and
-repertoiredisplay modules.
+The ScorePGN class is used to to display games and repertoires.
 
-The toplevelpgn module has classes used as superclasses in the gamedbdelete,
-gamedbdisplay, gamedbedit, gamedbshow, repertoiredbdelete, repertoiredbdisplay,
-repertoiredbedit, and repertoiredbshow, classes.
-
-All methods in the classes in this module existed as multiple copies in various
-classes in the modules named above.  They are now deleted from those modules.
-
-The classes in this module represnt the different sets of classes with methods
-in common.
-
-The ScorePGN class has methods identical in _GameDisplay, _RepertoireDisplay,
-GameDialogue, and RepertoireDialogue, now removed from those classes.
-
+The games and repertoires are in Portable Game Notation (PGN) text.
 """
 
 
 class ScorePGN:
-
-    """Mixin providing methods shared by the displaypgn.ShowPGN and
-    toplevelpgn.ToplevelPGN classes.
+    """Display current game or analysis position on the board.
 
     These methods display the game or repertoire PGN score, or the engine
     analysis for the PGN score.
@@ -69,7 +53,6 @@ class ScorePGN:
         and repertoiredisplay modules.
 
         """
-
         # cuiai should be referencing self given use of current_item() method,
         # but style of sibling *_item() methods is followed.
         # cuiai was cuigs in gamedisplay, and cuirs in repertoiredisplay,

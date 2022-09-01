@@ -2,8 +2,12 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Demonstrate chess game class and methods to display PGN text, board, and
-analysis as it appears without an active chess engine."""
+"""Demonstrate chess game class and methods.
+
+This sample code will display PGN text, board, and analysis as it appears
+without an active chess engine.
+
+"""
 
 if __name__ == "__main__":
 
@@ -19,13 +23,13 @@ if __name__ == "__main__":
         """Helper to allow Game instances to work without a real UI."""
 
         def set_status_text(self, *a, **k):
-            pass
+            """Do nothing."""
 
     class DuckqueueQueue:
         """Helper to allow Game instances to work without a real UI."""
 
         def put(self, *a):
-            pass
+            """Do nothing."""
 
     class DuckcoreuciUCI:
         """Helper to allow Game instances to work without a real UI."""
@@ -49,6 +53,7 @@ if __name__ == "__main__":
         database = False
 
         def make_position_analysis_data_source(self):
+            """Return None as data analysis source."""
             return None
 
         statusbar = DuckStatusbar()
@@ -58,9 +63,12 @@ if __name__ == "__main__":
     # else, even if duplicated, to avoid this.
     # An empty Navigation entry is put in the popup menu.
     class Game(Game):
+        """Customise Game with empty popup navigation maps."""
+
         binding_labels = ()
 
         def generate_popup_navigation_maps(self):
+            """Return empty navigation maps."""
             return {}, {}
 
     root = tkinter.Tk()

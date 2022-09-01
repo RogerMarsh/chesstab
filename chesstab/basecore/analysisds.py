@@ -16,5 +16,4 @@ from .analysis import Analysis
 
 
 class AnalysisDS(Analysis, DataSourceCursor):
-
     """Combine a standard DataSourceCursor with Analysis."""

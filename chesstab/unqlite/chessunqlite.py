@@ -2,8 +2,7 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database using unqlite.
-"""
+"""Chess database using unqlite."""
 
 import os
 
@@ -17,11 +16,10 @@ from ..basecore import database
 
 
 class ChessDatabaseError(Exception):
-    pass
+    """Exception class for chessunqlite module."""
 
 
 class ChessDatabase(database.Database, unqlite_database.Database):
-
     """Provide access to a database of games of chess."""
 
     _deferred_update_process = os.path.join(

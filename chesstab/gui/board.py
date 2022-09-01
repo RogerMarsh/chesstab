@@ -77,7 +77,6 @@ _pieces = {
 
 
 class Board(ExceptionHandler):
-
     """Chess board widget.
 
     Frame containing an 8x8 grid of Text widgets representing chess board
@@ -200,7 +199,6 @@ class Board(ExceptionHandler):
 
 
 class PartialBoard(Board):
-
     """Partial board widget.
 
     Customise Board to display wildpieces.
@@ -229,7 +227,6 @@ class PartialBoard(Board):
 
     def draw_board(self):
         """Set font size to match board size and redraw pieces."""
-
         # Obsolescent comment because board no longer shown for partial
         # position after conversion to CQL statements.
 

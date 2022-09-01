@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise edit toplevel to edit or insert chess engine definition record.
-"""
+"""Customise edit toplevel to edit or insert chess engine definition."""
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
@@ -61,8 +60,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         self.initialize()
 
     def get_title_for_object(self, object_=None):
-        """Return title for Toplevel containing a chess engine definition
-        object_.
+        """Return title for Toplevel containing a chess engine definition.
 
         Default value of object_ is oldobject attribute from DataEdit class.
 
@@ -81,17 +79,21 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface EngineListGrid object."""
         return self.ui.base_engines
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.engines_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'editable' view."""
         return self.newview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)
 
@@ -142,6 +144,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         return super().dialog_ok()
 
     def tidy_on_destroy(self):
+        """Clear up after Toplevel destruction."""
         # ui_base_table is None when this happens other than directly closing
         # the Toplevel.
         try:

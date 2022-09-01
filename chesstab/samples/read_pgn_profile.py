@@ -13,6 +13,8 @@ from ..core.pgn import GameUpdate
 
 
 class Main(_utilities.Main):
+    """Collect timing profile for processing a PGN file."""
+
     def process_pgn_file(self, event=None):
         """Process PGN file."""
         pr = cProfile.Profile()

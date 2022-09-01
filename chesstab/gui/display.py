@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide focus switching and widget visibility methods shared by widgets.
-"""
+"""Provide focus switching and widget visibility methods shared by widgets."""
 
 import tkinter
 
@@ -11,7 +10,6 @@ from .eventspec import DummyEvent
 
 
 class Display(object):
-
     """Mixin providing focus switching and widget visibility methods.
 
     The User Interface has sets of related widgets: each set has a widget to:
@@ -27,7 +25,7 @@ class Display(object):
     """
 
     def bind_for_widget_navigation(self):
-        """Subclasses shall override this method if necessary.
+        """Override this method if necessary.
 
         Set pointer bindings for this widget to become the active item of it's
         type and regain the focus.
@@ -154,21 +152,25 @@ class Display(object):
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order.
 
-        Subclasses shall override if required."""
+        Subclasses shall override if required.
+        """
         # Do nothing.
         return "break"
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order.
 
-        Subclasses shall override if required."""
+        Subclasses shall override if required.
+        """
         # Do nothing.
         return "break"
 
     def traverse_round(self, event=None):
         """Give focus to next widget within active item in traversal order.
 
-        Subclasses shall override if required."""
+        Subclasses shall override if required.
+
+        """
         # Do nothing.
         return "break"
 

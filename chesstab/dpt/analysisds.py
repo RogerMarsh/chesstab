@@ -17,5 +17,4 @@ from ..basecore.analysis import Analysis
 
 
 class AnalysisDS(Analysis, DataSourceCursor):
-
     """Combine a DPT DataSourceCursor with Analysis."""

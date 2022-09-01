@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise delete toplevel to delete game selection rule statement record.
-"""
+"""Customise delete toplevel to delete game selection rule statement record."""
 
 from solentware_grid.gui.datadelete import DataDelete
 
@@ -66,16 +65,20 @@ class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface CQLGrid object."""
         return self.ui.base_partials
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.partials_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the query extracted from object_."""
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text()

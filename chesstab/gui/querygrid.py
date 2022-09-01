@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Grids for listing details of selection rules on chess database.
-"""
+"""Grids for listing details of selection rules on chess database."""
 
 import tkinter.messagebox
 
@@ -20,7 +19,6 @@ from .display import Display
 
 
 class QueryListGrid(ExceptionHandler, DataGrid, Display):
-
     """A DataGrid for lists of game selection rules.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -260,7 +258,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
         exclude=True,
     ):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -279,7 +276,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -293,7 +289,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_partial_key(self, key):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -307,7 +302,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_configure_canvas(self, event=None):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -321,7 +315,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_data_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -334,6 +327,7 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
             super(QueryListGrid, self).on_data_change(instance)
 
     def set_popup_bindings(self, popup, bindings=()):
+        """Set popup menu bindings for query grid."""
         for accelerator, function in bindings:
             popup.add_command(
                 label=accelerator[1],
@@ -448,7 +442,6 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
 
 
 class QueryGrid(QueryListGrid):
-
     """Customized QueryListGrid for list of game selection rules."""
 
     def __init__(self, ui):
@@ -693,6 +686,7 @@ class QueryGrid(QueryListGrid):
 
     def on_partial_change(self, instance):
         # may turn out to be just to catch datasource is None
+        """Refresh query grid after database update for instance."""
         if self.get_data_source() is None:
             return
         super(QueryGrid, self).on_data_change(instance)

@@ -2,8 +2,7 @@
 # Copyright 2009 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Make and copy chess pieces fonts for ChessTab.
-"""
+"""Make and copy chess pieces fonts for ChessTab."""
 
 import tkinter
 import tkinter.font

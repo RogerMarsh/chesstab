@@ -2,8 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database using dbm.ndbm.
-"""
+"""Chess database using dbm.ndbm."""
 
 import os
 
@@ -17,11 +16,10 @@ from ..basecore import database
 
 
 class ChessDatabaseError(Exception):
-    pass
+    """Exception class for chessndbm module."""
 
 
 class ChessDatabase(database.Database, ndbm_database.Database):
-
     """Provide access to a database of games of chess."""
 
     _deferred_update_process = os.path.join(

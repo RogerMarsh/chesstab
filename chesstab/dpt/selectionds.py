@@ -17,5 +17,4 @@ from ..basecore.selection import Selection
 
 
 class SelectionDS(Selection, DataSourceCursor):
-
     """Combine a DPT DataSourceCursor with Selection."""

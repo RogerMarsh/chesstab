@@ -45,7 +45,6 @@ from ..basecore import database
 
 
 class ChessDatabase(database.Database, berkeleydb_database.Database):
-
     """Provide access to a database of games of chess."""
 
     _deferred_update_process = os.path.join(

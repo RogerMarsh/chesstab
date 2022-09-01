@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Grids for listing details of games on chess database.
-"""
+"""Grids for listing details of games on chess database."""
 
 import tkinter.messagebox
 
@@ -39,7 +38,6 @@ from ..core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
 
 
 class GameListGrid(ExceptionHandler, DataGrid, Display):
-
     """A DataGrid for lists of chess games.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -269,7 +267,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
         exclude=True,
     ):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -288,7 +285,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -302,7 +298,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_partial_key(self, key):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -315,9 +310,10 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
             super(GameListGrid, self).load_new_partial_key(key)
 
     def on_configure_canvas(self, event=None):
-        """Delegate to superclass and then apply row highlighting if database
-        is open otherwise do nothing."""
+        """Delegate to superclass and then apply row highlighting.
 
+        If a database is not open do nothing.
+        """
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -340,7 +336,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_data_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -353,6 +348,7 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
             super(GameListGrid, self).on_data_change(instance)
 
     def set_popup_bindings(self, popup, bindings=()):
+        """Set popup menu bindings for game list grid."""
         for accelerator, function in bindings:
             popup.add_command(
                 label=accelerator[1],
@@ -550,7 +546,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 # introducing subclasses of PGN to do just the required work it may not be
 # possible for PartialPositionGames to be subclass of GameListGrid.
 class PartialPositionGames(GameListGrid):
-
     """Customized GameListGrid for list of games matching a partial position.
 
     The grid is populated by a ChessQueryLanguageDS instance from the dpt.cqlds
@@ -759,6 +754,7 @@ class PartialPositionGames(GameListGrid):
         )
 
     def on_game_change(self, instance):
+        """Delegate to superclass if data source exists."""
         # datasource refers to a set derived from file and may need
         # to be recreated
         if self.get_data_source() is None:
@@ -814,7 +810,6 @@ class PartialPositionGames(GameListGrid):
 
 
 class GamePositionGames(GameListGrid):
-
     """Customized GameListGrid for list of games matching a game position.
 
     The grid is populated by a FullPositionDS instance from the
@@ -1037,6 +1032,7 @@ class GamePositionGames(GameListGrid):
         )
 
     def on_game_change(self, instance):
+        """Delegate to superclass if data source exists."""
         # datasource refers to a set derived from file and may need
         # to be recreated
         if self.get_data_source() is None:
@@ -1099,7 +1095,6 @@ class GamePositionGames(GameListGrid):
 
 
 class TagRosterGrid(GameListGrid):
-
     """Customized GameListGrid for list of games on database.
 
     The grid is usually populated by a DataSource instance from the
@@ -1308,6 +1303,7 @@ class TagRosterGrid(GameListGrid):
         self.edit_selected_item(self.pointer_popup_selection)
 
     def on_game_change(self, instance):
+        """Delegate to superclass if data source exists."""
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return
@@ -1394,7 +1390,6 @@ class TagRosterGrid(GameListGrid):
 
 
 class RepertoireGrid(GameListGrid):
-
     """Customized GameListGrid for list of repertoires on database."""
 
     def __init__(self, ui):
@@ -1576,6 +1571,7 @@ class RepertoireGrid(GameListGrid):
         self.edit_selected_item(self.pointer_popup_selection)
 
     def on_game_change(self, instance):
+        """Delegate to superclass if data source exists."""
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return
@@ -1833,8 +1829,7 @@ class RepertoireGrid(GameListGrid):
 
 
 class RepertoirePositionGames(GameListGrid):
-
-    """Customized GameListGrid for list of games matching a repertoire position.
+    """Customized GameListGrid for list of games matching repertoire position.
 
     The grid is populated by a FullPositionDS instance from the
     dpt.fullpositionds or basecore.fullpositionds modules.
@@ -2050,6 +2045,7 @@ class RepertoirePositionGames(GameListGrid):
         )
 
     def on_game_change(self, instance):
+        """Delegate to superclass if data source exists."""
         # datasource refers to a set derived from file and may need
         # to be recreated
         if self.get_data_source() is None:

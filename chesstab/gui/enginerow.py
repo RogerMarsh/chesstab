@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets that display details of chess engines emabled for database.
-"""
+"""Create widgets that display details of chess engines emabled for database."""
 
 import tkinter
 
@@ -26,7 +25,6 @@ ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
-
     """Define row in list of chess engines.
 
     Add row methods to the chess engine record definition.
@@ -106,11 +104,7 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
         )
 
     def grid_row(self, **kargs):
-        """Return super().grid_row(textitems=(...), **kargs).
-
-        Create textitems argument for ChessDBrowEngine instance.
-
-        """
+        """Return ChessDBrowEngine() with text set to engine name."""
         return super(ChessDBrowEngine, self).grid_row(
             textitems=(
                 self.value.get_name_text(),
@@ -120,16 +114,18 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
         )
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowEngine() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
 
 def make_ChessDBrowEngine(chessui):
-    """Make ChessDBrowEngine with reference to ChessUI instance"""
+    """Make ChessDBrowEngine with reference to ChessUI instance."""
 
     def make_engine(database=None):
         return ChessDBrowEngine(database=database, ui=chessui)

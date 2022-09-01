@@ -2,8 +2,7 @@
 # Copyright 2009 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Functions for editing and applying font and colour options.
-"""
+"""Functions for editing and applying font and colour options."""
 
 import os
 

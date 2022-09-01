@@ -2,8 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database using dbm.gnu.
-"""
+"""Chess database using dbm.gnu."""
 
 import os
 
@@ -17,11 +16,10 @@ from ..basecore import database
 
 
 class ChessDatabaseError(Exception):
-    pass
+    """Exception class for chessgnu module."""
 
 
 class ChessDatabase(database.Database, gnu_database.Database):
-
     """Provide access to a database of games of chess."""
 
     _deferred_update_process = os.path.join(

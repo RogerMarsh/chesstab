@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Game selection rule parser.
-"""
+"""Game selection rule parser."""
 
 import re
 
@@ -24,7 +23,7 @@ re_normalize_player_name = re.compile("([^,\.\s]+)(?:[,\.\s]*)")
 
 
 class QueryStatementError(Exception):
-    pass
+    """Exception class for querystatement module."""
 
 
 class QueryStatement(object):
@@ -35,7 +34,7 @@ class QueryStatement(object):
     """
 
     def __init__(self):
-        """ """
+        """Initialize the query statement text and derived query."""
         super().__init__()
         self._dbset = None
 
@@ -62,10 +61,12 @@ class QueryStatement(object):
 
     @property
     def where_error(self):
+        """Return the error desciption instance."""
         return self._where_error
 
     @property
     def dbset(self):
+        """Return database file name."""
         return self._dbset
 
     @dbset.setter

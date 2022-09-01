@@ -2,7 +2,9 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide classes which define methods shared by classes in gamedisplay and
+"""Provide classes which define set bindings and navigation methods.
+
+The methods in these classes are shared by classes in gamedisplay and
 repertoiredisplay modules which display Portable Game Notation (PGN) text.
 
 The gamedisplay module has two sets of classes: based on the _GameDisplay and
@@ -54,18 +56,7 @@ from .displaytext import ShowText, DisplayText, EditText, InsertText
 # ShowText before ScorePGN because identical methods in ShowPGN and ShowText
 # are deleted from ShowPGN.
 class ShowPGN(ShowText, ScorePGN):
-
-    """Mixin providing methods shared by the gamedisplay._GameDisplay and
-    repertoiredisplay.RepertoreDisplay classes.
-
-    Provide focus switching and widget visibility methods for widgets which
-    display Portable Game Notation (PGN) text.
-
-    The gamedisplay.GameDialogue and repertoire.RepertoireDialogue classes
-    are used in a Toplevel which displays one game or repertoire.  The focus
-    switching provided here is not needed.
-
-    """
+    """Provide methods to set bindinds and traverse visible items."""
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces
     # 'game' and 'repertoire'.  The method names already had 'item' rather
@@ -100,7 +91,6 @@ class ShowPGN(ShowText, ScorePGN):
     # subclass: see displaytext.ShowText version.
     def set_and_tag_item_text(self, reset_undo=False):
         """Delegate to superclass method and set PGN score inactive."""
-
         # Superclass may set self._most_recent_bindings but test below must be
         # against current value.
         mrb = self._most_recent_bindings
@@ -114,10 +104,7 @@ class ShowPGN(ShowText, ScorePGN):
                 self.set_event_bindings_score(es, switch=True)
 
     def set_select_variation_bindings(self, switch=True):
-        """Delegate to toggle other relevant bindings and toggle bindings for
-        database actions, navigation to other widgets, and close widget.
-
-        """
+        """Delegate then set navigation and close item bindings."""
         super().set_select_variation_bindings(switch=switch)
         self.set_database_navigation_close_item_bindings(switch=switch)
 
@@ -249,18 +236,7 @@ class ShowPGN(ShowText, ScorePGN):
 
 
 class DisplayPGN(DisplayText):
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplay
-    and repertoiredisplay.RepertoireDisplay classes.
-
-    Named DisplayPGN because ShowPGN is already taken, and when created the
-    only methods in the class are delete_game_database and get_database_events.
-    Both were in GameDisplay and RepertoireDisplay originally.
-
-    insert_game_database is in ShowPGN, not here, because it is also used
-    in the InsertPGN line.
-
-    """
+    """Provide method to delete an item from database."""
 
     def delete_item_database(self, event=None):
         """Remove PGN score from database on request from item display."""
@@ -341,14 +317,7 @@ class DisplayPGN(DisplayText):
 
 
 class InsertPGN(InsertText):
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplayInsert
-    and repertoiredisplay.RepertoireDisplayInsert classes.
-
-    Provide methods involved in generating popup menus relevant to PGN score
-    editing when inserting records.
-
-    """
+    """Provide methods to generate popup menus for inserting PGN scores."""
 
     # The methods identical except for docstrings.  Here 'PGN score' replaces
     # 'game' and 'repertoire'.  The method names already had 'item' rather
@@ -357,6 +326,7 @@ class InsertPGN(InsertText):
     # 'Select' classes.
 
     def create_primary_activity_popup(self):
+        """Delegate then set bindings for navigation and insert PGN."""
         popup = super().create_primary_activity_popup()
         self.add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label
@@ -371,68 +341,67 @@ class InsertPGN(InsertText):
         return popup
 
     def create_select_move_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_select_move_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_pgn_tag_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_pgn_tag_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_comment_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_comment_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_nag_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_nag_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_start_rav_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_start_rav_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_end_rav_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_end_rav_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_comment_to_end_of_line_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_comment_to_end_of_line_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_escape_whole_line_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_escape_whole_line_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_reserved_popup(self):
+        """Delegate then set bindings for close item."""
         popup = super().create_reserved_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def set_edit_symbol_mode_bindings(self, switch=True, **ka):
-        """Delegate to toggle other relevant bindings and toggle bindings for
-        database actions, navigation to other widgets, and close widget.
-
-        """
+        """Delegate then set bindings for navigation and close item."""
         super().set_edit_symbol_mode_bindings(switch=switch, **ka)
         self.set_database_navigation_close_item_bindings(switch=switch)
 
 
 class EditPGN(EditText):
-
-    """Mixin providing methods shared by the gamedisplay.GameDisplayEdit
-    and repertoiredisplay.RepertoireDisplayEdit classes.
-
-    Provide methods involved in generating popup menus relevant to PGN score
-    editing when editing records.
-
-    """
+    """Provide methods to generate popup menus for editing PGN scores."""
 
     def update_item_database(self, event=None):
         """Modify existing PGN score record."""

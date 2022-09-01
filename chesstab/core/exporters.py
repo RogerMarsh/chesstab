@@ -2,8 +2,7 @@
 # Copyright 2013 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess game, repertoire, and partial position exporters.
-"""
+"""Chess game, repertoire, and partial position exporters."""
 
 import os
 
@@ -185,8 +184,9 @@ def export_all_games_pgn_no_comments(database, filename):
 
 
 def export_all_games_pgn_no_comments_no_ravs(database, filename):
-    """Export all database games in PGN export format excluding comments and
-    RAVs.
+    """Export all database games, tags and moves only, in PGN export format.
+
+    Comments and RAVs are excluded from the export.
 
     """
     if filename is None:
@@ -374,7 +374,7 @@ def export_all_repertoires_pgn_import_format(database, filename):
 
 
 def export_all_repertoires_text(database, filename):
-    """Export repertoires in database to text file in internal record format."""
+    """Export repertoires in database to text file in internal format."""
     if filename is None:
         return True
     rr = chessrecord.ChessDBrecordGameText()
@@ -397,10 +397,7 @@ def export_all_repertoires_text(database, filename):
 
 
 def export_all_positions(database, filename):
-    """Export CQL statements in database to text file in internal record
-    format.
-
-    """
+    """Export CQL statements in database to text file in internal format."""
     if filename is None:
         return True
     rr = chessrecord.ChessDBrecordPartial()
@@ -1351,8 +1348,10 @@ def export_single_game_pgn(collected_game, filename):
 
 
 def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
-    """Export collected_game to filename in PGN export format without comments
-    or RAVs.
+    """Export collected_game tags and moves to filename in PGN export format.
+
+    No comments or RAVs are included in the export (PGN Tags and moves
+    played only).
 
     Caller should test is_pgn_valid_export_format before picking filename.
 

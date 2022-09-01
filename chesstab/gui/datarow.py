@@ -2,9 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Add solentware_misc exception handling to solentware_grid DataRow class for
-ChessTab.
-"""
+"""Provide DataRow class which uses solentware_misc exception handling."""
 
 from solentware_grid.gui.datarow import DataRow
 
@@ -12,7 +10,4 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 
 class DataRow(ExceptionHandler, DataRow):
-
-    """Override solentware_grid.gui.datarow.DataRow methods, from the subclass
-    CallbackException, with those in ExceptionHandler.
-    """
+    """Override DataRow methods with those available in ExceptionHandler."""

@@ -2,8 +2,7 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""ChessTab database methods common to all database engine interfaces.
-"""
+"""ChessTab database methods common to all database engine interfaces."""
 
 import os
 import bz2
@@ -18,8 +17,7 @@ from .. import APPLICATION_NAME, ERROR_LOG
 
 
 class Database:
-
-    """ """
+    """Define methods which are common to all database engine interfaces."""
 
     def use_deferred_update_process(self, **kargs):
         """Return path to deferred update module.
@@ -120,7 +118,7 @@ class Database:
         return message
 
     def get_archive_names(self, files=()):
-        """Return names and operating system files for archives and guards"""
+        """Return names and operating system files for archives and guards."""
         names = (self.database_file,)
         archives = dict()
         guards = dict()
@@ -163,7 +161,7 @@ class Database:
         pass
 
     def adjust_database_for_retry_import(self, files):
-        """Database engine specific actions to do before re-trying an import"""
+        """Database engine specific actions to do before re-trying an import."""
         pass
 
     def mark_partial_positions_to_be_recalculated(self):

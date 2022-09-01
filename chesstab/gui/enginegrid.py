@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Grids for listing details of chess engines enabled for chess database.
-"""
+"""Grids for listing details of chess engines enabled for chess database."""
 
 import tkinter
 import tkinter.messagebox
@@ -20,7 +19,6 @@ from .display import Display
 
 
 class EngineListGrid(ExceptionHandler, DataGrid, Display):
-
     """A DataGrid for lists of chess engine definition.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -128,7 +126,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
     def create_edit_dialog(
         self, instance, newobject, oldobject, showinitial, modal, title=""
     ):
-        """Extend to do chess initialization"""
+        """Extend to do chess initialization."""
         for x in (newobject, oldobject):
             if x:
                 x.load_record((instance.key.pack(), instance.srvalue))
@@ -144,7 +142,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         exclude=True,
     ):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -163,7 +160,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -177,7 +173,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_partial_key(self, key):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -191,7 +186,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_configure_canvas(self, event=None):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -205,7 +199,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_data_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # Intend to put this in superclass but must treat the DataClient objects
         # being scrolled as a database to do this properly.  Do this when these
         # objects have been given a database interface used when the database
@@ -261,7 +254,6 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
 
 class EngineGrid(EngineListGrid):
-
     """Customized EngineListGrid for list of enabled chess engines."""
 
     def __init__(self, ui):
@@ -308,7 +300,6 @@ class EngineGrid(EngineListGrid):
 
     def on_partial_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return

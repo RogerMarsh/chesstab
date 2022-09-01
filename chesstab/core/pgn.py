@@ -54,6 +54,7 @@ class GameDisplayMoves(GameIndicateCheck):
     """Add structures to support display of PGN moves."""
 
     def __init__(self):
+        """Delegate then initialize moves to empty list."""
         super().__init__()
         self.moves = []
 
@@ -87,10 +88,12 @@ class GameMove(Game):
     """
 
     def __init__(self):
+        """Delegate then set 'set initial position state' to None."""
         super().__init__()
         self._set_initial_position_state = None
 
     def set_initial_position(self):
+        """Return 'set initial position state' after delegate to initialize."""
         if self._set_initial_position_state is None:
             self._set_initial_position_state = super().set_initial_position()
         return self._set_initial_position_state
@@ -262,9 +265,11 @@ class GameTags(Game):
     """
 
     def append_token_and_set_error(self, match):
+        """Delegate."""
         super().append_token_and_set_error(match)
 
     def append_start_tag(self, match):
+        """Delegate."""
         super().append_start_tag(match)
 
     def append_piece_move(self, match):
@@ -328,9 +333,11 @@ class GameTags(Game):
             self.add_board_state_none(None)
 
     def ignore_move_number(self, match):
+        """Delegate."""
         super().ignore_move_number(match)
 
     def ignore_dots(self, match):
+        """Delegate."""
         super().ignore_dots(match)
 
     def append_token(self, match):
@@ -348,8 +355,7 @@ class GameTags(Game):
     append_reserved = append_token
 
     def append_start_rav(self, match):
-        """Append start recursive annotation variation token to game score and
-        update board state.
+        """Append start RAV token to game score and update board state.
 
         Put game in error state if a variation cannot be put at current place
         in game score.
@@ -364,8 +370,7 @@ class GameTags(Game):
         self._state_stack.append(self._state)
 
     def append_end_rav(self, match):
-        """Append end recursive annotation variation token to game score and
-        update board state.
+        """Append end RAV token to game score and update board state.
 
         Put game in error state if a variation cannot be finished at current
         place in game score.
@@ -390,6 +395,7 @@ class GameTags(Game):
         return True
 
     def ignore_escape(self, match):
+        """Delegate."""
         super().ignore_escape(match)
 
     def append_other_or_disambiguation_pgn(self, match):
@@ -414,17 +420,22 @@ class GameTags(Game):
         self._text.append(match.group())
 
     def append_start_rav_after_error(self, match):
-        """Append start RAV marker to game score and adjust error state for
-        recovery at end of recursive annotation variation in which error
-        occured.
+        """Append start RAV marker to game score and prepare error recovery.
+
+        Rest of RAV is assumed to be in error, but after next matching end
+        RAV marker it is worth assuming it possible to pick up from the
+        valid position just before this start RAV marker.
+
         """
         self._text.append(match.group())
         self._state_stack.append(self._state)
 
     def append_end_rav_after_error(self, match):
-        """Append start RAV marker to game score and adjust error state for
-        recovery at end of recursive annotation variation in which error
-        occured.
+        """Append end RAV marker to game score and reset position to pre-RAV.
+
+        It is assumed the pre-RAV position is valid (otherwise the error
+        state would have begun earlier).
+
         """
         if len(self._state_stack) > 1:
             if self._state_stack[-2] == self._state_stack[-1]:
@@ -478,6 +489,7 @@ class GameUpdate(Game):
     # self.positions, and the three similar, renamed to self.positionkeys.
     # self.movenumber is changed to self.halfmovenumber.
     def __init__(self):
+        """Delegate then prepare to collect positions and piece locations."""
         super().__init__()
         self.positionkeys = []
         self.piecesquaremovekeys = []
@@ -506,8 +518,7 @@ class GameUpdate(Game):
         )
 
     def reset_board_state(self, position_delta):
-        """Delegate to superclass then append initial variation number for this
-        level if it does not exist."""
+        """Delegate then append variation number to fit ravstack level."""
         super().reset_board_state(position_delta)
         if len(self._ravstack) > len(self.variationnumber):
             self.variationnumber.append(0)
@@ -516,9 +527,11 @@ class GameUpdate(Game):
     # came from PGNUpdate in chesstab, without the -1 adjustment, and seems to
     # work.
     def set_board_state(self, position_delta):
-        """Delegate to superclass then increment variation number and it's
-        string form in case there is another variation at this level.  For
-        example: '... Ba7 ) ( Nf4 ...'.
+        """Delegate then increment variation number.
+
+        Both numeric and string variation numbers are kept in step in case
+        there is another variation at this level.  For example:
+        '... Ba7 ) ( Nf4 ...'.
         """
         super().set_board_state(position_delta)
         self.variationnumber[len(self._ravstack) - 1] += 1
@@ -587,22 +600,27 @@ class GameUpdateEstimate(GameUpdate):
     end_char = 0
 
     def __init__(self):
+        """Delegate."""
         super().__init__()
 
     def append_start_tag(self, match):
+        """Set self.start_char if no PGN Tags found and delegate."""
         if not len(self._tags):
             self.start_char = match.start()
         super().append_start_tag(match)
 
     def append_game_termination_after_error(self, match):
+        """Set self.end_char and delegate."""
         self.end_char = match.end()
         super().append_game_termination_after_error(match)
 
     def append_game_termination(self, match):
+        """Set self.end_char and delegate."""
         self.end_char = match.end()
         super().append_game_termination(match)
 
     def append_bad_tag_and_set_error(self, match):
+        """Set self.start_char if no PGN Tags found and delegate."""
         if not len(self._tags):
             self.start_char = match.start()
         super().append_bad_tag_and_set_error(match)

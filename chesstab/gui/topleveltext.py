@@ -2,18 +2,16 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide methods shared by all classes which display games, repertoires,
-selection rules, CQL statements, and run engine commands in Toplevels.
+"""Provide classes which initialize and close record or filter rule displays.
+
+The records are games, repertoires, and rule lists.  The rules are selection
+rules, CQL statements, and run engine commands in Toplevels.
 
 """
 
 
 class ToplevelText:
-
-    """Mixin providing methods shared by all classes which display selection
-    rules, CQL statements, and run engine commands in Toplevels.
-
-    """
+    """Provide default popup menu initialisation methods for record display."""
 
     binding_labels = ()
 
@@ -25,14 +23,20 @@ class ToplevelText:
     # 'Run Engine' option or the absence of the 'main display' options.
     # The Game* and Repertoire* classes have reason for a popup here.
     def create_widget_navigation_submenu_for_popup(self, popup):
-        pass
+        """Do nothing.
+
+        Most ToplevelText subclasses require a handler for right-click,
+        Shift F10, and Ctrl F10, events.
+
+        A null popup menu is posted unless the subclass has a reason to
+        implement a useful popup menu.
+        """
 
 
 class _ToplevelText:
+    """Provide methods shared by this module's public _ToplevelText subclasses.
 
-    """Mixin providing methods shared by at least two of the DeleteText,
-    EditText, and ShowText, classes.
-
+    The subclasses are DeleteText, EditText, and ShowText.
     """
 
     def initialize(self):
@@ -53,6 +57,8 @@ class _ToplevelText:
 
 
 class ShowText(_ToplevelText):
+    """Show original text."""
+
     def dialog_ok(self):
         """Close the show record toplevel."""
         if self.ui.database is None:
@@ -65,6 +71,8 @@ class ShowText(_ToplevelText):
 
 
 class DeleteText(_ToplevelText):
+    """Show original text for record deletion."""
+
     def dialog_ok(self):
         """Delete record and return delete action response (True for deleted).
 
@@ -85,7 +93,10 @@ class DeleteText(_ToplevelText):
 
 
 class EditText(_ToplevelText):
+    """Show original and editable text versions for record editing."""
+
     def initialize(self):
+        """Create widgets for the original and editable versions of text."""
         if self.oldview:
             self.ui_items_in_toplevels.add(self.oldview)
             self.set_item(self.oldview, self.oldobject)

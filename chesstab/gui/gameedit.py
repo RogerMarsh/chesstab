@@ -243,11 +243,10 @@ _error_wrapper_re = re.compile(
 
 
 class GameEditException(Exception):
-    pass
+    """Exception class for gameedit module."""
 
 
 class GameEdit(Game):
-
     """Display a game with editing allowed.
 
     gameclass is passed to the superclass as the gameclass argument.  It
@@ -324,19 +323,20 @@ class GameEdit(Game):
         self.reserved_popup = None
 
     def add_char_to_token(self, event):
-        """ """
+        """Handle <KeyPress> event for non-move token."""
         self._add_char_to_token(event.char.translate(_NEWLINE))
         return "break"
 
     def add_move_char_to_token(self, event):
-        """ """
+        """Handle <KeyPress> event for move token."""
         if self._add_char_to_token(event.char.translate(_FORCECASE)):
             self.process_move()
         return "break"
 
     def set_primary_activity_bindings(self, switch=True):
-        """Delegate to toggle other relevant bindings and toggle bindings for
-        inserting moves and traversing all tokens.
+        """Delegate then set bindings for primary activity.
+
+        The primary activity is inserting moves and traversing all tokens.
 
         Moves, including RAVs can only be inserted if the game termination
         marker is present.
@@ -457,6 +457,7 @@ class GameEdit(Game):
         # Allowed characters defined in set_token_context() call
 
     def bind_for_edit_glyph(self, switch=True):
+        """Set bindings for EDIT_GLYPH state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_GLYPH
@@ -467,6 +468,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_game_termination(self, switch=True):
+        """Set bindings for EDIT_RESULT state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_RESULT
@@ -478,6 +480,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_pgn_tag_name(self, switch=True):
+        """Set bindings for EDIT_PGN_TAG_NAME state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_PGN_TAG_NAME
@@ -490,6 +493,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_pgn_tag_value(self, switch=True):
+        """Set bindings for EDIT_PGN_TAG_VALUE state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_PGN_TAG_VALUE
@@ -502,6 +506,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_comment(self, switch=True):
+        """Set bindings for EDIT_COMMENT state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_COMMENT
@@ -512,6 +517,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_reserved(self, switch=True):
+        """Set bindings for EDIT_RESERVED state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_RESERVED
@@ -522,6 +528,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_comment_eol(self, switch=True):
+        """Set bindings for EDIT_COMMENT_EOL state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_COMMENT_EOL
@@ -532,6 +539,7 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_escape_eol(self, switch=True):
+        """Set bindings for EDIT_ESCAPE_EOL state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_ESCAPE_EOL
@@ -542,12 +550,14 @@ class GameEdit(Game):
         )
 
     def bind_for_edit_move_error(self, switch=True):
+        """Set bindings for EDIT_MOVE_ERROR state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_MOVE_ERROR
         self.set_edit_symbol_mode_bindings(switch=switch)
 
     def bind_for_edit_move(self, switch=True):
+        """Set bindings for EDIT_MOVE state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = EDIT_MOVE
@@ -571,12 +581,14 @@ class GameEdit(Game):
         )
 
     def bind_for_insert_rav(self, switch=True):
+        """Set bindings for INSERT_RAV state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = INSERT_RAV
         self.set_primary_activity_bindings(switch=switch)
 
     def bind_for_move_edited(self, switch=True):
+        """Set bindings for MOVE_EDITED state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = MOVE_EDITED
@@ -608,6 +620,7 @@ class GameEdit(Game):
 
     # Should self.set_edit_symbol_mode_bindings() be used?
     def bind_for_rav_start(self, switch=True):
+        """Set bindings for RAV_START_TAG state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = RAV_START_TAG
@@ -646,6 +659,7 @@ class GameEdit(Game):
 
     # Should self.set_edit_symbol_mode_bindings() be used?
     def bind_for_rav_end(self, switch=True):
+        """Set bindings for RAV_END_TAG state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = RAV_END_TAG
@@ -666,6 +680,7 @@ class GameEdit(Game):
         )
 
     def bind_for_no_current_token(self, switch=True):
+        """Set bindings for NO_CURRENT_TOKEN state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.NO_CURRENT_TOKEN
@@ -678,6 +693,7 @@ class GameEdit(Game):
         )
 
     def bind_for_unrecognised_edit_token(self, switch=True):
+        """Set bindings for DEFAULT_BINDINGS state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.DEFAULT_BINDINGS
@@ -701,14 +717,20 @@ class GameEdit(Game):
         )
 
     def bind_for_initial_state(self, switch=True):
+        """Set bindings for INITIAL_BINDINGS state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
     def bind_for_no_editable_tags(self, switch=True):
+        """Do nothing.
+
+        Set bindings for NO_EDITABLE_TAGS state.
+        """
         pass
 
     def bind_for_current_without_tags(self, switch=True):
+        """Set bindings for CURRENT_NO_TAGS state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.CURRENT_NO_TAGS
@@ -749,17 +771,17 @@ class GameEdit(Game):
     }
 
     def delete_char_right(self, event):
-        """ """
+        """Handle <Del> event."""
         self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
         return "break"
 
     def delete_char_left(self, event):
-        """ """
+        """Handle <BackSpace> event."""
         self.delete_char_next_to_insert_mark(START_EDIT_MARK, tkinter.INSERT)
         return "break"
 
     def delete_move_char_right(self, event):
-        """ """
+        """Handle <Shift-Del> event for move token."""
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
             self.process_move()
@@ -768,7 +790,7 @@ class GameEdit(Game):
         return "break"
 
     def delete_move_char_left(self, event):
-        """ """
+        """Handle <Shift-BackSpace> event for move token."""
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
@@ -779,7 +801,7 @@ class GameEdit(Game):
         return "break"
 
     def delete_token_char_right(self, event):
-        """ """
+        """Handle <Shift-Del> event for non-move token."""
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
         else:
@@ -787,7 +809,7 @@ class GameEdit(Game):
         return "break"
 
     def delete_token_char_left(self, event):
-        """ """
+        """Handle <Shift-BackSpace> event for non-move token."""
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
@@ -985,8 +1007,11 @@ class GameEdit(Game):
         return "break"
 
     def get_implied_current_move(self):
-        """Return implied current if self.current refers to a RAV start or
-        self.current if not.
+        """Return implied current if self.current is RAV start.
+
+        RAV start is associated with the position in which the first move
+        of the RAV is made.  The implied current is the move made to reach
+        this position.
 
         """
         assert self.current
@@ -1020,6 +1045,7 @@ class GameEdit(Game):
         super().add_move_to_moves_played_colouring_tag(move)
 
     def insert_rav_command(self, event=None):
+        """Display information dialogue saying how to insert a RAV."""
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title="Insert RAV",
@@ -1369,32 +1395,32 @@ class GameEdit(Game):
             self.token_bind_method[NonTagBind.CURRENT_NO_TAGS](self)
 
     def set_insert_first_char_in_token(self, event):
-        """ """
+        """Handle <Home> event."""
         self.set_insert_mark_at_start_of_token()
         return "break"
 
     def set_insert_last_char_in_token(self, event):
-        """ """
+        """Handle <End> event."""
         self.set_insert_mark_at_end_of_token()
         return "break"
 
     def set_insert_next_char_in_token(self, event):
-        """ """
+        """Handle <Right> event."""
         self.set_insert_mark_right_one_char()
         return "break"
 
     def set_insert_next_line_in_token(self, event):
-        """ """
+        """Handle <Alt-Down> event."""
         self.set_insert_mark_down_one_line()
         return "break"
 
     def set_insert_prev_char_in_token(self, event):
-        """ """
+        """Handle <Left> event."""
         self.set_insert_mark_left_one_char()
         return "break"
 
     def set_insert_prev_line_in_token(self, event):
-        """ """
+        """Handle <Alt-Up> event."""
         self.set_insert_mark_up_one_line()
         return "break"
 
@@ -1550,7 +1576,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_first_in_line which does same thing.
     def show_first_in_line_from_non_move_token(self, event=None):
-        """ """
+        """Set first move in line before currrent token as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_first_in_line(event)
 
@@ -1558,7 +1584,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_first_in_game which does same thing.
     def show_first_in_game_from_non_move_token(self, event=None):
-        """ """
+        """Set first move in game as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_first_in_game(event)
 
@@ -1566,7 +1592,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_last_in_line which does same thing.
     def show_last_in_line_from_non_move_token(self, event=None):
-        """ """
+        """Set last move in line after currrent token as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_last_in_line(event)
 
@@ -1574,7 +1600,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_last_in_game which does same thing.
     def show_last_in_game_from_non_move_token(self, event=None):
-        """ """
+        """Set last move in game as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_last_in_game(event)
 
@@ -1582,7 +1608,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_next_in_line which does same thing.
     def show_next_in_line_from_non_move_token(self, event=None):
-        """ """
+        """Set move after currrent token as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_next_in_line(event)
 
@@ -1590,7 +1616,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_next_in_variation which does same thing.
     def show_next_in_variation_from_non_move_token(self, event=None):
-        """ """
+        """Set move after currrent token in variation as current move."""
         self.set_nearest_move_to_token_as_currentmove()
         return self.show_next_in_variation(event)
 
@@ -1598,7 +1624,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_prev_in_variation which does same thing.
     def show_prev_in_variation_from_non_move_token(self, event=None):
-        """ """
+        """Set move before currrent token in variation as current move."""
         self.set_nearest_move_to_token_as_currentmove()
 
         # self.set_current() already called but return is not via a method
@@ -1610,7 +1636,7 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     # Replaces non_move_show_prev_in_line which does same thing.
     def show_prev_in_line_from_non_move_token(self, event=None):
-        """ """
+        """Set move before currrent token as current move."""
         self.set_nearest_move_to_token_as_currentmove()
 
         # self.set_current() already called but return is not via a method
@@ -1650,7 +1676,7 @@ class GameEdit(Game):
         widget.tag_remove(INSERT_RAV, *tr)
 
     def add_pgntag_to_map(self, name, value):
-        """Add a PGN Tag, a name and value, to the game score.
+        r"""Add a PGN Tag, a name and value, to the game score.
 
         The PGN Tag consists of two editable tokens: the Tag name and the Tag
         value.  These are inserted and deleted together, never separately,
@@ -1867,7 +1893,6 @@ class GameEdit(Game):
         FORCE_NEWLINE_AFTER_FULLMOVES without a newline would be created.
 
         """
-
         # Maybe always look at NAVIGATE_TOKEN if the search can be stopped
         # at start of movetext: is this START_SCORE_MARK at all times.  Doubt
         # is when START_SCORE_MARK is set.
@@ -2222,14 +2247,14 @@ class GameEdit(Game):
             return self.get_prior_tag_of_index(tr[0]), tr
 
     def get_prior_tag_of_index(self, index):
-        """Return Tk tag name if index is in a choice tag"""
+        """Return Tk tag name if index is in a choice tag."""
         for tn in self.score.tag_names(index):
             if tn.startswith(PRIOR_MOVE):
                 return tn
         return None
 
     def get_rav_moves_of_index(self, index):
-        """Return Tk tag name if index is in a rav_moves tag"""
+        """Return Tk tag name if index is in a rav_moves tag."""
         for tn in self.score.tag_names(index):
             if tn.startswith(RAV_MOVES):
                 return tn
@@ -2240,7 +2265,7 @@ class GameEdit(Game):
         return "".join((RAV_TAG, rav_moves[len(RAV_MOVES) :]))
 
     def get_rav_tag_of_index(self, index):
-        """Return Tk tag name if index is in a rav_tag tag"""
+        """Return Tk tag name if index is in a rav_tag tag."""
         for tn in self.score.tag_names(index):
             if tn.startswith(RAV_TAG):
                 return tn
@@ -2251,7 +2276,7 @@ class GameEdit(Game):
         return "".join((TOKEN, position[len(POSITION) :]))
 
     def get_token_tag_of_index(self, index):
-        """Return Tk tag name if index is in TOKEN tag"""
+        """Return Tk tag name if index is in TOKEN tag."""
         for tn in self.score.tag_names(index):
             if tn.startswith(TOKEN):
                 return tn
@@ -2440,7 +2465,7 @@ class GameEdit(Game):
         return t[0]
 
     def insert_empty_comment_to_eol(self):
-        """Insert ";<null>\n " sequence."""
+        r"""Insert ";<null>\n " sequence."""
         self.set_insertion_point_before_next_token(
             between_newlines=bool(
                 self.score.tag_nextrange(
@@ -2456,7 +2481,7 @@ class GameEdit(Game):
         return t[0]
 
     def insert_empty_escape_to_eol(self):
-        """Insert "\n%<null>\n " sequence.
+        r"""Insert "\n%<null>\n " sequence.
 
         Leading '\n' is the PGN rule.  Here this is done as a consequence
         of putting all non-move movetext tokens on their own line.  Thus
@@ -2876,7 +2901,6 @@ class GameEdit(Game):
         find_choice_prior_move_variation_main_move().
 
         """
-
         # If choice is not a tag name there is something wrong: do nothing.
         if not choice:
             return
@@ -3047,7 +3071,7 @@ class GameEdit(Game):
         return bool(self.score.tag_nextrange(MOVE_EDITED, start, end))
 
     def is_move_last_of_variation(self, move):
-        """Return True if currentmove is at end of a variation tag"""
+        """Return True if currentmove is at end of a variation tag."""
         widget = self.score
         index = widget.tag_ranges(move)[1]
         for tn in widget.tag_names(index):
@@ -3055,7 +3079,7 @@ class GameEdit(Game):
                 return not bool(self.score.tag_nextrange(tn, index))
 
     def is_move_start_of_variation(self, move, variation):
-        """Return True if move is at start of variation"""
+        """Return True if move is at start of variation."""
         widget = self.score
         return widget.compare(
             widget.tag_ranges(move)[0], "==", widget.tag_ranges(variation)[0]
@@ -3070,7 +3094,7 @@ class GameEdit(Game):
     # The method is_pgn_tag_insertion_allowed is therefore removed and calls
     # replaced by is_current_in_movetext calls.
     def is_current_in_movetext(self):
-        """Return True if current is not before start of movetext"""
+        """Return True if current is not before start of movetext."""
         return bool(
             self.score.compare(
                 START_SCORE_MARK, "<=", self.score.tag_ranges(self.current)[0]
@@ -3357,7 +3381,6 @@ class GameEdit(Game):
 
     def add_glyph(self, token, position):
         """Tag token for single-step navigation and game editing."""
-
         # At present NAGs are not put on a line of their own when following
         # a move.  They would be if the NAG translations were shown too.
         # before = self.tokens_exist_between_movetext_start_and_insert_point()
@@ -3381,7 +3404,6 @@ class GameEdit(Game):
 
     def map_glyph(self, token):
         """Override to tag token for single-step navigation and game editing."""
-
         # At present NAGs are not put on a line of their own when following
         # a move.  They would be if the NAG translations were shown too.
         # before = self.tokens_exist_between_movetext_start_and_insert_point()
@@ -3577,7 +3599,7 @@ class GameEdit(Game):
             self.set_game_board()
 
     def select_item_at_index(self, index):
-        """Return the itemtype tag associated with index"""
+        """Return the itemtype tag associated with index."""
         try:
             tns = set(self.score.tag_names(index))
             # EDIT_PGN_TAG_VALUE before EDIT_PGN_TAG_NAME as both tag values
@@ -3609,7 +3631,7 @@ class GameEdit(Game):
         return None
 
     def select_first_item_in_game(self, item):
-        """Return POSITION tag associated with first item in game"""
+        """Return POSITION tag associated with first item in game."""
         widget = self.score
         tr = widget.tag_nextrange(item, "1.0")
         if not tr:
@@ -3620,7 +3642,7 @@ class GameEdit(Game):
         return None
 
     def select_last_item_in_game(self, item):
-        """Return POSITION tag associated with last item in game"""
+        """Return POSITION tag associated with last item in game."""
         widget = self.score
         tr = widget.tag_prevrange(item, tkinter.END)
         if not tr:
@@ -3680,7 +3702,7 @@ class GameEdit(Game):
         return self.select_prev_item_in_game(NAVIGATE_COMMENT)
 
     def select_next_pgn_tag_field_name(self):
-        """Return POSITION tag for nearest following PGN Tag field"""
+        """Return POSITION tag for nearest following PGN Tag field."""
         widget = self.score
         try:
             if self.current:
@@ -3699,7 +3721,7 @@ class GameEdit(Game):
         return self.current
 
     def select_prev_pgn_tag_field_name(self):
-        """Return POSITION tag for nearest preceding PGN Tag field"""
+        """Return POSITION tag for nearest preceding PGN Tag field."""
         widget = self.score
         try:
             if self.current:
@@ -3725,7 +3747,7 @@ class GameEdit(Game):
         return self.current
 
     def select_nearest_pgn_tag(self):
-        """Return POSITION tag for nearest preceding PGN Tag field"""
+        """Return POSITION tag for nearest preceding PGN Tag field."""
         # do nothing at first
         return self.current
 
@@ -3754,15 +3776,15 @@ class GameEdit(Game):
         return self.select_prev_item_in_game(RAV_START_TAG)
 
     def set_insert_mark_at_end_of_token(self):
-        """ """
+        """Move insert mark to end edit mark."""
         self.score.mark_set(tkinter.INSERT, END_EDIT_MARK)
 
     def set_insert_mark_at_start_of_token(self):
-        """ """
+        """Move insert mark to start edit mark."""
         self.score.mark_set(tkinter.INSERT, START_EDIT_MARK)
 
     def set_insert_mark_down_one_line(self):
-        """ """
+        """Move insert mark down one line limited by end edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, "<", END_EDIT_MARK):
             widget.mark_set(
@@ -3772,19 +3794,19 @@ class GameEdit(Game):
                 widget.mark_set(tkinter.INSERT, END_EDIT_MARK)
 
     def set_insert_mark_left_one_char(self):
-        """ """
+        """Move insert mark left one character limited by start edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, ">", START_EDIT_MARK):
             widget.mark_set(tkinter.INSERT, tkinter.INSERT + " -1 chars")
 
     def set_insert_mark_right_one_char(self):
-        """ """
+        """Move insert mark right one character limited by end edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, "<", END_EDIT_MARK):
             widget.mark_set(tkinter.INSERT, tkinter.INSERT + " +1 chars")
 
     def set_insert_mark_up_one_line(self):
-        """ """
+        """Move insert mark up one line limited by start edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, ">", START_EDIT_MARK):
             widget.mark_set(
@@ -3803,7 +3825,9 @@ class GameEdit(Game):
     # new game template should be removed, if this is not forced.
     # The escaped line may continue to be a problem.
     def set_insertion_point_before_next_token(self, between_newlines=True):
-        """INSERT is set before next token and it's move number if any, and
+        """Set the insert point at start of token after current token.
+
+        INSERT is set before next token and it's move number if any, and
         before it's 'forced newline' too if there is one.  Ensure there is an
         adjacent newline before and after INSERT if between_newlines is true.
 
@@ -3922,23 +3946,23 @@ class GameEdit(Game):
         self.set_move_tag(start, end)
 
     def get_token_range(self, tagnames):
-        """Set token editing bound marks from TOKEN<suffix> in tagnames"""
+        """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         for tn in tagnames:
             if tn.startswith(TOKEN):
                 return self.score.tag_nextrange(tn, "1.0")
 
     def get_token_insert(self, tagnames):
-        """Set token editing bound marks from TOKEN<suffix> in tagnames"""
+        """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         for tn in tagnames:
             if tn.startswith(TOKEN):
                 return "".join((TOKEN_MARK, tn[len(TOKEN) :]))
 
     def get_token_text_length(self, start, end):
-        """Set token editing bound marks from TOKEN<suffix> in tagnames"""
+        """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         return self.score.count(start, end)[0]
 
     def set_marks_for_editing_comment_eol(self, tagnames, tagranges):
-        """Set token editing bound marks from TOKEN<suffix> in tagnames"""
+        """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         start, end = tagranges
         if self.score.count(start, end)[0] < 2:
             for tn in tagnames:
@@ -3953,7 +3977,7 @@ class GameEdit(Game):
         self.set_move_tag(START_EDIT_MARK, END_EDIT_MARK)
 
     def set_start_score_mark_before_positiontag(self):
-        """ """
+        """Set start score mark at start self.position_number position tag."""
         self.score.mark_set(
             START_SCORE_MARK,
             self.score.tag_ranges(
@@ -4023,6 +4047,11 @@ class GameEdit(Game):
         return positiontag, token_indicies
 
     def create_popup(self, popup, move_navigation=None):
+        """Create and return popup menu with optional move navigation.
+
+        This method is called by all the create_*_popup methods.
+
+        """
         assert popup is None
         assert move_navigation is not None
         popup = tkinter.Menu(master=self.score, tearoff=False)
@@ -4038,6 +4067,12 @@ class GameEdit(Game):
     # Most popups are same except for binding the popup menu attribute.
     # This does the work for the ones with identical processing.
     def create_non_move_popup(self, popup):
+        """Create and return popup menu for PGN non-move tokens.
+
+        This method is called by the create_*_popup methods for each
+        non-move token.
+
+        """
         popup = self.create_popup(
             popup,
             move_navigation=self.get_primary_activity_from_non_move_events,
@@ -4052,6 +4087,7 @@ class GameEdit(Game):
         return popup
 
     def create_pgn_tag_popup(self):
+        """Create and return popup menu for PGN Tag token."""
         popup = self.create_popup(
             self.pgn_tag_popup,
             move_navigation=self.get_primary_activity_from_non_move_events,
@@ -4082,6 +4118,7 @@ class GameEdit(Game):
         )
 
     def create_game_termination_popup(self):
+        """Create and return popup menu for PGN game termination token."""
         popup = self.create_popup(
             self.game_termination_popup,
             move_navigation=self.get_primary_activity_from_non_move_events,
@@ -4110,6 +4147,7 @@ class GameEdit(Game):
         )
 
     def create_comment_popup(self):
+        """Create and return popup menu for PGN comment, {...}, token."""
         popup = self.create_non_move_popup(self.comment_popup)
         self.comment_popup = popup
         return popup
@@ -4127,6 +4165,7 @@ class GameEdit(Game):
         )
 
     def create_nag_popup(self):
+        """Create and return popup menu for PGN numeric annotation glyph."""
         popup = self.create_non_move_popup(self.nag_popup)
         self.nag_popup = popup
         return popup
@@ -4144,6 +4183,7 @@ class GameEdit(Game):
         )
 
     def create_start_rav_popup(self):
+        """Create and return popup menu for PGN start RAV token."""
         popup = self.create_popup(
             self.start_rav_popup,
             move_navigation=self.get_primary_activity_from_non_move_events,
@@ -4171,6 +4211,7 @@ class GameEdit(Game):
         )
 
     def create_end_rav_popup(self):
+        """Create and return popup menu for PGN end RAV token."""
         popup = self.create_non_move_popup(self.end_rav_popup)
         self.end_rav_popup = popup
         return popup
@@ -4188,12 +4229,13 @@ class GameEdit(Game):
         )
 
     def create_comment_to_end_of_line_popup(self):
+        """Create and return popup menu for PGN comment to end line token."""
         popup = self.create_non_move_popup(self.comment_to_end_of_line_popup)
         self.comment_to_end_of_line_popup = popup
         return popup
 
     def post_comment_to_end_of_line_menu(self, event=None):
-        """Post popup menu when a ';...\n' comment is current token."""
+        r"""Post popup menu when a ';...\n' comment is current token."""
         return self.post_menu(
             self.comment_to_end_of_line_popup,
             self.create_comment_to_end_of_line_popup,
@@ -4201,7 +4243,7 @@ class GameEdit(Game):
         )
 
     def post_comment_to_end_of_line_menu_at_top_left(self, event=None):
-        """Post popup menu when a ';...\n' comment is current token."""
+        r"""Post popup menu when a ';...\n' comment is current token."""
         return self.post_menu_at_top_left(
             self.comment_to_end_of_line_popup,
             self.create_comment_to_end_of_line_popup,
@@ -4209,12 +4251,13 @@ class GameEdit(Game):
         )
 
     def create_escape_whole_line_popup(self):
+        """Create and return popup menu for PGN escaped line token."""
         popup = self.create_non_move_popup(self.escape_whole_line_popup)
         self.escape_whole_line_popup = popup
         return popup
 
     def post_escape_whole_line_menu(self, event=None):
-        """Post popup menu when a '\n%...\n' escape is current token."""
+        r"""Post popup menu when a '\n%...\n' escape is current token."""
         return self.post_menu(
             self.escape_whole_line_popup,
             self.create_escape_whole_line_popup,
@@ -4222,7 +4265,7 @@ class GameEdit(Game):
         )
 
     def post_escape_whole_line_menu_at_top_left(self, event=None):
-        """Post popup menu when a '\n%...\n' escape is current token."""
+        r"""Post popup menu when a '\n%...\n' escape is current token."""
         return self.post_menu_at_top_left(
             self.escape_whole_line_popup,
             self.create_escape_whole_line_popup,
@@ -4230,6 +4273,7 @@ class GameEdit(Game):
         )
 
     def create_reserved_popup(self):
+        """Create and return popup menu for PGN reserved tokens."""
         popup = self.create_non_move_popup(self.reserved_popup)
         self.reserved_popup = popup
         return popup
@@ -4247,7 +4291,7 @@ class GameEdit(Game):
         )
 
     def _add_char_to_token(self, char):
-        """ """
+        """Insert char at insert point."""
         if not char:
             return
         if self._allowed_chars_in_token:
@@ -4315,6 +4359,7 @@ class GameEdit(Game):
         return "".join(tc)
 
     def create_edit_move_context(self, tag):
+        """Return tuple of FEN (position) and * (unknown result) for tag."""
         return (
             self.generate_fen_for_position(*self.tagpositionmap[tag]).join(
                 _EDIT_MOVE_CONTEXT
@@ -4323,6 +4368,7 @@ class GameEdit(Game):
         )
 
     def populate_navigate_score_submenu(self, submenu):
+        """Populate popup menu with commands for navigating PGN."""
         self.set_popup_bindings(submenu, self.get_navigate_score_events())
 
     # O-O-O is available to avoid ambiguity if both O-O and O-O-O are legal
@@ -4339,6 +4385,7 @@ class GameEdit(Game):
         include_rav_start_rav=False,
         include_move_rav=False,
     ):
+        """Populate popup menu with commands for inserting PGN."""
         assert not (include_rav_start_rav and include_move_rav)
         if include_movetext:
             self.set_popup_bindings(
@@ -4465,6 +4512,7 @@ class GameEdit(Game):
     # Use in creating popup menus only, where the entries exist to
     # advertise the options.
     def get_insert_pgn_rav_in_movetext_events(self):
+        """Return tuple of event definitions for inserting RAVs."""
         return (
             (
                 EventSpec.gameedit_insert_rav_after_rav_end,
@@ -4483,6 +4531,7 @@ class GameEdit(Game):
     # Use in creating popup menus only, where the entries exist to
     # advertise the options.
     def get_insert_rav_in_movetext_events(self):
+        """Return tuple of event definitions for inserting text."""
         return ((EventSpec.gameedit_insert_rav, self.insert_rav_command),)
 
     def get_insert_pgn_in_tags_events(self):
@@ -4505,6 +4554,7 @@ class GameEdit(Game):
         )
 
     def get_set_insert_in_token_events(self):
+        """Return tuple of event definitions for inserting text."""
         return (
             (
                 EventSpec.gameedit_set_insert_previous_line_in_token,
@@ -4533,6 +4583,7 @@ class GameEdit(Game):
         )
 
     def get_delete_char_in_token_events(self):
+        """Return event specification tuple for text deletion."""
         return (
             (
                 EventSpec.gameedit_delete_token_char_left,
@@ -4547,6 +4598,7 @@ class GameEdit(Game):
         )
 
     def get_delete_char_in_move_events(self):
+        """Return event specification tuple for move deletion."""
         return (
             (
                 EventSpec.gameedit_delete_move_char_left_shift,
@@ -4567,6 +4619,7 @@ class GameEdit(Game):
         )
 
     def get_primary_activity_from_non_move_events(self):
+        """Return event specification tuple for game score navigation."""
         return (
             (
                 EventSpec.gameedit_non_move_show_previous_in_variation,

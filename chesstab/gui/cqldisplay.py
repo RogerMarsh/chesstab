@@ -47,7 +47,6 @@ from .displaytext import (
 
 
 class _CQLDisplay(ExceptionHandler, Display):
-
     """Extend and link ChessQL statement to database.
 
     sourceobject - link to database.
@@ -104,8 +103,7 @@ class _CQLDisplay(ExceptionHandler, Display):
         return self.ui._set_find_partial_name_games
 
     def get_navigation_events(self):
-        """Return event description tuple for navigation from selection rule
-        statement."""
+        """Return event description tuple for navigation from query."""
         return (
             (EventSpec.navigate_to_partial_grid, self.set_focus_partial_grid),
             (EventSpec.partialdisplay_to_previous_partial, self.prior_item),
@@ -403,7 +401,7 @@ class _CQLDisplay(ExceptionHandler, Display):
                 self._get_cql_statement_games_to_grid(value)
 
     def get_text_for_statusbar(self):
-        """ """
+        """Return 'Please wait ..' message for status bar."""
         return "".join(
             (
                 "Please wait while finding games for ChessQL statement ",
@@ -412,7 +410,7 @@ class _CQLDisplay(ExceptionHandler, Display):
         )
 
     def get_selection_text_for_statusbar(self):
-        """ """
+        """Return CQL query name text for display in status bar."""
         return self.cql_statement.get_name_text()
 
     def set_game_list(self):
@@ -492,7 +490,6 @@ class _CQLDisplay(ExceptionHandler, Display):
 
 
 class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
-
     """Display ChessQL statement from database and allow delete and insert.
 
     Method delete_item_database allows records to be deleted from a database.
@@ -604,7 +601,6 @@ class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
 class CQLDisplayInsert(
     _CQLDisplay, ListGamesText, InsertText, ShowText, CQLEdit, DataNotify
 ):
-
     """Display ChessQL statement from database allowing insert.
 
     CQLEdit provides the widget and _CQLDisplay the database interface.
@@ -630,6 +626,7 @@ class CQLDisplayInsert(
         self.set_popup_bindings(popup, self.get_list_games_events())
 
     def set_database_navigation_close_item_bindings(self, switch=True):
+        """Delegate then set list games event bindings."""
         super().set_database_navigation_close_item_bindings(switch=switch)
         self.set_event_bindings_score(
             self.get_list_games_events(), switch=switch
@@ -684,7 +681,6 @@ class CQLDisplayInsert(
 
 
 class CQLDisplayEdit(EditText, CQLDisplayInsert):
-
     """Display ChessQL statement from database allowing edit and insert.
 
     Method update_item_database allows records on the database to be amended.

@@ -12,7 +12,10 @@ import tkinter.filedialog
 
 
 class DirectoryWidget:
+    """Provide select PGN game file dialogue and import from selected file."""
+
     def __init__(self, import_method, engine_name):
+        """Import games into database using engine_name database engine."""
         root = tkinter.Tk()
         root.wm_title(
             string=" - ".join((engine_name, "Import PGN from folder"))

@@ -86,14 +86,14 @@ del _filters
 
 
 class ChessQLGamesError(Exception):
-    pass
+    """Exception class for cqlgames module."""
 
 
 class ChessQLGames:
-
     """Represent subset of games that match a Chess Query Language query."""
 
     def __init__(self, *a, **k):
+        """Delete then create Find instance for queries."""
         super().__init__(*a, **k)
 
         # recordclass argument must be used to support non-index field finds.
@@ -359,7 +359,6 @@ class ChessQLGames:
 
     def pieces_matching_piece_designator(self, filter_):
         """Return pieces matching a piece designator."""
-
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(
                 "".join(
@@ -385,7 +384,6 @@ class ChessQLGames:
 
     def squares_matching_piece_designator(self, filter_):
         """Return squares matching a piece designator."""
-
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(
                 "".join(
@@ -422,7 +420,6 @@ class ChessQLGames:
         self, filter_, datasource, movenumber, variation
     ):
         """Return games matching a piece designator."""
-
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(
                 "".join(
@@ -497,7 +494,6 @@ class ChessQLGames:
         self, filter_, datasource, movenumber, variation
     ):
         """Return games matching a ray filter."""
-
         if filter_.tokendef is not Token.RAY:
             raise ChessQLGamesError(
                 "".join(
@@ -565,7 +561,7 @@ class ChessQLGames:
 
     # Version of get_games_matching_filters() to process CQL parameters.
     def get_games_matching_parameters(self, query, games):
-        """Select the games which meet the ChessQL cql(...) parameters
+        """Select the games which meet the ChessQL cql(...) parameters.
 
         Walk node tree for cql parameters and combine evaluated game sets.
 

@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess engine analysis for a position.
-"""
+"""Chess engine analysis for a position."""
 
 import sys
 
@@ -67,7 +66,6 @@ class Analysis(object):
     # PGN text: probably best to find a way of avoiding this.
     def translate_analysis_to_pgn(self, move_played=""):
         """Translate UCI chess engine variation output to PGN."""
-
         # Addition of this code tips balance in favour of a class to deal with
         # FEN representation of positions.
         to_move = self.position.split()[1]

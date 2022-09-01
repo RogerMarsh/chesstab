@@ -2,22 +2,20 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide classes which define methods shared by classes in the gamedbdelete,
-gamedbdisplay, gamedbedit, gamedbshow, repertoiredbdelete, repertoiredbdisplay,
-repertoiredbedit, and repertoiredbshow, modules which display Portable Game
-Notation (PGN) text.
+"""Provide classes which switch between game score and analysis display."""
 
-All methods in the classes in this module existed as multiple copies in the
-modules named above.  They are now deleted from those modules.
+# These classes existed in the gamedbdelete, gamedbdisplay, gamedbedit,
+# gamedbshow, repertoiredbdelete, repertoiredbdisplay, repertoiredbedit,
+# and repertoiredbshow, modules which display Portable Game Notation (PGN)
+# text.
+# All methods in the classes in this module existed as multiple copies in the
+# modules named above.  They are now deleted from those modules.
+# The classes in this module represent the different sets of classes with
+# methods in common.
+# The ToplevelPGN class is populated with the methods identical in
+# GameToplevel, RepertoireToplevel, GameToplevelEdit, and
+# RepertoireToplevelEdit, which were then removed from those two classes.
 
-The classes in this module represent the different sets of classes with methods
-in common.
-
-The ToplevelPGN class is populated with the methods identical in
-GameToplevel, RepertoireToplevel, GameToplevelEdit, and
-RepertoireToplevelEdit, which were then removed from those two classes.
-
-"""
 import tkinter.messagebox
 
 from .eventspec import EventSpec
@@ -26,14 +24,11 @@ from .topleveltext import DeleteText, EditText, ShowText
 
 
 class ToplevelPGN(ScorePGN):
-
-    """Mixin providing methods shared by the gametoplevel.GameToplevel,
-    repertoiretoplevel.RepertoireToplevel, gametoplevel.GameToplevelEdit,
-    and repertoiretoplevel.RepertoireToplevelEdit, classes.
+    """Switch focus between game score and analysis for a game.
 
     The game and repertoire display methods assume there is an associated list
-    of games for the current position.  The *Toplevel* classes do not have this
-    list, so the method which updates it is overridden.
+    of games for the current position.  The *Toplevel* classes do not have
+    this list, so the method which updates it is overridden.
 
     """
 
@@ -68,6 +63,7 @@ class ToplevelPGN(ScorePGN):
                 raise
 
     def generate_popup_navigation_maps(self):
+        """Return tuple of widget navigation map and switch to analysis map."""
         navigation_map = {}
         local_map = {
             EventSpec.scoresheet_to_analysis: self.analysis_current_item,
@@ -80,10 +76,9 @@ class ToplevelPGN(ScorePGN):
 
 
 class _ToplevelPGN:
+    """Provide methods shared by this module's public _ToplevelPGN subclasses.
 
-    """Mixin providing methods shared by the toplevelpgn.ShowPGN,
-    toplevelpgn.DeletePGN, and toplevelpgn.EditPGN, classes.
-
+    The subclasses are DeletePGN, EditPGN, and ShowPGN.
     """
 
     def initialize_item_bindings(self, item):
@@ -96,19 +91,23 @@ class _ToplevelPGN:
 
 
 class ShowPGN(_ToplevelPGN, ShowText):
-    pass
+    """Show original PGN."""
 
 
 class DeletePGN(_ToplevelPGN, DeleteText):
-    pass
+    """Show original PGN for record deletion."""
 
 
 class EditPGN(_ToplevelPGN, EditText):
+    """Show original and editable PGN versions for record editing."""
+
     def dialog_ok(self):
         """Update record and return update action response (True for updated).
 
         Check that database is open and is same one as update action was
         started.
+
+        This method extends the version in EditText superclass.
 
         """
         text = self.newview.get_score_error_escapes_removed()

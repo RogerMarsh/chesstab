@@ -31,7 +31,7 @@ from .constants import (
 
 
 class CQLNodeError(Exception):
-    pass
+    """Exception class for cqlnode module."""
 
 
 class CQLNode(Node):
@@ -43,6 +43,7 @@ class CQLNode(Node):
     """
 
     def __init__(self, *a, **k):
+        """Delegate then initialize node state."""
         super().__init__(*a, **k)
 
         # May get rid of 'where' because components should not be needed again
@@ -80,6 +81,7 @@ class CQLNode(Node):
                 self.data = pd
 
     def get_shift_limits(self, ranklimits=None, filelimits=None):
+        """Set rank and file shift limits."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -88,6 +90,7 @@ class CQLNode(Node):
             c.get_shift_limits(ranklimits=ranklimits, filelimits=filelimits)
 
     def shift(self, shiftfiles, shiftranks):
+        """Shift shiftfiles and shiftranks for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -104,6 +107,7 @@ class CQLNode(Node):
             c.shift(shiftfiles, shiftranks)
 
     def rotate(self, rotation):
+        """Rotate rotation for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -120,6 +124,7 @@ class CQLNode(Node):
             c.rotate(rotation)
 
     def reflect_horizontal(self):
+        """Reflect ranks for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -141,6 +146,7 @@ class CQLNode(Node):
             c.reflect_horizontal()
 
     def reflect_vertical(self):
+        """Reflect files for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -162,6 +168,7 @@ class CQLNode(Node):
             c.reflect_vertical()
 
     def rotate_and_reflect_horizontal(self):
+        """Rotate 90 and reflect ranks for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -183,6 +190,7 @@ class CQLNode(Node):
             c.rotate_and_reflect_horizontal()
 
     def rotate_and_reflect_vertical(self):
+        """Rotate 90 and reflect files for pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -204,6 +212,7 @@ class CQLNode(Node):
             c.rotate_and_reflect_vertical()
 
     def flip_color(self):
+        """Flip the colour of pieces referenced."""
         if self.tokendef is Token.PIECE_DESIGNATOR:
             data = PieceDesignator(self.leaf)
             data.parse()
@@ -233,6 +242,7 @@ class CQLNode(Node):
             c.flip_color()
 
     def __deepcopy__(self, memo):
+        """Return a deepcopy of memo."""
         newcopy = super().__deepcopy__(memo)
         newcopy.data = None
         newcopy.where = None
@@ -309,6 +319,7 @@ class FSNode:
     }
 
     def __init__(self, node):
+        """Note node and initialize child nodes to empty list."""
         self.node = node
         self.children = []
 

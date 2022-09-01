@@ -2,8 +2,7 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for sqlite3.
-"""
+"""Chess database update using custom deferred update for sqlite3."""
 
 import os
 import bz2
@@ -27,7 +26,7 @@ _python_version = ".".join(
 
 
 class ChessapswduError(Exception):
-    pass
+    """Exception class for chessapswdu module."""
 
 
 def chess_sqlite3du(
@@ -54,7 +53,6 @@ def chess_sqlite3du(
 
 
 class ChessDatabase(apswdu_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.

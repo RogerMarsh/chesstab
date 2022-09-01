@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess games database using DPT database via dptdb.dptapi.
-"""
+"""Chess games database using DPT database via dptdb.dptapi."""
 
 import os
 import shutil
@@ -41,11 +40,10 @@ from .. import APPLICATION_NAME
 
 
 class ChessdptError(Exception):
-    pass
+    """Exception class for chessdpt module."""
 
 
 class ChessDatabase(database.Database, dpt_database.Database):
-
     """Provide access to a database of games of chess."""
 
     # The default for DPT.  See use_deferred_update_process method for cases
@@ -96,7 +94,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
     def use_deferred_update_process(
         self, dptmultistepdu=False, dptchunksize=None, **kargs
     ):
-        """Return module name or None
+        """Return module name or None.
 
         dptmultistepdu is ignored if dptchunksize is not None.
         dptmultistepdu is True: use multi-step deferred update
@@ -138,7 +136,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
             return super().use_deferred_update_process(**kargs)
 
     def adjust_database_for_retry_import(self, files):
-        """Increase file sizes taking file full into account"""
+        """Increase file sizes taking file full into account."""
         # Increase the size of files allowing for the file full condition
         # which occurred while doing a deferred update for import.
         for dbn in self._broken_sizes.keys():
@@ -195,7 +193,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         return super().delete_database(names)
 
     def get_archive_names(self, files=()):
-        """Return names and operating system files for archives and guards"""
+        """Return names and operating system files for archives and guards."""
         specs = {f for f in files if f in self.table}
         names = [v.file for k, v in self.table.items() if k in specs]
         archives = dict()

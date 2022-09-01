@@ -33,7 +33,10 @@ def file_du(database, dbpath, pgnpath):
 
 
 class FileWidget:
+    """Provide select PGN game file dialogue and import from selected file."""
+
     def __init__(self, database, engine_name):
+        """Import games into database using engine_name database engine."""
         root = tkinter.Tk()
         root.wm_title(string=" - ".join((engine_name, "Import PGN file")))
         root.wm_iconify()

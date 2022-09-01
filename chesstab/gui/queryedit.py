@@ -17,7 +17,6 @@ from .eventspec import EventSpec
 
 
 class QueryEdit(Query):
-
     """Display a game selection rule with editing allowed.
 
     Attribute _is_text_editable is True means the statement can be edited.

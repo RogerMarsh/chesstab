@@ -101,7 +101,7 @@ MAP_RAY_TO_LINE = [
 
 
 class RayFilterError(Exception):
-    pass
+    """Exception class for rayfilter module."""
 
 
 class RayFilter:
@@ -123,7 +123,7 @@ class RayFilter:
     """
 
     def __init__(self, filter_, move_number, variation_code):
-        """ """
+        """Initialize to apply filter_ on move_number."""
         if filter_.tokendef not in {Token.BETWEEN, Token.RAY}:
             raise RayFilterError(
                 "".join(
@@ -185,7 +185,7 @@ class RayFilter:
         self.ray_games = {}
 
     def prune_end_squares(self, database):
-        """Remove ray-end squares with no game references"""
+        """Remove ray-end squares with no game references."""
         anypiece = (
             constants.ANY_WHITE_PIECE_NAME + constants.ANY_BLACK_PIECE_NAME
         )
@@ -219,7 +219,7 @@ class RayFilter:
             self.raycomponents[end].intersection_update(moveindex)
 
     def find_games_for_end_squares(self, finder):
-        """Remove ray-end squares with no game references"""
+        """Remove middle squares in ray with no game references."""
         anywhitepiece = constants.ANY_WHITE_PIECE_NAME
         anyblackpiece = constants.ANY_BLACK_PIECE_NAME
         anypiece = anywhitepiece + anyblackpiece
@@ -332,7 +332,11 @@ class RayFilter:
                 self._add_recordset_to_ray_games(sc, fc, i, finder)
 
     def _add_recordset_to_ray_games(self, start, final, rayindex, finder):
-        """Remove ray-end squares with no game references"""
+        """Store records in both start and final under key rayindex.
+
+        finder is not used.
+
+        """
         rg = start & final
         if rg.count_records():
             if rayindex in self.ray_games:
@@ -341,7 +345,7 @@ class RayFilter:
                 self.ray_games[rayindex] = rg
 
     def find_games_for_middle_squares(self, finder):
-        """Remove ray-end squares with no game references"""
+        """Remove ray-end squares with no game references."""
         anywhitepiece = constants.ANY_WHITE_PIECE_NAME
         anyblackpiece = constants.ANY_BLACK_PIECE_NAME
         anypiece = anywhitepiece + anyblackpiece
@@ -511,8 +515,10 @@ def piece_square_to_index(designator_set, index_prefix):
 
 
 def move_number_str(move_number):
-    """Return hex(move_number) values without leading '0x' but prefixed with
-    string length.
+    """Return hex(move_number) values prefixed with string length.
+
+    A '0x' prefix is removed first.
+
     """
     # Adapted from module pgn_read.core.parser method add_move_to_game().
     try:

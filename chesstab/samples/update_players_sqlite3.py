@@ -2,8 +2,11 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Update names in games_Black and games_White records where the name with
-',' and '.' ripped out is not the name in the record."""
+"""Sample database traversal with update of Games file in Sqlite3 database.
+
+Update names in games_Black and games_White records where the name with
+',' and '.' ripped out is not the name in the record.
+"""
 
 
 if __name__ == "__main__":

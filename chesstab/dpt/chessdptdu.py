@@ -77,7 +77,7 @@ CHUNKGAMES = 6144
 
 
 class ChessdptduError(Exception):
-    pass
+    """Exception class for chessdptdu module."""
 
 
 def chess_dptdu(
@@ -181,7 +181,6 @@ def chess_dptdu_chunks(
 
 
 class ChessDatabaseDeferred:
-
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
@@ -241,8 +240,13 @@ class ChessDatabaseDeferred:
         self._reporter = None
 
     def open_database(self, files=None):
-        """Raise ChessdptduError if any opened file is mot in DEFERRED_UPDATE
-        mode.
+        """Delegate then raise ChessdptduError if database is inconsistent.
+
+        Normally return None with the database open.
+
+        Close the database and raise ChessdptduError exception if the
+        database FISTAT parameter is not equal FISTAT_DEFERRED_UPDATES.
+
         """
         super().open_database(files=files)
         vr = self.dbenv.Core().GetViewerResetter()
@@ -261,11 +265,11 @@ class ChessDatabaseDeferred:
         raise ChessdptduError("A file is not in deferred update mode")
 
     def open_context_prepare_import(self):
-        """Open all files normally"""
+        """Open all files normally."""
         super().open_database()
 
     def get_archive_names(self, files=()):
-        """Return specified files and existing operating system files"""
+        """Return specified files and existing operating system files."""
         specs = {f for f in files if f in self.table}
         names = [v.file for k, v in self.table.items() if k in specs]
         exists = [
@@ -276,7 +280,7 @@ class ChessDatabaseDeferred:
         return (names, exists)
 
     def get_pages_for_record_counts(self, counts=(0, 0)):
-        """Return Table B and Table D pages needed for record counts"""
+        """Return Table B and Table D pages needed for record counts."""
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         return (
             counts[0] // brecppg,
@@ -500,7 +504,7 @@ class ChessDatabaseDeferred:
         return self._notional_record_counts
 
     def report_plans_for_estimate(self, estimates, reporter):
-        """Calculate and report file size adjustments to do import
+        """Calculate and report file size adjustments to do import.
 
         Note the reporter and headline methods for initial report and possible
         later recalculations.
@@ -514,7 +518,7 @@ class ChessDatabaseDeferred:
         self._report_plans_for_estimate(estimates=estimates)
 
     def _report_plans_for_estimate(self, estimates=None):
-        """Recalculate and report file size adjustments to do import
+        """Recalculate and report file size adjustments to do import.
 
         Create dictionary of effective game counts for sizing Games file.
         This will be passed to the import job which will increase Table B and
@@ -627,7 +631,6 @@ class ChessDatabaseDeferred:
 
 
 class ChessDatabase(ChessDatabaseDeferred, dptdu_database.Database):
-
     """Provide single-step deferred update for a database of games of chess."""
 
 
@@ -651,9 +654,11 @@ if __name__ == "__main__":
         text.insert(tkinter.END, "No database selected\n")
 
     def quit_(*a):
+        """Destroy application."""
         root.destroy()
 
     def show_menu(event=None):
+        """Post popup menu at pointer location."""
         menu.tk_popup(*event.widget.winfo_pointerxy())
 
     menu = tkinter.Menu(master=root, tearoff=False)
@@ -661,10 +666,17 @@ if __name__ == "__main__":
         filepath = None
 
         def do_function(dbp, fp):
+            """Run chess_dptdu with database at dbp and PGN file at fp."""
             chess_dptdu(dbp, fp)
             text.insert(tkinter.END, "Process finished\nProceed or Quit?\n\n")
 
         def proceed(*a):
+            """Run a process by the do_function function.
+
+            *a soaks up any arguments: in particular event if proceed is
+            invoked by KeyPress rather than a menu command.
+
+            """
             global filepath
             if filepath:
                 text.insert(tkinter.END, "\nProcess started, please wait.\n")

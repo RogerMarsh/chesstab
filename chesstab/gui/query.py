@@ -33,7 +33,6 @@ from .eventspec import EventSpec
 
 
 class Query(QueryText):
-
     """Game selection rule widget.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -43,7 +42,6 @@ class Query(QueryText):
 
     See superclass for ui, items_manager, and itemgrid, arguments.  These may
     be, or have been, absorbed into **ka argument.
-
 
     """
 
@@ -56,10 +54,7 @@ class Query(QueryText):
         itemgrid=None,
         **ka
     ):
-        """Create Frame and delegate to superclass, then set grid geometry
-        manager.
-        """
-
+        """Create Frame , delegate to superclass, and set geometry manager."""
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
@@ -115,7 +110,6 @@ class Query(QueryText):
 
     def takefocus(self, take=True):
         """Configure game widget takefocus option."""
-
         # Hack because I misunderstood meaning of takefocus: FALSE does not
         # stop the widget taking focus, just stops tab traversal.
         if take:
@@ -125,6 +119,7 @@ class Query(QueryText):
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
 
     def set_database_navigation_close_item_bindings(self, switch=True):
+        """Unset navigation bindings when query is closed."""
         self.set_event_bindings_score(
             self.get_database_events(), switch=switch
         )
@@ -156,6 +151,7 @@ class Query(QueryText):
         """
 
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup

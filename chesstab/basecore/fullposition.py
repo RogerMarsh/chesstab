@@ -2,8 +2,9 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Interface to chess database for full position index providing methods which
-do not need to know the particular engine used.
+"""Interface to chess database for full position index.
+
+Methods which do not need to know the particular engine used are defined here.
 
 A superclass will include a base class for particular database engines.
 """
@@ -12,7 +13,6 @@ from ..core.filespec import POSITIONS_FIELD_DEF
 
 
 class FullPosition:
-
     """Represent subset of games on file that match a postion."""
 
     def __init__(self, dbhome, dbset, dbname, newrow=None):

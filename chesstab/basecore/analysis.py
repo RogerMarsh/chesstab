@@ -2,8 +2,7 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Interface to chess database for chess engine analysis index.
-"""
+"""Interface to chess database for chess engine analysis index."""
 
 from ..core.filespec import (
     VARIATION_FIELD_DEF,
@@ -13,17 +12,16 @@ from ..core.filespec import (
 
 
 class Analysis:
-
     """Represent chess engine analysis on file that matches a postion.
 
     Notes:
-
     The find_*() methods should migrate to the database engine modules and the
     get_*() methods should migrate to a ../core/? module.
 
     """
 
     def __init__(self, dbhome, dbset, dbname, newrow=None):
+        """Delegate the initialize FEN and engine for analysis."""
         super().__init__(dbhome, dbset, dbname, newrow=newrow)
 
         # FEN and engine used to do analysis.

@@ -19,22 +19,26 @@ class DuckBoard:
     boardsquares = {}
 
     def __init__(self, ui):
+        """Set reference to ui User Interface object."""
         self.ui = ui
 
     def set_board(self, board):
-        pass
+        """Do nothing because board display is not implemented."""
 
 
 class DuckUI:
     """Helper to allow Score instances to work without a real UI."""
 
     def __init__(self, panel, *a, **k):
+        """Note panel as reference point to get top level widget."""
         self.top_pw = panel
 
     def get_toplevel(self):
+        """Return the top level widget."""
         return self.top_pw.winfo_toplevel()
 
     def get_export_filename_for_single_item(self, *a, **k):
+        """Display dialogue saying export not supported here."""
         tkinter.messagebox.showinfo(
             parent=self.get_toplevel(),
             title="Export Game",

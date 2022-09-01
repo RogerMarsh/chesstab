@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets that display details of game selection rules on database.
-"""
+"""Create widgets that display details of game selection rules."""
 
 import tkinter
 
@@ -26,7 +25,6 @@ ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
-
     """Define row in list of game selection rules.
 
     Add row methods to the game selection rule record definition.
@@ -106,7 +104,7 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         )
 
     def grid_row(self, **kargs):
-        """Return super().grid_row(textitems=(...), **kargs).
+        """Return ChessDBrowRepertoire() with row name set to query name.
 
         Create textitems argument for ChessDBrowQuery instance.
 
@@ -120,16 +118,18 @@ class ChessDBrowQuery(ChessDBrecordQuery, DataRow):
         )
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowQuery() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
 
 def make_ChessDBrowQuery(chessui):
-    """Make ChessDBrowQuery with reference to ChessUI instance"""
+    """Make ChessDBrowQuery with reference to ChessUI instance."""
 
     def make_selection(database=None):
         return ChessDBrowQuery(database=database, ui=chessui)

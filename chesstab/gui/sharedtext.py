@@ -2,18 +2,9 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide classes which define methods shared by classes in cqltext, score,
-enginetext, and querytext modules.
+"""Provide classes which define navigation methods and bindings.
 
-The methods are originally defined in classes in those modules.  All were
-identical in the CQLText and QueryText classes, and were in at most one of
-the Score and EngineText classes too as identical methods.  Methods identical
-in all four classes are in the blanktext.BlankText class.
-
-The displaytext and displaypgn module do a similar thing where it matters if
-the class is doing 'show', 'insert', 'delete', or 'edit', actions.  Methods
-in classes in this module do not care about those differences.
-
+The classes are SharedText, SharedTextEngineText, and SharedTextScore.
 """
 
 import tkinter
@@ -22,9 +13,7 @@ from .eventspec import EventSpec
 
 
 class SharedText:
-
-    """Provide methods shared by the cqltext.CQLText and querytext.QueryText
-    classes.
+    """Provide navigation bindings for subclasses.
 
     Methods with the same name are used in one or both enginetext.EngineText
     and score.Score, but the internals are different.
@@ -52,22 +41,23 @@ class SharedText:
         )
 
     def get_primary_activity_events(self):
+        """Return null tuple of navigation keypresses and callbacks."""
         return ()
 
 
 class SharedTextEngineText:
+    """Provide keypress and pointer navigation methods for subclasses.
 
-    """Provide methods shared by the cqltext.CQLText, enginetext.EngineText,
-    and querytext.QueryText, classes.
-
-    A method with the same name may be used in score.Score, but the internals
-    are different.
-
+    This is a separate hierarchy from SharedTextScore because the engine
+    stuff is in a Toplevel instance not the main application widget.
     """
 
     def get_modifier_buttonpress_suppression_events(self):
-        """Return tuple of event binding definitions suppressing buttonpress
-        with Control, Shift, or Alt."""
+        """Return empty tuple of event binding definitions.
+
+        These events suppress buttonpress with Control, Shift, or Alt.
+
+        """
         return ()
 
     def post_active_menu(self, event=None):
@@ -90,13 +80,11 @@ class SharedTextEngineText:
 
 
 class SharedTextScore:
+    """Provide keypress and pointer navigation methods for subclasses.
 
-    """Provide methods shared by the cqltext.CQLText, querytext.QueryText,
-    and score.Score, classes.
-
-    A method with the same name may be used in enginetext.EngineText, but the
-    internals are different.
-
+    This is a separate hierarchy from SharedTextEngineText because the
+    engine stuff is in a Toplevel instance not the main application
+    widget.
     """
 
     def add_cascade_menu_to_popup(
@@ -155,6 +143,7 @@ class SharedTextScore:
         self.set_popup_bindings(popup, self.get_close_item_events())
 
     def create_inactive_popup(self):
+        """Create popup menu for an inactive widget."""
         assert self.inactive_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_inactive_events())
@@ -162,6 +151,7 @@ class SharedTextScore:
         return popup
 
     def get_inactive_button_events(self):
+        """Return pointer event specifications for an inactive widget."""
         return self.get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_1, self.give_focus_to_widget),
             (EventSpec.buttonpress_3, self.post_inactive_menu),
@@ -180,6 +170,7 @@ class SharedTextScore:
         )
 
     def get_inactive_events(self):
+        """Return keypress event specifications for an inactive widget."""
         return (
             (EventSpec.display_make_active, self.set_focus_panel_item_command),
             (EventSpec.display_dismiss_inactive, self.delete_item_view),

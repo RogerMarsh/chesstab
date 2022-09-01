@@ -2,8 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for dbm.gnu.
-"""
+"""Chess database update using custom deferred update for dbm.gnu."""
 
 import os
 import bz2
@@ -27,7 +26,7 @@ _python_version = ".".join(
 
 
 class ChessgnuduError(Exception):
-    pass
+    """Exception class for chessgnudu module."""
 
 
 def chess_gnudu(
@@ -54,7 +53,6 @@ def chess_gnudu(
 
 
 class ChessDatabase(gnudu_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.

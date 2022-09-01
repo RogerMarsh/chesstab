@@ -61,5 +61,4 @@ def chess_dptdu_multi(
 
 
 class ChessDatabase(ChessDatabaseDeferred, DPTdumultiapi):
-
     """Provide multi-step deferred update for a database of games of chess."""

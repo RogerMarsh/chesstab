@@ -33,8 +33,10 @@ del sys
 
 
 class UCI(ExceptionHandler):
-    def __init__(self, menu_engines, menu_commands):
+    """Provide menu interface to run and control Chess Engines."""
 
+    def __init__(self, menu_engines, menu_commands):
+        """Build the engine and command menus for the menubar."""
         self._do_toplevel = None
         self._show_engines_toplevel = None
         self.database = None
@@ -115,7 +117,7 @@ class UCI(ExceptionHandler):
 
     @property
     def show_engines_toplevel(self):
-        """ """
+        """Return toplevel widget."""
         return self._show_engines_toplevel
 
     def remove_engines_and_menu_entries(self):
@@ -160,7 +162,6 @@ class UCI(ExceptionHandler):
 
     def start_engine(self):
         """Start an UCI compliant Chess Engine."""
-
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
         # Assume all later Pythons are affected because they do not install
@@ -236,7 +237,7 @@ class UCI(ExceptionHandler):
         del self._contents
 
     def do_command(self, initial_value, callback, hint=None, wraplength=None):
-
+        """Start dialogue to send command to chess engines."""
         if self._do_toplevel is not None:
             tkinter.messagebox.showinfo(
                 parent=self.menu_commands,
@@ -280,7 +281,7 @@ class UCI(ExceptionHandler):
         entrythingy.focus_set()
 
     def run_engine(self, program_file_name, args=None):
-
+        """Start engine 'program_file_name' and add 'quit' command to menu."""
         self.uci.run_engine(program_file_name, args)
         self.menu_engines.insert_command(
             self.menu_engines.index("end"),
@@ -289,13 +290,15 @@ class UCI(ExceptionHandler):
         )
 
     def make_quit_engine_command(self, counter):
+        """Build and return a function to stop engine numbered 'counter'."""
+
         def quit_engine_command():
             self.quit_engine(counter)
 
         return quit_engine_command
 
     def quit_engine(self, number):
-
+        """Stop the engine at index number in the engine table."""
         ui_name = self.uci.uci_drivers_index[number]
         for i in range(self.menu_engines.index("end")):
             label = self.menu_engines.entryconfigure(i).get("label")
@@ -337,7 +340,11 @@ class UCI(ExceptionHandler):
                         )
 
     def send_to_all_engines(self, event):
+        """Send command to all engines: seems to be unused.
 
+        See uci_net.samples.driver for very similar code.
+
+        """
         command = self._contents.get()
         if command.split()[0] != self._command:
             if (
@@ -516,7 +523,6 @@ class UCI(ExceptionHandler):
 
     def stop(self):
         """Send stop command to UCI compliant Chess Engines."""
-
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
             title="Stop Command",
@@ -525,7 +531,6 @@ class UCI(ExceptionHandler):
 
     def go_infinite(self):
         """Send go infinite command to UCI compliant Chess Engines."""
-
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
             title="Go Infinite Command",
@@ -534,7 +539,6 @@ class UCI(ExceptionHandler):
 
     def isready(self):
         """Send isready command to UCI compliant Chess Engines."""
-
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
             title="Isready Command",
@@ -544,7 +548,7 @@ class UCI(ExceptionHandler):
     def do_spinbox(
         self, initial_value, from_, to, callback, hint=None, wraplength=None
     ):
-
+        """Show spinbox to get value in range from_:to with initial value."""
         # Comapare with show_engines() method.
         # The after() technique used in show_engines does not help here to
         # guarantee display of the new Toplevel on second and subsequent use.

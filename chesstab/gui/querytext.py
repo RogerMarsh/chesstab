@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Widget to display a game selection rule.
-"""
+"""Widget to display a game selection rule."""
 
 import tkinter
 import tkinter.messagebox
@@ -20,7 +19,6 @@ from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
 
 
 class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
-
     """Game selection rule widget.
 
     panel is used as the panel argument for the super().__init__ call.
@@ -81,12 +79,12 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.ui.statusbar.set_status_text(self.query_statement.get_name_text())
 
     def get_name_query_statement_text(self):
-        """ """
+        """Return text from query statement Text widget."""
         text = self.score.get("1.0", tkinter.END).strip()
         return text
 
     def map_query_statement(self):
-        """ """
+        """Convert tokens to text and show in query statement Text widget."""
         # No mapping of tokens to text in widget (yet).
         self.score.insert(
             tkinter.INSERT,

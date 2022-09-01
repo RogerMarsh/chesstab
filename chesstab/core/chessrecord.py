@@ -69,11 +69,10 @@ PLAYER_NAME_TAGS = frozenset((TAG_WHITE, TAG_BLACK))
 
 
 class ChessRecordError(Exception):
-    pass
+    """Exception class for chessrecor module."""
 
 
 class ChessDBkeyGame(KeyData):
-
     """Primary key of chess game."""
 
     def __eq__(self, other):
@@ -92,10 +91,10 @@ class ChessDBkeyGame(KeyData):
 
 
 class ChessDBvaluePGN(Value):
-
     """Methods common to all chess PGN data classes."""
 
     def __init__(self):
+        """Delegate then initialize collected game."""
         super().__init__()
         self.collected_game = None
 
@@ -114,7 +113,6 @@ class ChessDBvaluePGN(Value):
 
 
 class ChessDBvalueGame(PGN, ChessDBvaluePGN):
-
     """Chess game data.
 
     Data is indexed by PGN Seven Tag Roster tags.
@@ -150,11 +148,10 @@ class ChessDBvalueGame(PGN, ChessDBvaluePGN):
 
 
 class ChessDBrecordGame(Record):
-
     """Chess game record customised for displaying the game score and tags."""
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         super(ChessDBrecordGame, self).__init__(
             ChessDBkeyGame, ChessDBvalueGame
         )
@@ -250,7 +247,6 @@ class ChessDBrecordGame(Record):
 
 
 class ChessDBrecordGameText(Record):
-
     """Chess game record customised for processing the game score as text.
 
     Used to export games or repertoires from a database in the 'Import Format',
@@ -259,7 +255,7 @@ class ChessDBrecordGameText(Record):
     """
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         super(ChessDBrecordGameText, self).__init__(ChessDBkeyGame, ValueText)
 
     def clone(self):
@@ -306,7 +302,6 @@ class ChessDBrecordGameText(Record):
 
 
 class ChessDBvalueGameTags(ChessDBvalueGame):
-
     """Chess game data excluding PGN movetext but including PGN Tags."""
 
     def __init__(self):
@@ -352,18 +347,16 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
 
 
 class ChessDBrecordGameTags(Record):
-
     """Chess game record customised for displaying tag information for a game."""
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         super(ChessDBrecordGameTags, self).__init__(
             ChessDBkeyGame, ChessDBvalueGameTags
         )
 
 
 class ChessDBrecordGamePosition(Record):
-
     """Chess game record customised for displaying the game score only.
 
     Much of the game structure to be represented in the row display is held
@@ -374,7 +367,7 @@ class ChessDBrecordGamePosition(Record):
     """
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         super(ChessDBrecordGamePosition, self).__init__(
             ChessDBkeyGame, ValueText
         )
@@ -464,7 +457,6 @@ class _GameUpdate(GameUpdate):
 
 
 class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
-
     """Chess game data with position, piece location, and PGN Tag, indexes."""
 
     # Replaces ChessDBvaluePGNUpdate and ChessDBvalueGameImport which had been
@@ -553,7 +545,6 @@ class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
 
 
 class ChessDBrecordGameUpdate(Record):
-
     """Chess game record customized for editing database records.
 
     Used to edit or insert a single record by typing in a widget.
@@ -561,7 +552,7 @@ class ChessDBrecordGameUpdate(Record):
     """
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         super(ChessDBrecordGameUpdate, self).__init__(
             ChessDBkeyGame, ChessDBvaluePGNUpdate
         )
@@ -651,7 +642,6 @@ class ChessDBrecordGameUpdate(Record):
 
 
 class ChessDBrecordGameImport(Record):
-
     """Chess game record customised for importing games from PGN files.
 
     Used to import multiple records from a PGN file.
@@ -659,7 +649,7 @@ class ChessDBrecordGameImport(Record):
     """
 
     def __init__(self):
-        """Customise Record with chess database import key and value classes"""
+        """Customise Record with chess database key and value classes."""
         super(ChessDBrecordGameImport, self).__init__(
             ChessDBkeyGame, ChessDBvaluePGNUpdate
         )
@@ -705,15 +695,14 @@ class ChessDBrecordGameImport(Record):
 
 
 class ChessDBkeyPartial(KeyData):
-
     """Primary key of partial position record."""
 
 
 class ChessDBvaluePartial(CQLStatement, Value):
-
     """Partial position data."""
 
     def __init__(self):
+        """Delegate."""
         super(ChessDBvaluePartial, self).__init__()
 
     def __eq__(self, other):
@@ -743,11 +732,11 @@ class ChessDBvaluePartial(CQLStatement, Value):
             return True
 
     def load(self, value):
-        """Set partial position from value"""
+        """Set partial position from value."""
         self.process_statement(literal_eval(value))
 
     def pack_value(self):
-        """Return partial position value"""
+        """Return partial position value."""
         return repr(self.get_name_statement_text())
 
     def pack(self):
@@ -759,7 +748,6 @@ class ChessDBvaluePartial(CQLStatement, Value):
 
 
 class ChessDBrecordPartial(Record):
-
     """Partial position record."""
 
     def __init__(self):
@@ -794,7 +782,6 @@ class ChessDBrecordPartial(Record):
 
 # Not quite sure what customization needed yet
 class ChessDBvalueRepertoire(PGN, Value):
-
     """Repertoire data using custom non-standard tags in PGN format."""
 
     def __init__(self, game_class=GameRepertoireDisplayMoves):
@@ -809,7 +796,6 @@ class ChessDBvalueRepertoire(PGN, Value):
 
 # Not quite sure what customization needed yet
 class ChessDBvalueRepertoireTags(ChessDBvalueRepertoire):
-
     """Repertoire data using custom non-standard tags in PGN format."""
 
     def __init__(self):
@@ -819,7 +805,6 @@ class ChessDBvalueRepertoireTags(ChessDBvalueRepertoire):
 
 # Not quite sure what customization needed yet
 class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
-
     """Repertoire data using custom non-standard tags in PGN format."""
 
     def __init__(self):
@@ -841,17 +826,16 @@ class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
         return v
 
     def set_game_source(self, source):
-        """Set game source (the PGN file name or '')"""
+        """Set game source (the PGN file name or '')."""
         self.gamesource = source
 
 
 # Not quite sure what customization needed yet
 class ChessDBrecordRepertoire(ChessDBrecordGame):
-
     """Repertoire record customised for exporting repertoire information."""
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         super(ChessDBrecordGame, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoire
@@ -860,11 +844,10 @@ class ChessDBrecordRepertoire(ChessDBrecordGame):
 
 # Not quite sure what customization needed yet
 class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
-
     """Repertoire record customised for displaying repertoire tag information."""
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         super(ChessDBrecordGameTags, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireTags
@@ -873,11 +856,10 @@ class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
 
 # Not quite sure what customization needed yet
 class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
-
     """Repertoire record customized for editing repertoire records."""
 
     def __init__(self):
-        """Extend with move number encode and decode methods"""
+        """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         super(ChessDBrecordGameUpdate, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireUpdate
@@ -905,11 +887,10 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
 
 
 class ChessDBvalueAnalysis(Analysis, Value):
-
     """Chess engine analysis data for a position."""
 
     def __init__(self):
-        """ """
+        """Delegate."""
         super().__init__()
 
     def pack(self):
@@ -922,7 +903,6 @@ class ChessDBvalueAnalysis(Analysis, Value):
 
 
 class ChessDBrecordAnalysis(Record):
-
     """Chess game record customised for chess engine analysis data.
 
     No index values are derived from PGN move text, so there is no advantage in
@@ -937,15 +917,14 @@ class ChessDBrecordAnalysis(Record):
 
 
 class ChessDBkeyQuery(KeyData):
-
     """Primary key of game selection rule record."""
 
 
 class ChessDBvalueQuery(QueryStatement, Value):
-
     """Game selection rule data."""
 
     def __init__(self):
+        """Delegate."""
         super(ChessDBvalueQuery, self).__init__()
 
     def __eq__(self, other):
@@ -975,11 +954,11 @@ class ChessDBvalueQuery(QueryStatement, Value):
             return True
 
     def load(self, value):
-        """Set game selection rule from value"""
+        """Set game selection rule from value."""
         self.process_query_statement(literal_eval(value))
 
     def pack_value(self):
-        """Return gameselection rule value"""
+        """Return gameselection rule value."""
         return repr(self.get_name_query_statement_text())
 
     def pack(self):
@@ -991,7 +970,6 @@ class ChessDBvalueQuery(QueryStatement, Value):
 
 
 class ChessDBrecordQuery(Record):
-
     """Game selection rule record."""
 
     def __init__(self):
@@ -1025,15 +1003,14 @@ class ChessDBrecordQuery(Record):
 
 
 class ChessDBkeyEngine(KeyData):
-
     """Primary key of chess engine record."""
 
 
 class ChessDBvalueEngine(Engine, Value):
-
     """Game selection rule data."""
 
     def __init__(self):
+        """Delegate."""
         super(ChessDBvalueEngine, self).__init__()
 
     def pack(self):
@@ -1045,7 +1022,6 @@ class ChessDBvalueEngine(Engine, Value):
 
 
 class ChessDBrecordEngine(Record):
-
     """Chess engine record."""
 
     def __init__(self):

@@ -26,7 +26,6 @@ del sys
 
 
 class EngineEdit(engine.Engine):
-
     """Display a chess engine definition with editing allowed.
 
     Attribute _is_text_editable is True meaning the statement can be
@@ -45,6 +44,7 @@ class EngineEdit(engine.Engine):
         self.engine_definition_checker = Engine()
 
     def get_primary_activity_events(self):
+        """Return tuple of game navigation keypresses and callbacks."""
         return (
             (EventSpec.databaseenginedisplay_run, self.run_engine),
             (EventSpec.databaseengineedit_browse, self.browse_engine),

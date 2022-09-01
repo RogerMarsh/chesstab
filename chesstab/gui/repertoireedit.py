@@ -22,7 +22,6 @@ from .gameedit import GameEdit
 
 
 class RepertoireEdit(GameEdit):
-
     """Display a repertoire with editing allowed.
 
     gameclass is passed to the superclass as the gameclass argument.  It
@@ -59,6 +58,7 @@ class RepertoireEdit(GameEdit):
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.
     def get_all_export_events(self):
+        """Return event specifications for exporting repertoires."""
         return (
             (
                 EventSpec.pgn_export_format_no_comments,

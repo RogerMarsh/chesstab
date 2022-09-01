@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Widget to display a chess engine definition.
-"""
+"""Widget to display a chess engine definition."""
 
 import tkinter
 import tkinter.messagebox
@@ -16,7 +15,6 @@ from .sharedtext import SharedTextEngineText
 
 
 class EngineText(SharedTextEngineText, BlankText):
-
     """Chess engine definition widget.
 
     panel is used as the panel argument for the super().__init__ call.
@@ -55,6 +53,7 @@ class EngineText(SharedTextEngineText, BlankText):
     # Dismiss item and database update actions by keypress and buttunpress
     # are assumed to be exposed by the associated solentware_misc class.
     def get_primary_activity_events(self):
+        """Return tuple of game navigation keypresses and callbacks."""
         return ((EventSpec.databaseenginedisplay_run, self.run_engine),)
 
     def set_primary_activity_bindings(self, switch=True):
@@ -119,7 +118,6 @@ class EngineText(SharedTextEngineText, BlankText):
 
     def run_engine(self, event=None):
         """Run chess engine."""
-
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
         # Assume all later Pythons are affected because they do not install

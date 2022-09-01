@@ -41,7 +41,10 @@ if __name__ == "__main__":
         cdb.close_database_contexts()
 
     class FileWidget:
+        """Provide select and import PGN game from file dialogue."""
+
         def __init__(self, database, engine_name):
+            """Import games into database using engine_name database engine."""
             root = tkinter.Tk()
             root.wm_title(string=" - ".join((engine_name, "Import PGN file")))
             root.wm_iconify()

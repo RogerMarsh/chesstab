@@ -36,11 +36,10 @@ del os
 
 
 class DisplayItemsError(Exception):
-    pass
+    """Exception class for displayitems module."""
 
 
 class DisplayItems(object):
-
     """Manage set of displayed widgets."""
 
     def __init__(self):
@@ -94,6 +93,7 @@ class DisplayItems(object):
 
     @property
     def active_item(self):
+        """Return the active item."""
         try:
             return self.stack[-1]
         except IndexError:
@@ -301,7 +301,6 @@ class DisplayItems(object):
 
 
 class DisplayItemsStub(object):
-
     """Stub manager for set of displayed widgets.
 
     Tk Frames, each containing an item and usually called a panel in ChessTab,
@@ -317,7 +316,6 @@ class DisplayItemsStub(object):
 
     def __init__(self):
         """Create control data structures for  widgets."""
-
         # Only stack and panel_object_map are referenced when module written.
         # self.order = ()
         self.stack = (None,)
@@ -326,6 +324,7 @@ class DisplayItemsStub(object):
 
     @property
     def active_item(self):
+        """Return the active item."""
         return self.stack[-1]
 
     def is_mapped_panel(self, panel):

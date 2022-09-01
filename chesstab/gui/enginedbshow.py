@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise show toplevel to show chess engine definition record.
-"""
+"""Customise show toplevel to show chess engine definition record."""
 
 from solentware_grid.gui.datashow import DataShow
 
@@ -47,8 +46,7 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
         self.initialize()
 
     def get_title_for_object(self, object_=None):
-        """Return title for Toplevel containing a chess engine definition
-        object_.
+        """Return title for Toplevel containing a chess engine definition.
 
         Default value of object_ is object attribute from DataShow class.
 
@@ -64,21 +62,26 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface EngineListGrid object."""
         return self.ui.base_engines
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.engines_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)
 
     def tidy_on_destroy(self):
+        """Clear up after Toplevel destruction."""
         # ui_base_table is None when this happens other than directly closing
         # the Toplevel.
         try:

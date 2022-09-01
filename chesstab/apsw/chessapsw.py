@@ -2,8 +2,7 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database using sqlite3.
-"""
+"""Chess database using sqlite3."""
 
 import os
 
@@ -19,11 +18,10 @@ from ..basecore import database
 
 
 class ChessDatabaseError(Exception):
-    pass
+    """Exception class for chessapsw module."""
 
 
 class ChessDatabase(database.Database, apsw_database.Database):
-
     """Provide access to a database of games of chess."""
 
     _deferred_update_process = os.path.join(

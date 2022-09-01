@@ -37,7 +37,6 @@ from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
 class _RepertoireDisplay(ExceptionHandler, Display):
-
     """Extend and link PGN repertoire text to database.
 
     sourceobject - link to database.
@@ -194,7 +193,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
                 self.blockchange = True
 
     def get_text_for_statusbar(self):
-        """ """
+        """Return 'Please wait ..' message for status bar."""
         return "".join(
             (
                 "Please wait while finding games for repertoire position in ",
@@ -203,7 +202,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
         )
 
     def get_selection_text_for_statusbar(self):
-        """ """
+        """Return opening name for display in status bar."""
         return self.pgn.tags.get(TAG_OPENING, "?")
 
     def generate_popup_navigation_maps(self):
@@ -217,7 +216,6 @@ class _RepertoireDisplay(ExceptionHandler, Display):
 class RepertoireDisplay(
     _RepertoireDisplay, DisplayPGN, ShowPGN, Repertoire, DataNotify
 ):
-
     """Display a repertoire from a database allowing delete and insert."""
 
     # Allow for structure difference between RepertoireDisplay and GameDisplay
@@ -227,18 +225,20 @@ class RepertoireDisplay(
     # instances of superclasses of RepertoireDisplay, emulating the behaviour
     # before introduction of displaypgn module.
     def pgn_score_original_value(self, original_value):
-
+        """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
         # original.value.set_game_source(self.sourceobject.value.gamesource)
         original_value.set_game_source("No opening name")
 
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
 
     def create_select_move_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_select_move_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
@@ -247,7 +247,6 @@ class RepertoireDisplay(
 class RepertoireDisplayInsert(
     _RepertoireDisplay, InsertPGN, ShowPGN, RepertoireEdit, DataNotify
 ):
-
     """Display a repertoire from a database allowing insert.
 
     RepertoireEdit provides the widget and _RepertoireDisplay the database
@@ -257,7 +256,6 @@ class RepertoireDisplayInsert(
 
 
 class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
-
     """Display a repertoire from a database allowing edit and insert."""
 
     # Allow for structure difference between RepertoireDisplay and GameDisplay
@@ -267,7 +265,7 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
     # instances of superclasses of RepertoireDisplay, emulating the behaviour
     # before introduction of displaypgn module.
     def pgn_score_original_value(self, original_value):
-
+        """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
         # original.value.set_game_source(self.sourceobject.value.gamesource)
@@ -280,4 +278,5 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
     # The property which returns self.ui.base_repertoires is ignored because
     # the GameDisplayEdit version of the method sets properties on all grids.
     def set_properties_on_game_grids(self, newkey):
+        """Set grid row properties of row for newkey record."""
         self.ui.base_repertoires.set_properties(newkey)

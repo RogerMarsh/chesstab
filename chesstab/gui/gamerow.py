@@ -2,8 +2,7 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets that display tag roster details of games on database.
-"""
+"""Create widgets that display tag roster details of games on database."""
 
 import tkinter
 
@@ -236,7 +235,7 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         )
 
     def grid_row(self, **kargs):
-        """Return super(ChessDBrowGame,).grid_row(textitems=(...), **kargs).
+        """Return ChessDBrowGame() with selected Tags at game value.
 
         Create textitems argument for ChessDBrowGame instance.
 
@@ -262,6 +261,7 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         )
 
     def get_tags_display_order(self, pgn):
+        """Return Tags not given their own column in display order."""
         str_tags = []
         other_tags = []
         tags = self.value.collected_game._tags
@@ -274,16 +274,18 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         return str_tags + other_tags
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowGame() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
 
 def make_ChessDBrowGame(chessui):
-    """Make ChessDBrowGame with reference to ChessUI instance"""
+    """Make ChessDBrowGame with reference to ChessUI instance."""
 
     def make_position(database=None):
         return ChessDBrowGame(database=database, ui=chessui)

@@ -27,7 +27,6 @@ from .game import Game
 
 
 class Repertoire(Game):
-
     """Chess repertoire game widget composed from Board and Text widgets.
 
     gameclass is passed to the superclass as the gameclass argument.  It
@@ -60,6 +59,7 @@ class Repertoire(Game):
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.
     def get_all_export_events(self):
+        """Return event specifications for Repertoire widget."""
         return (
             (
                 EventSpec.pgn_export_format_no_comments,

@@ -2,8 +2,7 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Define User Interface for deferred update process.
-"""
+"""Define User Interface for deferred update process."""
 
 import sys
 import os
@@ -188,7 +187,6 @@ class ChessDeferredUpdate(ExceptionHandler):
 
     def allow_import(self):
         """Do checks for database engine and return True if import allowed."""
-
         # The close_database() in finally clause used to be the first statement
         # after runjob() definition in run_import() method.  An exception was
         # raised using the sqlite3 module because run_input() is run in a
@@ -578,6 +576,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         return os.path.join(sys.argv[1], ERROR_LOG)
 
     def get_pgn_file_estimates(self):
+        """Return the estimates of object counts for a PGN file."""
         return self.estimate_data
 
     def quit_after_import_started(self):
@@ -750,19 +749,27 @@ class ChessDeferredUpdate(ExceptionHandler):
     # change.
 
     def __call__(self):
-        """ """
+        """Return self allowing the construct <instance>()."""
         return self
 
     def get_reportqueue(self):
-        """ """
+        """Return queue from which reports to be displayed are taken.
+
+        Tasks run from self.queue place responses on this queue.
+
+        """
         return self.reportqueue
 
     def get_thread_queue(self):
-        """ """
+        """Return queue on which tasks to be run are placed.
+
+        A task runner takes tasks from this queue.
+
+        """
         return self.queue
 
     def __run_ui_task_from_queue(self, interval):
-        """Do all queued tasks then wake-up after interval"""
+        """Do all queued tasks then wake-up after interval."""
         while True:
             try:
                 method, args, kwargs = self.reportqueue.get_nowait()

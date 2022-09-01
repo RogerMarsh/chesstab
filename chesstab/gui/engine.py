@@ -28,7 +28,6 @@ from .enginetext import EngineText
 
 
 class Engine(EngineText):
-
     """Chess engine definition widget.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -38,7 +37,6 @@ class Engine(EngineText):
 
     See superclass for ui, items_manager, and itemgrid, arguments.  These may
     be, or have been, absorbed into **ka argument.
-
 
     """
 
@@ -52,7 +50,6 @@ class Engine(EngineText):
         **ka
     ):
         """Create widgets to display chess engine definition."""
-
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
@@ -103,7 +100,6 @@ class Engine(EngineText):
 
     def takefocus(self, take=True):
         """Configure game widget takefocus option."""
-
         # Hack because I misunderstood meaning of takefocus: FALSE does not
         # stop the widget taking focus, just stops tab traversal.
         if take:

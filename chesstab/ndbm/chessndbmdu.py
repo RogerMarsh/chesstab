@@ -2,8 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for dbm.ndbm.
-"""
+"""Chess database update using custom deferred update for dbm.ndbm."""
 
 import os
 import bz2
@@ -27,7 +26,7 @@ _python_version = ".".join(
 
 
 class ChessndbmduError(Exception):
-    pass
+    """Exception class for chessndbmdu module."""
 
 
 def chess_ndbmdu(
@@ -54,7 +53,6 @@ def chess_ndbmdu(
 
 
 class ChessDatabase(ndbmdu_database.Database):
-
     """Provide custom deferred update for a database of games of chess."""
 
     # The optimum chunk size is the segment size.

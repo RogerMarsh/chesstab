@@ -47,7 +47,6 @@ from .displaytext import (
 
 
 class _QueryDisplay(ExceptionHandler, Display):
-
     """Extend and link game selection rule to database.
 
     sourceobject - link to database.
@@ -104,8 +103,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         return self.ui._set_find_selection_name_games
 
     def get_navigation_events(self):
-        """Return event description tuple for navigation from selection rule
-        statement."""
+        """Return event description tuple for navigation from query."""
         return (
             (
                 EventSpec.navigate_to_position_grid,
@@ -310,6 +308,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         return navigation_map, local_map
 
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup
@@ -341,7 +340,7 @@ class _QueryDisplay(ExceptionHandler, Display):
                 self.blockchange = True
 
     def get_text_for_statusbar(self):
-        """ """
+        """Return 'Please wait ..' message for status bar."""
         return "".join(
             (
                 "Please wait while finding games for game selection rule ",
@@ -350,7 +349,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         )
 
     def get_selection_text_for_statusbar(self):
-        """ """
+        """Return query name text for display in status bar."""
         return self.query_statement.get_name_text()
 
     # This method added so it can be used in _cycle_items which then becomes
@@ -389,7 +388,6 @@ class _QueryDisplay(ExceptionHandler, Display):
 
 
 class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
-
     """Display game selection rule from database and allow delete and insert.
 
     Method delete_item_database allows records to be deleted from a database.
@@ -400,6 +398,7 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
     # list area is shared with the main game list and the index lists.
     # Generating the game list on demand may be necessary at any time.
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_list_games_entry_to_popup(popup, index="Close Item")
         return popup
@@ -506,7 +505,6 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
 class QueryDisplayInsert(
     _QueryDisplay, ListGamesText, InsertText, ShowText, QueryEdit, DataNotify
 ):
-
     """Display game selection rule from database allowing insert.
 
     QueryEdit provides the widget and _QueryDisplay the database interface.
@@ -523,7 +521,6 @@ class QueryDisplayInsert(
 
 
 class QueryDisplayEdit(EditText, QueryDisplayInsert):
-
     """Display game selection rule from database allowing edit and insert.
 
     Method update_item_database allows records on the database to be amended.

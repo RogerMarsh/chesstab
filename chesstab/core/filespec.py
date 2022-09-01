@@ -110,7 +110,6 @@ NEWGAMES_FIELD_VALUE = "changed"
 
 
 class FileSpec(solentware_base.core.filespec.FileSpec):
-
     """Specify a chess database.
 
     Parameters for Berkeley DB, DPT, and Sqlite3, are defined.

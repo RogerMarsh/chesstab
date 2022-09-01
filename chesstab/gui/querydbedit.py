@@ -2,8 +2,7 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Customise edit toplevel to edit or insert game selection rule record.
-"""
+"""Customise edit toplevel to edit or insert game selection rule record."""
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
@@ -84,17 +83,21 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface QueryGrid object."""
         return self.ui.base_selections
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.selections_in_toplevels
 
     @property
     def ui(self):
+        """Return the User Interface object from 'editable' view."""
         return self.newview.ui
 
     def set_item(self, view, object_):
+        """Populate view with the query extracted from object_."""
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)
 

@@ -2,8 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets to display Chess Query Language (ChessQL) statement records.
-"""
+"""Create widgets to display Chess Query Language (ChessQL) statement."""
 
 import tkinter
 
@@ -26,7 +25,6 @@ ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
 
 class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
-
     """Define row in list of ChessQL statements.
 
     Add row methods to the ChessQL statement record definition.
@@ -106,7 +104,7 @@ class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
         )
 
     def grid_row(self, **kargs):
-        """Return super().grid_row(textitems=(...), **kargs).
+        """Return ChessDBrowCQL() with row text set to CQL query name.
 
         Create textitems argument for ChessDBrowCQL instance.
 
@@ -120,16 +118,18 @@ class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
         )
 
     def grid_row_on_display(self, **kargs):
+        """Return ChessDBrowCQL() with ON_DISPLAY_COLOUR background."""
         self._current_row_background = ON_DISPLAY_COLOUR
         return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
     def set_background_on_display(self, widgets):
+        """Set background to ON_DISPLAY_COLOUR on all widgets."""
         self._current_row_background = ON_DISPLAY_COLOUR
         self.set_background(widgets, self._current_row_background)
 
 
 def make_ChessDBrowCQL(chessui):
-    """Make ChessDBrowCQL with reference to ChessUI instance"""
+    """Make ChessDBrowCQL with reference to ChessUI instance."""
 
     def make_selection(database=None):
         return ChessDBrowCQL(database=database, ui=chessui)

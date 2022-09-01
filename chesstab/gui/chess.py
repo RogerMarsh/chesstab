@@ -87,11 +87,10 @@ ExceptionHandler.set_application_name(APPLICATION_NAME)
 
 
 class ChessError(Exception):
-    pass
+    """Exception class fo chess module."""
 
 
 class Chess(ExceptionHandler):
-
     """Connect a chess database with User Interface."""
 
     _index = GAMES_FILE_DEF
@@ -482,7 +481,7 @@ class Chess(ExceptionHandler):
         """Return callback to bind to <<MenuSelect>> event for menu."""
 
         def menu_changed(event):
-            """Display menu tip in status bar"""
+            """Display menu tip in status bar."""
             # entrycget('active', <property>) always returns None
             # <index> and 'end' forms work though
             # even tried repeating in an 'after_idle' call
@@ -1365,7 +1364,7 @@ class Chess(ExceptionHandler):
         )
 
     def export_all_games_pgn_no_comments(self):
-        """Export all database games in PGN export format excluding comments."""
+        """Export all games in PGN export format excluding comments."""
         self.ui.export_report(
             exporters.export_all_games_pgn_no_comments(
                 self.opendatabase,
@@ -1375,10 +1374,7 @@ class Chess(ExceptionHandler):
         )
 
     def export_all_games_pgn_no_comments_no_ravs(self):
-        """Export all database games in PGN export format excluding comments
-        and RAVs.
-
-        """
+        """Export games in PGN export format excluding comments and RAVs."""
         self.ui.export_report(
             exporters.export_all_games_pgn_no_comments_no_ravs(
                 self.opendatabase,
@@ -1864,7 +1860,7 @@ class Chess(ExceptionHandler):
     # of the __run_ui_task_from_queue and try_command_after_idle methods.
 
     def __run_ui_task_from_queue(self, interval):
-        """Do all queued tasks then wake-up after interval"""
+        """Do all queued tasks then wake-up after interval."""
         while True:
             try:
                 method, args, kwargs = self.reportqueue.get_nowait()
@@ -1879,7 +1875,7 @@ class Chess(ExceptionHandler):
             self.reportqueue.task_done()
 
     def try_command_after_idle(self, method, widget):
-        """Run command in main thread after idle"""
+        """Run command in main thread after idle."""
         self.root.after_idle(self.try_command(method, widget))
 
     def toggle_single_view(self):
@@ -1960,7 +1956,6 @@ class Chess(ExceptionHandler):
 
 
 class Statusbar(object):
-
     """Status bar for chess application."""
 
     def __init__(self, root, background):
