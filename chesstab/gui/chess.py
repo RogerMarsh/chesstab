@@ -618,8 +618,8 @@ class Chess(ExceptionHandler):
                 parent=self.get_toplevel(),
                 message="".join(
                     (
-                        "None of the available database engines can be used to ",
-                        "create a database.",
+                        "None of the available database engines can be ",
+                        "used to create a database.",
                     )
                 ),
                 title="New",
@@ -1562,7 +1562,8 @@ class Chess(ExceptionHandler):
 
             # See comment near end of class definition ChessDeferredUpdate in
             # sibling module chessdu for explanation of this change.
-            # self.root.after_idle(self.try_command(after_completion, self.root))
+            # self.root.after_idle(
+            #     self.try_command(after_completion, self.root))
             self.reportqueue.put(
                 (
                     self.try_command_after_idle,
@@ -1590,8 +1591,8 @@ class Chess(ExceptionHandler):
                             "The import ",
                             msg,
                             "before completion of backups.",
-                            "\n\nThe database has not been changed and will be ",
-                            "opened after deleting these backups.",
+                            "\n\nThe database has not been changed and will ",
+                            "be opened after deleting these backups.",
                         )
                     ),
                 )
@@ -1606,9 +1607,9 @@ class Chess(ExceptionHandler):
                         title="Import",
                         message="".join(
                             (
-                                "The import failed.\n\nBackups were not taken ",
-                                "so the database cannot be restored and may not ",
-                                "be usable.",
+                                "The import failed.\n\nBackups were not ",
+                                "taken so the database cannot be restored ",
+                                "and may not be usable.",
                             )
                         ),
                     )
@@ -1808,8 +1809,8 @@ class Chess(ExceptionHandler):
         # print() statements on entry to each method mentioned in the traceback
         # showed nothing unusual about these cases compared with all the others
         # which 'behaved properly' for deletion.
-        # So tried forcing garbage collection, which seemed to work and does not
-        # break the _db or _sqlite cases.
+        # So tried forcing garbage collection, which seemed to work and does
+        # not break the _db or _sqlite cases.
         gc.collect()
 
     def _database_close(self):

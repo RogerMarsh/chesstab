@@ -2,7 +2,7 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Create widgets that display details of chess engines emabled for database."""
+"""Create widgets to display details of chess engines emabled for database."""
 
 import tkinter
 

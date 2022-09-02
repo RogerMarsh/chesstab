@@ -127,8 +127,9 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                     msg = "".join(
                         (
                             "Unable to list games for ChessQL statement, ",
-                            "probably because an 'empty square' is in the query ",
-                            "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                            "probably because an 'empty square' is in the ",
+                            "query (eg '.a2-3'):\n\n",
+                            "The reported  error is:\n\n",
                             str(exc),
                         )
                     )

@@ -142,13 +142,13 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         exclude=True,
     ):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(EngineListGrid, self).fill_view(
@@ -160,52 +160,52 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(EngineListGrid, self).load_new_index()
 
     def load_new_partial_key(self, key):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(EngineListGrid, self).load_new_partial_key(key)
 
     def on_configure_canvas(self, event=None):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(EngineListGrid, self).on_configure_canvas(event=event)
 
     def on_data_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(EngineListGrid, self).on_data_change(instance)
@@ -329,9 +329,10 @@ class EngineGrid(EngineListGrid):
                 title="Insert Engine Definition Workaround",
                 message="".join(
                     (
-                        "All records have same name on this display.\n\nThe new ",
-                        "record has been inserted but you need to Hide, and then ",
-                        "Show, the display to see the record in the list.",
+                        "All records have same name on this display.\n\nThe ",
+                        "new record has been inserted but you need to Hide, ",
+                        "and then Show, the display to see the record in ",
+                        "the list.",
                     )
                 ),
             )

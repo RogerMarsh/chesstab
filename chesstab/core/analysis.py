@@ -110,7 +110,8 @@ class Analysis(object):
             # Now closing and opening the database switches it off and on.
             # if engine_name is None:
             #    sys.stderr.write(
-            #        'Name of engine: ' + str(engine_name) + ' ' + str(len(variations)) + '\n')
+            #        'Name of engine: ' + str(engine_name) \
+            #        + ' ' + str(len(variations)) + '\n')
             #    continue
 
             analysis = variations[engine_name]

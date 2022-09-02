@@ -156,7 +156,12 @@ class _QueryDisplay(ExceptionHandler, Display):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Insert Game Selection Rule",
-                message="No active game selection rule to insert into database.",
+                message="".join(
+                    (
+                        "No active game selection rule to insert ",
+                        "into database.",
+                    )
+                ),
             )
             return
 
@@ -190,8 +195,8 @@ class _QueryDisplay(ExceptionHandler, Display):
                 title="Insert Game Selection Rule",
                 message="".join(
                     (
-                        "The selection rule has no name.\n\nPlease enter it's ",
-                        "name as the first line of text.'",
+                        "The selection rule has no name.\n\nPlease enter ",
+                        "it's name as the first line of text.'",
                     )
                 ),
             )
@@ -203,7 +208,8 @@ class _QueryDisplay(ExceptionHandler, Display):
                     title="Insert Game Selection Rule",
                     message="".join(
                         (
-                            "Confirm request to add game selection rule named:\n\n",
+                            "Confirm request to add game selection rule ",
+                            "named:\n\n",
                             updater.value.get_name_text(),
                             "\n\nto database.\n\n",
                             "Note validation of the statement failed but no ",
@@ -227,7 +233,8 @@ class _QueryDisplay(ExceptionHandler, Display):
                 title="Insert Game Selection Rule",
                 message="".join(
                     (
-                        "Confirm request to add game selection rule named:\n\n",
+                        "Confirm request to add game selection rule ",
+                        "named:\n\n",
                         updater.value.get_name_text(),
                         "\n\nto database.\n\n",
                         updater.value.where_error.get_error_report(
@@ -541,7 +548,12 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Edit Game Selection Rule",
-                message="Cannot edit game selection rule:\n\nRule list hidden.",
+                message="".join(
+                    (
+                        "Cannot edit game selection rule:\n\n",
+                        "Rule list hidden.",
+                    )
+                ),
             )
             return
         if self.sourceobject is None:
@@ -591,8 +603,8 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
                 title="Edit Game Selection Rule",
                 message="".join(
                     (
-                        "The selection rule has no name.\n\nPlease enter it's ",
-                        "name as the first line of text.'",
+                        "The selection rule has no name.\n\nPlease enter ",
+                        "it's name as the first line of text.'",
                     )
                 ),
             )
@@ -629,7 +641,8 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
                 title="Edit Game Selection Rule",
                 message="".join(
                     (
-                        "Confirm request to edit game selection rule named:\n\n",
+                        "Confirm request to edit game selection rule ",
+                        "named:\n\n",
                         updater.value.get_name_text(),
                         "\n\nto database.\n\n",
                         updater.value.where_error.get_error_report(

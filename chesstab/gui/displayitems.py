@@ -23,10 +23,10 @@ import tkinter
 # Not yet known if 64-bit OSes in general are affected.
 # The problem code is: widget.winfo_pathname(widget.winfo_id())
 import sys
+import os
 
 _win32_platform = sys.platform == "win32"
 del sys
-import os
 
 _amd64 = (
     os.getenv("PROCESSOR_ARCHITECTURE") == "AMD64"

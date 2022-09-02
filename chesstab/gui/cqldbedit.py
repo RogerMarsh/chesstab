@@ -115,8 +115,8 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
                     title=title,
                     message="".join(
                         (
-                            "The ChessQL statement has no name.\n\nPlease enter ",
-                            "it's name as the first line of text.'",
+                            "The ChessQL statement has no name.\n\nPlease ",
+                            "enter it's name as the first line of text.'",
                         )
                     ),
                 )
@@ -138,7 +138,8 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
                 title=title,
                 message="".join(
                     (
-                        "Confirm request to update ChessQL statement named:\n\n",
+                        "Confirm request to update ChessQL statement ",
+                        "named:\n\n",
                         self.newobject.value.get_name_text(),
                         "\n\non database.\n\n",
                         self.newobject.value.cql_error.get_error_report(),
@@ -153,9 +154,9 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
                     title=title,
                     message="".join(
                         (
-                            "Cannot use this insert dialogue while the active ",
-                            "item in cql queries is one opened by menu action ",
-                            "'Position | Partial'.",
+                            "Cannot use this insert dialogue while the ",
+                            "active item in cql queries is one opened by ",
+                            "menu action 'Position | Partial'.",
                         )
                     ),
                 )

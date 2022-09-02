@@ -1045,9 +1045,8 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
                     )
                 )
                 if rr.value.collected_game.is_pgn_valid_export_format():
-                    gamesout.write(
-                        rr.value.collected_game.get_repertoire_pgn_no_comments()
-                    )
+                    rvcg = rr.value.collected_game  # For line length.
+                    gamesout.write(rvcg.get_repertoire_pgn_no_comments())
             gamesout = open(filename, "w")
         finally:
             gamesout.close()

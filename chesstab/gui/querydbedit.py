@@ -118,8 +118,8 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
                 title=title,
                 message="".join(
                     (
-                        "The selection rule has no name.\n\nPlease enter it's ",
-                        "name as the first line of text.'",
+                        "The selection rule has no name.\n\nPlease enter ",
+                        "it's name as the first line of text.'",
                     )
                 ),
             )
@@ -130,7 +130,8 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
                 title=title,
                 message="".join(
                     (
-                        "Confirm request to update game selection rule named:\n\n",
+                        "Confirm request to update game selection rule ",
+                        "named:\n\n",
                         self.newobject.value.get_name_text(),
                         "\n\non database.\n\n",
                         self.newobject.value.where_error.get_error_report(

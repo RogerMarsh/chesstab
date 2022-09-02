@@ -161,7 +161,7 @@ class Database:
         pass
 
     def adjust_database_for_retry_import(self, files):
-        """Database engine specific actions to do before re-trying an import."""
+        """Database engine specific actions done before re-trying an import."""
         pass
 
     def mark_partial_positions_to_be_recalculated(self):

@@ -154,10 +154,10 @@ def get_position_string(
     changing the order of those remaining.
 
     These values are intended as keys in an index and this structure puts keys
-    for similar positions, specifically for castling and en passant differences,
-    near each other.  En passant is before castling because the meaning of 'b',
-    'Q', and 'q', can be decided without using the 8 byte bit pattern: piece
-    name or en passant or castling or whose move.
+    for similar positions, specifically for castling and en passant
+    differences, near each other.  En passant is before castling because the
+    meaning of 'b', 'Q', and 'q', can be decided without using the 8 byte bit
+    pattern: piece name or en passant or castling or whose move.
 
     """
     squares = Squares.squares
@@ -260,7 +260,8 @@ class GameTags(Game):
     been disabled by overriding _collecting_movetext.  The definition ensures
     PGN._disambiguate_move is never called.
 
-    PGN._collecting_non_whitespace_while_searching is correct in this class too.
+    PGN._collecting_non_whitespace_while_searching is correct in this class
+    too.
 
     """
 
@@ -540,7 +541,7 @@ class GameUpdate(Game):
         )
 
     def modify_board_state(self, position_delta):
-        """Delegate to superclass then modify board state and add index entries."""
+        """Delegate then modify board state and add index entries."""
         super().modify_board_state(position_delta)
         if len(self._ravstack) != len(self.halfmovenumber):
             while len(self._ravstack) < len(self.halfmovenumber):

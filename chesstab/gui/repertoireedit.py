@@ -50,7 +50,7 @@ class RepertoireEdit(GameEdit):
         super(RepertoireEdit, self).__init__(gameclass=gameclass, **ka)
 
     def insert_empty_pgn_seven_tag_roster(self):
-        """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster sequence."""
+        """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""
         self.set_insertion_point_before_next_pgn_tag()
         for t in REPERTOIRE_TAG_ORDER:
             self.add_pgntag_to_map(t, "")

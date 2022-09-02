@@ -15,7 +15,7 @@ if __name__ == "__main__":
     import ast
     import re
 
-    re_normalize_player_name = re.compile("([^,\.\s]+(?:,|\.)?)(?:\s*)")
+    re_normalize_player_name = re.compile(r"([^,\.\s]+(?:,|\.)?)(?:\s*)")
 
     file_dbname_map = {
         "games_Black": "Black",

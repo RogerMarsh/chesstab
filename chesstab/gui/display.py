@@ -122,7 +122,7 @@ class Display(object):
         return self.ui.set_focus_repertoire_game_grid(event=event)
 
     def set_focus_repertoire_grid(self, event=None):
-        """Give focus to widget displaying list of database repertoire games."""
+        """Give focus to widget displaying list of repertoire games."""
         if not self.ui.base_repertoires.is_visible():
             return
         self.bind_for_widget_navigation()

@@ -16,7 +16,7 @@ if __name__ == "__main__":
     import re
     import sqlite3
 
-    re_normalize_player_name = re.compile("([^,\.\s]+(?:,|\.)?)(?:\s*)")
+    re_normalize_player_name = re.compile(r"([^,\.\s]+(?:,|\.)?)(?:\s*)")
 
     table_names = "games_Black", "games_White"
 

@@ -105,7 +105,8 @@ class _RepertoireDisplay(ExceptionHandler, Display):
         return self.ui.repertoire_items
 
     # Defined so cycle_item and give_focus_to_widget methods can be shared by
-    # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay classes.
+    # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay
+    # classes.
     @property
     def ui_configure_item_list_grid(self):
         return self.ui.configure_repertoire_grid

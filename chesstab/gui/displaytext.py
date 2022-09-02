@@ -70,7 +70,7 @@ class ShowText:
         self.set_score_pointer_item_navigation_bindings(True)
 
     def bind_for_widget_navigation(self):
-        """Set bindings to give focus to this text statement on pointer click."""
+        """Set pointer bindings to give focus to this text statement."""
         self.set_score_pointer_widget_navigation_bindings(True)
 
     def get_close_item_events(self):

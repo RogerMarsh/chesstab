@@ -280,7 +280,8 @@ class Game(Score):
             analysis.variations.clear()
 
             # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3
-            # running under Wine on FreeBSD 10.1 by disabling the UCI functions.
+            # running under Wine on FreeBSD 10.1 by disabling the UCI
+            # functions.
             # Assume all later Pythons are affected because they do not install
             # under Wine at time of writing.
             # The OSError stopped happening by wine-2.0_3,1 on FreeBSD 10.1 but
@@ -289,7 +290,7 @@ class Game(Score):
             # problem is being shifted constructively.
             # At Python3.5 running under Wine on FreeBSD 10.1, get() does not
             # wait when the queue is empty either, and ChessTab does not run
-            # under Python3.3 because it uses asyncio: so no point in disabling.
+            # under Python3.3 because it uses asyncio: so no point disabling.
             # try:
             #    uci.ui_analysis_queue.put((sas, pa))
             # except AttributeError:

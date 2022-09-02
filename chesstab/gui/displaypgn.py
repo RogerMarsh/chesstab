@@ -203,8 +203,9 @@ class ShowPGN(ShowText, ScorePGN):
                         "The new ",
                         "".join(
                             (
-                                " score contains at least one illegal move in ",
-                                "PGN.\n\nPlease re-confirm request to insert ",
+                                " score contains at least one illegal move ",
+                                "in PGN.\n\nPlease re-confirm request to ",
+                                "insert ",
                             )
                         ),
                         ".",
@@ -266,8 +267,8 @@ class DisplayPGN(DisplayText):
                         "Cannot delete ",
                         "".join(
                             (
-                                ":\n\nDatabase has been closed since this copy ",
-                                "displayed.",
+                                ":\n\nDatabase has been closed since ",
+                                "this copy displayed.",
                             )
                         ),
                     )
@@ -281,7 +282,12 @@ class DisplayPGN(DisplayText):
                 message=mt.join(
                     (
                         "Cannot delete ",
-                        ":\n\nRecord has been amended since this copy displayed.",
+                        "".join(
+                            (
+                                ":\n\nRecord has been amended since ",
+                                "this copy displayed.",
+                            )
+                        ),
                     )
                 ),
             )
@@ -431,8 +437,8 @@ class EditPGN(EditText):
                         "Cannot edit ",
                         "".join(
                             (
-                                ":\n\nDatabase has been closed since this copy ",
-                                "displayed.",
+                                ":\n\nDatabase has been closed since ",
+                                "this copy displayed.",
                             )
                         ),
                     )
@@ -446,7 +452,12 @@ class EditPGN(EditText):
                 message=mt.join(
                     (
                         "Cannot edit ",
-                        ":\n\nRecord has been amended since this copy displayed.",
+                        "".join(
+                            (
+                                ":\n\nRecord has been amended since ",
+                                "this copy displayed.",
+                            )
+                        ),
                     )
                 ),
             )
@@ -480,8 +491,9 @@ class EditPGN(EditText):
                         "The edited ",
                         "".join(
                             (
-                                " score contains at least one illegal move in ",
-                                "PGN.\n\nPlease re-confirm request to edit ",
+                                " score contains at least one illegal move ",
+                                "in PGN.\n\nPlease re-confirm request to ",
+                                "edit ",
                             )
                         ),
                         ".",

@@ -102,7 +102,8 @@ class _GameDisplay(ExceptionHandler, Display):
         return self.ui.game_items
 
     # Defined so cycle_item and give_focus_to_widget methods can be shared by
-    # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay classes.
+    # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay
+    # classes.
     @property
     def ui_configure_item_list_grid(self):
         """Return method to configure game grid widget."""

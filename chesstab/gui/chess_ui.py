@@ -522,7 +522,7 @@ class ChessUI(ExceptionHandler):
                 self.game_games.close_client_cursor()
 
                 self.game_games.get_data_source().get_full_position_games(None)
-                # Line above is reasonable when dealing with a built record set.
+                # Line above is reasonable if dealing with a built record set.
                 # Line below seemed hackish at first.
                 # However it is probably correct and the dubious code is likely
                 # the long established use of None as the initial and default
@@ -706,10 +706,10 @@ class ChessUI(ExceptionHandler):
         # Is next comment, kept from earlier version of this method called
         # hide_middle_column(), still relevant?
 
-        ## Why different to hide_partial_position_games and
-        ## hide_repertoire_games?
-        ## Problem surfaces when games shown again.
-        ## Only style of the three which works here.
+        # # Why different to hide_partial_position_games and
+        # # hide_repertoire_games?
+        # # Problem surfaces when games shown again.
+        # # Only style of the three which works here.
 
         self.calculate_payload_availability()
         self.configure_panedwindows()
@@ -822,8 +822,9 @@ class ChessUI(ExceptionHandler):
         # BUG start
         # There was a comment here on a problem whose detail was not recorded.
         # But if sashes have been dragged such that the widget being hidden
-        # is not visible when being hiddden, the list of games on close database
-        # for example, then w is None in the w.winfo_pathname(...) call.
+        # is not visible when being hiddden, the list of games on close
+        # database for example, then w is None in the w.winfo_pathname(...)
+        # call.
         #
         # hidden is the wrong argument.  Should be the widgets to take focus in
         # preference order and if that does not give an answer go through the
@@ -1065,7 +1066,7 @@ class ChessUI(ExceptionHandler):
             self.repertoire_games.set_selection_text()
 
     def set_focus_repertoire_grid(self, event=None):
-        """Give focus to widget displaying list of database repertoire games."""
+        """Give focus to widget showing list of database repertoire games."""
         if self.database is not None:
             self.set_toolbarframe_normal(
                 self.move_to_repertoire, self.filter_repertoire
@@ -1193,7 +1194,7 @@ class ChessUI(ExceptionHandler):
             self.selection_items.set_insert_or_delete_on_all_items()
         self._set_position_analysis_data_source_all_items()
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.base_games.get_data_source().get_database() is not None:
         #    self.base_games.clear_grid_keys()
 
@@ -1233,11 +1234,11 @@ class ChessUI(ExceptionHandler):
         if not self.game_items.count_items_in_stack():
             return
 
-        ## Hack to cope with GUI use while Import in progress.
-        ##if self.partial_games.get_data_source() is not None:
-        ##    if self.partial_games.get_data_source(
-        ##        ).get_database() is not None:
-        ##        self.partial_games.clear_grid_keys()
+        # # Hack to cope with GUI use while Import in progress.
+        # #if self.partial_games.get_data_source() is not None:
+        # #    if self.partial_games.get_data_source(
+        # #        ).get_database() is not None:
+        # #        self.partial_games.clear_grid_keys()
         # if self.game_games.get_data_source() is not None:
         #    if self.game_games.get_data_source(
         #        ).get_database() is not None:
@@ -1250,12 +1251,12 @@ class ChessUI(ExceptionHandler):
         self.configure_panedwindows()
 
     def show_partial_position_games(self):
-        """List games containing partial position in active partial position."""
+        """List games with a position fitting the active partial position."""
         if not self.partial_items.count_items_in_stack():
             if not self.top_pw.pane(self.analysis_pw, "weight"):
                 return
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.partial_games.get_data_source() is not None:
         #    if self.partial_games.get_data_source(
         #        ).get_database() is not None:
@@ -1273,7 +1274,7 @@ class ChessUI(ExceptionHandler):
             if not self.top_pw.pane(self.analysis_pw, "weight"):
                 return
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.repertoire_games.get_data_source() is not None:
         #    if self.repertoire_games.get_data_source(
         #        ).get_database() is not None:
@@ -1294,7 +1295,7 @@ class ChessUI(ExceptionHandler):
             if not self.top_pw.pane(self.selections_pw, "weight"):
                 return
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.repertoire_games.get_data_source() is not None:
         #    if self.repertoire_games.get_data_source(
         #        ).get_database() is not None:
@@ -1339,7 +1340,7 @@ class ChessUI(ExceptionHandler):
         """Show widget containing list of partial positions in database."""
         self._create_partial_position_datasource(database)
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.base_partials.get_data_source().get_database() is not None:
         #    self.base_partials.clear_grid_keys()
 
@@ -1383,8 +1384,9 @@ class ChessUI(ExceptionHandler):
         """Show widget containing list of repertoire games in database."""
         self._create_repertoire_datasource(database)
 
-        ## Hack to cope with GUI use while Import in progress.
-        # if self.base_repertoires.get_data_source().get_database() is not None:
+        # # Hack to cope with GUI use while Import in progress.
+        # if self.base_repertoires.get_data_source(
+        #     ).get_database() is not None:
         #    self.base_repertoires.clear_grid_keys()
 
         self.calculate_payload_availability()
@@ -1808,7 +1810,7 @@ class ChessUI(ExceptionHandler):
         """Show widget containing list of selection rules in database."""
         self._create_selection_rules_datasource(database)
 
-        ## Hack to cope with GUI use while Import in progress.
+        # # Hack to cope with GUI use while Import in progress.
         # if self.base_selections.get_data_source().get_database() is not None:
         #    self.base_selections.clear_grid_keys()
 
@@ -1840,7 +1842,7 @@ class ChessUI(ExceptionHandler):
         self.base_games.move_to_row_in_grid(self.tb_entry.get())
 
     def move_to_partial(self):
-        """Move to first ChessQL statement with name starting text in filter."""
+        """Move to first ChessQL statement with name starting filter text."""
         self.base_partials.move_to_row_in_grid(self.tb_entry.get())
 
     def move_to_repertoire(self):
@@ -1877,18 +1879,17 @@ class ChessUI(ExceptionHandler):
                             "Filter '",
                             text,
                             "' contains a '*'.\n\nThis warning ",
-                            "is expected to appear if the database engine is ",
-                            "SQLite3 and means an attempt to scroll the list of ",
-                            "games will cause a program crash.\n\nA known way ",
-                            "to avoid this is menu option 'Select | Game'.\n\n",
-                            "Assuming the filter was enabled by menu option ",
-                            "'Select | White' the filter can be done by 'Select ",
-                            "| Rule', typing 'White starts ",
+                            "is expected to appear if the database engine ",
+                            "is SQLite3 and means an attempt to scroll the ",
+                            "list of games will cause a program crash.\n\nA ",
+                            "known way to avoid this is menu option 'Select ",
+                            "| Game'.\n\nAssuming the filter was enabled by ",
+                            "menu option 'Select | White' the filter can be ",
+                            "done by 'Select | Rule', typing 'White starts ",
                             text,
-                            "', followed ",
-                            "by 'Ctrl + Enter'.\n\nIf the filter was enabled by ",
-                            "'Select | Result' the appropriate rule is likely ",
-                            "to be 'Result eq *'.",
+                            "', followed by 'Ctrl + Enter'.\n\nIf the ",
+                            "filter was enabled by 'Select | Result' the ",
+                            "appropriate rule is likely to be 'Result eq *'.",
                         )
                     ),
                 )

@@ -93,9 +93,9 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
                     title=self.get_title_for_object(),
                     message="".join(
                         (
-                            "Cannot use this delete dialogue while the active ",
-                            "item in cql queries is one opened by menu action ",
-                            "'Position | Partial'.",
+                            "Cannot use this delete dialogue while the ",
+                            "active item in cql queries is one opened by ",
+                            "menu action 'Position | Partial'.",
                         )
                     ),
                 )
@@ -109,9 +109,9 @@ class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
                     title=self.get_title_for_object(),
                     message="".join(
                         (
-                            "Cannot use this delete dialogue while the active ",
-                            "item in cql queries is one that displays the record ",
-                            "being deleted.",
+                            "Cannot use this delete dialogue while the ",
+                            "active item in cql queries is one that ",
+                            "displays the record being deleted.",
                         )
                     ),
                 )

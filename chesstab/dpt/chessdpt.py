@@ -178,8 +178,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     "\n\n",
                     APPLICATION_NAME,
                     " will close the database on dismissing this ",
-                    "dialogue.\n\nRestore the database from backups, or source ",
-                    "data, before trying again.",
+                    "dialogue.\n\nRestore the database from backups, or ",
+                    "source data, before trying again.",
                 )
             ),
         )
@@ -250,11 +250,11 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     (
                         "The import failed.\n\n",
                         APPLICATION_NAME,
-                        " has opened the database but some of the files are full ",
-                        "and backups were not taken, so cannot offer ",
-                        "the option of retrying the import with a larger file, ",
-                        "and cannot restore the database.  The database may not ",
-                        "be usable.",
+                        " has opened the database but some of the files are ",
+                        "full and backups were not taken, so cannot offer ",
+                        "the option of retrying the import with a larger ",
+                        "file, and cannot restore the database.  The ",
+                        "database may not be usable.",
                     )
                 ),
             )
@@ -278,12 +278,12 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     "not in the Normal state.\n\n",
                     r,
                     "\n\nAt least one of these files is neither just ",
-                    "marked Deferred Update nor marked Full, and backups were ",
-                    "not taken, so ",
+                    "marked Deferred Update nor marked Full, and backups ",
+                    "were not taken, so ",
                     APPLICATION_NAME,
                     " is not offering the option of ",
-                    "retrying the import with a larger file.\n\nDo you want to ",
-                    "save a copy of the broken database?",
+                    "retrying the import with a larger file.\n\nDo you ",
+                    "want to save a copy of the broken database?",
                 )
             ),
         )
@@ -337,8 +337,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 title="Retry Import",
                 message="".join(
                     (
-                        "The import failed because the games file was filled.\n\n",
-                        "The file will be restored from backups.\n\nDo ",
+                        "The import failed because the games file was filled.",
+                        "\n\nThe file will be restored from backups.\n\nDo ",
                         "you want to retry the import with more space (20%) ",
                         "allocated to the games file?",
                     )
@@ -370,7 +370,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     APPLICATION_NAME,
                     " is not offering the option of retrying ",
                     "the import with a larger file.\n\nDo you want to save a ",
-                    "copy of the broken database before restoring from backups?",
+                    "copy of the broken database before restoring from ",
+                    "backups?",
                 )
             ),
         )

@@ -531,8 +531,8 @@ class FSNode:
         Some points from http://www.gadycosteff.com/cql/doc/transform.html for
         cql5.0 are:
 
-        The flipcolor transform applied to filter is the 'or' of filter with the
-        new filter formed from the filter as follows:
+        The flipcolor transform applied to filter is the 'or' of filter with
+        the new filter formed from the filter as follows:
 
             the colors of any piece designators in filter are changed;
             'wtm' is changed to 'btm' and vice versa;

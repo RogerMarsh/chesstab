@@ -133,7 +133,8 @@ class ChessDeferredUpdate(ExceptionHandler):
         import_.pack(side=tkinter.RIGHT, padx=12)
 
         # See comment near end of this class definition for explanation of this
-        # change.  Replacing Text by LogText fixes the majority of the problems.
+        # change.  Replacing Text by LogText fixes the majority of the
+        # problems.
         # Consequential changes, self.append_text to self.report.append_text
         # mainly, are not marked.
         # Added 07 August 2016:
@@ -293,13 +294,14 @@ class ChessDeferredUpdate(ExceptionHandler):
                 title="Import Backup",
                 message="".join(
                     (
-                        "Import backups of the following files already exist.\n\n",
+                        "Import backups of the following files already ",
+                        "exist.\n\n",
                         "\n".join(exists),
-                        "\n\nThis may mean an earlier Import action failed and ",
-                        'has not yet been resolved.\n\nClick "Ok" to delete ',
-                        "these backups and create new ones before doing the ",
-                        "Import.  These backups will be deleted if the Import ",
-                        "succeeds.\n\nClick ",
+                        "\n\nThis may mean an earlier Import action failed ",
+                        'and has not yet been resolved.\n\nClick "Ok" to ',
+                        "delete these backups and create new ones before ",
+                        "doing the Import.  These backups will be deleted ",
+                        "if the Import succeeds.\n\nClick ",
                         '"Cancel" to leave things as they are.',
                     )
                 ),
@@ -349,13 +351,14 @@ class ChessDeferredUpdate(ExceptionHandler):
                 title="Import Backup",
                 message="".join(
                     (
-                        "Import backups of the following files already exist.\n\n",
+                        "Import backups of the following files already ",
+                        "exist.\n\n",
                         "\n".join(exists),
-                        "\n\nThis may mean an earlier Import action failed and ",
-                        'has not yet been resolved.\n\nClick "Ok" to delete ',
-                        "these backups and create new ones before doing the ",
-                        "Import.  These backups will be deleted if the Import ",
-                        "succeeds.\n\nClick ",
+                        "\n\nThis may mean an earlier Import action failed ",
+                        'and has not yet been resolved.\n\nClick "Ok" to ',
+                        "delete these backups and create new ones before ",
+                        "doing the Import.  These backups will be deleted ",
+                        "if the Import succeeds.\n\nClick ",
                         '"Cancel" to leave things as they are.',
                     )
                 ),
@@ -589,8 +592,8 @@ class ChessDeferredUpdate(ExceptionHandler):
                     "The import has been started.\n\n",
                     APPLICATION_NAME,
                     " will attempt ",
-                    "to restore the files using the backups if they were taken.",
-                    "\n\nDo you want to abandon the import?",
+                    "to restore the files using the backups if they were ",
+                    "taken.\n\nDo you want to abandon the import?",
                 )
             ),
         ):
@@ -636,7 +639,8 @@ class ChessDeferredUpdate(ExceptionHandler):
                         self.report.append_text(
                             "".join(
                                 (
-                                    "The existing backup does not look like a ",
+                                    "The existing backup does not ",
+                                    "look like a ",
                                     APPLICATION_NAME,
                                     " backup.",
                                 )
@@ -670,8 +674,8 @@ class ChessDeferredUpdate(ExceptionHandler):
                         self.report.append_text(
                             "".join(
                                 (
-                                    "Problem encountered doing import. Backups are ",
-                                    "retained for recovery.",
+                                    "Problem encountered doing import. ",
+                                    "Backups are retained for recovery.",
                                 )
                             )
                         )
@@ -679,8 +683,8 @@ class ChessDeferredUpdate(ExceptionHandler):
                         self.report.append_text(
                             "".join(
                                 (
-                                    "Problem encountered doing import. No backups ",
-                                    "available.",
+                                    "Problem encountered doing import. ",
+                                    "No backups available.",
                                 )
                             )
                         )
@@ -697,7 +701,8 @@ class ChessDeferredUpdate(ExceptionHandler):
                         self.report.append_text_only(
                             "".join(
                                 (
-                                    "The existing backup does not look like a ",
+                                    "The existing backup does not ",
+                                    "look like a ",
                                     APPLICATION_NAME,
                                     " backup.",
                                 )

@@ -21,14 +21,14 @@ import tkinter.font
 # unix-like systems.
 import multiprocessing
 
+from . import constants
+
 try:
     multiprocessing.Queue()
     _assume_wine = False
 except OSError:
     _assume_wine = True
 del multiprocessing
-
-from . import constants
 
 modify_font_attributes = ("family", "weight", "slant", "size")
 modify_board_font_attributes = ("family", "weight")

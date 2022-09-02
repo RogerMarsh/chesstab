@@ -224,9 +224,9 @@ class UCI(ExceptionHandler):
             get,
             hint="".join(
                 (
-                    "\nConsult chess engine's documentation for any arguments ",
-                    "which must be appended to the command.\n\nPress enter to ",
-                    "run engine.\n",
+                    "\nConsult chess engine's documentation for any ",
+                    "arguments which must be appended to the command.",
+                    "\n\nPress enter to run engine.\n",
                 )
             ),
         )
@@ -310,7 +310,8 @@ class UCI(ExceptionHandler):
                             title="Quit Engine",
                             message="".join(
                                 (
-                                    "Please confirm request to quit engine\n\n",
+                                    "Please confirm request to quit ",
+                                    "engine\n\n",
                                     ui_name,
                                 )
                             ),
@@ -353,8 +354,8 @@ class UCI(ExceptionHandler):
                     title="Send to Engine",
                     message="".join(
                         (
-                            "Command is not the one used to start dialogue.\n\n",
-                            "Do you want to cancel dialogue?",
+                            "Command is not the one used to start dialogue.",
+                            "\n\nDo you want to cancel dialogue?",
                         )
                     ),
                 )
@@ -406,8 +407,8 @@ class UCI(ExceptionHandler):
                 (
                     "\nSet the size of hash tables, in mega-bytes, within ",
                     "limits allowed by chess engines.\n\n0 (zero) means use ",
-                    "the default assumed by a chess engine.\n\nPress enter to ",
-                    "set value.\n",
+                    "the default assumed by a chess engine.\n\nPress enter ",
+                    "to set value.\n",
                 )
             ),
         )
@@ -428,10 +429,10 @@ class UCI(ExceptionHandler):
             get,
             hint="".join(
                 (
-                    "\nSet the number of variations returned by chess engines ",
-                    "which support the MultiPV option.\n\n0 (zero) means use ",
-                    "the default assumed by a chess engine.\n\nPress enter to ",
-                    "set value.\n",
+                    "\nSet the number of variations returned by chess ",
+                    "engines which support the MultiPV option.\n\n0 (zero) ",
+                    "means use the default assumed by a chess engine.\n\n",
+                    "Press enter to set value.\n",
                 )
             ),
         )
@@ -477,14 +478,14 @@ class UCI(ExceptionHandler):
                 title="Ucinewgame OFF",
                 message="".join(
                     (
-                        "Turn use of ucinewgame command OFF when navigating in or ",
-                        "between game scores?\n\n",
-                        "Consult engine documentation for implications of using, ",
-                        "or not using, the ucinewgame command.\n\n",
-                        "UCI specification states new GUIs should support ucinewgame ",
-                        "command, and engines should not expect ucinewgame commands ",
-                        "if the ucinewgame command is not used before the first ",
-                        "position command. (August 2015)",
+                        "Turn use of ucinewgame command OFF when navigating ",
+                        "in or between game scores?\n\nConsult engine ",
+                        "documentation for implications of using, or not ",
+                        "using, the ucinewgame command.\n\nUCI specification ",
+                        "states new GUIs should support ucinewgame command, ",
+                        "and engines should not expect ucinewgame commands ",
+                        "if the ucinewgame command is not used before the ",
+                        "first position command. (August 2015)",
                     )
                 ),
             )
@@ -503,14 +504,14 @@ class UCI(ExceptionHandler):
                 title="Ucinewgame ON",
                 message="".join(
                     (
-                        "Turn use of ucinewgame command ON when navigating in or ",
-                        "between game scores?\n\n",
-                        "Consult engine documentation for implications of using, ",
-                        "or not using, the ucinewgame command.\n\n",
-                        "UCI specification states new GUIs should support ucinewgame ",
-                        "command, and engines should not expect ucinewgame commands ",
-                        "if the ucinewgame command is not used before the first ",
-                        "position command. (August 2015)",
+                        "Turn use of ucinewgame command ON when navigating ",
+                        "in or between game scores?\n\nConsult engine ",
+                        "documentation for implications of using, or not ",
+                        "using, the ucinewgame command.\n\nUCI specification ",
+                        "states new GUIs should support ucinewgame command, ",
+                        "and engines should not expect ucinewgame commands ",
+                        "if the ucinewgame command is not used before the ",
+                        "first position command. (August 2015)",
                     )
                 ),
             )
@@ -752,9 +753,9 @@ class UCI(ExceptionHandler):
                 title="Clear Hash OFF",
                 message="".join(
                     (
-                        "Turn OFF clear hash tables before analysing a position?\n\n",
-                        "Consult engine documentation for implications of clearing ",
-                        "hash tables or not.",
+                        "Turn OFF clear hash tables before analysing a ",
+                        "position?\n\nConsult engine documentation for ",
+                        "implications of clearing hash tables or not.",
                     )
                 ),
             )
@@ -773,9 +774,9 @@ class UCI(ExceptionHandler):
                 title="Clear Hash ON",
                 message="".join(
                     (
-                        "Turn ON clear hash tables before analysing a position?\n\n",
-                        "Consult engine documentation for implications of clearing ",
-                        "hash tables or not.",
+                        "Turn ON clear hash tables before analysing a ",
+                        "position?\n\nConsult engine documentation for ",
+                        "implications of clearing hash tables or not.",
                     )
                 ),
             )

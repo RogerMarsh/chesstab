@@ -1306,7 +1306,7 @@ class GameEdit(Game):
     # self.viewmode_comment_popup and self.viewmode_pgntag_popup can just drop
     # viewmode_ from their names.  The only references outside gameedit are in
     # gamedisplay and repertoiredisplay, four in all.  Ok to do now.
-    # The event handler to post pgn_tag_popup menu is renamed post_pgn_tag_menu.
+    # Event handler to post pgn_tag_popup menu is renamed post_pgn_tag_menu.
     # Two new ones, start_rav_popup and end_rav_popup, are needed.  It may be
     # best to have one each for all the editable tokens, in particular escaped
     # line and comment to end of line, to cope with the slight variation in
@@ -2213,8 +2213,8 @@ class GameEdit(Game):
         # range relative to self.current should exist.
         # Bug 2013-06-19 note.
         # This method had some code which attempted to solve RAV insertion
-        # problem until correct code added to insert_empty_rav_after_next_move()
-        # method on 2015-09-05.
+        # problem until insert_empty_rav_after_next_move() method was
+        # amended with correct code on 2015-09-05.
         depth = 0
         nr = widget.tag_ranges(self.current)
         while True:
@@ -2355,7 +2355,7 @@ class GameEdit(Game):
         """
         widget = self.score
         if not self.is_currentmove_in_edit_move():
-            # Likely will not happen because insert RAV is allowed in this case.
+            # Likely will not happen as insert RAV is allowed in this case.
             return
         # Methods used to get variation and start designed for other, more
         # general, cases.  Extra return values ignored.
@@ -2516,7 +2516,7 @@ class GameEdit(Game):
         self.add_pgntag_to_map("", "")
 
     def insert_empty_pgn_seven_tag_roster(self):
-        """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster sequence."""
+        """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""
         self.set_insertion_point_before_next_pgn_tag()
         for t in SEVEN_TAG_ROSTER:
             self.add_pgntag_to_map(t, "")
@@ -2636,9 +2636,9 @@ class GameEdit(Game):
             widget.tag_add(tag, start, end)
         if prior:
             widget.tag_add(prior, start, end)
-        # Insert is surrounded by tagged colourvariation text unlike add at end.
-        # This breaks the sequence so rest of inserts in this method do not get
-        # tagged by colourvariation as well as ravtag.
+        # Insert is surrounded by tagged colourvariation text unlike add at
+        # end.  This breaks the sequence so rest of inserts in this method
+        # do not get tagged by colourvariation as well as ravtag.
         widget.tag_remove(colourvariation, start, sepend)
         try:
             self.previousmovetags[positiontag] = (
@@ -3274,7 +3274,7 @@ class GameEdit(Game):
         return positiontag, token_indicies
 
     def map_start_comment(self, token):
-        """Override to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and editing."""
         positiontag, token_indicies = self._map_start_comment(
             token, self.tokens_exist_between_movetext_start_and_insert_point()
         )
@@ -3311,7 +3311,7 @@ class GameEdit(Game):
         return positiontag, token_indicies
 
     def map_comment_to_eol(self, token):
-        """Override to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and editing."""
         positiontag, token_indicies = self._map_comment_to_eol(
             token, self.tokens_exist_between_movetext_start_and_insert_point()
         )
@@ -3349,7 +3349,7 @@ class GameEdit(Game):
     # happen because '\n%\n' tokens are not put on database even if present
     # in the PGN movetext.
     def map_escape_to_eol(self, token):
-        """Override to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and editing."""
         positiontag, token_indicies = self._map_escape_to_eol(
             token, self.tokens_exist_between_movetext_start_and_insert_point()
         )
@@ -3403,7 +3403,7 @@ class GameEdit(Game):
         return positiontag, token_indicies
 
     def map_glyph(self, token):
-        """Override to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and editing."""
         # At present NAGs are not put on a line of their own when following
         # a move.  They would be if the NAG translations were shown too.
         # before = self.tokens_exist_between_movetext_start_and_insert_point()
@@ -3455,7 +3455,7 @@ class GameEdit(Game):
         return positiontag, token_indicies
 
     def map_start_reserved(self, token):
-        """Override to tag token for single-step navigation and game editing."""
+        """Override to tag token for single-step navigation and editing."""
         positiontag, token_indicies = self._map_start_reserved(
             token, self.tokens_exist_between_movetext_start_and_insert_point()
         )
@@ -3694,11 +3694,11 @@ class GameEdit(Game):
         return self.select_last_item_in_game(NAVIGATE_COMMENT)
 
     def select_next_comment_in_game(self):
-        """Return POSITION tag associated with comment after current in game."""
+        """Return POSITION tag for comment after current in game."""
         return self.select_next_item_in_game(NAVIGATE_COMMENT)
 
     def select_prev_comment_in_game(self):
-        """Return POSITION tag associated with comment before current in game."""
+        """Return POSITION tag for comment before current in game."""
         return self.select_prev_item_in_game(NAVIGATE_COMMENT)
 
     def select_next_pgn_tag_field_name(self):

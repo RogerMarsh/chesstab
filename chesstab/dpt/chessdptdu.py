@@ -17,6 +17,7 @@ import bz2
 import tkinter
 import tkinter.messagebox
 from io import StringIO
+import multiprocessing  # Removed later by 'del multiprocessing'.
 
 from dptdb.dptapi import (
     FILEDISP_OLD,
@@ -57,8 +58,6 @@ from ..core.chessrecord import ChessDBrecordGameImport
 # engines.
 # DB_SEGMENT_SIZE has no effect on processing apart from report points.
 DB_SEGMENT_SIZE = 65536
-import multiprocessing
-
 try:
     multiprocessing.Queue()
     _DEFERRED_UPDATE_POINTS = (DB_SEGMENT_SIZE - 1,)
@@ -73,6 +72,7 @@ except OSError:
     )
 del multiprocessing
 del DB_SEGMENT_SIZE
+
 CHUNKGAMES = 6144
 
 

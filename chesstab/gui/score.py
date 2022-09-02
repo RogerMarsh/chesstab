@@ -10,10 +10,10 @@ on the current position while navigating the game score.
 The current position is put on the instance's board.Board widget.
 
 Score is a superclass of game.Game and instances of game.Game have a separate
-Score instance as an attribute so chess engine analysis for the current position
-in the score can be shown.  The Game instance uses the same board.Board instance
-for it's two instances of Score.  Repertoires are similar because game.Game is
-a superclass of game.Repertoire.
+Score instance as an attribute so chess engine analysis for the current
+position in the score can be shown.  The Game instance uses the same
+board.Board instance for it's two instances of Score.  Repertoires are similar
+because game.Game is a superclass of game.Repertoire.
 
 """
 # Not sure what to call this yet.
@@ -331,8 +331,8 @@ class Score(SharedTextScore, BlankText):
             switch=switch,
         )
 
-    # This method may have independence from set_primary_activity_bindings when the
-    # control_buttonpress_1 event is fired.
+    # This method may have independence from set_primary_activity_bindings
+    # when the control_buttonpress_1 event is fired.
     # (So there should be a 'select_variation' version too?)
     # Renamed from bind_score_pointer_for_board_navigation to fit current use.
     def set_score_pointer_item_navigation_bindings(self, switch):
@@ -1254,7 +1254,7 @@ class Score(SharedTextScore, BlankText):
         return None
 
     def get_tags_display_order(self):
-        """Return tags in alphabetic order modified by self.tags_displayed_last.
+        """Return tags in alphabetic order except any chosen to be last.
 
         last=None means do not display the tags: assume tags will be displayed
         in the order they appear in the PGN text.
@@ -1772,7 +1772,9 @@ class Score(SharedTextScore, BlankText):
         # First character of this token is the newline to be tagged.
         # If necessary it is probably safe to use the commented version
         # because a forced newline will appear after the escaped line's EOL.
-        # widget.tag_add(FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT))
+        # widget.tag_add(
+        #     FORCED_NEWLINE_TAG, start, widget.index(tkinter.INSERT)
+        # )
         widget.tag_add(FORCED_NEWLINE_TAG, start)
 
         # widget.insert(tkinter.INSERT, NULL_SEP)
@@ -2036,7 +2038,7 @@ class Score(SharedTextScore, BlankText):
         are not present unless the variation is the main line.
 
         """
-        ######## warning ######
+        # ####### warning ######
         #
         # VARIATION_COLOR is the colour applied to moves up to the current
         # move in a RAV.
@@ -2050,11 +2052,11 @@ class Score(SharedTextScore, BlankText):
         # RAV_MOVES<suffix> is the Tk tag for the editable characters in a
         # set of moves for which RAV_SEP<suffix> is the colouring tag.
         #
-        #######################
+        # ######################
         #
         # Now it may be possible to use START_SCORE_MARK rather than '1.0'
         #
-        #######################
+        # ######################
 
         widget = self.score
         if move_prior_to_choice is None:
@@ -2844,13 +2846,13 @@ class AnalysisScore(Score):
         )
 
     def create_primary_activity_popup(self):
-        """Delegate then add widget navigation submenu and return popup menu."""
+        """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup
 
     def create_select_move_popup(self):
-        """Delegate then add widget navigation submenu and return popup menu."""
+        """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_select_move_popup()
         self.create_widget_navigation_submenu_for_popup(popup)
         return popup

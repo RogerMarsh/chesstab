@@ -40,7 +40,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
     def __init__(
         self, newobject, parent, oldobject, showinitial=True, ui=None
     ):
-        """Extend and create toplevel to edit or insert chess engine definition.
+        """Extend and create toplevel to edit or add chess engine definition.
 
         ui should be a UCI instance.
 

@@ -19,7 +19,7 @@ from .constants import NAME_DELIMITER
 # Names like 'surname, I. forename J.' may occur.
 # Index values are created by replacing all sequences containing just commas,
 # periods, and whitespace, by a single space.
-re_normalize_player_name = re.compile("([^,\.\s]+)(?:[,\.\s]*)")
+re_normalize_player_name = re.compile(r"([^,\.\s]+)(?:[,\.\s]*)")
 
 
 class QueryStatementError(Exception):

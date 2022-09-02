@@ -70,9 +70,9 @@ class ChessDatabase(ndbmdu_database.Database):
     # on order of processing indexes I think). Windows 10 Task Manager display
     # made this obvious.
     # The MemoryError exception or swap space thrashing will likely not occur
-    # for a default OpenBSD user process or a MS Windows XP process with segment
-    # sizes up to 32768 records. Monitoring with Top and Task Manager suggests
-    # it gets close with OpenBSD.
+    # for a default OpenBSD user process or a MS Windows XP process with
+    # segment sizes up to 32768 records. Monitoring with Top and Task Manager
+    # suggests it gets close with OpenBSD.
     if SegmentSize.db_segment_size > 32768:
         for f, m in ((4, 700000000), (2, 1400000000)):
             try:
@@ -133,7 +133,7 @@ class ChessDatabase(ndbmdu_database.Database):
         return True
 
     def get_archive_names(self, files=()):
-        """Return dbm.ndbm database file and existing operating system files."""
+        """Return dbm.ndbm database file and existing archive system files."""
         names = [self.database_file]
         exists = [
             os.path.basename(n)

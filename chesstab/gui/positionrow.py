@@ -70,7 +70,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
                     relief=tkinter.FLAT,
                     font=constants.LISTS_OF_GAMES_FONT,
                     wrap=tkinter.NONE,
-                    borderwidth=2,  # hack to fill cell to row height from labels
+                    borderwidth=2,  # fill cell to row height from labels
                 ),
                 GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
                 ROW: 0,

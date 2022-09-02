@@ -36,7 +36,7 @@ class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
     text_name = "Selection Rule Statement"
 
     def __init__(self, parent, oldobject, ui=None):
-        """Extend and create toplevel widget for deleting game selection rule."""
+        """Extend and create toplevel widget to delete game selection rule."""
         # Toplevel title set '' in __init__ and to proper value in initialize.
         super().__init__(
             oldobject, parent, QueryToplevel(master=parent, ui=ui), ""

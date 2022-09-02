@@ -324,11 +324,11 @@ class UCI(object):
                     del eq[-1]
 
     def set_analysis_queue(self, queue):
-        """Note queue for return of analysis by UCI engine to user interface."""
+        """Note queue for return of UCI engine analysis to user interface."""
         self.ui_analysis_queue = queue
 
     def process_analysis_request(self, ei, position_data):
-        """Find existing analysis or ask engine for deeper or wider analysis."""
+        """Return True if deeper or wider analysis requested from engine."""
         engine_name = ei.parser.name
 
         # (0, 0) or value read from database by requestor.
@@ -616,7 +616,7 @@ class UCI(object):
 
 
 def run_driver(to_driver_queue, to_ui_queue, path, args, ui_name):
-    """Start UCI chess engine and enter loop sending queued resuests to engine."""
+    """Start UCI chess engine and loop sending queued resuests to engine."""
     driver = UCIDriverOverTCP(to_ui_queue, ui_name)
     try:
         driver.start_engine(path, args)

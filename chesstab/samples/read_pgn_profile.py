@@ -4,7 +4,9 @@
 
 """Read a PGN file and display timing profile."""
 
-import cProfile, pstats, io
+import cProfile
+import pstats
+import io
 import tkinter
 
 from pgn_read.samples import _utilities

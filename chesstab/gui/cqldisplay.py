@@ -311,8 +311,9 @@ class _CQLDisplay(ExceptionHandler, Display):
                     msg = "".join(
                         (
                             "Unable to add ChessQL statement to database, ",
-                            "probably because an 'empty square' is in the query ",
-                            "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                            "probably because an 'empty square' is in the ",
+                            "query (eg '.a2-3'):\n\nThe reported  error ",
+                            "is:\n\n",
                             str(exc),
                         )
                     )
@@ -356,16 +357,17 @@ class _CQLDisplay(ExceptionHandler, Display):
                     msg = "".join(
                         (
                             "Unable to edit ChessQL statement on database, ",
-                            "probably because an 'empty square' is in the query ",
-                            "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
+                            "probably because an 'empty square' is in the ",
+                            "query (eg '.a2-3'):\n\nThe reported  error ",
+                            "is:\n\n",
                             str(exc),
                         )
                     )
                 else:
                     msg = "".join(
                         (
-                            "Unable to edit ChessQL statement on database:\n\n",
-                            "The reported error is:\n\n",
+                            "Unable to edit ChessQL statement on database:",
+                            "\n\nThe reported error is:\n\n",
                             str(exc),
                         )
                     )
@@ -574,8 +576,8 @@ class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
                             "Cannot delete ChessQL statement.",
                             " ".join(
                                 (
-                                    "ChessQL statement on display is not same as",
-                                    "rule from record.",
+                                    "ChessQL statement on display is not",
+                                    "same as rule from record.",
                                 )
                             ),
                         )
@@ -645,8 +647,8 @@ class CQLDisplayInsert(
             if str(exc) == "'NoneType' object has no attribute 'answer'":
                 msg = "".join(
                     (
-                        "Unable to list games for ChessQL statement, probably ",
-                        "because an 'empty square' is in the query ",
+                        "Unable to list games for ChessQL statement, ",
+                        "probably because an 'empty square' is in the query ",
                         "(eg '.a2-3'):\n\nThe reported  error is:\n\n",
                         str(exc),
                     )

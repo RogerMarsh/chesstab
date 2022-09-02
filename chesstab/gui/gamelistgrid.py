@@ -267,13 +267,13 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
         exclude=True,
     ):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(GameListGrid, self).fill_view(
@@ -285,26 +285,26 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def load_new_index(self):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(GameListGrid, self).load_new_index()
 
     def load_new_partial_key(self, key):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(GameListGrid, self).load_new_partial_key(key)
@@ -314,13 +314,13 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
         If a database is not open do nothing.
         """
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
         # (No longer only reason for this method.)
 
         # The loop on set_properties to highlight rows in lists of games is
@@ -336,13 +336,13 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def on_data_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient objects
-        # being scrolled as a database to do this properly.  Do this when these
-        # objects have been given a database interface used when the database
-        # is not open.  (One problem is how to deal with indexes.)
+        # Intend to put this in superclass but must treat the DataClient
+        # objects being scrolled as a database to do this properly.  Do this
+        # when these objects have been given a database interface used when
+        # the database is not open.  (One problem is how to deal with indexes.)
 
-        # Used to deal with temporary closure of database to do Imports of games
-        # from PGN files; which can take many hours.
+        # Used to deal with temporary closure of database to do Imports of
+        # games from PGN files; which can take many hours.
 
         if self.get_database() is not None:
             super(GameListGrid, self).on_data_change(instance)
@@ -424,7 +424,7 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
         position is shown at that position.
 
         """
-        if game != None:
+        if game is not None:
             if game.current:
                 game.set_move_highlight(game.current, True, True)
 
@@ -770,11 +770,12 @@ class PartialPositionGames(GameListGrid):
             ss0 = self.selection[0]
             if ss0 in self.objects:
                 t = self.objects[ss0].value.collected_game._tags
+                supiai = self.ui.partial_items.active_item  # For line length.
                 self.ui.statusbar.set_status_text(
                     "  ".join(
                         [t.get(k, "") for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]
                     )
-                    + self.ui.partial_items.active_item.get_selection_text_for_statusbar().join(
+                    + supiai.get_selection_text_for_statusbar().join(
                         ("   (", ")")
                     )
                 )
@@ -1367,9 +1368,10 @@ class TagRosterGrid(GameListGrid):
                 title="Insert Game Workaround",
                 message="".join(
                     (
-                        "All records have same name on this display.\n\nThe new ",
-                        "record has been inserted but you need to switch to ",
-                        "another index, and back, to see the record in the list.",
+                        "All records have same name on this display.\n\n",
+                        "The new record has been inserted but you need to ",
+                        "switch to another index, and back, to see the ",
+                        "record in the list.",
                     )
                 ),
             )
@@ -1724,7 +1726,7 @@ class RepertoireGrid(GameListGrid):
         )
 
     def export_pgn_no_comments(self, event=None):
-        """Export selected repertoires in PGN export format without comments."""
+        """Export selected repertoires in PGN export format no comments."""
         self.ui.export_report(
             exporters.export_selected_repertoires_pgn_no_comments(
                 self,
@@ -1820,9 +1822,10 @@ class RepertoireGrid(GameListGrid):
                 title="Insert Repertoire Workaround",
                 message="".join(
                     (
-                        "All records have same name on this display.\n\nThe new ",
-                        "record has been inserted but you need to Hide, and then ",
-                        "Show, the display to see the record in the list.",
+                        "All records have same name on this display.\n\nThe ",
+                        "new record has been inserted but you need to Hide, ",
+                        "and then Show, the display to see the record in ",
+                        "the list.",
                     )
                 ),
             )

@@ -195,7 +195,7 @@ class PositionScore(ExceptionHandler):
             self.score.tag_remove(MOVE_TAG, tr[0], tr[1])
 
     def get_tags_display_order(self):
-        """Return tags in alphabetic order modified by self.tags_displayed_last.
+        """Return tags in alphabetic order except any chosen to be last.
 
         last=None means do not display the tags: assume tags will be displayed
         in the order they appear in the PGN text.

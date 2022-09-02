@@ -100,7 +100,7 @@ class ChessDBvaluePGN(Value):
 
     @staticmethod
     def encode_move_number(key):
-        """Return base 256 string for integer with left-end most significant."""
+        """Return base 256 string for integer, left-end most significant."""
         return key.to_bytes(2, byteorder="big")
 
     def load(self, value):
@@ -171,7 +171,7 @@ class ChessDBrecordGame(Record):
 
     @staticmethod
     def decode_move_number(skey):
-        """Return integer from base 256 string with left-end most significant."""
+        """Return integer from base 256 string, left-end most significant."""
         return int.from_bytes(skey, byteorder="big")
 
     def delete_record(self, database, dbset):
@@ -212,7 +212,7 @@ class ChessDBrecordGame(Record):
                 ]
             else:
                 return []
-        if partial == None:
+        if partial is None:
             return []
 
         moves = self.value.moves
@@ -273,7 +273,7 @@ class ChessDBrecordGameText(Record):
 
     @staticmethod
     def decode_move_number(skey):
-        """Return integer from base 256 string with left-end most significant."""
+        """Return integer from base 256 string, left-end most significant."""
         return int.from_bytes(skey, byteorder="big")
 
     def delete_record(self, database, dbset):
@@ -347,7 +347,7 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
 
 
 class ChessDBrecordGameTags(Record):
-    """Chess game record customised for displaying tag information for a game."""
+    """Chess game record customised to display tag information for a game."""
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
@@ -387,7 +387,7 @@ class ChessDBrecordGamePosition(Record):
 
     @staticmethod
     def decode_move_number(skey):
-        """Return integer from base 256 string with left-end most significant."""
+        """Return integer from base 256 string, left-end most significant."""
         return int.from_bytes(skey, byteorder="big")
 
     def delete_record(self, database, dbset):
@@ -572,7 +572,7 @@ class ChessDBrecordGameUpdate(Record):
 
     @staticmethod
     def decode_move_number(skey):
-        """Return integer from base 256 string with left-end most significant."""
+        """Return integer from base 256 string, left-end most significant."""
         return int.from_bytes(skey, byteorder="big")
 
     def get_keys(self, datasource=None, partial=None):
@@ -597,7 +597,7 @@ class ChessDBrecordGameUpdate(Record):
                 ]
             else:
                 return []
-        if partial == None:
+        if partial is None:
             return []
 
         moves = self.value.moves
@@ -844,7 +844,7 @@ class ChessDBrecordRepertoire(ChessDBrecordGame):
 
 # Not quite sure what customization needed yet
 class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
-    """Repertoire record customised for displaying repertoire tag information."""
+    """Repertoire record customised to display repertoire tag information."""
 
     def __init__(self):
         """Extend with move number encode and decode methods."""

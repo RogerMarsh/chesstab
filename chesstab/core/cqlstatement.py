@@ -25,7 +25,7 @@ When CQL has finished trying to match all the positions in the game against its
 filters, then if any of the positions matched, CQL will output the game to the
 output file. The output file can be specified either by default (in which case
 its name is the name of the CQL file with -out appended); or as a parameter in
-to the cql arguments in the CQL file itself; or on the command line. 
+to the cql arguments in the CQL file itself; or on the command line.
 
 
 The earlier partial position scheme implemented a sequence of piece designator
