@@ -158,7 +158,7 @@ VERTICAL_TAB = "\v"
 
 # Building blocks
 ANYTHING_ELSE = "."
-WHITESPACE = "\s+"
+WHITESPACE = r"\s+"
 FULLSTOP = "."
 PERIOD = "\\" + FULLSTOP
 INTEGER = "[1-9][0-9]*"
@@ -171,11 +171,11 @@ TAG_PAIR = "".join(
     (
         "(\\",
         START_TAG,
-        ")\s*",
+        r")\s*",
         SYMBOL,
-        "\s*",
+        r"\s*",
         STRING,
-        "\s*",
+        r"\s*",
         "(\\",
         END_TAG,
         ")",
@@ -193,8 +193,8 @@ RESERVED = "".join(
 )
 COMMENT_TO_EOL = ";(?:[^\n]*)\n"
 PERCENT = "%"
-ESCAPE_LINE = PERCENT.join(("(?:\A|(?<=\n))", "(?:[^\n]*)\n"))
-NAG = "\$[0-9]+(?!/|-)"
+ESCAPE_LINE = PERCENT.join((r"(?:\A|(?<=\n))", "(?:[^\n]*)\n"))
+NAG = r"\$[0-9]+(?!/|-)"
 START_RAV = "("
 END_RAV = ")"
 
@@ -1063,7 +1063,7 @@ ESCAPE_END_COMMENT = "::" + START_COMMENT + START_COMMENT + "::"
 PLAYER_NAME_TAGS = frozenset((TAG_WHITE, TAG_BLACK))
 
 # Imported from chesstab.core.querystatement.
-re_normalize_player_name = re.compile("([^,\.\s]+)(?:[,\.\s]*)")
+re_normalize_player_name = re.compile(r"([^,\.\s]+)(?:[,\.\s]*)")
 
 # The two chessql.core.constants attributes needed.
 ANY_WHITE_PIECE_NAME = r"A"
@@ -1606,7 +1606,7 @@ class PGN131(object):
                 for active_side_king_square in self.piece_locations[
                     SIDE_KING[self.active_side]
                 ]:
-                    pass  # set active_side_king_square without pop() and add().
+                    pass  # set active_side_king_square without pop() or add().
                 gk = GAPS[active_side_king_square]
                 pinned_to_king = set()
                 for si in inactive_side_squares:
@@ -2073,9 +2073,9 @@ class PGN131(object):
             del self.ravstack[-1]
             try:
                 self.reset_position(self.ravstack[-1][-1])
-            except:
+            except Exception:
                 pass
-        except:
+        except Exception:
             pass
 
     def _searching(self, match):
@@ -3444,7 +3444,7 @@ class PGN132(object):
                 for active_side_king_square in self.piece_locations[
                     SIDE_KING[self.active_side]
                 ]:
-                    pass  # set active_side_king_square without pop() and add().
+                    pass  # set active_side_king_square without pop() or add().
                 gk = GAPS[active_side_king_square]
                 pinned_to_king = set()
                 for si in inactive_side_squares:
@@ -3911,9 +3911,9 @@ class PGN132(object):
             del self.ravstack[-1]
             try:
                 self.reset_position(self.ravstack[-1][-1])
-            except:
+            except Exception:
                 pass
-        except:
+        except Exception:
             pass
 
     def _searching(self, match):
@@ -4578,13 +4578,13 @@ class ChessDBkeyGame131(KeyData):
     def __eq__(self, other):
         try:
             return self.recno == other.recno
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
         try:
             return self.recno != other.recno
-        except:
+        except Exception:
             return True
 
 
@@ -4701,7 +4701,7 @@ class ChessDBrecordGameUpdate131(Record):
                 ]
             else:
                 return []
-        if partial == None:
+        if partial is None:
             return []
 
         moves = self.value.moves
