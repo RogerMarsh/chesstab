@@ -665,7 +665,7 @@ class ChessDeferredUpdate(ExceptionHandler):
                 status = False
                 try:
                     status = self.dumethod(*a)
-                except:
+                except Exception:
                     write_error_to_log()
                 self.report.append_text("Import finished.")
                 self.report.append_text_only("")
@@ -720,10 +720,10 @@ class ChessDeferredUpdate(ExceptionHandler):
                         "\n\nDo you want to dismiss the import log?",
                     )
                 )
-            except:
+            except Exception:
                 try:
                     write_error_to_log()
-                except:
+                except Exception:
                     pass
 
         self._import_job = True

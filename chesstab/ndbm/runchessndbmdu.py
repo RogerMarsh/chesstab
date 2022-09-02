@@ -34,10 +34,10 @@ if __name__ == "__main__":
                 resource.setrlimit(
                     resource.RLIMIT_DATA, (min(soft * 2, hard), hard)
                 )
-            except:
+            except Exception:
                 try:
                     chesssdu.write_error_to_log()
-                except:
+                except Exception:
                     # Maybe the import is small enough to get away with
                     # limited memory (~500Mb).
                     pass
@@ -71,10 +71,10 @@ if __name__ == "__main__":
             deferred_update_method=chessndbmdu.chess_ndbmdu,
             database_class=chessndbmdu.ChessDatabase,
         )
-    except:
+    except Exception:
         try:
             chessdu.write_error_to_log()
-        except:
+        except Exception:
             # Assume that parent process will report the failure
             pass
         sys.exit(1)

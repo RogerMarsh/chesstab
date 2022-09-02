@@ -40,10 +40,10 @@ if __name__ == "__main__":
             deferred_update_method=chessdptdu.chess_dptdu,
             database_class=chessdptdu.ChessDatabase,
         )
-    except:
+    except Exception:
         try:
             chessdu.write_error_to_log()
-        except:
+        except Exception:
             # Assume that parent process will report the failure
             pass
         sys.exit(1)
