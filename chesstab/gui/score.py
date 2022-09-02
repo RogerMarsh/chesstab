@@ -1236,7 +1236,7 @@ class Score(SharedTextScore, BlankText):
             # navigation at end of imported game with errors when editing.
             return get_position_string(*self.get_position_for_current())
 
-        except:
+        except TypeError:
             return False
 
     def get_position_tag_of_index(self, index):
@@ -2753,7 +2753,7 @@ class AnalysisScore(Score):
                 self._start_latest_move,
                 self._end_latest_move,
             ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
-        except:
+        except TypeError:
             (self._start_latest_move, self._end_latest_move) = (
                 tkinter.END,
                 tkinter.END,

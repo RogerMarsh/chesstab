@@ -47,7 +47,7 @@ if __name__ == "__main__":
                     )
                 ),
             )
-        except:
+        except tkinter.TclError:
             pass
         raise SystemExit("Unable to import start application utilities")
     try:

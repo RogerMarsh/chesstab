@@ -110,7 +110,7 @@ class ChessDatabase(apswdu_database.Database):
                 for t in names:
                     if FILEDESC in names[t]:
                         del names[t][FILEDESC]
-            except:
+            except Exception:
                 if __name__ == "__main__":
                     raise
                 else:
@@ -184,11 +184,11 @@ class ChessDatabase(apswdu_database.Database):
                 archivename = ".".join((n, "bz2"))
                 try:
                     os.remove(archiveguard)
-                except:
+                except FileNotFoundError:
                     pass
                 try:
                     os.remove(archivename)
-                except:
+                except FileNotFoundError:
                     pass
         return True
 

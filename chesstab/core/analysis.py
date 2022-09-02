@@ -170,5 +170,5 @@ class Analysis(object):
             return "{:+.2f}".format(
                 (int(val) if to_move != FEN_BLACK_ACTIVE else -int(val)) / 100
             )
-        except:
+        except Exception:
             return "?.??"

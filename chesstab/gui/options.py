@@ -31,7 +31,7 @@ def get_saved_options(folder):
         return
     try:
         optionsfile = open(optionsfilename, "r")
-    except:
+    except OSError:
         return
     defaults = dict()
     try:
@@ -59,7 +59,7 @@ def save_options(folder, changes):
     try:
         optionsfile = open(optionsfilename, "a+")
         defaults = _extract_options(optionsfile)
-    except:
+    except Exception:
         return
     olddefaults, newdefaults = changes
     try:
@@ -124,7 +124,7 @@ def _extract_options(fileid):
             continue
         try:
             k, v = text.split("=", 1)
-        except:
+        except ValueError:
             k, v = text, ""
         key = k.strip()
         if key in defaults:

@@ -73,7 +73,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 for dd in ddnames:
                     if FILEDESC in ddnames[dd]:
                         del ddnames[dd][FILEDESC]
-            except:
+            except Exception:
                 if __name__ == "__main__":
                     raise
                 else:

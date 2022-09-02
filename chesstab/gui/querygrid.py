@@ -346,7 +346,7 @@ class QueryListGrid(ExceptionHandler, DataGrid, Display):
         # Cannot see a way of asking 'Does entry exist?' other than:
         try:
             popup.index(index)
-        except:
+        except tkinter.TclError:
             cascade_menu = tkinter.Menu(master=popup, tearoff=False)
             popup.add_cascade(label=index, menu=cascade_menu)
             if bindings is None:

@@ -369,7 +369,7 @@ class UCI(ExceptionHandler):
         for ui_name, ei in self.uci.uci_drivers.items():
             try:
                 ei.to_driver_queue.put(command)
-            except:
+            except Exception:
                 tkinter.messagebox.showinfo(
                     parent=self.menu_commands,
                     title="Send to Engine",

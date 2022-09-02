@@ -467,7 +467,7 @@ class Chess(ExceptionHandler):
             # sibling module chessdu for explanation of this change.
             self.__run_ui_task_from_queue(5000)
 
-        except:
+        except Exception:
             self.root.destroy()
             del self.root
 

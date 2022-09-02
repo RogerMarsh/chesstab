@@ -98,7 +98,7 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
     text = []
     try:
         moves = moves.split()
-    except:
+    except Exception:
         return "".join(
             ("{'", str(moves), "' cannot be a move, 'Yz0' inserted.}Yz0")
         )

@@ -143,7 +143,7 @@ class ChessDatabase(berkeleydbdu_database.Database):
                 for t in names:
                     if FILEDESC in names[t]:
                         del names[t][FILEDESC]
-            except:
+            except Exception:
                 if __name__ == "__main__":
                     raise
                 else:
@@ -274,7 +274,7 @@ class ChessDatabase(berkeleydbdu_database.Database):
                     if not os.path.exists(archivename):
                         try:
                             os.remove(archiveguard)
-                        except:
+                        except FileNotFoundError:
                             pass
                         continue
                     c = zipfile.ZipFile(
@@ -296,11 +296,11 @@ class ChessDatabase(berkeleydbdu_database.Database):
                     c.close()
                     try:
                         os.remove(archiveguard)
-                    except:
+                    except FileNotFoundError:
                         pass
                     try:
                         os.remove(archivename)
-                    except:
+                    except FileNotFoundError:
                         pass
                 if not_backups:
                     return
@@ -310,11 +310,11 @@ class ChessDatabase(berkeleydbdu_database.Database):
                     archivename = ".".join((n, "bz2"))
                     try:
                         os.remove(archiveguard)
-                    except:
+                    except FileNotFoundError:
                         pass
                     try:
                         os.remove(archivename)
-                    except:
+                    except FileNotFoundError:
                         pass
         return True
 

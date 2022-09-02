@@ -60,11 +60,11 @@ class Database:
             archivename = ".".join((n, "bz2"))
             try:
                 os.remove(archiveguard)
-            except:
+            except FileNotFoundError:
                 pass
             try:
                 os.remove(archivename)
-            except:
+            except FileNotFoundError:
                 pass
 
     def restore_backups(self, names=()):
@@ -113,7 +113,7 @@ class Database:
                 os.remove(h)
         try:
             os.rmdir(self.home_directory)
-        except:
+        except FileNotFoundError:
             pass
         return message
 

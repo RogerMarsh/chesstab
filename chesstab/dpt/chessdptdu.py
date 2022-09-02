@@ -217,7 +217,7 @@ class ChessDatabaseDeferred:
                 for dd in ddnames:
                     if FILEDESC in ddnames[dd]:
                         del ddnames[dd][FILEDESC]
-            except:
+            except Exception:
                 if __name__ == "__main__":
                     raise
                 else:
@@ -329,11 +329,11 @@ class ChessDatabaseDeferred:
                 archivename = ".".join((n, "bz2"))
                 try:
                     os.remove(archiveguard)
-                except:
+                except FileNotFoundError:
                     pass
                 try:
                     os.remove(archivename)
-                except:
+                except FileNotFoundError:
                     pass
         return True
 

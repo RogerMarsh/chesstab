@@ -93,7 +93,7 @@ class UCI(object):
         ei = self.uci_drivers[ui_name]
         try:
             ei.to_driver_queue.put(CommandsToEngine.quit_)
-        except:
+        except Exception:
             return False
         ei.driver.join()
         engine_name = ei.parser.name
@@ -121,7 +121,7 @@ class UCI(object):
         for ui_name, ei in self.uci_drivers.items():
             try:
                 ei.to_driver_queue.put(CommandsToEngine.quit_)
-            except:
+            except Exception:
                 non_joiners.append((ui_name, ei.driver.pid))
                 continue
             joiners.append(ei.driver)
@@ -197,7 +197,7 @@ class UCI(object):
                 break
             try:
                 self.process_commands_from_engines(item)
-            except:
+            except Exception:
                 pass
 
     def process_commands_from_engines(self, response):
@@ -212,7 +212,7 @@ class UCI(object):
         # Follow this principle here.
         try:
             self.uci_drivers[ui_name].parser.process_engine_commands(response)
-        except:
+        except Exception:
             return
 
         c = commands[-1].split(None, maxsplit=1)[0]
@@ -286,7 +286,7 @@ class UCI(object):
                 item = self.ui_analysis_queue.get_nowait()
             except Empty:
                 break
-            except:
+            except Exception:
                 if self.ui_analysis_queue is None:
                     break
                 raise
@@ -620,7 +620,7 @@ def run_driver(to_driver_queue, to_ui_queue, path, args, ui_name):
     driver = UCIDriverOverTCP(to_ui_queue, ui_name)
     try:
         driver.start_engine(path, args)
-    except:
+    except Exception:
         to_ui_queue.put(("start failed", (ui_name,)))
         return
     to_ui_queue.put(("started", (ui_name,)))

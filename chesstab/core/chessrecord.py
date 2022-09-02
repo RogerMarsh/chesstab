@@ -79,14 +79,14 @@ class ChessDBkeyGame(KeyData):
         """Return (self == other).  Attributes are compared explicitly."""
         try:
             return self.recno == other.recno
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
         try:
             return self.recno != other.recno
-        except:
+        except exception:
             return True
 
 
@@ -715,7 +715,7 @@ class ChessDBvaluePartial(CQLStatement, Value):
                 return False
             else:
                 return True
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
@@ -728,7 +728,7 @@ class ChessDBvaluePartial(CQLStatement, Value):
                 return False
             else:
                 return True
-        except:
+        except Exception:
             return True
 
     def load(self, value):
@@ -937,7 +937,7 @@ class ChessDBvalueQuery(QueryStatement, Value):
                 return False
             else:
                 return True
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
@@ -950,7 +950,7 @@ class ChessDBvalueQuery(QueryStatement, Value):
                 return False
             else:
                 return True
-        except:
+        except Exception:
             return True
 
     def load(self, value):

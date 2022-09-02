@@ -42,7 +42,7 @@ class ChessDatabase(database.Database, vedis_database.Database):
                 for t in names:
                     if FILEDESC in names[t]:
                         del names[t][FILEDESC]
-            except:
+            except Exception:
                 if __name__ == "__main__":
                     raise
                 else:

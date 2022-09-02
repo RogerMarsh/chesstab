@@ -100,7 +100,7 @@ class SharedTextScore:
         # Cannot see a way of asking 'Does entry exist?' other than:
         try:
             popup.index(label)
-        except:
+        except tkinter.TclError:
             cascade_menu = tkinter.Menu(master=popup, tearoff=False)
             popup.insert_cascade(label=label, menu=cascade_menu, index=index)
             if order is None:
