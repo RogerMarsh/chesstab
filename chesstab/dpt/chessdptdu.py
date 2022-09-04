@@ -41,6 +41,7 @@ from ..core.filespec import (
     POSITIONS_PER_GAME,
 )
 from ..core.chessrecord import ChessDBrecordGameImport
+from.archivedu import Archivedu
 
 # Current practical way to determine if running on Wine, taking advantage of
 # a problem found in ..core.uci which prevents UCI chess engines being used to
@@ -224,7 +225,7 @@ class ChessDatabaseDeferred:
                     raise ChessdptduError("DPT description invalid")
 
         try:
-            super(ChessDatabaseDeferred, self).__init__(
+            super().__init__(
                 ddnames, databasefolder, **kargs
             )
         except ChessdptduError:
@@ -286,56 +287,6 @@ class ChessDatabaseDeferred:
             counts[0] // brecppg,
             (counts[1] * self.table[GAMES_FILE_DEF].btod_factor) // brecppg,
         )
-
-    def archive(self, flag=None, names=None):
-        """Write a bz2 backup of file containing games.
-
-        Intended to be a backup in case import fails.
-
-        """
-        if names is None:
-            return False
-        if not self.delete_archive(flag=flag, names=names):
-            return
-        if flag:
-            for n in names:
-                c = bz2.BZ2Compressor()
-                archiveguard = ".".join((n, "grd"))
-                archivename = ".".join((n, "bz2"))
-                fi = open(n, "rb")
-                fo = open(archivename, "wb")
-                inp = fi.read(10000000)
-                while inp:
-                    co = c.compress(inp)
-                    if co:
-                        fo.write(co)
-                    inp = fi.read(10000000)
-                co = c.flush()
-                if co:
-                    fo.write(co)
-                fo.close()
-                fi.close()
-                c = open(archiveguard, "wb")
-                c.close()
-        return True
-
-    def delete_archive(self, flag=None, names=None):
-        """Delete a bz2 backup of file containing games."""
-        if names is None:
-            return False
-        if flag:
-            for n in names:
-                archiveguard = ".".join((n, "grd"))
-                archivename = ".".join((n, "bz2"))
-                try:
-                    os.remove(archiveguard)
-                except FileNotFoundError:
-                    pass
-                try:
-                    os.remove(archivename)
-                except FileNotFoundError:
-                    pass
-        return True
 
     def get_database_table_sizes(self, files=None):
         """Return Table B and D size and usage in pages for files."""
@@ -630,7 +581,7 @@ class ChessDatabaseDeferred:
         append_text_only("")
 
 
-class ChessDatabase(ChessDatabaseDeferred, dptdu_database.Database):
+class ChessDatabase(Archivedu, ChessDatabaseDeferred, dptdu_database.Database):
     """Provide single-step deferred update for a database of games of chess."""
 
 
