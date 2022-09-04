@@ -22,6 +22,10 @@ def chess_gnudu(dbpath, *args, **kwargs):
     return True
 
 
+# 'def chess_gnudu' will be changed to 'def chess_database_du' at some time.
+chess_database_du = chess_gnudu
+
+
 class ChessDatabase(Alldu, Litedu, gnudu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 

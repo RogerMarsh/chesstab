@@ -22,6 +22,10 @@ def chess_dbdu():
     return True
 
 
+# 'def chess_dbdu' will be changed to 'def chess_database_du' at some time.
+chess_database_du = chess_dbdu
+
+
 class ChessDatabase(Alldu, Dbdu, berkeleydbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 

@@ -22,6 +22,10 @@ def chess_unqlitedu(dbpath, *args, **kwargs):
     return True
 
 
+# 'def chess_unqlitedu' will be changed to 'def chess_database_du' some time.
+chess_database_du = chess_unqlitedu
+
+
 class ChessDatabase(Alldu, Litedu, unqlitedu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 

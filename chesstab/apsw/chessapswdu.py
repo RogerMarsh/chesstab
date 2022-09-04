@@ -22,6 +22,10 @@ def chess_sqlite3du(dbpath, *args, **kwargs):
     return True
 
 
+# 'def chess_sqlite3du' will be changed to 'def chess_database_du' some time.
+chess_database_du = chess_sqlite3du
+
+
 class ChessDatabase(Alldu, Litedu, apswdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
