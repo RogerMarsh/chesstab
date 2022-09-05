@@ -14,11 +14,15 @@ from ..core.chessrecord import ChessDBrecordPartial
 from .cqldisplay import CQLDisplay, CQLDisplayEdit
 from .cqlrow import ChessDBrowCQL
 from ..core import exporters
-from .eventspec import EventSpec, DummyEvent
+from .eventspec import EventSpec
 from .display import Display
+from ..shared.cql_gamelist_query import CQLGameListQuery
+from ..shared.allgrid import AllGrid
 
 
-class CQLListGrid(ExceptionHandler, DataGrid, Display):
+class CQLListGrid(
+    ExceptionHandler, AllGrid, CQLGameListQuery, DataGrid, Display
+):
     """A DataGrid for lists of ChessQL statements.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -33,34 +37,10 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
 
         """
         super().__init__(parent=parent)
-        self.gcanvas.configure(takefocus=tkinter.FALSE)
-        self.data.configure(takefocus=tkinter.FALSE)
-        self.frame.configure(takefocus=tkinter.FALSE)
-        self.hsbar.configure(takefocus=tkinter.FALSE)
-        self.vsbar.configure(takefocus=tkinter.FALSE)
-        self.ui = ui
-        self.set_event_bindings_frame(
-            (
-                (EventSpec.tab_traverse_forward, self.traverse_forward),
-                (EventSpec.tab_traverse_backward, self.traverse_backward),
-                (EventSpec.tab_traverse_round, self.traverse_round),
-                # Remove entries when binding implemented in solentware_grid.
-                (
-                    EventSpec.score_enable_F10_popupmenu_at_top_left,
-                    self.show_grid_or_row_popup_menu_at_top_left_by_keypress,
-                ),
-                (
-                    EventSpec.score_enable_F10_popupmenu_at_pointer,
-                    self.show_grid_or_row_popup_menu_at_pointer_by_keypress,
-                ),
-            )
-        )
+        self._configure_frame_and_initial_event_bindings(ui)
 
-    def display_selected_item(self, key):
+    def _display_selected_item(self, key, selected):
         """Create CQLDisplay for ChessQL statement."""
-        selected = self.get_visible_record(key)
-        if selected is None:
-            return None
         # Should the Frame containing board and position be created here and
         # passed to CQLDisplay. (Needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
@@ -119,14 +99,10 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
         if super().set_properties(key, dodefaultaction=False):
             return True
         if self.ui.partial_items.object_display_count(key):
-            self.objects[key].set_background_on_display(
-                self.get_row_widgets(key)
-            )
-            self.set_row_under_pointer_background(key)
+            self._set_background_on_display_row_under_pointer(key)
             return True
         if dodefaultaction:
-            self.objects[key].set_background_normal(self.get_row_widgets(key))
-            self.set_row_under_pointer_background(key)
+            self._set_background_normal_row_under_pointer(key)
             return True
         return False
 
@@ -143,22 +119,6 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
             return self.objects[key].grid_row_normal(**kargs)
         else:
             return None
-
-    def select_down(self):
-        """Extend to show ChessQL statement summary in status bar."""
-        super().select_down()
-        self.set_selection_text()
-
-    def select_up(self):
-        """Extend to show ChessQL statement summary in status bar."""
-        super().select_up()
-        self.set_selection_text()
-
-    def cancel_selection(self):
-        """Extend to clear ChessQL statement summary from status bar."""
-        if self.selection:
-            self.ui.statusbar.set_status_text("")
-        super().cancel_selection()
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
@@ -222,206 +182,11 @@ class CQLListGrid(ExceptionHandler, DataGrid, Display):
             self.objects[key], oldobject, modal, title="Show ChessQL Statement"
         )
 
-    def create_edit_dialog(
-        self, instance, newobject, oldobject, showinitial, modal, title=""
-    ):
-        """Extend to do chess initialization."""
-        for x in (newobject, oldobject):
-            if x:
-                x.load_record((instance.key.pack(), instance.srvalue))
-        super().create_edit_dialog(
-            instance, newobject, oldobject, showinitial, modal, title=title
-        )
-
-    def fill_view(
-        self,
-        currentkey=None,
-        down=True,
-        topstart=True,
-        exclude=True,
-    ):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super().fill_view(
-                currentkey=currentkey,
-                down=down,
-                topstart=topstart,
-                exclude=exclude,
-            )
-
-    def load_new_index(self):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super().load_new_index()
-
-    def load_new_partial_key(self, key):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super().load_new_partial_key(key)
-
-    def on_configure_canvas(self, event=None):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super().on_configure_canvas(event=event)
-
-    def on_data_change(self, instance):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super().on_data_change(instance)
-
-    def set_popup_bindings(self, popup, bindings=()):
-        """Set popup menu bindings for CQL grid."""
-        for accelerator, function in bindings:
-            popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, popup),
-                accelerator=accelerator[2],
-            )
-
-    def add_cascade_menu_to_popup(self, index, popup, bindings=None):
-        """Add cascade_menu, and bindings, to popup if not already present.
-
-        The index is used as the label on the popup menu when visible.
-
-        The bindings are not applied if cascade_menu is alreay in popup menu.
-
-        """
-        # Cannot see a way of asking 'Does entry exist?' other than:
-        try:
-            popup.index(index)
-        except tkinter.TclError:
-            cascade_menu = tkinter.Menu(master=popup, tearoff=False)
-            popup.add_cascade(label=index, menu=cascade_menu)
-            if bindings is None:
-                return
-            self.set_popup_bindings(cascade_menu, bindings)
-
-    def set_event_bindings_frame(self, bindings=(), switch=True):
-        """Set bindings if switch is True or unset the bindings."""
-        ste = self.try_event
-        for sequence, function in bindings:
-            self.frame.bind(
-                sequence[0], ste(function) if switch and function else ""
-            )
-
-    def traverse_backward(self, event=None):
-        """Give focus to previous widget type in traversal order."""
-        self.ui.give_focus_backward(self)
-        return "break"
-
-    def traverse_forward(self, event=None):
-        """Give focus to next widget type in traversal order."""
-        self.ui.give_focus_forward(self)
-        return "break"
-
-    def traverse_round(self, event=None):
-        """Give focus to next widget within active item in traversal order."""
-        return "break"
-
-    def set_focus(self):
-        """Give focus to this widget."""
-        self.frame.focus_set()
-        if self.ui.single_view:
-            self.ui.show_just_panedwindow_with_focus(self.frame)
-
-    def is_payload_available(self):
-        """Return True if grid is connected to a database."""
-        ds = self.get_data_source()
-        if ds is None:
-            return False
-        if ds.get_database() is None:
-
-            # Avoid exception scrolling visible grid not connected to database.
-            # Make still just be hack to cope with user interface activity
-            # while importing data.
-            self.clear_grid_keys()
-
-            return False
-        return True
-
     def export_partial(self, event=None):
         """Export selected partial position definitions."""
         exporters.export_selected_positions(
             self, self.ui.get_export_filename("Partial Positions", pgn=False)
         )
-
-    def focus_set_frame(self, event=None):
-        """Adjust widget which is losing focus then delegate to superclass."""
-        self.ui.set_bindings_on_item_losing_focus_by_pointer_click()
-        super().focus_set_frame(event=event)
-
-    def bind_for_widget_without_focus(self):
-        """Return True if this item has the focus about to be lost."""
-        if self.get_frame().focus_displayof() != self.get_frame():
-            return False
-
-        # Nothing to do on losing focus.
-        return True
-
-    def get_top_widget(self):
-        """Return topmost widget for game display.
-
-        The topmost widget is put in a container widget in some way.
-
-        """
-        # Superclass DataGrid.get_frame() method returns the relevant widget.
-        # Name, get_top_widget, is compatible with Game and Partial names.
-        return self.get_frame()
-
-    def get_visible_selected_key(self):
-        """Return selected key if it is visible and display dialogue if not.
-
-        Getting the key is delegated to superclass.
-
-        """
-        key = super().get_visible_selected_key()
-        if key is None:
-            tkinter.messagebox.showinfo(
-                parent=self.parent,
-                title="Display Item",
-                message="No record selected or selected record is not visible",
-            )
-        return key
 
 
 class CQLGrid(CQLListGrid):

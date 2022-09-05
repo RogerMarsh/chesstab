@@ -32,12 +32,16 @@ from .constants import (
 )
 from ..core.filespec import POSITIONS_FIELD_DEF
 from ..core import exporters
-from .eventspec import EventSpec, DummyEvent
+from .eventspec import EventSpec
 from .display import Display
+from ..shared.cql_gamelist_query import CQLGameListQuery
+from ..shared.allgrid import AllGrid
 from ..core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
 
 
-class GameListGrid(ExceptionHandler, DataGrid, Display):
+class GameListGrid(
+    ExceptionHandler, AllGrid, CQLGameListQuery, DataGrid, Display
+):
     """A DataGrid for lists of chess games.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -51,35 +55,10 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
         ui - container for user interface widgets and methods.
 
         """
-        super(GameListGrid, self).__init__(parent=parent)
-        self.gcanvas.configure(takefocus=tkinter.FALSE)
-        self.data.configure(takefocus=tkinter.FALSE)
-        self.frame.configure(takefocus=tkinter.FALSE)
-        self.hsbar.configure(takefocus=tkinter.FALSE)
-        self.vsbar.configure(takefocus=tkinter.FALSE)
-        self.ui = ui
-        self.set_event_bindings_frame(
-            (
-                (EventSpec.tab_traverse_forward, self.traverse_forward),
-                (EventSpec.tab_traverse_backward, self.traverse_backward),
-                (EventSpec.tab_traverse_round, self.traverse_round),
-                # Remove entries when binding implemented in solentware_grid.
-                (
-                    EventSpec.score_enable_F10_popupmenu_at_top_left,
-                    self.show_grid_or_row_popup_menu_at_top_left_by_keypress,
-                ),
-                (
-                    EventSpec.score_enable_F10_popupmenu_at_pointer,
-                    self.show_grid_or_row_popup_menu_at_pointer_by_keypress,
-                ),
-            )
-        )
+        super().__init__(parent=parent)
+        self._configure_frame_and_initial_event_bindings(ui)
 
-    def display_selected_item(self, key):
-        """Create display and return a GameDisplay for selected game."""
-        selected = self.get_visible_record(key)
-        if selected is None:
-            return None
+    def _display_selected_item(self, key, selected):
         # Should the Frame containing board and score be created here and
         # passed to GameDisplay. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
@@ -149,27 +128,19 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def set_properties(self, key, dodefaultaction=True):
         """Return True if properties for game key set or False."""
-        if super(GameListGrid, self).set_properties(
-            key, dodefaultaction=False
-        ):
+        if super().set_properties(key, dodefaultaction=False):
             return True
         if self.ui.game_items.object_display_count(key):
-            self.objects[key].set_background_on_display(
-                self.get_row_widgets(key)
-            )
-            self.set_row_under_pointer_background(key)
+            self._set_background_on_display_row_under_pointer(key)
             return True
         if dodefaultaction:
-            self.objects[key].set_background_normal(self.get_row_widgets(key))
-            self.set_row_under_pointer_background(key)
+            self._set_background_normal_row_under_pointer(key)
             return True
         return False
 
     def set_row(self, key, dodefaultaction=True, **kargs):
         """Return row widget for game key or None."""
-        row = super(GameListGrid, self).set_row(
-            key, dodefaultaction=False, **kargs
-        )
+        row = super().set_row(key, dodefaultaction=False, **kargs)
         if row is not None:
             return row
         if key not in self.keys:
@@ -180,22 +151,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
             return self.objects[key].grid_row_normal(**kargs)
         else:
             return None
-
-    def select_down(self):
-        """Extend to show selection summary in status bar."""
-        super(GameListGrid, self).select_down()
-        self.set_selection_text()
-
-    def select_up(self):
-        """Extend to show selection summary in status bar."""
-        super(GameListGrid, self).select_up()
-        self.set_selection_text()
-
-    def cancel_selection(self):
-        """Extend to clear selection summary from status bar."""
-        if self.selection:
-            self.ui.statusbar.set_status_text("")
-        super(GameListGrid, self).cancel_selection()
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
@@ -248,174 +203,11 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
             self.objects[key], oldobject, modal, title="Show Game"
         )
 
-    def create_edit_dialog(
-        self, instance, newobject, oldobject, showinitial, modal, title=""
-    ):
-        """Extend to do chess initialization."""
-        for x in (newobject, oldobject):
-            if x:
-                x.load_record((instance.key.pack(), instance.srvalue))
-        super(GameListGrid, self).create_edit_dialog(
-            instance, newobject, oldobject, showinitial, modal, title=title
-        )
-
-    def fill_view(
-        self,
-        currentkey=None,
-        down=True,
-        topstart=True,
-        exclude=True,
-    ):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(GameListGrid, self).fill_view(
-                currentkey=currentkey,
-                down=down,
-                topstart=topstart,
-                exclude=exclude,
-            )
-
-    def load_new_index(self):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(GameListGrid, self).load_new_index()
-
-    def load_new_partial_key(self, key):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(GameListGrid, self).load_new_partial_key(key)
-
-    def on_configure_canvas(self, event=None):
-        """Delegate to superclass and then apply row highlighting.
-
-        If a database is not open do nothing.
-        """
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-        # (No longer only reason for this method.)
-
-        # The loop on set_properties to highlight rows in lists of games is
-        # necesssary when widgets are resized.  A bug in the highlighting code
-        # for lists of games hid enough of the problems for it not to be found
-        # for many years: but I recall a time before the bug existed.
-
-        if self.get_database() is not None:
-            super(GameListGrid, self).on_configure_canvas(event=event)
-            ui = self.ui
-            for key in ui.game_items.object_panel_count:
-                self.set_properties(key)
-
-    def on_data_change(self, instance):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(GameListGrid, self).on_data_change(instance)
-
-    def set_popup_bindings(self, popup, bindings=()):
-        """Set popup menu bindings for game list grid."""
-        for accelerator, function in bindings:
-            popup.add_command(
-                label=accelerator[1],
-                command=self.try_command(function, popup),
-                accelerator=accelerator[2],
-            )
-
-    def add_cascade_menu_to_popup(self, index, popup, bindings=None):
-        """Add cascade_menu, and bindings, to popup if not already present.
-
-        The index is used as the label on the popup menu when visible.
-
-        The bindings are not applied if cascade_menu is alreay in popup menu.
-
-        """
-        # Cannot see a way of asking 'Does entry exist?' other than:
-        try:
-            popup.index(index)
-        except tkinter.TclError:
-            cascade_menu = tkinter.Menu(master=popup, tearoff=False)
-            popup.add_cascade(label=index, menu=cascade_menu)
-            if bindings is None:
-                return
-            self.set_popup_bindings(cascade_menu, bindings)
-
-    def set_event_bindings_frame(self, bindings=(), switch=True):
-        """Set bindings if switch is True or unset the bindings."""
-        ste = self.try_event
-        for sequence, function in bindings:
-            self.frame.bind(
-                sequence[0], ste(function) if switch and function else ""
-            )
-
-    def traverse_backward(self, event=None):
-        """Give focus to previous widget type in traversal order."""
-        self.ui.give_focus_backward(self)
-        return "break"
-
-    def traverse_forward(self, event=None):
-        """Give focus to next widget type in traversal order."""
-        self.ui.give_focus_forward(self)
-        return "break"
-
-    def traverse_round(self, event=None):
-        """Give focus to next widget within active item in traversal order."""
-        return "break"
-
-    def set_focus(self):
-        """Give focus to this widget."""
-        self.frame.focus_set()
-        if self.ui.single_view:
-            self.ui.show_just_panedwindow_with_focus(self.frame)
-
-    def is_payload_available(self):
-        """Return True if grid is connected to a database."""
-        ds = self.get_data_source()
-        if ds is None:
-            return False
-        if ds.get_database() is None:
-
-            # Avoid exception scrolling visible grid not connected to database.
-            # Make still just be hack to cope with user interface activity
-            # while importing data.
-            self.clear_grid_keys()
-
-            return False
-        return True
+    def _set_object_panel_item_properties(self):
+        """Adjust properties of game_items to fit configure canvas event."""
+        ui = self.ui
+        for key in ui.game_items.object_panel_count:
+            self.set_properties(key)
 
     def set_move_highlight(self, game):
         """Set move highlight at current position in game.
@@ -430,12 +222,12 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
 
     def bookmark_down(self):
         """Extend to show selection summary in status bar."""
-        super(GameListGrid, self).bookmark_down()
+        super().bookmark_down()
         self.set_selection_text()
 
     def bookmark_up(self):
         """Extend to show selection summary in status bar."""
-        super(GameListGrid, self).bookmark_up()
+        super().bookmark_up()
         self.set_selection_text()
 
     def export_text(self, event=None):
@@ -503,44 +295,6 @@ class GameListGrid(ExceptionHandler, DataGrid, Display):
             "Games (no comments)",
         )
 
-    def focus_set_frame(self, event=None):
-        """Adjust widget which is losing focus then delegate to superclass."""
-        self.ui.set_bindings_on_item_losing_focus_by_pointer_click()
-        super().focus_set_frame(event=event)
-
-    def bind_for_widget_without_focus(self):
-        """Return True if this item has the focus about to be lost."""
-        if self.get_frame().focus_displayof() != self.get_frame():
-            return False
-
-        # Nothing to do on losing focus.
-        return True
-
-    def get_top_widget(self):
-        """Return topmost widget for game display.
-
-        The topmost widget is put in a container widget in some way.
-
-        """
-        # Superclass DataGrid.get_frame() method returns the relevant widget.
-        # Name, get_top_widget, is compatible with Game and Partial names.
-        return self.get_frame()
-
-    def get_visible_selected_key(self):
-        """Return selected key if it is visible and display dialogue if not.
-
-        Getting the key is delegated to superclass.
-
-        """
-        key = super().get_visible_selected_key()
-        if key is None:
-            tkinter.messagebox.showinfo(
-                parent=self.parent,
-                title="Display Item",
-                message="No record selected or selected record is not visible",
-            )
-        return key
-
 
 # Because of possible changes to GameListGrid to support database update after
 # introducing subclasses of PGN to do just the required work it may not be
@@ -558,7 +312,7 @@ class PartialPositionGames(GameListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(PartialPositionGames, self).__init__(ui.position_partials_pw, ui)
+        super().__init__(ui.position_partials_pw, ui)
         self.make_header(ChessDBrowGame.header_specification)
         self.__bind_on()
         self.set_popup_bindings(
@@ -637,7 +391,7 @@ class PartialPositionGames(GameListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(PartialPositionGames, self).bind_off()
+        super().bind_off()
         self.set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_partial_grid, ""),
@@ -759,7 +513,7 @@ class PartialPositionGames(GameListGrid):
         # to be recreated
         if self.get_data_source() is None:
             return
-        super(PartialPositionGames, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     # Before version 4.3 collected_game[2] was always empty, and at time of
     # change it seemed wrong to include it even if occupied, so remove it from
@@ -823,7 +577,7 @@ class GamePositionGames(GameListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(GamePositionGames, self).__init__(ui.position_games_pw, ui)
+        super().__init__(ui.position_games_pw, ui)
         self.make_header(ChessDBrowPosition.header_specification)
         self.__bind_on()
         self.set_popup_bindings(
@@ -902,7 +656,7 @@ class GamePositionGames(GameListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(GamePositionGames, self).bind_off()
+        super().bind_off()
         self.set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_repertoire_grid, ""),
@@ -928,7 +682,7 @@ class GamePositionGames(GameListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(GamePositionGames, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -1028,9 +782,7 @@ class GamePositionGames(GameListGrid):
             position=self.datasource.fullposition,
             context=self.ui.get_active_game_move(),
         )
-        return super(GamePositionGames, self).set_row(
-            key, dodefaultaction=dodefaultaction, **kargs
-        )
+        return super().set_row(key, dodefaultaction=dodefaultaction, **kargs)
 
     def on_game_change(self, instance):
         """Delegate to superclass if data source exists."""
@@ -1040,7 +792,7 @@ class GamePositionGames(GameListGrid):
             return
         # It may be on_data_change(None) should prevent GamePositionGames
         # being cleared on deleting game, but it does not.
-        super(GamePositionGames, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""
@@ -1110,7 +862,7 @@ class TagRosterGrid(GameListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(TagRosterGrid, self).__init__(ui.games_pw, ui)
+        super().__init__(ui.games_pw, ui)
         self.make_header(ChessDBrowGame.header_specification)
         self.__bind_on()
         self.set_popup_bindings(
@@ -1192,7 +944,7 @@ class TagRosterGrid(GameListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(TagRosterGrid, self).bind_off()
+        super().bind_off()
         self.set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_repertoire_grid, ""),
@@ -1218,7 +970,7 @@ class TagRosterGrid(GameListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(TagRosterGrid, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -1308,7 +1060,7 @@ class TagRosterGrid(GameListGrid):
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return
-        super(TagRosterGrid, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""
@@ -1400,7 +1152,7 @@ class RepertoireGrid(GameListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(RepertoireGrid, self).__init__(ui.repertoires_pw, ui)
+        super().__init__(ui.repertoires_pw, ui)
         self.make_header(ChessDBrowRepertoire.header_specification)
         self.__bind_on()
         self.set_popup_bindings(
@@ -1471,7 +1223,7 @@ class RepertoireGrid(GameListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(RepertoireGrid, self).bind_off()
+        super().bind_off()
         self.set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_active_repertoire, ""),
@@ -1498,7 +1250,7 @@ class RepertoireGrid(GameListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(RepertoireGrid, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -1772,14 +1524,10 @@ class RepertoireGrid(GameListGrid):
         ):
             return True
         if self.ui.repertoire_items.object_display_count(key):
-            self.objects[key].set_background_on_display(
-                self.get_row_widgets(key)
-            )
-            self.set_row_under_pointer_background(key)
+            self._set_background_on_display_row_under_pointer(key)
             return True
         if dodefaultaction:
-            self.objects[key].set_background_normal(self.get_row_widgets(key))
-            self.set_row_under_pointer_background(key)
+            self._set_background_normal_row_under_pointer(key)
             return True
         return False
 
@@ -1844,9 +1592,7 @@ class RepertoirePositionGames(GameListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(RepertoirePositionGames, self).__init__(
-            ui.position_repertoires_pw, ui
-        )
+        super().__init__(ui.position_repertoires_pw, ui)
         self.make_header(ChessDBrowPosition.header_specification)
         self.__bind_on()
         self.set_popup_bindings(
@@ -1921,7 +1667,7 @@ class RepertoirePositionGames(GameListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(RepertoirePositionGames, self).bind_off()
+        super().bind_off()
         self.set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_repertoire_grid, ""),
@@ -1947,7 +1693,7 @@ class RepertoirePositionGames(GameListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(RepertoirePositionGames, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -2043,9 +1789,7 @@ class RepertoirePositionGames(GameListGrid):
             position=self.datasource.fullposition,
             context=self.ui.get_active_repertoire_move(),
         )
-        return super(RepertoirePositionGames, self).set_row(
-            key, dodefaultaction=dodefaultaction, **kargs
-        )
+        return super().set_row(key, dodefaultaction=dodefaultaction, **kargs)
 
     def on_game_change(self, instance):
         """Delegate to superclass if data source exists."""
@@ -2053,7 +1797,7 @@ class RepertoirePositionGames(GameListGrid):
         # to be recreated
         if self.get_data_source() is None:
             return
-        super(RepertoirePositionGames, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""

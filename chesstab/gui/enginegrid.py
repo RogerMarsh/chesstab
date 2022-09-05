@@ -14,11 +14,12 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from ..core.chessrecord import ChessDBrecordEngine
 from .enginerow import ChessDBrowEngine
-from .eventspec import EventSpec, DummyEvent
+from .eventspec import EventSpec
 from .display import Display
+from ..shared.allgrid import AllGrid
 
 
-class EngineListGrid(ExceptionHandler, DataGrid, Display):
+class EngineListGrid(ExceptionHandler, AllGrid, DataGrid, Display):
     """A DataGrid for lists of chess engine definition.
 
     Subclasses provide navigation and extra methods appropriate to list use.
@@ -31,18 +32,12 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
         parent - see superclass
 
         """
-        super(EngineListGrid, self).__init__(parent=parent)
-        self.gcanvas.configure(takefocus=tkinter.FALSE)
-        self.data.configure(takefocus=tkinter.FALSE)
-        self.frame.configure(takefocus=tkinter.FALSE)
-        self.hsbar.configure(takefocus=tkinter.FALSE)
-        self.vsbar.configure(takefocus=tkinter.FALSE)
+        super().__init__(parent=parent)
+        self._configure_frame()
 
     def set_properties(self, key, dodefaultaction=True):
         """Return True if chess engine definition properties set or False."""
-        if super(EngineListGrid, self).set_properties(
-            key, dodefaultaction=False
-        ):
+        if super().set_properties(key, dodefaultaction=False):
             return True
         if dodefaultaction:
             self.objects[key].set_background_normal(self.get_row_widgets(key))
@@ -52,9 +47,7 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
 
     def set_row(self, key, dodefaultaction=True, **kargs):
         """Return row widget for chess engine definition key or None."""
-        row = super(EngineListGrid, self).set_row(
-            key, dodefaultaction=False, **kargs
-        )
+        row = super().set_row(key, dodefaultaction=False, **kargs)
         if row is not None:
             return row
         if key not in self.keys:
@@ -123,116 +116,15 @@ class EngineListGrid(ExceptionHandler, DataGrid, Display):
             self.objects[key], oldobject, modal, title="Show Engine Definition"
         )
 
-    def create_edit_dialog(
-        self, instance, newobject, oldobject, showinitial, modal, title=""
-    ):
-        """Extend to do chess initialization."""
-        for x in (newobject, oldobject):
-            if x:
-                x.load_record((instance.key.pack(), instance.srvalue))
-        super(EngineListGrid, self).create_edit_dialog(
-            instance, newobject, oldobject, showinitial, modal, title=title
-        )
-
-    def fill_view(
-        self,
-        currentkey=None,
-        down=True,
-        topstart=True,
-        exclude=True,
-    ):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(EngineListGrid, self).fill_view(
-                currentkey=currentkey,
-                down=down,
-                topstart=topstart,
-                exclude=exclude,
-            )
-
-    def load_new_index(self):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(EngineListGrid, self).load_new_index()
-
-    def load_new_partial_key(self, key):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(EngineListGrid, self).load_new_partial_key(key)
-
-    def on_configure_canvas(self, event=None):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(EngineListGrid, self).on_configure_canvas(event=event)
-
-    def on_data_change(self, instance):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # Intend to put this in superclass but must treat the DataClient
-        # objects being scrolled as a database to do this properly.  Do this
-        # when these objects have been given a database interface used when
-        # the database is not open.  (One problem is how to deal with indexes.)
-
-        # Used to deal with temporary closure of database to do Imports of
-        # games from PGN files; which can take many hours.
-
-        if self.get_database() is not None:
-            super(EngineListGrid, self).on_data_change(instance)
-
-            # Hack to display newly inserted record.
-            # Acceptable because there will likely be two or three records at
-            # most in the engine grid.
-            self.fill_view_from_top()
+    def _fill_view_from_top_hack(self):
+        # Hack to display newly inserted record.
+        # Acceptable because there will likely be two or three records at
+        # most in the engine grid.
+        self.fill_view_from_top()
 
     def set_focus(self):
         """Give focus to this widget."""
         self.frame.focus_set()
-
-    def is_payload_available(self):
-        """Return True if grid is connected to a database."""
-        ds = self.get_data_source()
-        if ds is None:
-            return False
-        if ds.get_database() is None:
-
-            # Avoid exception scrolling visible grid not connected to database.
-            # Make still just be hack to cope with user interface activity
-            # while importing data.
-            self.clear_grid_keys()
-
-            return False
-        return True
 
     def bind_for_widget_without_focus(self):
         """Return True if this item has the focus about to be lost."""
@@ -262,7 +154,7 @@ class EngineGrid(EngineListGrid):
         ui - container for user interface widgets and methods.
 
         """
-        super(EngineGrid, self).__init__(ui.show_engines_toplevel)
+        super().__init__(ui.show_engines_toplevel)
         self.ui = ui
         self.make_header(ChessDBrowEngine.header_specification)
         self.__bind_on()
@@ -278,7 +170,7 @@ class EngineGrid(EngineListGrid):
 
     def bind_off(self):
         """Disable all bindings."""
-        super(EngineGrid, self).bind_off()
+        super().bind_off()
         for sequence, function in ((EventSpec.engine_grid_run, ""),):
             if function:
                 function = self.try_event(function)
@@ -286,7 +178,7 @@ class EngineGrid(EngineListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(EngineGrid, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -303,7 +195,7 @@ class EngineGrid(EngineListGrid):
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return
-        super(EngineGrid, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     def set_selection_text(self):
         """Set status bar to display selection rule name."""
