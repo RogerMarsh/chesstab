@@ -20,11 +20,10 @@ from .cqldbedit import CQLDbEdit
 from .cqldbdelete import CQLDbDelete
 from .cqldbshow import CQLDbShow
 from . import constants
+from ..shared.allrow import AllRow
 
-ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
-
-class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
+class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
     """Define row in list of ChessQL statements.
 
     Add row methods to the ChessQL statement record definition.
@@ -116,16 +115,6 @@ class ChessDBrowCQL(ChessDBrecordPartial, DataRow):
             ),
             **kargs
         )
-
-    def grid_row_on_display(self, **kargs):
-        """Return ChessDBrowCQL() with ON_DISPLAY_COLOUR background."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
-
-    def set_background_on_display(self, widgets):
-        """Set background to ON_DISPLAY_COLOUR on all widgets."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        self.set_background(widgets, self._current_row_background)
 
 
 def make_ChessDBrowCQL(chessui):

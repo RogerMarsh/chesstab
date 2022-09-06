@@ -28,15 +28,12 @@ from pgn_read.core.constants import (
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordGameTags
-from .gamedbedit import GameDbEdit
-from .gamedbdelete import GameDbDelete
-from .gamedbshow import GameDbShow
 from . import constants
+from ..shared.allrow import AllRow
+from ..shared.game_position import GamePosition
 
-ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
-
-class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
+class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
     """Define row in list of games.
 
     Add row methods to the chess game record definition.
@@ -131,7 +128,7 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
         ui - the ChessUI instamce
 
         """
-        super(ChessDBrowGame, self).__init__()
+        super().__init__()
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
@@ -203,37 +200,6 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
             },
         ]
 
-    def show_row(self, dialog, oldobject):
-        """Return a GameDbShow toplevel for instance.
-
-        dialog - a Toplevel
-        oldobject - a ChessDBrecordGame containing original data
-
-        """
-        return GameDbShow(dialog, oldobject, ui=self.ui)
-
-    def delete_row(self, dialog, oldobject):
-        """Return a GameDbDelete toplevel for instance.
-
-        dialog - a Toplevel
-        oldobject - a ChessDBrecordGame containing original data
-
-        """
-        return GameDbDelete(dialog, oldobject, ui=self.ui)
-
-    def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a GameDbEdit toplevel for instance.
-
-        dialog - a Toplevel
-        newobject - a ChessDBrecordGame containing original data to be edited
-        oldobject - a ChessDBrecordGame containing original data
-        showintial == True - show both original and edited data
-
-        """
-        return GameDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
-        )
-
     def grid_row(self, **kargs):
         """Return ChessDBrowGame() with selected Tags at game value.
 
@@ -241,7 +207,7 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
 
         """
         tags = self.value.collected_game._tags
-        return super(ChessDBrowGame, self).grid_row(
+        return super().grid_row(
             textitems=(
                 tags.get(TAG_WHITE, DEFAULT_TAG_VALUE),
                 tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE),
@@ -272,16 +238,6 @@ class ChessDBrowGame(ChessDBrecordGameTags, DataRow):
             if t not in SEVEN_TAG_ROSTER:
                 other_tags.append((t, v))
         return str_tags + other_tags
-
-    def set_background_on_display(self, widgets):
-        """Set background to ON_DISPLAY_COLOUR on all widgets."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        self.set_background(widgets, self._current_row_background)
-
-    def grid_row_on_display(self, **kargs):
-        """Return ChessDBrowGame() with ON_DISPLAY_COLOUR background."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
 
 def make_ChessDBrowGame(chessui):

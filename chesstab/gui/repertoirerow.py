@@ -27,11 +27,10 @@ from .repertoiredbdelete import RepertoireDbDelete
 from .repertoiredbshow import RepertoireDbShow
 from . import constants
 from ..core.constants import TAG_OPENING, REPERTOIRE_GAME_TAGS
+from ..shared.allrow import AllRow
 
-ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
-
-class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
+class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
     """Define row in list of repertoires.
 
     Add row methods to the chess game record definition.
@@ -74,7 +73,7 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
         ui - the ChessUI instamce
 
         """
-        super(ChessDBrowRepertoire, self).__init__()
+        super().__init__()
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
@@ -140,7 +139,7 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
 
         """
         tags = self.value.collected_game._tags
-        return super(ChessDBrowRepertoire, self).grid_row(
+        return super().grid_row(
             textitems=(
                 tags.get(TAG_OPENING, "?"),
                 tags.get(TAG_RESULT, "?"),
@@ -156,16 +155,6 @@ class ChessDBrowRepertoire(ChessDBrecordRepertoireTags, DataRow):
             if tv[0] not in REPERTOIRE_GAME_TAGS:
                 tag_values.append(tv)
         return tag_values
-
-    def set_background_on_display(self, widgets):
-        """Set background to ON_DISPLAY_COLOUR on all widgets."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        self.set_background(widgets, self._current_row_background)
-
-    def grid_row_on_display(self, **kargs):
-        """Return ChessDBrowRepertoire() with ON_DISPLAY_COLOUR background."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
 
 def make_ChessDBrowRepertoire(chessui):

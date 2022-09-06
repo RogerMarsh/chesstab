@@ -21,14 +21,13 @@ from .datarow import DataRow
 from . import constants
 from ..core.chessrecord import ChessDBrecordGamePosition
 from .positionscore import PositionScore
-from .gamedbedit import GameDbEdit
-from .gamedbdelete import GameDbDelete
-from .gamedbshow import GameDbShow
-
-ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
+from ..shared.allrow import AllRow
+from ..shared.game_position import GamePosition
 
 
-class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
+class ChessDBrowPosition(
+    GamePosition, AllRow, ChessDBrecordGamePosition, DataRow
+):
     """Define row in list of games for given position.
 
     Add row methods to the chess game record definition.
@@ -58,7 +57,7 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
         ui - the ChessUI instamce
 
         """
-        super(ChessDBrowPosition, self).__init__()
+        super().__init__()
         self.ui = ui
         self.set_database(database)
         self.score = None
@@ -77,37 +76,6 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
             },
         ]
 
-    def show_row(self, dialog, oldobject):
-        """Return a GameDbShow toplevel for instance.
-
-        dialog - a Toplevel
-        oldobject - a ChessDBrecordGame containing original data
-
-        """
-        return GameDbShow(dialog, oldobject, ui=self.ui)
-
-    def delete_row(self, dialog, oldobject):
-        """Return a GameDbDelete toplevel for instance.
-
-        dialog - a Toplevel
-        oldobject - a ChessDBrecordGame containing original data
-
-        """
-        return GameDbDelete(dialog, oldobject, ui=self.ui)
-
-    def edit_row(self, dialog, newobject, oldobject, showinitial=True):
-        """Return a GameDbEdit toplevel for instance.
-
-        dialog - a Toplevel
-        newobject - a ChessDBrecordGame containing original data to be edited
-        oldobject - a ChessDBrecordGame containing original data
-        showintial == True - show both original and edited data
-
-        """
-        return GameDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
-        )
-
     def grid_row(self, position=None, context=(None, None, None), **kargs):
         """Return ChessDBrowPosition() with row items set to query text.
 
@@ -115,14 +83,9 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
 
         """
         self.row_specification[0][WIDGET_CONFIGURE]["context"] = context
-        return super(ChessDBrowPosition, self).grid_row(
+        return super().grid_row(
             textitems=(literal_eval(self.srvalue),), **kargs
         )
-
-    def grid_row_on_display(self, **kargs):
-        """Return ChessDBrowPosition() with ON_DISPLAY_COLOUR background."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
 
     def set_background(self, widgets, background):
         """Set background colour of widgets.
@@ -139,17 +102,10 @@ class ChessDBrowPosition(ChessDBrecordGamePosition, DataRow):
             if "background" not in rs[WIDGET_CONFIGURE]:
                 w[0].configure(background=background)
 
-    def set_background_on_display(self, widgets):
-        """Set background to ON_DISPLAY_COLOUR on all widgets."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        self.set_background(widgets, self._current_row_background)
-
     def populate_widget(self, widget, cnf=None, text=None, context=None, **kw):
         """Delegate for tkinter.Label widget, put text in a PositionScore."""
         if isinstance(widget, tkinter.Label):
-            super(ChessDBrowPosition, self).populate_widget(
-                widget, text=text, **kw
-            )
+            super().populate_widget(widget, text=text, **kw)
             return
         # This is the place to implement a pool of pre-processed PositionScore
         # instances which only need to call the colour_score() method rather

@@ -20,11 +20,10 @@ from .enginedbedit import EngineDbEdit
 from .enginedbdelete import EngineDbDelete
 from .enginedbshow import EngineDbShow
 from . import constants
+from ..shared.allrow import AllRow
 
-ON_DISPLAY_COLOUR = "#eba610"  # a pale orange
 
-
-class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
+class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
     """Define row in list of chess engines.
 
     Add row methods to the chess engine record definition.
@@ -54,7 +53,7 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
         ui - the ChessUI instamce
 
         """
-        super(ChessDBrowEngine, self).__init__()
+        super().__init__()
         self.ui = ui
         self.set_database(database)
         self.row_specification = [
@@ -105,23 +104,13 @@ class ChessDBrowEngine(ChessDBrecordEngine, DataRow):
 
     def grid_row(self, **kargs):
         """Return ChessDBrowEngine() with text set to engine name."""
-        return super(ChessDBrowEngine, self).grid_row(
+        return super().grid_row(
             textitems=(
                 self.value.get_name_text(),
                 # self.value.get_selection_rule_text(),
             ),
             **kargs
         )
-
-    def grid_row_on_display(self, **kargs):
-        """Return ChessDBrowEngine() with ON_DISPLAY_COLOUR background."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        return self.grid_row(background=ON_DISPLAY_COLOUR, **kargs)
-
-    def set_background_on_display(self, widgets):
-        """Set background to ON_DISPLAY_COLOUR on all widgets."""
-        self._current_row_background = ON_DISPLAY_COLOUR
-        self.set_background(widgets, self._current_row_background)
 
 
 def make_ChessDBrowEngine(chessui):
