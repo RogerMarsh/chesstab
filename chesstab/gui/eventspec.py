@@ -39,7 +39,7 @@ PREVIOUS_SELECTION_RULE = "Previous Selection Rule"
 NEXT_SELECTION_RULE = "Next Selection Rule"
 
 
-class EventSpec(object):
+class EventSpec:
     """Event detail values for ChessTab keyboard and pointer actions."""
 
     # Navigate to another specific widget event specifications.  (Not next

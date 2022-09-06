@@ -1519,6 +1519,8 @@ class RepertoireGrid(GameListGrid):
 
     def set_properties(self, key, dodefaultaction=True):
         """Return True if properties for game key set or False."""
+        # Skip the immediate superclass method to not touch self.game_items
+        # pylint bad-super-call message given.
         if super(GameListGrid, self).set_properties(
             key, dodefaultaction=False
         ):
@@ -1533,6 +1535,8 @@ class RepertoireGrid(GameListGrid):
 
     def set_row(self, key, dodefaultaction=True, **kargs):
         """Return row widget for game key or None."""
+        # Skip the immediate superclass method to not touch self.game_items
+        # pylint bad-super-call message given.
         row = super(GameListGrid, self).set_row(
             key, dodefaultaction=False, **kargs
         )

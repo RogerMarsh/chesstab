@@ -1947,7 +1947,7 @@ class Chess(ExceptionHandler):
             Chess.set_error_file_name(os.path.join(directory, ERROR_LOG))
 
 
-class Statusbar(object):
+class Statusbar:
     """Status bar for chess application."""
 
     def __init__(self, root, background):

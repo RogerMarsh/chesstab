@@ -837,6 +837,7 @@ class ChessDBrecordRepertoire(ChessDBrecordGame):
     def __init__(self):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
+        # pylint bad-super-call message given.
         super(ChessDBrecordGame, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoire
         )
@@ -849,6 +850,7 @@ class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
     def __init__(self):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
+        # pylint bad-super-call message given.
         super(ChessDBrecordGameTags, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireTags
         )
@@ -861,6 +863,7 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
     def __init__(self):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
+        # pylint bad-super-call message given.
         super(ChessDBrecordGameUpdate, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireUpdate
         )

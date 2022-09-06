@@ -39,7 +39,7 @@ class DisplayItemsError(Exception):
     """Exception class for displayitems module."""
 
 
-class DisplayItems(object):
+class DisplayItems:
     """Manage set of displayed widgets."""
 
     def __init__(self):
@@ -300,7 +300,7 @@ class DisplayItems(object):
         return True
 
 
-class DisplayItemsStub(object):
+class DisplayItemsStub:
     """Stub manager for set of displayed widgets.
 
     Tk Frames, each containing an item and usually called a panel in ChessTab,

@@ -40,7 +40,7 @@ from .chessrecord import ChessDBrecordAnalysis
 from .analysis import Analysis
 
 
-class UCI(object):
+class UCI:
     """Control multiple chess engines using the UCI."""
 
     def __init__(self):

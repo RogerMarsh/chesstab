@@ -9,7 +9,7 @@ import tkinter
 from .eventspec import DummyEvent
 
 
-class Display(object):
+class Display:
     """Mixin providing focus switching and widget visibility methods.
 
     The User Interface has sets of related widgets: each set has a widget to:

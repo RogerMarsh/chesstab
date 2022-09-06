@@ -26,7 +26,7 @@ class QueryStatementError(Exception):
     """Exception class for querystatement module."""
 
 
-class QueryStatement(object):
+class QueryStatement:
     """Game selection rule parser.
 
     Parse text for a game selection rule specification.

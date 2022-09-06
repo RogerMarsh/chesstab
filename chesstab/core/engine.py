@@ -11,7 +11,7 @@ from .constants import NAME_DELIMITER
 _error = 1
 
 
-class Engine(object):
+class Engine:
     """Chess engine program definition.
 
     Maintain command line details for running a chess engine.
