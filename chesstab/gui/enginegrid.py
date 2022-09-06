@@ -171,10 +171,7 @@ class EngineGrid(EngineListGrid):
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        for sequence, function in ((EventSpec.engine_grid_run, ""),):
-            if function:
-                function = self.try_event(function)
-            self.frame.bind(sequence[0], function)
+        self.set_event_bindings_frame(((EventSpec.engine_grid_run, ""),))
 
     def bind_on(self):
         """Enable all bindings."""
@@ -183,12 +180,9 @@ class EngineGrid(EngineListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        for sequence, function in (
-            (EventSpec.engine_grid_run, self.run_engine),
-        ):
-            if function:
-                function = self.try_event(function)
-            self.frame.bind(sequence[0], function)
+        self.set_event_bindings_frame(
+            ((EventSpec.engine_grid_run, self.run_engine),)
+        )
 
     def on_partial_change(self, instance):
         """Delegate to superclass if database is open otherwise do nothing."""

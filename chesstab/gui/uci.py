@@ -124,7 +124,7 @@ class UCI(ExceptionHandler):
         """Quit all started UCI compliant Chess Engines."""
         ui_names = set(self.uci.uci_drivers)
         still_alive = self.uci.quit_all_engines()
-        ui_names -= set([n for n, p in still_alive])
+        ui_names -= set(n for n, p in still_alive)
         dead_menu_items = []
         for i in range(self.menu_engines.index("end") + 1):
             label = self.menu_engines.entryconfigure(i).get("label")

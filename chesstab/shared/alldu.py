@@ -74,6 +74,8 @@ class Alldu:
     # for a default OpenBSD user process or a MS Windows XP process with
     # segment sizes up to 32768 records. Monitoring with Top and Task Manager
     # suggests it gets close with OpenBSD.
+
+    # pylint comparison-with-callable report is false positive.
     if SegmentSize.db_segment_size > 32768:
         for f, m in ((4, 700000000), (2, 1400000000)):
             try:

@@ -380,11 +380,11 @@ class ChessDeferredUpdate(ExceptionHandler):
                 ("Please confirm the import is to be done without backups.",)
             ),
         ):
+            # self.report.append_text(
+            #     "The import will be done without taking backups."
+            # )
+            # self.report.append_text_only("")
             return
-            self.report.append_text(
-                "The import will be done without taking backups."
-            )
-            self.report.append_text_only("")
         self.run_import(backup=False, names=names)
 
     def estimate_games_in_import(self):

@@ -304,19 +304,13 @@ class PositionScore(ExceptionHandler):
         """Return True if move is in the main line."""
         return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
 
-    """At present both POSITION<suffix> and TOKEN<suffix> tags exist.
-
-    Now that setting MOVE_TAG has been moved to token-type specific code there
-    is probably no need for both.  TOKEN marks the active text of a POSITION,
-    for example {<active text>} where POSITION includes the surrounding braces,
-    but as active text can vary and when null POSITION is used to set MOVE_TAG
-    might as well refer to POSITION directly.
-
-    This means the set_insert_mark_for_editing and set_bound_marks_for_editing
-    methods do not need to loop through tag names for TOKEN because it starts
-    from a POSITION tag name.
-
-    """
+    # At present both POSITION<suffix> and TOKEN<suffix> tags exist.
+    # Now that setting MOVE_TAG has been moved to token-type specific code
+    # there is probably no need for both.  TOKEN marks the active text of a
+    # POSITION, for example {<active text>} where POSITION includes the
+    # surrounding braces, but as active text can vary and when null
+    # POSITION is used to set MOVE_TAG might as well refer to POSITION
+    # directly.
 
     def _set_square_piece_map(self, position):
         assert len(position) == 1

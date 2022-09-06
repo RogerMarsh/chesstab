@@ -132,7 +132,7 @@ def _extract_options(fileid):
                 if font_details:
                     defaults[font_details][key] = v.strip()
                 continue
-            elif font_details:
+            if font_details:
                 font_attributes = defaults[font_details]
                 for fa in fonts.modify_font_attributes:
                     if defaults[fa]:

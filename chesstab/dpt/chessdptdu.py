@@ -626,7 +626,7 @@ if __name__ == "__main__":
             invoked by KeyPress rather than a menu command.
 
             """
-            global filepath
+            global filepath  # pylint global-statement report: global needed.
             if filepath:
                 text.insert(tkinter.END, "\nProcess started, please wait.\n")
                 text.after(1, do_function, *(databasepath, [filepath]))

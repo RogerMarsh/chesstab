@@ -97,8 +97,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         """Return module name or None.
 
         dptmultistepdu is ignored if dptchunksize is not None.
-        dptmultistepdu is True: use multi-step deferred update
-        otherwise use single-step deferred update.
+        dptmultistepdu is ignored because multi-step is no longer supported.
 
         dptchunksize is None: dptmultistepdu determines deferred update module
         otherwise use single-step deferred update with the chunk size (assumed
@@ -117,9 +116,11 @@ class ChessDatabase(database.Database, dpt_database.Database):
         runchessdptduchunk.py does DPT's single-step deferred update process
         but splits the task into fixed size chunks, a number of games, which
         it is hoped are small enough to finish before all memory is used.
-        runchessdptdumulti.py does DPT's multi-step deferred update process.
+        The deleted runchessdptdumulti.py did DPT's multi-step deferred
+        update process.
 
-        Multi-step is about half an order of magnitude slower than single-step.
+        Multi-step was about half an order of magnitude slower than
+        single-step.
 
         """
         if dptchunksize is not None:
@@ -127,13 +128,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 os.path.basename(os.path.dirname(__file__)),
                 "runchessdptduchunk.py",
             )
-        if dptmultistepdu is True:
-            return os.path.join(
-                os.path.basename(os.path.dirname(__file__)),
-                "runchessdptdumulti.py",
-            )
-        else:
-            return super().use_deferred_update_process(**kargs)
+        return super().use_deferred_update_process(**kargs)
 
     def adjust_database_for_retry_import(self, files):
         """Increase file sizes taking file full into account."""
@@ -145,7 +140,6 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 self.table[dbn].get_file_parameters(self.dbenv),
                 self._broken_sizes[dbn],
             )
-        return
 
     def open_database(self, files=None):
         """Return True if all files are opened in Normal mode (FISTAT == 0)."""

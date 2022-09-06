@@ -43,14 +43,6 @@ class CQLGameListQuery:
                 return
             self.set_popup_bindings(cascade_menu, bindings)
 
-    def set_event_bindings_frame(self, bindings=(), switch=True):
-        """Set bindings if switch is True or unset the bindings."""
-        ste = self.try_event
-        for sequence, function in bindings:
-            self.frame.bind(
-                sequence[0], ste(function) if switch and function else ""
-            )
-
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
         self.ui.give_focus_backward(self)

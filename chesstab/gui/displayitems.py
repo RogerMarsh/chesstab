@@ -178,7 +178,7 @@ class DisplayItems(object):
 
         """
         item = self.stack[-1]
-        if not (item.blockchange is True):
+        if item.blockchange is not True:
             return False
         panel = item.panel
         pom = self.panel_object_map
