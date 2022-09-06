@@ -134,7 +134,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         """Increase file sizes taking file full into account."""
         # Increase the size of files allowing for the file full condition
         # which occurred while doing a deferred update for import.
-        for dbn in self._broken_sizes.keys():
+        for dbn in self._broken_sizes:
             self.table[dbn].increase_size_of_full_file(
                 self.dbenv,
                 self.table[dbn].get_file_parameters(self.dbenv),

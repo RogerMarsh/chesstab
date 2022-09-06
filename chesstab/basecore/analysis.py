@@ -108,8 +108,7 @@ class Analysis:
                 analysis.scale.update(arv.scale)
                 analysis.variations.update(arv.variations)
                 r = rsc.next()
-            else:
-                analysis.position = fen
+            analysis.position = fen
         finally:
             rsc.close()
         return analysis

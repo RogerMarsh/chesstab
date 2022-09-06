@@ -2587,6 +2587,9 @@ class GameEdit(Game):
                 tr = widget.tag_nextrange(tn, nextmove[1])
                 if tr:
                     point = tr[0]
+            # pylint message useless-else-on-loop not resolved lest a crash
+            # is introduced to replace presumed, but unnoticed, incorrect
+            # behaviour.
             else:
                 # Can keep going, but both raise exception and issue warning
                 # dialogue are better options here.

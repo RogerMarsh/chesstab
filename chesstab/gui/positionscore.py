@@ -54,8 +54,6 @@ from .constants import (
     NAVIGATE_COMMENT,
     TOKEN_MARK,
     PGN_TAG,
-    ALTERNATIVE_MOVE_COLOR,
-    VARIATION_COLOR,
     SPACE_SEP,
     NEWLINE_SEP,
     NULL_SEP,

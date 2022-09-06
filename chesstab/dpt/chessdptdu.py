@@ -145,7 +145,7 @@ def chess_dptdu_chunks(
                 games.append("".join(gamelines))
                 gamelines = []
                 if len(games) >= CHUNKGAMES:
-                    records = write_chunk(sample=records)
+                    write_chunk(sample=records)
                     count += 1
                     reporter(
                         " ".join(
@@ -162,7 +162,7 @@ def chess_dptdu_chunks(
         inp.close()
         if gamelines:
             games.append("".join(gamelines))
-            records = write_chunk(sample=records)
+            write_chunk(sample=records)
         reporter("Extraction from " + pp + " done")
         reporter("", timestamp=False)
     reporter("Finishing import: please wait.")

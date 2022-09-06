@@ -636,6 +636,9 @@ class Game(Score):
         to self.generate_fen_for_position().
 
         """
+        # pylint message no-value-for-parameter seems to be false positive.
+        # See apparently similar code in gameedit line 4364 which does not
+        # attract the message.
         if self.analysis_data_source:
             return self.analysis_data_source.get_position_analysis(
                 self.generate_fen_for_position(*a)

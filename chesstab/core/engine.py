@@ -30,7 +30,7 @@ class Engine(object):
 
     def update_engine_definition(self, attributes):
         """Update existing self.__dict__ keys from dict attributes."""
-        for a in self.__dict__.keys():
+        for a in self.__dict__:
             if a in attributes:
                 self.__dict__[a] = attributes[a]
 
