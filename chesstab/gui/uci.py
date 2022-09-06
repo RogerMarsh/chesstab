@@ -4,6 +4,7 @@
 
 """Control multiple UCI compliant chess engines."""
 
+import sys
 import tkinter
 import tkinter.messagebox
 import tkinter.filedialog
@@ -24,8 +25,6 @@ from ..core.filespec import (
     COMMAND_FIELD_DEF,
 )
 from .eventspec import EventSpec
-
-import sys
 
 _win32_platform = sys.platform == "win32"
 _freebsd_platform = sys.platform.startswith("freebsd")

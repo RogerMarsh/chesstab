@@ -4,10 +4,10 @@
 
 """Provide DataRow class which uses solentware_misc exception handling."""
 
-from solentware_grid.gui.datarow import DataRow
+from solentware_grid.gui import datarow
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 
-class DataRow(ExceptionHandler, DataRow):
+class DataRow(ExceptionHandler, datarow.DataRow):
     """Override DataRow methods with those available in ExceptionHandler."""

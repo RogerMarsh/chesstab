@@ -26,6 +26,7 @@ def rundu(engine_module_name, database_module_name):
     database_module = importlib.import_module(database_module_name)
     engine_module = importlib.import_module(engine_module_name)
     if sys.platform.startswith("openbsd"):
+        import resource
 
         # The default user class is limited to 512Mb memory but imports need
         # ~550Mb at Python3.6 for sqlite3.
@@ -37,7 +38,6 @@ def rundu(engine_module_name, database_module_name):
         try:
             b" " * 1000000000
         except MemoryError:
-            import resource
 
             soft, hard = resource.getrlimit(resource.RLIMIT_DATA)
             try:
@@ -51,8 +51,8 @@ def rundu(engine_module_name, database_module_name):
                     # Maybe the import is small enough to get away with
                     # limited memory (~500Mb).
                     pass
-            del resource
 
+        del resource
     try:
         cdu = engine_module.ChessDeferredUpdate(
             deferred_update_method=database_module.chess_database_du,

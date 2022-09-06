@@ -10,6 +10,7 @@ An instance of this class fits into the user interface as the only item in a
 new toplevel widget.
 
 """
+import sys
 import os.path
 import tkinter.filedialog
 
@@ -17,8 +18,6 @@ from ..core.constants import NAME_DELIMITER
 from ..core.engine import Engine
 from . import engine
 from .eventspec import EventSpec
-
-import sys
 
 _win32_platform = sys.platform == "win32"
 _freebsd_platform = sys.platform.startswith("freebsd")

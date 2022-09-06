@@ -1322,15 +1322,6 @@ class Chess(ExceptionHandler):
                 message="The chess database has not been deleted",
             )
 
-    def export_all_games_text(self):
-        """Export all games, repertoires and positions as text files."""
-        filenames = self.ui.get_export_folder()
-        if filenames is None:
-            return
-        exporters.export_all_games_text(self.opendatabase, filenames[0])
-        exporters.export_all_repertoires_text(self.opendatabase, filenames[1])
-        exporters.export_all_positions(self.opendatabase, filenames[2])
-
     def export_all_games_pgn_reduced_export_format(self):
         """Export all database games in PGN reduced export format."""
         self.ui.export_report(

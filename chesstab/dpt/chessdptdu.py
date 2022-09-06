@@ -64,12 +64,10 @@ try:
     _DEFERRED_UPDATE_POINTS = (DB_SEGMENT_SIZE - 1,)
 except OSError:
     _DEFERRED_UPDATE_POINTS = tuple(
-        [
-            i
-            for i in range(
-                DB_SEGMENT_SIZE // 8 - 1, DB_SEGMENT_SIZE, DB_SEGMENT_SIZE // 8
-            )
-        ]
+        i
+        for i in range(
+            DB_SEGMENT_SIZE // 8 - 1, DB_SEGMENT_SIZE, DB_SEGMENT_SIZE // 8
+        )
     )
 del multiprocessing
 del DB_SEGMENT_SIZE

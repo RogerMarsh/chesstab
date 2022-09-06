@@ -136,10 +136,8 @@ class QueryStatement(object):
                         )
                     else:
                         n.value = tuple(
-                            [
-                                " ".join(re_normalize_player_name.findall(nv))
-                                for nv in n.value
-                            ]
+                            " ".join(re_normalize_player_name.findall(nv))
+                            for nv in n.value
                         )
             return True
 

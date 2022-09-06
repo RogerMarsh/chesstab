@@ -519,8 +519,10 @@ class Score(SharedTextScore, BlankText):
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self.populate_export_submenu(export_submenu)
         popup.add_cascade(label="Export", menu=export_submenu)
+        # pylint message assignment-from-none is false positive.
+        # However it is sensible to do an isinstance test.
         database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
+        if isinstance(database_submenu, tkinter.Menu):
             popup.add_cascade(label="Database", menu=database_submenu)
         self.select_move_popup = popup
         return popup

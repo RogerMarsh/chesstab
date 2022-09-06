@@ -176,6 +176,11 @@ class BlankText(ExceptionHandler):
         Subclasses should override this method as needed.
 
         """
+        # pylint message assignment-from-none is reported when the return
+        # value is assigned to a name.
+        # The message is not reported if 'return None' is replaced like:
+        # none = None
+        # return none
         return None
 
     def post_menu(self, menu, create_menu, allowed=True, event=None):
@@ -264,8 +269,10 @@ class BlankText(ExceptionHandler):
         assert self.primary_activity_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_primary_activity_events())
+        # pylint message assignment-from-none is false positive.
+        # However it is sensible to do an isinstance test.
         database_submenu = self.create_database_submenu(popup)
-        if database_submenu:
+        if isinstance(database_submenu, tkinter.Menu):
             popup.add_cascade(label="Database", menu=database_submenu)
         self.primary_activity_popup = popup
         return popup
@@ -284,33 +291,3 @@ class BlankText(ExceptionHandler):
             (EventSpec.buttonpress_1, buttonpress1),
             (EventSpec.buttonpress_3, buttonpress3),
         )
-
-    # Take a snapshot of the tkinter.Text widget bound to self.score.  It is
-    # intended for problem tracing.  It is saved as a sibling of ErrorLog.
-    # At a convenient time dump_text_widget will become a method in the
-    # solentware_misc.gui.exceptionhandler.ExceptionHandler class.
-    def dump_text_widget(self, textwidget, filename=None):
-        """Save dump of a tkinter.Text widget in filename.
-
-        Default filename is dumptextwidget in directory of error file.
-
-        """
-        if filename is None:
-            filename = "dumptextwidget"
-        import os
-        import datetime
-
-        filename = "_".join(
-            (
-                filename,
-                datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            )
-        )
-        with open(
-            os.path.join(
-                os.path.dirname(self.get_error_file_name()), filename
-            ),
-            "w",
-        ) as f:
-            for t in textwidget.dump("1.0", tkinter.END):
-                f.write(repr(t) + "\n")

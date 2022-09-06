@@ -457,32 +457,33 @@ class RayFilter:
 # chesstab has no subclass of of PieceDesignator (yet), and rayfilter is only
 # user at present.
 # The alternative definitions are retained at present.
-def piece_square_to_index(designator_set, index_prefix):
-    """Convert piece designator set values to index format: Qa4 to a4Q.
+# Commented to avoid pylint function-redefined message.
+# def piece_square_to_index(designator_set, index_prefix):
+#    """Convert piece designator set values to index format: Qa4 to a4Q.
 
-    Assumed that having all index values for a square adjacent is better
-    than having index values for piece together, despite the need for
-    conversion.
+#    Assumed that having all index values for a square adjacent is better
+#    than having index values for piece together, despite the need for
+#    conversion.
 
-    """
-    ecs = piecedesignator.PieceDesignator._expand_composite_square
-    ds = set()
-    for ps in designator_set:
-        if len(ps) != 1:
-            ds.add(index_prefix + ps)
-        else:
-            ds.update(
-                {
-                    index_prefix + ps + s
-                    for s in ecs(
-                        FILE_NAMES[0],
-                        FILE_NAMES[-1],
-                        RANK_NAMES[0],
-                        RANK_NAMES[-1],
-                    )
-                }
-            )
-    return ds
+#    """
+#    ecs = piecedesignator.PieceDesignator._expand_composite_square
+#    ds = set()
+#    for ps in designator_set:
+#        if len(ps) != 1:
+#            ds.add(index_prefix + ps)
+#        else:
+#            ds.update(
+#                {
+#                    index_prefix + ps + s
+#                    for s in ecs(
+#                        FILE_NAMES[0],
+#                        FILE_NAMES[-1],
+#                        RANK_NAMES[0],
+#                        RANK_NAMES[-1],
+#                    )
+#                }
+#            )
+#    return ds
 
 
 # If 'square piece' is better order than 'piece square'

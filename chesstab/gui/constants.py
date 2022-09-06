@@ -16,6 +16,7 @@ At time of writing available from:
 
 www.enpassant.dk/chess/fonteng.htm
 """
+import sys
 
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
@@ -35,8 +36,6 @@ from ..core.constants import (
 # The 'win32' order is my preference, but Merida and Motif are microsoft-symbol
 # fonts according to description in /usr/local/share/fonts/../fonts.dir after
 # installation on FreeBSD 10.1 and produce the default characters, not pieces.
-import sys
-
 if sys.platform == "win32":
     PREFERRED_PIECES = (
         "Chess Merida",
