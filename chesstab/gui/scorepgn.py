@@ -26,6 +26,8 @@ class ScorePGN:
 
     def analysis_current_item(self, event=None):
         """Select current PGN score analysis."""
+        # pylint message access-member-before-definition.
+        # Action deferred till later (whatever it turns out to be).
         if self.game_position_analysis:
             self.analysis.apply_colouring_to_variation_back_to_main_line()
         else:

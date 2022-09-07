@@ -101,6 +101,7 @@ class BlankText(ExceptionHandler):
 
         # The popup menus used by all subclasses.
         self.inactive_popup = None
+        self.primary_activity_popup = None
 
     def set_event_bindings_score(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
@@ -266,6 +267,8 @@ class BlankText(ExceptionHandler):
         override the create_database_submanu method as needed.
 
         """
+        # pylint message access-member-before-definition.
+        # Initialize primary_activity_popup moved to blanktext from enginetext module.
         assert self.primary_activity_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_primary_activity_events())

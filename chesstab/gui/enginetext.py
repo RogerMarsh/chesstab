@@ -43,9 +43,6 @@ class EngineText(SharedTextEngineText, BlankText):
         super().__init__(panel, items_manager=items_manager, **ka)
         self.ui = ui
 
-        # The popup menus for the engine definition.
-        self.primary_activity_popup = None
-
         # Selection rule parser instance to process text.
         self.definition = Engine()
 

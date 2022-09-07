@@ -62,6 +62,8 @@ class ShowText(_ToplevelText):
     def dialog_ok(self):
         """Close the show record toplevel."""
         if self.ui.database is None:
+            # pylint message access-member-before-definition.
+            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None
@@ -84,6 +86,8 @@ class DeleteText(_ToplevelText):
             self.status.configure(
                 text="Cannot delete because not connected to a database"
             )
+            # pylint message access-member-before-definition.
+            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None
@@ -117,6 +121,8 @@ class EditText(_ToplevelText):
             self.status.configure(
                 text="Cannot update because not connected to a database"
             )
+            # pylint message access-member-before-definition.
+            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None

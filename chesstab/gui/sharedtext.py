@@ -144,6 +144,8 @@ class SharedTextScore:
 
     def create_inactive_popup(self):
         """Create popup menu for an inactive widget."""
+        # pylint message access-member-before-definition.
+        # Action deferred till later (whatever it turns out to be).
         assert self.inactive_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_inactive_events())
