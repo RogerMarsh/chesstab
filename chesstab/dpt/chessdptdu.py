@@ -89,9 +89,9 @@ def chess_dptdu(
     cdb = ChessDatabase(dbpath, allowcreate=True)
     importer = ChessDBrecordGameImport()
     cdb.open_database(files=file_records)
-    for pp in pgnpaths:
-        s = open(pp, "r", encoding="iso-8859-1")
-        importer.import_pgn(cdb, s, pp, reporter=reporter)
+    for pgnfile in pgnpaths:
+        s = open(pgnfile, "r", encoding="iso-8859-1")
+        importer.import_pgn(cdb, s, pgnfile, reporter=reporter)
         s.close()
     reporter("Finishing import: please wait.")
     reporter("", timestamp=False)
@@ -115,12 +115,12 @@ def chess_dptdu_chunks(
 ):
     """Open database, import games in fixed chunks and close database."""
 
-    def write_chunk(sample=None):
+    def write_chunk(pgnpath, sample=None):
         cdb.open_database(files=sample)
 
         # chess_dptdu_chunks does the reporting so do not pass reporter to
         # import_pgn, but the name of the source file is mandantory.
-        importer.import_pgn(cdb, StringIO("".join(games)), pp)
+        importer.import_pgn(cdb, StringIO("".join(games)), pgnpath)
 
         cdb.close_database_contexts()
         games[:] = []
@@ -132,18 +132,18 @@ def chess_dptdu_chunks(
     gamelines = []
     newgamestring = '[Event "'
     records = file_records
-    for pp in pgnpaths:
-        cdb._text_file_size = os.path.getsize(pp)
-        inp = open(pp, "r", encoding="iso-8859-1")
+    for pgnfile in pgnpaths:
+        cdb._text_file_size = os.path.getsize(pgnfile)
+        inp = open(pgnfile, "r", encoding="iso-8859-1")
         line = inp.readline()
-        reporter("Extracting games from " + pp)
+        reporter("Extracting games from " + pgnfile)
         count = 0
         while line:
             if line.startswith(newgamestring):
                 games.append("".join(gamelines))
                 gamelines = []
                 if len(games) >= CHUNKGAMES:
-                    write_chunk(sample=records)
+                    write_chunk(pgnfile, sample=records)
                     count += 1
                     reporter(
                         " ".join(
@@ -160,8 +160,8 @@ def chess_dptdu_chunks(
         inp.close()
         if gamelines:
             games.append("".join(gamelines))
-            write_chunk(sample=records)
-        reporter("Extraction from " + pp + " done")
+            write_chunk(pgnfile, sample=records)
+        reporter("Extraction from " + pgnfile + " done")
         reporter("", timestamp=False)
     reporter("Finishing import: please wait.")
     reporter("", timestamp=False)

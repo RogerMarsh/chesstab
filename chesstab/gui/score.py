@@ -1824,10 +1824,10 @@ class Score(SharedTextScore, BlankText):
             return None
         for oldtn in widget.tag_names(tag_range[0]):
             if oldtn.startswith(RAV_MOVES):
+                tag_range = widget.tag_nextrange(oldtn, "1.0")
                 break
         else:
             return None
-        tag_range = widget.tag_nextrange(oldtn, "1.0")
         if not tag_range:
             return move
         for tag_name in widget.tag_names(tag_range[0]):
@@ -1883,10 +1883,10 @@ class Score(SharedTextScore, BlankText):
             return None
         for oldtn in widget.tag_names(tag_range[0]):
             if oldtn.startswith(RAV_MOVES):
+                tag_range = widget.tag_prevrange(oldtn, tkinter.END)
                 break
         else:
             return None
-        tag_range = widget.tag_prevrange(oldtn, tkinter.END)
         if not tag_range:
             return self.current
         for tag_name in widget.tag_names(tag_range[0]):
@@ -1902,12 +1902,12 @@ class Score(SharedTextScore, BlankText):
             return None
         for oldtn in widget.tag_names(tag_range[0]):
             if oldtn.startswith(RAV_MOVES):
+                tag_range = widget.tag_nextrange(
+                    oldtn, "".join((str(tag_range[0]), "+1 chars"))
+                )
                 break
         else:
             return None
-        tag_range = widget.tag_nextrange(
-            oldtn, "".join((str(tag_range[0]), "+1 chars"))
-        )
         if not tag_range:
             return self.current
         for tag_name in widget.tag_names(tag_range[0]):
@@ -1923,10 +1923,10 @@ class Score(SharedTextScore, BlankText):
             return None
         for oldtn in widget.tag_names(oldtr[0]):
             if oldtn.startswith(RAV_MOVES):
+                tag_range = widget.tag_prevrange(oldtn, oldtr[0])
                 break
         else:
             return None
-        tag_range = widget.tag_prevrange(oldtn, oldtr[0])
         if not tag_range:
             if widget.tag_prevrange(NAVIGATE_MOVE, oldtr[0]):
                 return self.current
@@ -2260,12 +2260,12 @@ class Score(SharedTextScore, BlankText):
         tag_range = widget.tag_ranges(self.current)
         for tag_name in widget.tag_names(tag_range[0]):
             if tag_name.startswith(RAV_MOVES):
+                tag_range = widget.tag_nextrange(
+                    tag_name, "".join((str(tag_range[0]), "+1 chars"))
+                )
                 break
         else:
             return None
-        tag_range = widget.tag_nextrange(
-            tag_name, "".join((str(tag_range[0]), "+1 chars"))
-        )
         if not tag_range:
             return None
         return tag_range
@@ -2298,12 +2298,12 @@ class Score(SharedTextScore, BlankText):
             return None
         for oldtn in widget.tag_names(tag_range[0]):
             if oldtn.startswith(RAV_MOVES):
+                tag_range = widget.tag_nextrange(
+                    oldtn, "".join((str(tag_range[0]), "+1 chars"))
+                )
                 break
         else:
             return None
-        tag_range = widget.tag_nextrange(
-            oldtn, "".join((str(tag_range[0]), "+1 chars"))
-        )
         if not tag_range:
             return None
         for tag_name in widget.tag_names(tag_range[0]):
