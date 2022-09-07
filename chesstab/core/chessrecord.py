@@ -622,24 +622,6 @@ class ChessDBrecordGameUpdate(Record):
             ref += 1
         return keys
 
-    def load_instance(self, database, dbset, dbname, record):
-        """Extend to set source for game if necessary."""
-        super(ChessDBrecordGameUpdate, self).load_instance(
-            database, dbset, dbname, record
-        )
-
-        # Never called because attribute is not bound anywhere and no
-        # exceptions are seen ever.
-        # Until ..tools.chesstab-4-1-1_castling-option-correction written, and
-        # following code commented.  I assume the idea made sense once!
-        # Might as well let superclass method be used directly.
-        # if self.value.callbacktried:
-        #    pass
-        # elif self.value.callbacktried == None:
-        #    pass
-        # elif not self.value.callbacktried:
-        #    self.value.set_game_source(record[0])
-
 
 class ChessDBrecordGameImport(Record):
     """Chess game record customised for importing games from PGN files.
@@ -700,10 +682,6 @@ class ChessDBkeyPartial(KeyData):
 
 class ChessDBvaluePartial(CQLStatement, Value):
     """Partial position data."""
-
-    def __init__(self):
-        """Delegate."""
-        super(ChessDBvaluePartial, self).__init__()
 
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
@@ -926,10 +904,6 @@ class ChessDBkeyQuery(KeyData):
 class ChessDBvalueQuery(QueryStatement, Value):
     """Game selection rule data."""
 
-    def __init__(self):
-        """Delegate."""
-        super(ChessDBvalueQuery, self).__init__()
-
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
         try:
@@ -1011,10 +985,6 @@ class ChessDBkeyEngine(KeyData):
 
 class ChessDBvalueEngine(Engine, Value):
     """Game selection rule data."""
-
-    def __init__(self):
-        """Delegate."""
-        super(ChessDBvalueEngine, self).__init__()
 
     def pack(self):
         """Extend, return game selection rule record and index data."""

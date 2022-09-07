@@ -265,14 +265,6 @@ class GameTags(Game):
 
     """
 
-    def append_token_and_set_error(self, match):
-        """Delegate."""
-        super().append_token_and_set_error(match)
-
-    def append_start_tag(self, match):
-        """Delegate."""
-        super().append_start_tag(match)
-
     def append_piece_move(self, match):
         """Ignore piece move token and update board state with null.
 
@@ -333,14 +325,6 @@ class GameTags(Game):
         except IndexError:
             self.add_board_state_none(None)
 
-    def ignore_move_number(self, match):
-        """Delegate."""
-        super().ignore_move_number(match)
-
-    def ignore_dots(self, match):
-        """Delegate."""
-        super().ignore_dots(match)
-
     def append_token(self, match):
         """Ignore valid non-tag token which does not change board state.
 
@@ -394,10 +378,6 @@ class GameTags(Game):
         self.set_board_state(None)
         self._text.append(match.group())
         return True
-
-    def ignore_escape(self, match):
-        """Delegate."""
-        super().ignore_escape(match)
 
     def append_other_or_disambiguation_pgn(self, match):
         """Ignore token.
@@ -599,10 +579,6 @@ class GameUpdateEstimate(GameUpdate):
 
     start_char = 0
     end_char = 0
-
-    def __init__(self):
-        """Delegate."""
-        super().__init__()
 
     def append_start_tag(self, match):
         """Set self.start_char if no PGN Tags found and delegate."""

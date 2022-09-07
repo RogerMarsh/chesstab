@@ -268,7 +268,8 @@ class BlankText(ExceptionHandler):
 
         """
         # pylint message access-member-before-definition.
-        # Initialize primary_activity_popup moved to blanktext from enginetext module.
+        # Initialize primary_activity_popup moved to blanktext from
+        # enginetext module.
         assert self.primary_activity_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_primary_activity_events())
