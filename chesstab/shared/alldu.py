@@ -84,14 +84,12 @@ class Alldu:
 
                 # Override the value in the superclass.
                 deferred_update_points = frozenset(
-                    [
-                        i
-                        for i in range(
-                            65536 // f - 1,
-                            SegmentSize.db_segment_size,
-                            65536 // f,
-                        )
-                    ]
+                    i
+                    for i in range(
+                        65536 // f - 1,
+                        SegmentSize.db_segment_size,
+                        65536 // f,
+                    )
                 )
 
                 break

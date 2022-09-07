@@ -265,7 +265,7 @@ class _CQLDisplay(ExceptionHandler, Display):
             )  # .match)
 
     def generate_popup_navigation_maps(self):
-        navigation_map = {k: v for k, v in self.get_navigation_events()}
+        navigation_map = dict(self.get_navigation_events())
         local_map = {}
         return navigation_map, local_map
 

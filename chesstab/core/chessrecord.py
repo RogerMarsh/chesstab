@@ -879,7 +879,7 @@ class ChessDBvalueAnalysis(Analysis, Value):
         v = super().pack()
         index = v[1]
         index[VARIATION_FIELD_DEF] = [self.position]
-        index[ENGINE_FIELD_DEF] = [k for k in self.scale]
+        index[ENGINE_FIELD_DEF] = list(self.scale)
         return v
 
 

@@ -207,7 +207,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
         return self.pgn.tags.get(TAG_OPENING, "?")
 
     def generate_popup_navigation_maps(self):
-        navigation_map = {k: v for k, v in self.get_navigation_events()}
+        navigation_map = dict(self.get_navigation_events())
         local_map = {
             EventSpec.scoresheet_to_analysis: self.analysis_current_item,
         }

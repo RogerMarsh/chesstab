@@ -255,16 +255,15 @@ class FSNode:
     INITIAL_RANK_LIMITS = RANK_NAMES[-1], RANK_NAMES[0]
     INITIAL_FILE_LIMITS = FILE_NAMES[-1], FILE_NAMES[0]
 
-    ROTATE_90 = {
-        x: y
-        for x, y in zip(
+    ROTATE_90 = dict(
+        zip(
             RANK_NAMES + FILE_NAMES,
             (
                 "".join(z for z in reversed(FILE_NAMES))
                 + "".join(z for z in RANK_NAMES)
             ),
         )
-    }
+    )
 
     # This comprehension construct did not work at Python3.6.1 at this place.
     # ROTATE_180 = {x:ROTATE_90[ROTATE_90[x]] for x in RANK_NAMES + FILE_NAMES}
@@ -275,14 +274,12 @@ class FSNode:
     ROTATE_270 = {}
     for x in RANK_NAMES + FILE_NAMES:
         ROTATE_270[x] = ROTATE_90[ROTATE_180[x]]
-    REFLECT_HORIZONTAL = {
-        x: y
-        for x, y in zip(RANK_NAMES, "".join(z for z in reversed(RANK_NAMES)))
-    }
-    REFLECT_VERTICAL = {
-        x: y
-        for x, y in zip(FILE_NAMES, "".join(z for z in reversed(FILE_NAMES)))
-    }
+    REFLECT_HORIZONTAL = dict(
+        zip(RANK_NAMES, "".join(z for z in reversed(RANK_NAMES)))
+    )
+    REFLECT_VERTICAL = dict(
+        zip(FILE_NAMES, "".join(z for z in reversed(FILE_NAMES)))
+    )
 
     # These rotate-reflect combinations are not defined by CQL but are used to
     # generate the diagonal reflections needed to complete the flip transform.
@@ -294,9 +291,8 @@ class FSNode:
         _ROTATE_90_REFLECT_VERTICAL[x] = REFLECT_VERTICAL.get(y, y)
     del x, y
 
-    FLIP_COLOR_PIECE = {
-        x: y
-        for x, y in zip(
+    FLIP_COLOR_PIECE = dict(
+        zip(
             PIECE_NAMES,
             "".join(
                 (
@@ -308,7 +304,7 @@ class FSNode:
                 )
             ),
         )
-    }
+    )
     FLIP_COLOR_TOMOVE = {
         Token.WTM.name: Token.BTM.name,
         Token.BTM.name: Token.WTM.name,
@@ -566,7 +562,7 @@ class FSNode:
         for j in range(sourcefiles.index(filelow)):
             sourcefiles.append(sourcefiles.pop(0))
         for j in range(i):
-            fileshifts.append({x: y for x, y in zip(sourcefiles, FILE_NAMES)})
+            fileshifts.append(dict(zip(sourcefiles, FILE_NAMES)))
             sourcefiles.insert(0, sourcefiles.pop())
         sourceranks = list(RANK_NAMES)
         rankrange = (
@@ -576,7 +572,7 @@ class FSNode:
             sourceranks.append(sourceranks.pop(0))
         transforms = []
         for j in range(rankrange):
-            rankshifts = {x: y for x, y in zip(sourceranks, RANK_NAMES)}
+            rankshifts = dict(zip(sourceranks, RANK_NAMES))
             for fs in fileshifts:
                 if fs[filelow] != filelow or rankshifts[ranklow] != ranklow:
                     transforms.extend(
@@ -635,9 +631,9 @@ class FSNode:
         for j in range(source.index(limits[0])):
             source.append(source.pop(0))
         for j in range(i):
-            shifts.append({x: y for x, y in zip(source, shiftsource)})
+            shifts.append(dict(zip(source, shiftsource)))
             source.insert(0, source.pop())
-        static = {x: y for x, y in zip(staticsource, staticsource)}
+        static = dict(zip(staticsource, staticsource))
         transforms = []
         for fs in shifts:
             if fs[limits[0]] != limits[0]:
