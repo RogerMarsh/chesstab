@@ -131,7 +131,6 @@ class PositionScore(ExceptionHandler):
         a Map event occurs.
 
         """
-        pass
 
     def _clear_tag_maps(self):
         """Clear mappings of tags and positions.
@@ -461,11 +460,9 @@ class PositionScore(ExceptionHandler):
         if not (prev_match_prevcontext or prev_match_currcontext):
             # token is move to reach position and different from context
             widget.tag_add(VARIATION_TAG, start, end)
-            pass
         if not (curr_match_currcontext or next_match_nextcontext):
             # token is move out of position and  different from context
             widget.tag_add(ALTERNATIVE_MOVE_TAG, start, end)
-            pass
         tr = widget.tag_prevrange(self._vartag, start)
         if not tr:
             varstack = list(self.varstack)

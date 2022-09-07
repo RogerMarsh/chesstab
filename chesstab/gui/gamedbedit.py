@@ -132,7 +132,6 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         Now present for compatibility with Repertoires.
 
         """
-        pass
 
     def put(self):
         """Mark partial position records for recalculation and return key."""

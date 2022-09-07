@@ -489,7 +489,6 @@ class Chess(ExceptionHandler):
             # PERL has same problem as found when looked at www
             # print 'menu changed', menu.entrycget('active', 'label')
             # print menu, event, 'changed', menu.entrycget('active', 'label')
-            pass
 
         return menu_changed
 
@@ -551,10 +550,8 @@ class Chess(ExceptionHandler):
             return
 
         if os.path.exists(chessfolder):
-            if len(
-                modulequery.modules_for_existing_databases(
-                    chessfolder, FileSpec()
-                )
+            if modulequery.modules_for_existing_databases(
+                chessfolder, FileSpec()
             ):
                 tkinter.messagebox.showinfo(
                     parent=self.get_toplevel(),

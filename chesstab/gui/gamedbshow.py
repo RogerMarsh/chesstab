@@ -105,4 +105,3 @@ class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
         Now present for compatibility with Repertoires.
 
         """
-        pass

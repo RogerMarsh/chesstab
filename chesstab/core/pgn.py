@@ -606,7 +606,7 @@ class GameUpdateEstimate(GameUpdate):
 
     def append_start_tag(self, match):
         """Set self.start_char if no PGN Tags found and delegate."""
-        if not len(self._tags):
+        if not self._tags:
             self.start_char = match.start()
         super().append_start_tag(match)
 
@@ -622,7 +622,7 @@ class GameUpdateEstimate(GameUpdate):
 
     def append_bad_tag_and_set_error(self, match):
         """Set self.start_char if no PGN Tags found and delegate."""
-        if not len(self._tags):
+        if not self._tags:
             self.start_char = match.start()
         super().append_bad_tag_and_set_error(match)
 

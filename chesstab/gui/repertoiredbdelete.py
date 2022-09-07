@@ -98,4 +98,3 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
         Default value of object_ is object attribute from DataDelete class.
 
         """
-        pass

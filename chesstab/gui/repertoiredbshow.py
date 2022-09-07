@@ -98,4 +98,3 @@ class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
         Default value of object_ is object attribute from DataShow class.
 
         """
-        pass

@@ -108,7 +108,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
             repr(self.newview.get_name_cql_statement_text())
         )
         title = self.get_title_for_object()
-        if not len(self.newobject.value.get_name_text()):
+        if not self.newobject.value.get_name_text():
             if not self.newobject.value.cql_error:
                 tkinter.messagebox.showerror(
                     parent=self.parent,

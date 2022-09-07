@@ -727,7 +727,6 @@ class GameEdit(Game):
 
         Set bindings for NO_EDITABLE_TAGS state.
         """
-        pass
 
     def bind_for_current_without_tags(self, switch=True):
         """Set bindings for CURRENT_NO_TAGS state."""

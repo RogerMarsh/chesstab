@@ -104,7 +104,6 @@ class GameDbDelete(ExceptionHandler, DeletePGN, DataDelete):
         Now present for compatibility with Repertoires.
 
         """
-        pass
 
     def delete(self):
         """Mark partial position records for recalculation and return key."""

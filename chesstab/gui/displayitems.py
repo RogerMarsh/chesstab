@@ -53,7 +53,7 @@ class DisplayItems:
         """Add item widget to GUI."""
         stack = self.stack
         order = self.order
-        if len(order):
+        if order:
             order.insert(order.index(stack[-1]) + 1, item)
             stack.insert(0, item)
         else:
@@ -122,7 +122,7 @@ class DisplayItems:
     def any_items_displayed_of_type(self, class_=None):
         """Return True if instances of class_ displayed, default any class."""
         if class_ is None:
-            return bool(len(self.stack))
+            return bool(self.stack)
         for i in self.stack:
             if isinstance(i, class_):
                 return True

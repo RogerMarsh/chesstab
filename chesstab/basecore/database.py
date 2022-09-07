@@ -158,11 +158,9 @@ class Database:
         It is assumed that the Database Services object exists.
 
         """
-        pass
 
     def adjust_database_for_retry_import(self, files):
         """Database engine specific actions done before re-trying an import."""
-        pass
 
     def mark_partial_positions_to_be_recalculated(self):
         """File all partial positions to be recalculated."""

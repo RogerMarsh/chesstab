@@ -185,7 +185,7 @@ class _CQLDisplay(ExceptionHandler, Display):
         updater.value.process_statement(self.get_name_cql_statement_text())
         title = "Insert ChessQL Statement"
         tname = title.replace("Insert ", "").replace("S", "s")
-        if not len(updater.value.get_name_text()):
+        if not updater.value.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title=title,
@@ -749,7 +749,7 @@ class CQLDisplayEdit(EditText, CQLDisplayInsert):
         updater.value.process_statement(self.get_name_cql_statement_text())
         title = "Edit ChessQL Statement"
         tname = title.replace("Edit ", "").replace("S", "s")
-        if not len(updater.value.get_name_text()):
+        if not updater.value.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title=title,

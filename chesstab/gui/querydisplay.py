@@ -189,7 +189,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         uvpqs = updater.value.process_query_statement(
             self.get_name_query_statement_text()
         )
-        if not len(updater.value.get_name_text()):
+        if not updater.value.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title="Insert Game Selection Rule",
@@ -597,7 +597,7 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
         uvpqs = updater.value.process_query_statement(
             self.get_name_query_statement_text()
         )
-        if not len(updater.value.get_name_text()):
+        if not updater.value.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title="Edit Game Selection Rule",

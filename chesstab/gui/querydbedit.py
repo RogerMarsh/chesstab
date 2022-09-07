@@ -112,7 +112,7 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
         self.newobject.value.load(
             repr(self.newview.get_name_query_statement_text())
         )
-        if not len(self.newobject.value.get_name_text()):
+        if not self.newobject.value.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.parent,
                 title=title,

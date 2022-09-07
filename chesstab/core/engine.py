@@ -49,7 +49,7 @@ class Engine:
             self._run_engine_string = text["_run_engine_string"]
             return True
         definition = [t.strip() for t in text.split(NAME_DELIMITER)]
-        if not len(definition[0]) or not len(definition[-1]):
+        if not definition[0] or not definition[-1]:
             return False
         if len(definition) > 2:
             return False
