@@ -88,18 +88,22 @@ class _QueryDisplay(ExceptionHandler, Display):
 
     @property
     def ui_displayed_items(self):
+        """Return manager of widgets displaying a selection rule record."""
         return self.ui.selection_items
 
     @property
     def ui_configure_item_list_grid(self):
+        """Return function to configure selection rule grid to fit text."""
         return self.ui.configure_selection_grid
 
     @property
     def ui_set_item_name(self):
+        """Return function to set status bar text to name of active query."""
         return self.ui._set_selection_name
 
     @property
     def ui_set_find_item_games(self):
+        """Return function to set status bar text."""
         return self.ui._set_find_selection_name_games
 
     def get_navigation_events(self):
@@ -310,6 +314,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         )
 
     def generate_popup_navigation_maps(self):
+        """Return genenal and current widget navigation binding maps."""
         navigation_map = dict(self.get_navigation_events())
         local_map = {}
         return navigation_map, local_map

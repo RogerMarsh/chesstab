@@ -102,6 +102,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
     # to displaypgn.ShowPGN class.
     @property
     def ui_displayed_items(self):
+        """Return manager of widgets displaying a repertoire record."""
         return self.ui.repertoire_items
 
     # Defined so cycle_item and give_focus_to_widget methods can be shared by
@@ -109,6 +110,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
     # classes.
     @property
     def ui_configure_item_list_grid(self):
+        """Return function to configure repertoire grid to fit text."""
         return self.ui.configure_repertoire_grid
 
     # ui_base_table and mark_partial_positions_to_be_recalculated defined
@@ -118,14 +120,16 @@ class _RepertoireDisplay(ExceptionHandler, Display):
 
     @property
     def ui_base_table(self):
+        """Return the User Interface TagRosterGrid object."""
         return self.ui.base_repertoires
 
     @property
     def ui_items_in_toplevels(self):
+        """Return the User Interface objects in Toplevels."""
         return self.ui.games_and_repertoires_in_toplevels
 
     def mark_partial_positions_to_be_recalculated(self, datasource=None):
-        pass
+        """Do nothing.  Exists for compatibility with game display."""
 
     def get_navigation_events(self):
         """Return event description tuple for navigation from repertoire."""
@@ -207,6 +211,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
         return self.pgn.tags.get(TAG_OPENING, "?")
 
     def generate_popup_navigation_maps(self):
+        """Return genenal and current widget navigation binding maps."""
         navigation_map = dict(self.get_navigation_events())
         local_map = {
             EventSpec.scoresheet_to_analysis: self.analysis_current_item,

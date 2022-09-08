@@ -88,18 +88,22 @@ class _CQLDisplay(ExceptionHandler, Display):
 
     @property
     def ui_displayed_items(self):
+        """Return manager of widgets displaying a partial position record."""
         return self.ui.partial_items
 
     @property
     def ui_configure_item_list_grid(self):
+        """Return function to configure partial position grid to fit text."""
         return self.ui.configure_partial_grid
 
     @property
     def ui_set_item_name(self):
+        """Return function to set status bar text to name of active query."""
         return self.ui._set_partial_name
 
     @property
     def ui_set_find_item_games(self):
+        """Return function to set status bar text."""
         return self.ui._set_find_partial_name_games
 
     def get_navigation_events(self):
@@ -265,11 +269,13 @@ class _CQLDisplay(ExceptionHandler, Display):
             )  # .match)
 
     def generate_popup_navigation_maps(self):
+        """Return genenal and current widget navigation binding maps."""
         navigation_map = dict(self.get_navigation_events())
         local_map = {}
         return navigation_map, local_map
 
     def create_primary_activity_popup(self):
+        """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
         self.add_close_item_entry_to_popup(popup)
         return popup

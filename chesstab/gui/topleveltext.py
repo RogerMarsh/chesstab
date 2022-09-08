@@ -40,6 +40,7 @@ class _ToplevelText:
     """
 
     def initialize(self):
+        """Initialize the widgets and event bindings in Toplevel widget."""
         oldview = self.oldview
         self.ui_items_in_toplevels.add(oldview)
         self.parent.wm_title(self.get_title_for_object(self.object))
@@ -47,6 +48,7 @@ class _ToplevelText:
         self.set_item(oldview, self.object)
 
     def initialize_item_bindings(self, item):
+        """Initialize keypress and buttonpress bindings for item."""
         self.bind_buttons_to_widget(item.score)
         # item.set_score_pointer_to_score_bindings(False)
 

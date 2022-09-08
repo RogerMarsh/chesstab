@@ -219,16 +219,14 @@ class ChessDatabaseDeferred:
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessdptduError("DPT description invalid")
+                raise ChessdptduError("DPT description invalid")
 
         try:
             super().__init__(ddnames, databasefolder, **kargs)
         except ChessdptduError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessdptduError("DPT description invalid")
+            raise ChessdptduError("DPT description invalid")
 
         # Retain import estimates for increase size by button actions
         self._import_estimates = None

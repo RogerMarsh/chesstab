@@ -47,16 +47,14 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessDatabaseError("sqlite3 description invalid")
+                raise ChessDatabaseError("sqlite3 description invalid")
 
         try:
             super().__init__(names, sqlite3file, **kargs)
         except ChessDatabaseError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessDatabaseError("sqlite3 description invalid")
+            raise ChessDatabaseError("sqlite3 description invalid")
 
     def delete_database(self):
         """Close and delete the open chess database."""

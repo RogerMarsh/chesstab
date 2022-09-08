@@ -76,8 +76,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessdptError("DPT description invalid")
+                raise ChessdptError("DPT description invalid")
 
         try:
             super(ChessDatabase, self).__init__(
@@ -86,8 +85,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         except ChessdptError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessdptError("DPT description invalid")
+            raise ChessdptError("DPT description invalid")
 
         self._broken_sizes = dict()
 

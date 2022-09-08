@@ -82,6 +82,7 @@ class _ToplevelPGN:
     """
 
     def initialize_item_bindings(self, item):
+        """Initialize keypress and buttonpress bindings for item."""
         self.bind_buttons_to_widget(item.score)
         self.bind_buttons_to_widget(item.analysis.score)
         item.set_score_pointer_to_score_bindings(False)

@@ -45,16 +45,14 @@ class ChessDatabase(database.Database, vedis_database.Database):
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessDatabaseError("vedis description invalid")
+                raise ChessDatabaseError("vedis description invalid")
 
         try:
             super().__init__(names, nosqlfile, **kargs)
         except ChessDatabaseError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessDatabaseError("vedis description invalid")
+            raise ChessDatabaseError("vedis description invalid")
 
     def delete_database(self):
         """Close and delete the open chess database."""

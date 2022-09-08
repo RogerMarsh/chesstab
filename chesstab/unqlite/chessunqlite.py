@@ -45,16 +45,14 @@ class ChessDatabase(database.Database, unqlite_database.Database):
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessDatabaseError("unqlite description invalid")
+                raise ChessDatabaseError("unqlite description invalid")
 
         try:
             super().__init__(names, nosqlfile, **kargs)
         except ChessDatabaseError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessDatabaseError("unqlite description invalid")
+            raise ChessDatabaseError("unqlite description invalid")
 
     def delete_database(self):
         """Close and delete the open chess database."""

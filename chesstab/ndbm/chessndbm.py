@@ -45,16 +45,14 @@ class ChessDatabase(database.Database, ndbm_database.Database):
             except Exception:
                 if __name__ == "__main__":
                     raise
-                else:
-                    raise ChessDatabaseError("dbm.ndbm description invalid")
+                raise ChessDatabaseError("dbm.ndbm description invalid")
 
         try:
             super().__init__(names, nosqlfile, **kargs)
         except ChessDatabaseError:
             if __name__ == "__main__":
                 raise
-            else:
-                raise ChessDatabaseError("dbm.ndbm description invalid")
+            raise ChessDatabaseError("dbm.ndbm description invalid")
 
     def delete_database(self):
         """Close and delete the open chess database."""

@@ -415,6 +415,7 @@ class _ColourScheme(ExceptionHandler):
         return olddefaults, newdefaults
 
     def get_combination(self, option, value):
+        """Return numeric code for move and non-move font combination."""
         tvc = self.tags_variations_comments_font[option] == value
         m = self.moves_played_in_game_font[option] == value
         if tvc:
