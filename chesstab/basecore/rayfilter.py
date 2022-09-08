@@ -184,7 +184,7 @@ class RayFilter:
         self.recordset_cache = {}
         self.ray_games = {}
 
-    def prune_end_squares(self, database):
+    def prune_end_squares(self, database, finder):
         """Remove ray-end squares with no game references."""
         anypiece = (
             constants.ANY_WHITE_PIECE_NAME + constants.ANY_BLACK_PIECE_NAME
@@ -437,7 +437,7 @@ class RayFilter:
                         recordset_cache[i] = w.node.result.answer
                         squareset |= recordset_cache[i]
                 if linegames:
-                    squareset = linegames.pop() & self.ray_games[index]
+                    squareset = linegames.pop() & self.ray_games[start, final]
                     for lg in linegames:
                         squareset &= lg
                     raygames.append(squareset)
@@ -495,6 +495,8 @@ def piece_square_to_index(designator_set, index_prefix):
     conversion.
 
     """
+    file_names = constants.FILE_NAMES
+    rank_names = constants.RANK_NAMES
     ecs = piecedesignator.PieceDesignator._expand_composite_square
     ds = set()
     for ps in designator_set:
@@ -505,10 +507,10 @@ def piece_square_to_index(designator_set, index_prefix):
                 {
                     index_prefix + s + ps
                     for s in ecs(
-                        FILE_NAMES[0],
-                        FILE_NAMES[-1],
-                        RANK_NAMES[0],
-                        RANK_NAMES[-1],
+                        file_names[0],
+                        file_names[-1],
+                        rank_names[0],
+                        rank_names[-1],
                     )
                 }
             )

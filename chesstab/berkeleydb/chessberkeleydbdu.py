@@ -14,7 +14,7 @@ class ChessberkeleydbduError(Exception):
     """Exception class for chessberkeleydbdu module."""
 
 
-def chess_dbdu():
+def chess_dbdu(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 

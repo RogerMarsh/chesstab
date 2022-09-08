@@ -38,7 +38,7 @@ black piece or empty square matches.
 
 """
 
-from chessql.core.statement import Statement
+from chessql.core.statement import Statement, ErrorInformation
 
 # from chessql.core.constants import PIECE_DESIGNATOR_FILTER
 # from chessql.core.piecedesignator import PieceDesignator

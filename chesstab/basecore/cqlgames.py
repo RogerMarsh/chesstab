@@ -507,7 +507,7 @@ class ChessQLGames:
                 )
             )
         rf = RayFilter(filter_, movenumber, variation)
-        rf.prune_end_squares(self.dbhome)
+        rf.prune_end_squares(self.dbhome, self.cqlfinder)
         rf.find_games_for_end_squares(self.cqlfinder)
         rf.find_games_for_middle_squares(self.cqlfinder)
 

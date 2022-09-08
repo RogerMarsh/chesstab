@@ -485,7 +485,7 @@ class _CQLDisplay(ExceptionHandler, Display):
                     (
                         "These filters are not implemented and ",
                         "are ignored:\n\n",
-                        "\n".join(sorted(grid.datasource.not_implemented)),
+                        "\n".join(sorted(p.datasource.not_implemented)),
                     )
                 ),
             )

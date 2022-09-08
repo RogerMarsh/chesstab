@@ -86,7 +86,7 @@ class ChessDBkeyGame(KeyData):
         """Return (self != other).  Attributes are compared explicitly."""
         try:
             return self.recno != other.recno
-        except exception:
+        except Exception:
             return True
 
 

@@ -28,6 +28,7 @@ import tkinter
 
 from .cqltext import CQLText
 from .eventspec import EventSpec
+from ..core import exporters
 
 
 class CQL(CQLText):

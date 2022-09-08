@@ -8,6 +8,8 @@ ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
 Costeff).
 
 """
+import tkinter
+
 from solentware_grid.gui.datadelete import DataDelete
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
