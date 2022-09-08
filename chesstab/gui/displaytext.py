@@ -247,7 +247,7 @@ class ShowText:
             # on database.
             # instance.newrecord is edited record including index stuff.
             key = None
-            for e, k in enumerate(grid.keys):
+            for k in grid.keys:
                 if instance.key.recno != k[0]:
                     key = k
                     break

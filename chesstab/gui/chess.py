@@ -1606,7 +1606,7 @@ class Chess(ExceptionHandler):
                 oaiwb = self.opendatabase.open_after_import_without_backups
                 try:
                     action = oaiwb(files=(GAMES_FILE_DEF,))
-                except self.opendatabase.__class__.SegmentSizeError as exc:
+                except self.opendatabase.__class__.SegmentSizeError:
                     action = oaiwb(files=(GAMES_FILE_DEF,))
                 if action is None:
                     # Database full

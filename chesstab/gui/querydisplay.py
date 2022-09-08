@@ -334,13 +334,11 @@ class _QueryDisplay(ExceptionHandler, Display):
         if instance.newrecord:
 
             # Editing an existing record.
-            value = instance.newrecord.value
             key = instance.newrecord.key
 
         else:
 
             # Inserting a new record.
-            value = instance.value
             key = instance.key
 
         if self.sourceobject is not None:

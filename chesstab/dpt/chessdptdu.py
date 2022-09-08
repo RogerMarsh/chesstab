@@ -127,7 +127,6 @@ def chess_dptdu_chunks(
 
     cdb = ChessDatabase(dbpath, allowcreate=True)
     importer = ChessDBrecordGameImport()
-    chunks = []
     games = []
     gamelines = []
     newgamestring = '[Event "'
@@ -486,12 +485,7 @@ class ChessDatabaseDeferred:
             bytes_per_game,
             positions_per_game,
             pieces_per_game,
-            errorcount,
-            bytes_per_error,
-            estimate,
-            gamesamplecount,
-            errorsamplecount,
-        ) = self._import_estimates[:9]
+        ) = self._import_estimates[:4]
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         d_count = (gamecount * (positions_per_game + pieces_per_game)) // (
             POSITIONS_PER_GAME * (1 + PIECES_PER_POSITION)

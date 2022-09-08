@@ -1719,6 +1719,7 @@ class GameEdit(Game):
             token, separator=separator
         )
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        del tokentag
         widget = self.score
         for tag in tagset:
             widget.tag_add(tag, start, end)
@@ -2554,7 +2555,6 @@ class GameEdit(Game):
         widget = self.score
         current = self.current
         choice = None
-        ins = None
         if self.current is None:
             # Insert RAV after first move of game
             prior = None
@@ -2700,7 +2700,6 @@ class GameEdit(Game):
         ):
             widget.tag_add(tag, start, sepend)
         widget.mark_set(tokenmark, end)
-        s, e = start, sepend
         self.previousmovetags[positiontag] = (current, vartag, variation)
         self.nextmovetags[current][1].append(positiontag)
 
@@ -3005,7 +3004,6 @@ class GameEdit(Game):
         ):
             widget.tag_add(tag, start, sepend)
         widget.mark_set(tokenmark, end)
-        s, e = start, sepend
         self.previousmovetags[positiontag] = (
             main_line_move,
             vartag,
@@ -3558,7 +3556,6 @@ class GameEdit(Game):
             # removed from EDIT_MOVE tag and placed on INSERT_RAV tag when
             # starting insert of next move.
             start, end = self.score.tag_ranges(self.current)
-            vartag = self.get_variation_tag_of_index(start)
             widget.tag_add(EDIT_MOVE, start, end)
             widget.tag_remove(MOVE_EDITED, start, end)
             if bishopmove:

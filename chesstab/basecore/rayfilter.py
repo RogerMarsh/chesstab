@@ -351,9 +351,9 @@ class RayFilter:
         anypiece = anywhitepiece + anyblackpiece
         nopiece = constants.EMPTY_SQUARE_NAME
         record_selector = finder.db.record_selector
-        internal_ray_length = len(self.raycomponents) - 2
-        empty_square_games = self.empty_square_games
-        piece_square_games = self.piece_square_games
+        # internal_ray_length = len(self.raycomponents) - 2
+        # empty_square_games = self.empty_square_games
+        # piece_square_games = self.piece_square_games
         recordset_cache = self.recordset_cache
         raycomponents = self.raycomponents
         internal_raycomponents = raycomponents[1:-1]

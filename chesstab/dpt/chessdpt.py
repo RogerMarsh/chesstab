@@ -184,7 +184,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
     def delete_database(self):
         """Close and delete the open chess database."""
         names = [self.sysfolder]
-        for k, v in self.table.items():
+        for v in self.table.values():
             names.append(v.file)
         return super().delete_database(names)
 
@@ -229,7 +229,9 @@ class ChessDatabase(database.Database, dpt_database.Database):
         # At least one file is not in Normal state after Import.
         # Check the files that had imports applied
         for dbn in file_sizes_for_import:
-            status = file_sizes_for_import[dbn]["FISTAT"][0]
+            # pylint message unused variable.
+            # Document what seemed to matter at some point.
+            # status = file_sizes_for_import[dbn]["FISTAT"][0]
             flags = file_sizes_for_import[dbn]["FIFLAGS"]
             if not (
                 (flags & FIFLAGS_FULL_TABLEB) or (flags & FIFLAGS_FULL_TABLED)

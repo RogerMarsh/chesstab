@@ -470,9 +470,6 @@ class ChessQLGames:
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
                     continue
-                e = self._games_matching_filter(
-                    n, initialgames, movenumber, variation
-                )
                 games |= self._games_matching_filter(
                     n, initialgames, movenumber, variation
                 )
@@ -535,7 +532,7 @@ class ChessQLGames:
         )
         w.lex()
         w.parse()
-        v = w.validate(self.cqlfinder.db, self.cqlfinder.dbset)
+        w.validate(self.cqlfinder.db, self.cqlfinder.dbset)
         w.evaluate(self.cqlfinder)
         return w.get_node_result_answer()
 

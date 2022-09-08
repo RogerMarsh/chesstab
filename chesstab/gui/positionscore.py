@@ -484,7 +484,6 @@ class PositionScore(ExceptionHandler):
 
         """
         self._set_square_piece_map(position)
-        widget = self.score
         self.varstack.append(self._vartag)
         self._vartag = self.get_variation_tag_names()
         self.insert_token_into_text(token, SPACE_SEP)
@@ -499,7 +498,7 @@ class PositionScore(ExceptionHandler):
 
         """
         self._set_square_piece_map(position)
-        start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+        self.insert_token_into_text(token, SPACE_SEP)
         self._vartag = self.varstack.pop()
         self._force_movenumber = True
 

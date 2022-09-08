@@ -564,6 +564,9 @@ class FSNode:
         for j in range(i):
             fileshifts.append(dict(zip(sourcefiles, FILE_NAMES)))
             sourcefiles.insert(0, sourcefiles.pop())
+        # pylint message unused-variable.
+        # Find a way of doing without j in the two preceding loops.
+        del j
         sourceranks = list(RANK_NAMES)
         rankrange = (
             sourceranks.index(ranklow) + 8 - sourceranks.index(rankhigh)
@@ -633,6 +636,9 @@ class FSNode:
         for j in range(i):
             shifts.append(dict(zip(source, shiftsource)))
             source.insert(0, source.pop())
+        # pylint message unused-variable.
+        # Find a way of doing without j in the two preceding loops.
+        del j
         static = dict(zip(staticsource, staticsource))
         transforms = []
         for fs in shifts:

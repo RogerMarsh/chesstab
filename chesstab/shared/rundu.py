@@ -54,7 +54,7 @@ def rundu(engine_module_name, database_module_name):
 
         del resource
     try:
-        cdu = engine_module.ChessDeferredUpdate(
+        engine_module.ChessDeferredUpdate(
             deferred_update_method=database_module.chess_database_du,
             database_class=database_module.ChessDatabase,
         )

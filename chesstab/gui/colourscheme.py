@@ -131,9 +131,9 @@ class _ColourScheme(ExceptionHandler):
         for i, b in enumerate(buttons):
             button = tkinter.Button(
                 master=self.buttons_frame,
-                text=buttons[i][0],
-                underline=buttons[i][3],
-                command=self.try_command(buttons[i][4], self.buttons_frame),
+                text=b[0],
+                underline=b[3],
+                command=self.try_command(b[4], self.buttons_frame),
             )
             if buttonrow:
                 self.buttons_frame.grid_columnconfigure(i * 2, weight=1)
@@ -150,7 +150,6 @@ class _ColourScheme(ExceptionHandler):
         """Create colour selector widgets."""
         colour_frame = tkinter.Frame(master=self.chooser)
         colour_frame.pack(fill=tkinter.X)
-        gs = self.game.score
         gb = self.game.board
         for row, label, color, setter in (
             (0, "Light squares", gb.litecolor, self.set_lite_square_bgcolour),

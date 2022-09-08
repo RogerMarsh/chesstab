@@ -121,6 +121,9 @@ class Analysis:
             new_text.append(str(engine_name).join(_EOL_COMMENT_CONTEXT))
 
             depth, multipv = [str(s) for s in scale[engine_name]]
+            # pylint message unused-variable.
+            # multipv documents what the second element is..
+            del multipv
             lines = [
                 "".join(
                     (
