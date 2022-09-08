@@ -632,10 +632,10 @@ class Score(SharedTextScore, BlankText):
                 square: piece
                 for piece, square in self.collected_game._initial_position[0]
             }
-        except TypeError:
+        except TypeError as error:
             raise ScoreNoGameException(
                 "No initial position: probably text has no PGN elements"
-            )
+            ) from error
 
     def fen_tag_tuple_square_piece_map(self):
         """Return FEN tag as tuple with pieces in square to piece mapping."""
@@ -1509,8 +1509,10 @@ class Score(SharedTextScore, BlankText):
         try:
             for piece, square in game._initial_position[0]:
                 spm[square] = piece
-        except TypeError:
-            raise ScoreMapToBoardException("Unable to map text to board")
+        except TypeError as error:
+            raise ScoreMapToBoardException(
+                "Unable to map text to board"
+            ) from error
         assert len(game._text) == len(game._position_deltas)
         tags_displayed = self.map_tags_display_order()
         for text, position in zip(game._text, game._position_deltas):

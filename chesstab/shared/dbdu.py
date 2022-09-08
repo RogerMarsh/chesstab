@@ -75,17 +75,17 @@ class Dbdu(DptCompatdu):
 
         try:
             names = get_filespec(**kargs)
-        except Exception:
+        except Exception as error:
             if __name__ == "__main__":
                 raise
-            raise exception_class("DB description invalid")
+            raise exception_class("DB description invalid") from error
 
         try:
             super().__init__(names, databasefile, environment)
-        except Exception:
+        except Exception as error:
             if __name__ == "__main__":
                 raise
-            raise exception_class("DB description invalid")
+            raise exception_class("DB description invalid") from error
 
     def open_context_prepare_import(self):
         """Return True.

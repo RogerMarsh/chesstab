@@ -216,17 +216,17 @@ class ChessDatabaseDeferred:
                 for dd in ddnames:
                     if FILEDESC in ddnames[dd]:
                         del ddnames[dd][FILEDESC]
-            except Exception:
+            except Exception as error:
                 if __name__ == "__main__":
                     raise
-                raise ChessdptduError("DPT description invalid")
+                raise ChessdptduError("DPT description invalid") from error
 
         try:
             super().__init__(ddnames, databasefolder, **kargs)
-        except ChessdptduError:
+        except ChessdptduError as error:
             if __name__ == "__main__":
                 raise
-            raise ChessdptduError("DPT description invalid")
+            raise ChessdptduError("DPT description invalid") from error
 
         # Retain import estimates for increase size by button actions
         self._import_estimates = None

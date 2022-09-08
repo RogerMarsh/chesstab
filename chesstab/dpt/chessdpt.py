@@ -73,19 +73,19 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 for dd in ddnames:
                     if FILEDESC in ddnames[dd]:
                         del ddnames[dd][FILEDESC]
-            except Exception:
+            except Exception as error:
                 if __name__ == "__main__":
                     raise
-                raise ChessdptError("DPT description invalid")
+                raise ChessdptError("DPT description invalid") from error
 
         try:
             super(ChessDatabase, self).__init__(
                 ddnames, databasefolder, sysprint=sysprint, **kargs
             )
-        except ChessdptError:
+        except ChessdptError as error:
             if __name__ == "__main__":
                 raise
-            raise ChessdptError("DPT description invalid")
+            raise ChessdptError("DPT description invalid") from error
 
         self._broken_sizes = dict()
 

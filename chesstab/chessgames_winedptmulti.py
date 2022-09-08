@@ -40,21 +40,27 @@ if __name__ == "__main__":
             )
         except tkinter.TclError:
             pass
-        raise SystemExit("Unable to import start application utilities")
+        raise SystemExit(
+            "Unable to import start application utilities"
+        ) from error
     try:
         from .gui.chess import Chess
     except Exception as error:
         start_application_exception(
             error, appname=application_name, action="import"
         )
-        raise SystemExit(" import ".join(("Unable to", application_name)))
+        raise SystemExit(
+            " import ".join(("Unable to", application_name))
+        ) from error
     try:
         app = Chess(allowcreate=True, dptmultistepdu=True)
     except Exception as error:
         start_application_exception(
             error, appname=application_name, action="initialise"
         )
-        raise SystemExit(" initialise ".join(("Unable to", application_name)))
+        raise SystemExit(
+            " initialise ".join(("Unable to", application_name))
+        ) from error
     try:
         app.root.mainloop()
     except SystemExit:

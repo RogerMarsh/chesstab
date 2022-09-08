@@ -44,17 +44,19 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
                 for t in names:
                     if FILEDESC in names[t]:
                         del names[t][FILEDESC]
-            except Exception:
+            except Exception as error:
                 if __name__ == "__main__":
                     raise
-                raise ChessDatabaseError("sqlite3 description invalid")
+                raise ChessDatabaseError(
+                    "sqlite3 description invalid"
+                ) from error
 
         try:
             super().__init__(names, sqlite3file, **kargs)
-        except ChessDatabaseError:
+        except ChessDatabaseError as error:
             if __name__ == "__main__":
                 raise
-            raise ChessDatabaseError("sqlite3 description invalid")
+            raise ChessDatabaseError("sqlite3 description invalid") from error
 
     # Resolve pylint message arguments-differ deferred.
     # Depends on detail of planned naming of methods as private if possible.
