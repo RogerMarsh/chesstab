@@ -56,6 +56,8 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
                 raise
             raise ChessDatabaseError("sqlite3 description invalid")
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def delete_database(self):
         """Close and delete the open chess database."""
         return super().delete_database((self.database_file,))

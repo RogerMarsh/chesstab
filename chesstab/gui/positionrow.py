@@ -76,6 +76,8 @@ class ChessDBrowPosition(
             },
         ]
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def grid_row(self, position=None, context=(None, None, None), **kargs):
         """Return ChessDBrowPosition() with row items set to query text.
 
@@ -102,6 +104,8 @@ class ChessDBrowPosition(
             if "background" not in rs[WIDGET_CONFIGURE]:
                 w[0].configure(background=background)
 
+    # Resolve pylint message arguments-differ deferred.
+    # Different arguments are correct.
     def populate_widget(self, widget, cnf=None, text=None, context=None, **kw):
         """Delegate for tkinter.Label widget, put text in a PositionScore."""
         if isinstance(widget, tkinter.Label):

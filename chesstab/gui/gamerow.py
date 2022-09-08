@@ -200,6 +200,8 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
             },
         ]
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def grid_row(self, **kargs):
         """Return ChessDBrowGame() with selected Tags at game value.
 

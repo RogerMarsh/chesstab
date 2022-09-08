@@ -132,6 +132,8 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
             newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
         )
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def grid_row(self, **kargs):
         """Return ChessDBrowRepertoire() with opening and result set to '?'.
 

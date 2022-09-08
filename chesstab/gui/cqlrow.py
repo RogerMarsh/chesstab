@@ -102,6 +102,8 @@ class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
             newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
         )
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def grid_row(self, **kargs):
         """Return ChessDBrowCQL() with row text set to CQL query name.
 

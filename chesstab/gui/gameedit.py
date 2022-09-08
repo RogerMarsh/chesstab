@@ -1711,6 +1711,8 @@ class GameEdit(Game):
         self.score.tag_add(tag, start, end)
         self.tagpositionmap[tag] = self.fen_tag_tuple_square_piece_map()
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def add_text_pgntag_or_pgnvalue(self, token, tagset=(), separator=" "):
         """Add PGN Tagname or Tagvalue to game. Return POSITION tagname."""
         start, end, sepend = super().add_text_pgntag_or_pgnvalue(
@@ -3285,6 +3287,8 @@ class GameEdit(Game):
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def _map_comment_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:
@@ -3322,6 +3326,8 @@ class GameEdit(Game):
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def _map_escape_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:

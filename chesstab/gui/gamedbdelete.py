@@ -105,6 +105,8 @@ class GameDbDelete(ExceptionHandler, DeletePGN, DataDelete):
 
         """
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def delete(self):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()

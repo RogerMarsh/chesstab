@@ -130,7 +130,7 @@ class Database:
                     d[n] = f
         return (names, archives, guards)
 
-    def open_after_import_without_backups(self, **ka):
+    def open_after_import_without_backups(self, files=()):
         """Return True after doing database engine specific open actions.
 
         For SQLite3 and Berkeley DB just call open_database.

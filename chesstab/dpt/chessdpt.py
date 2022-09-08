@@ -89,6 +89,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
         self._broken_sizes = dict()
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def use_deferred_update_process(
         self, dptmultistepdu=False, dptchunksize=None, **kargs
     ):
@@ -177,6 +179,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
         )
         self.close_database()
 
+    # Resolve pylint message arguments-differ deferred.
+    # Depends on detail of planned naming of methods as private if possible.
     def delete_database(self):
         """Close and delete the open chess database."""
         names = [self.sysfolder]
