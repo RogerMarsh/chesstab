@@ -40,6 +40,10 @@ from .chessrecord import ChessDBrecordAnalysis
 from .analysis import Analysis
 
 
+class UCIStartEngineError(Exception):
+    """Raise when attempt to start engine fails."""
+
+
 class UCI:
     """Control multiple chess engines using the UCI."""
 
@@ -93,7 +97,7 @@ class UCI:
         ei = self.uci_drivers[ui_name]
         try:
             ei.to_driver_queue.put(CommandsToEngine.quit_)
-        except Exception:
+        except (Full, ValueError, AssertionError):
             return False
         ei.driver.join()
         engine_name = ei.parser.name
@@ -121,7 +125,7 @@ class UCI:
         for ui_name, ei in self.uci_drivers.items():
             try:
                 ei.to_driver_queue.put(CommandsToEngine.quit_)
-            except Exception:
+            except (Full, ValueError, AssertionError):
                 non_joiners.append((ui_name, ei.driver.pid))
                 continue
             joiners.append(ei.driver)
@@ -170,7 +174,10 @@ class UCI:
                 ui_name,
             ),
         )
-        driver.start()
+        try:
+            driver.start()
+        except UCIStartEngineError:
+            return
         self.uci_drivers[ui_name] = EngineInterface(
             driver=driver,
             program_file_name=program_file_name,
@@ -195,10 +202,7 @@ class UCI:
                 item = self.uci_drivers_reply.get_nowait()
             except Empty:
                 break
-            try:
-                self.process_commands_from_engines(item)
-            except Exception:
-                pass
+            self.process_commands_from_engines(item)
 
     def process_commands_from_engines(self, response):
         """Process responses from UCI chess engines.
@@ -211,9 +215,12 @@ class UCI:
         # UCI commands are generally ignored if not understood.
         # Follow this principle here.
         try:
-            self.uci_drivers[ui_name].parser.process_engine_commands(response)
-        except Exception:
-            return
+            driver = self.uci_drivers[ui_name]
+        except KeyError:
+            if ui_name in ("start failed", "started"):
+                return
+            raise
+        driver.parser.process_engine_commands(response)
 
         c = commands[-1].split(None, maxsplit=1)[0]
         if c == CommandsFromEngine.bestmove:
@@ -622,7 +629,9 @@ def run_driver(to_driver_queue, to_ui_queue, path, args, ui_name):
         driver.start_engine(path, args)
     except Exception:
         to_ui_queue.put(("start failed", (ui_name,)))
-        return
+        raise UCIStartEngineError(
+            ui_name.join(("Start ", " failed"))
+        ) from error
     to_ui_queue.put(("started", (ui_name,)))
     while True:
         command = to_driver_queue.get()
