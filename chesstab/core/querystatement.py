@@ -95,7 +95,7 @@ class QueryStatement:
 
         """
         if self.__database is None:
-            return
+            return None
 
         # Assume no error, but set False indicating process_query_statement
         # has been called.

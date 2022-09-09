@@ -1356,7 +1356,7 @@ def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
 
     """
     if filename is None:
-        return
+        return None
     gamesout = open(filename, "w")
     try:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
@@ -1377,7 +1377,7 @@ def export_single_game_pgn_no_comments(collected_game, filename):
 
     """
     if filename is None:
-        return
+        return None
     gamesout = open(filename, "w")
     try:
         gamesout.write(collected_game.get_seven_tag_roster_tags())

@@ -63,6 +63,7 @@ class CQLNode(Node):
         r = fs_filter.transform_descendant_piece_designators()
         if r:
             return r
+        return None
 
     def expand_child_piece_designators(self):
         """Expand piece designators in child nodes.
@@ -447,6 +448,7 @@ class FSNode:
             r = self._transform.get(c.node.tokendef, lambda s: None)(c)
             if r:
                 return r
+        return None
 
     def _flip(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()

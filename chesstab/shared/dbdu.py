@@ -146,11 +146,11 @@ class Dbdu(DptCompatdu):
 
         """
         if self.home_directory is None:
-            return
+            return None
         if names is None:
             return False
         if not self.delete_archive(flag=flag, names=names):
-            return
+            return None
         if flag:
             if self._file_per_database:
                 for n in names:
@@ -174,7 +174,7 @@ class Dbdu(DptCompatdu):
     def delete_archive(self, flag=None, names=None):
         """Delete a zip backup of files containing games."""
         if self.home_directory is None:
-            return
+            return None
         if names is None:
             return False
         if flag:
@@ -215,7 +215,7 @@ class Dbdu(DptCompatdu):
                     except FileNotFoundError:
                         pass
                 if not_backups:
-                    return
+                    return None
             else:
                 _delete_archive(names)
         return True

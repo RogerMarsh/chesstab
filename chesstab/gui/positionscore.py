@@ -528,6 +528,7 @@ class PositionScore(ExceptionHandler):
         if tr:
             self.set_move_tag(tr[0], tr[1])
             return tr
+        return None
 
     def set_current_range(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.
@@ -541,10 +542,10 @@ class PositionScore(ExceptionHandler):
         """
         self.clear_current_range()
         if self.current is None:
-            return
+            return None
         tr = self.score.tag_ranges(self.current)
         if not tr:
-            return
+            return None
         return tr
 
     def set_move_tag(self, start, end):

@@ -54,28 +54,28 @@ class Display:
     def set_focus_game_grid(self, event=None):
         """Give widget displaying list of games on database the focus."""
         if not self.ui.base_games.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_game_grid(event=event)
 
     def set_focus_partial_game_grid(self, event=None):
         """Give widget displaying list of games for partial position focus."""
         if not self.ui.partial_games.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partial_game_grid(event=event)
 
     def set_focus_partial_grid(self, event=None):
         """Give widget displaying list of partial positions the focus."""
         if not self.ui.base_partials.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partial_grid(event=event)
 
     def set_focus_partialpanel_item(self, event=None):
         """Give partial position at top of stack the focus."""
         if self.ui.partial_items.active_item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partialpanel_item(event=event)
 
@@ -83,7 +83,7 @@ class Display:
         """Give partial position at top of stack the focus."""
         item = self.ui.partial_items.active_item
         if item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partialpanel_item(
             event=DummyEvent(item.get_top_widget())
@@ -92,7 +92,7 @@ class Display:
     def set_focus_gamepanel_item(self, event=None):
         """Give game at top of stack the focus."""
         if self.ui.game_items.active_item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_gamepanel_item(event=event)
 
@@ -100,7 +100,7 @@ class Display:
         """Give repertoire game at top of stack the focus."""
         items = self.ui.game_items
         if items.active_item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_gamepanel_item(
             event=DummyEvent(items.get_active_item_top_widget())
@@ -110,28 +110,28 @@ class Display:
     def set_focus_position_grid(self, event=None):
         """Give widget displaying list of games matching position the focus."""
         if not self.ui.game_games.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_position_grid(event=event)
 
     def set_focus_repertoire_game_grid(self, event=None):
         """Give widget displaying list of games for repertoire focus."""
         if not self.ui.repertoire_games.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoire_game_grid(event=event)
 
     def set_focus_repertoire_grid(self, event=None):
         """Give focus to widget displaying list of repertoire games."""
         if not self.ui.base_repertoires.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoire_grid(event=event)
 
     def set_focus_repertoirepanel_item(self, event=None):
         """Give repertoire game at top of stack the focus."""
         if self.ui.repertoire_items.active_item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoirepanel_item(event=event)
 
@@ -139,7 +139,7 @@ class Display:
         """Give repertoire game at top of stack the focus."""
         item = self.ui.repertoire_items.active_item
         if item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoirepanel_item(
             event=DummyEvent(item.get_top_widget())
@@ -185,14 +185,14 @@ class Display:
     def set_focus_selection_rule_grid(self, event=None):
         """Give widget displaying list of selection_rules the focus."""
         if not self.ui.base_selections.is_visible():
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_selection_rule_grid(event=event)
 
     def set_focus_selectionpanel_item(self, event=None):
         """Give selection_rule at top of stack the focus."""
         if self.ui.selection_items.active_item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_selectionpanel_item(event=event)
 
@@ -200,7 +200,7 @@ class Display:
         """Give selection rule at top of stack the focus."""
         item = self.ui.selection_items.active_item
         if item is None:
-            return
+            return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_selectionpanel_item(
             event=DummyEvent(item.get_top_widget())

@@ -363,14 +363,14 @@ class GameTags(Game):
         """
         if self._state is not None or self._movetext_offset is None:
             self.append_token_and_set_error(match)
-            return
+            return None
 
         if self._movetext_offset is None:
             self.append_token_and_set_error(match)
-            return
+            return None
         if len(self._ravstack) == 1:
             self.append_token_and_set_error(match)
-            return
+            return None
         del self._ravstack[-1]
         del self._state_stack[-1]
         self._state = self._state_stack[-1]

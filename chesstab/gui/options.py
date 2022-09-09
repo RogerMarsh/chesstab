@@ -28,11 +28,11 @@ def get_saved_options(folder):
     """
     optionsfilename = os.path.join(folder, _options_filename)
     if not os.path.isfile(optionsfilename):
-        return
+        return None
     try:
         optionsfile = open(optionsfilename, "r")
     except OSError:
-        return
+        return None
     defaults = dict()
     try:
         defaults = _extract_options(optionsfile)

@@ -73,6 +73,7 @@ class DisplayItems:
         if item.panel in self.panel_object_map:
             if item is self.stack[-1]:
                 return True
+        return None
 
     def is_mapped_panel(self, panel):
         """Return True if panel is in self.panel_object_map."""
@@ -150,6 +151,7 @@ class DisplayItems:
             if self.object_panel_count[s] == 0:
                 del self.object_panel_count[s]
                 return s
+        return None
 
     def set_itemmap(self, item, objectkey):
         """Set panel_object_map to map item.panel to objectkey (database key).

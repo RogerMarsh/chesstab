@@ -680,6 +680,7 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
         phrases.append(OR.join("  ").join(emptyds))
     if phrases:
         return OR.join("  ").join(phrases)
+    return None
 
 
 # def move_number_str(move_number):

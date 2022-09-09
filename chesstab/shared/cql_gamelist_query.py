@@ -104,9 +104,8 @@ class CQLGameListQuery:
     def display_selected_item(self, key):
         """Create display item for selected record."""
         selected = self.get_visible_record(key)
-        if selected is None:
-            return None
-        self._display_selected_item(key, selected)
+        if selected is not None:
+            self._display_selected_item(key, selected)
 
     def select_down(self):
         """Extend to show selection summary in status bar."""

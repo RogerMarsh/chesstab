@@ -34,7 +34,7 @@ class Archivedu:
         if names is None:
             return False
         if not self.delete_archive(flag=flag, names=names):
-            return
+            return None
         if flag:
             _archive(names)
         return True

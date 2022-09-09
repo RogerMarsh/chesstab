@@ -162,7 +162,7 @@ class ShowPGN(ShowText, ScorePGN):
                 title=title,
                 message=mt.join(("No active ", " to insert into database.")),
             )
-            return
+            return None
 
         # This should see if game with same PGN Tags already exists,
         # after checking for database open, and offer option to insert anyway.
@@ -172,7 +172,7 @@ class ShowPGN(ShowText, ScorePGN):
                 title=title,
                 message=mt.join(("Cannot add ", ":\n\nNo database open.")),
             )
-            return
+            return None
 
         datasource = self.ui_base_table.get_data_source()
         if datasource is None:
@@ -181,7 +181,7 @@ class ShowPGN(ShowText, ScorePGN):
                 title=title,
                 message=mt.join(("Cannot add ", ":\n\n", " list hidden.")),
             )
-            return
+            return None
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
@@ -192,7 +192,7 @@ class ShowPGN(ShowText, ScorePGN):
                 title=title,
                 message=mt.join(("Add ", " to database abandonned.")),
             )
-            return
+            return None
         updater = self.game_updater(repr(self.score.get("1.0", tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
@@ -212,7 +212,7 @@ class ShowPGN(ShowText, ScorePGN):
                     )
                 ),
             ):
-                return
+                return None
             updater.value.set_game_source(self.pgn_score_source_name)
         editor = RecordEdit(updater, None)
         editor.set_data_source(datasource, editor.on_data_change)

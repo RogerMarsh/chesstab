@@ -2241,12 +2241,14 @@ class GameEdit(Game):
         tr = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
         if tr:
             return self.get_choice_tag_of_index(tr[0]), tr
+        return None
 
     def get_prior_tag_and_range_of_move(self, move):
         """Return prior move tag name and move range for move tag."""
         tr = self.score.tag_ranges(move)
         if tr:
             return self.get_prior_tag_of_index(tr[0]), tr
+        return None
 
     def get_prior_tag_of_index(self, index):
         """Return Tk tag name if index is in a choice tag."""
@@ -2289,6 +2291,7 @@ class GameEdit(Game):
         for tn in self.score.tag_names(index):
             if tn.startswith(RAV_MOVES):
                 return tn
+        return None
 
     def get_nearest_move_to_token(self, token):
         """Return tag for nearest move to token.
@@ -2906,7 +2909,7 @@ class GameEdit(Game):
         """
         # If choice is not a tag name there is something wrong: do nothing.
         if not choice:
-            return
+            return None
 
         widget = self.score
 
@@ -3079,6 +3082,7 @@ class GameEdit(Game):
         for tn in widget.tag_names(index):
             if tn.startswith(RAV_MOVES):
                 return not bool(self.score.tag_nextrange(tn, index))
+        return None
 
     def is_move_start_of_variation(self, move, variation):
         """Return True if move is at start of variation."""
@@ -3954,12 +3958,14 @@ class GameEdit(Game):
         for tn in tagnames:
             if tn.startswith(TOKEN):
                 return self.score.tag_nextrange(tn, "1.0")
+        return None
 
     def get_token_insert(self, tagnames):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         for tn in tagnames:
             if tn.startswith(TOKEN):
                 return "".join((TOKEN_MARK, tn[len(TOKEN) :]))
+        return None
 
     def get_token_text_length(self, start, end):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
@@ -4299,10 +4305,10 @@ class GameEdit(Game):
     def _add_char_to_token(self, char):
         """Insert char at insert point."""
         if not char:
-            return
+            return None
         if self._allowed_chars_in_token:
             if char not in self._allowed_chars_in_token:
-                return
+                return None
         widget = self.score
         start, end = widget.tag_ranges(self.current)
         non_empty = widget.count(start, end)[0] - self._header_length
