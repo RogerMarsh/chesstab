@@ -95,7 +95,7 @@ class PositionScore(ExceptionHandler):
         Canvas must be square leaving Text at least half the Frame.
 
         """
-        super(PositionScore, self).__init__()
+        super().__init__()
         self.ui = ui
         if tags_variations_comments_font:
             self.tags_variations_comments_font = tags_variations_comments_font

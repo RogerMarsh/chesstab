@@ -119,7 +119,7 @@ class ChessDBvalueGame(PGN, ChessDBvaluePGN):
 
     def pack(self):
         """Return PGN text and indexes for game."""
-        v = super(ChessDBvalueGame, self).pack()
+        v = super().pack()
         index = v[1]
         tags = self.collected_game._tags
         for field in tags:
@@ -146,9 +146,7 @@ class ChessDBrecordGame(Record):
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
-        super(ChessDBrecordGame, self).__init__(
-            ChessDBkeyGame, ChessDBvalueGame
-        )
+        super().__init__(ChessDBkeyGame, ChessDBvalueGame)
 
     def clone(self):
         """Return copy of ChessDBrecordGame instance.
@@ -160,7 +158,7 @@ class ChessDBrecordGame(Record):
 
         """
         # are conditions for deleting this method in place?
-        clone = super(ChessDBrecordGame, self).clone()
+        clone = super().clone()
         return clone
 
     @staticmethod
@@ -250,7 +248,7 @@ class ChessDBrecordGameText(Record):
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
-        super(ChessDBrecordGameText, self).__init__(ChessDBkeyGame, ValueText)
+        super().__init__(ChessDBkeyGame, ValueText)
 
     def clone(self):
         """Return copy of ChessDBrecordGameText instance.
@@ -262,7 +260,7 @@ class ChessDBrecordGameText(Record):
 
         """
         # are conditions for deleting this method in place?
-        clone = super(ChessDBrecordGameText, self).clone()
+        clone = super().clone()
         return clone
 
     @staticmethod
@@ -345,9 +343,7 @@ class ChessDBrecordGameTags(Record):
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
-        super(ChessDBrecordGameTags, self).__init__(
-            ChessDBkeyGame, ChessDBvalueGameTags
-        )
+        super().__init__(ChessDBkeyGame, ChessDBvalueGameTags)
 
 
 class ChessDBrecordGamePosition(Record):
@@ -362,9 +358,7 @@ class ChessDBrecordGamePosition(Record):
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
-        super(ChessDBrecordGamePosition, self).__init__(
-            ChessDBkeyGame, ValueText
-        )
+        super().__init__(ChessDBkeyGame, ValueText)
 
     def clone(self):
         """Return copy of ChessDBrecordGamePosition instance.
@@ -376,7 +370,7 @@ class ChessDBrecordGamePosition(Record):
 
         """
         # are conditions for deleting this method in place?
-        clone = super(ChessDBrecordGamePosition, self).clone()
+        clone = super().clone()
         return clone
 
     @staticmethod
@@ -547,9 +541,7 @@ class ChessDBrecordGameUpdate(Record):
 
     def __init__(self):
         """Extend with move number encode and decode methods."""
-        super(ChessDBrecordGameUpdate, self).__init__(
-            ChessDBkeyGame, ChessDBvaluePGNUpdate
-        )
+        super().__init__(ChessDBkeyGame, ChessDBvaluePGNUpdate)
 
     def clone(self):
         """Return copy of ChessDBrecordGameUpdate instance.
@@ -561,7 +553,7 @@ class ChessDBrecordGameUpdate(Record):
 
         """
         # are conditions for deleting this method in place?
-        clone = super(ChessDBrecordGameUpdate, self).clone()
+        clone = super().clone()
         return clone
 
     @staticmethod
@@ -626,9 +618,7 @@ class ChessDBrecordGameImport(Record):
 
     def __init__(self):
         """Customise Record with chess database key and value classes."""
-        super(ChessDBrecordGameImport, self).__init__(
-            ChessDBkeyGame, ChessDBvaluePGNUpdate
-        )
+        super().__init__(ChessDBkeyGame, ChessDBvaluePGNUpdate)
 
     def import_pgn(self, database, source, sourcename, reporter=None):
         """Update database with games read from source."""
@@ -712,9 +702,7 @@ class ChessDBrecordPartial(Record):
 
     def __init__(self):
         """Extend as a partial position record."""
-        super(ChessDBrecordPartial, self).__init__(
-            ChessDBkeyPartial, ChessDBvaluePartial
-        )
+        super().__init__(ChessDBkeyPartial, ChessDBvaluePartial)
 
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
@@ -774,7 +762,7 @@ class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
 
     def pack(self):
         """Return PGN text and indexes for game."""
-        v = super(ChessDBvalueRepertoireUpdate, self).pack()
+        v = super().pack()
         index = v[1]
         tags = self.collected_game._tags
         if self.collected_game.is_pgn_valid():
@@ -798,6 +786,7 @@ class ChessDBrecordRepertoire(ChessDBrecordGame):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         # pylint bad-super-call message given.
+        # pylint super-with-arguments message given.
         super(ChessDBrecordGame, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoire
         )
@@ -811,6 +800,7 @@ class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         # pylint bad-super-call message given.
+        # pylint super-with-arguments message given.
         super(ChessDBrecordGameTags, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireTags
         )
@@ -824,6 +814,7 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         # pylint bad-super-call message given.
+        # pylint super-with-arguments message given.
         super(ChessDBrecordGameUpdate, self).__init__(
             ChessDBkeyGame, ChessDBvalueRepertoireUpdate
         )
@@ -927,9 +918,7 @@ class ChessDBrecordQuery(Record):
 
     def __init__(self):
         """Extend as a game selection rule record."""
-        super(ChessDBrecordQuery, self).__init__(
-            ChessDBkeyQuery, ChessDBvalueQuery
-        )
+        super().__init__(ChessDBkeyQuery, ChessDBvalueQuery)
 
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
@@ -975,6 +964,4 @@ class ChessDBrecordEngine(Record):
 
     def __init__(self):
         """Extend as a game selection rule record."""
-        super(ChessDBrecordEngine, self).__init__(
-            ChessDBkeyEngine, ChessDBvalueEngine
-        )
+        super().__init__(ChessDBkeyEngine, ChessDBvalueEngine)

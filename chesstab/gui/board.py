@@ -218,12 +218,12 @@ class PartialBoard(Board):
             self.wildfont = tkinter.font.nametofont(self.wildpiecesfont).copy()
         except AttributeError:
             self.wildfont = self.wildpiecesfont.copy()
-        super(PartialBoard, self).__init__(master, **ka)
+        super().__init__(master, **ka)
 
     def configure_font(self, side):
         """Adjust font size after container widget has been resized."""
         self.wildfont.configure(size=-(side * 3) // 32)
-        super(PartialBoard, self).configure_font(side)
+        super().configure_font(side)
 
     def draw_board(self):
         """Set font size to match board size and redraw pieces."""

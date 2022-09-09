@@ -79,7 +79,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 raise ChessdptError("DPT description invalid") from error
 
         try:
-            super(ChessDatabase, self).__init__(
+            super().__init__(
                 ddnames, databasefolder, sysprint=sysprint, **kargs
             )
         except ChessdptError as error:

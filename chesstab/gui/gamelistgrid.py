@@ -417,7 +417,7 @@ class PartialPositionGames(GameListGrid):
 
     def bind_on(self):
         """Enable all bindings."""
-        super(PartialPositionGames, self).bind_on()
+        super().bind_on()
         self.__bind_on()
 
     def __bind_on(self):
@@ -1329,7 +1329,7 @@ class RepertoireGrid(GameListGrid):
         # may turn out to be just to catch datasource is None
         if self.get_data_source() is None:
             return
-        super(RepertoireGrid, self).on_data_change(instance)
+        super().on_data_change(instance)
 
     def set_selection_text(self):
         """Set status bar to display main PGN Tags."""

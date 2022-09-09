@@ -54,7 +54,7 @@ class Repertoire(Game):
     # Otherwise there is no point to this __init__ method.
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend to display repertoire game."""
-        super(Repertoire, self).__init__(gameclass=gameclass, **ka)
+        super().__init__(gameclass=gameclass, **ka)
 
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.

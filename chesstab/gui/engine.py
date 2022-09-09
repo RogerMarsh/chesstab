@@ -53,7 +53,7 @@ class Engine(EngineText):
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
-        super(Engine, self).__init__(
+        super().__init__(
             panel, ui=ui, items_manager=items_manager, itemgrid=itemgrid, **ka
         )
         self.scrollbar.grid(column=1, row=0, rowspan=1, sticky=tkinter.NSEW)

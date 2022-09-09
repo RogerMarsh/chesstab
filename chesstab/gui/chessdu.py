@@ -63,7 +63,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         sample - estimate size of import from first 'sample' games in PGN file
 
         """
-        super(ChessDeferredUpdate, self).__init__()
+        super().__init__()
         self.queue = callthreadqueue.CallThreadQueue()
         self.reportqueue = queue.Queue(maxsize=1)
 

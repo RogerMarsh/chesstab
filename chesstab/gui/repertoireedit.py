@@ -47,7 +47,7 @@ class RepertoireEdit(GameEdit):
     # Otherwise there is no point to this __init__ method.
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit repertoire score."""
-        super(RepertoireEdit, self).__init__(gameclass=gameclass, **ka)
+        super().__init__(gameclass=gameclass, **ka)
 
     def insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""

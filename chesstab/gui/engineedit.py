@@ -37,7 +37,7 @@ class EngineEdit(engine.Engine):
 
     def __init__(self, **ka):
         """Extend chess engine definition widget as editor."""
-        super(EngineEdit, self).__init__(**ka)
+        super().__init__(**ka)
         # Context is same for each location so do not need dictionary of
         # Engine instances.
         self.engine_definition_checker = Engine()

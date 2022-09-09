@@ -158,7 +158,7 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
         dptdsn = FileSpec.dpt_dsn
         fn = FileSpec.field_name
 
-        super(FileSpec, self).__init__(
+        super().__init__(
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
             **{

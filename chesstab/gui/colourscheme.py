@@ -608,9 +608,7 @@ class ColourChooser(_ColourScheme):
         moves tags and pieces are fonts to be used as basis for modified fonts.
 
         """
-        super(ColourChooser, self).__init__(
-            height=660, title="Chessboard colour chooser", **ka
-        )
+        super().__init__(height=660, title="Chessboard colour chooser", **ka)
         self.create_game_frame()
         self.create_colour_frame()
         self.create_buttons(self.get_button_definitions())
@@ -632,9 +630,7 @@ class FontChooser(_ColourScheme):
         moves tags and pieces are fonts to be used as basis for modified fonts.
 
         """
-        super(FontChooser, self).__init__(
-            height=680, title="Chessboard font chooser", **ka
-        )
+        super().__init__(height=680, title="Chessboard font chooser", **ka)
         self.create_font_frame()
         self.create_game_frame()
         self.create_buttons(self.get_button_definitions())
@@ -656,9 +652,7 @@ class FontColourChooser(_ColourScheme):
         moves tags and pieces are fonts to be used as basis for modified fonts.
 
         """
-        super(FontColourChooser, self).__init__(
-            height=950, title="Chessboard style chooser", **ka
-        )
+        super().__init__(height=950, title="Chessboard style chooser", **ka)
         self.create_font_frame()
         self.create_game_frame()
         self.create_colour_frame()
@@ -679,7 +673,7 @@ class ChessColourSlider(ColourSlider):
         TagConfigureBGcolour=None,
     ):
         """Extend with callback to attach a colour to a Text tag."""
-        super(ChessColourSlider, self).__init__(
+        super().__init__(
             master=master,
             row=row,
             label=label,
@@ -690,30 +684,30 @@ class ChessColourSlider(ColourSlider):
 
     def delta_red_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Red."""
-        super(ChessColourSlider, self).delta_red_colour(event=event)
+        super().delta_red_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
 
     def set_red_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Red."""
-        super(ChessColourSlider, self).set_red_colour(event=event)
+        super().set_red_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
 
     def delta_green_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Green."""
-        super(ChessColourSlider, self).delta_green_colour(event=event)
+        super().delta_green_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
 
     def set_green_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Green."""
-        super(ChessColourSlider, self).set_green_colour(event=event)
+        super().set_green_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
 
     def delta_blue_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Blue."""
-        super(ChessColourSlider, self).delta_blue_colour(event=event)
+        super().delta_blue_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
 
     def set_blue_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Blue."""
-        super(ChessColourSlider, self).set_blue_colour(event=event)
+        super().set_blue_colour(event=event)
         self.TagConfigureBGcolour(self.get_colour())
