@@ -3595,7 +3595,6 @@ class GameEdit(Game):
             # removed from EDIT_MOVE tag and placed on INSERT_RAV tag when
             # starting insert of next move.
             start, end = self.score.tag_ranges(self.current)
-            vartag = self.get_variation_tag_of_index(start)
             widget.tag_add(EDIT_MOVE, start, end)
             widget.tag_remove(MOVE_EDITED, start, end)
             widget.insert(widget.index(start) + "+1 char", PGN_BISHOP)

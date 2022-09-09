@@ -1641,7 +1641,7 @@ class Chess(ExceptionHandler):
             # Succeeded, or failed with backups
             try:
                 action = self.opendatabase.open_after_import_with_backups()
-            except self.opendatabase.__class__.SegmentSizeError as exc:
+            except self.opendatabase.__class__.SegmentSizeError:
                 action = self.opendatabase.open_after_import_with_backups()
             if action is None:
                 # Database full

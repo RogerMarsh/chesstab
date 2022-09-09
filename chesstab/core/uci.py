@@ -15,7 +15,7 @@ the need to interrupt it.
 """
 
 import multiprocessing
-from queue import Empty
+from queue import Empty, Full
 import os
 
 from solentware_grid.gui.dataedit import RecordEdit
@@ -627,7 +627,7 @@ def run_driver(to_driver_queue, to_ui_queue, path, args, ui_name):
     driver = UCIDriverOverTCP(to_ui_queue, ui_name)
     try:
         driver.start_engine(path, args)
-    except Exception:
+    except Exception as error:
         to_ui_queue.put(("start failed", (ui_name,)))
         raise UCIStartEngineError(
             ui_name.join(("Start ", " failed"))
