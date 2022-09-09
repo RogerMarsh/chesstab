@@ -382,6 +382,7 @@ class UCI(ExceptionHandler):
                         )
                     ),
                 )
+                raise
         del self._command
         del self._contents
         self._do_toplevel.destroy()

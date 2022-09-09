@@ -46,6 +46,10 @@ from .displaytext import (
 )
 
 
+class CQLDisplayListGamesError(Exception):
+    """Exception class for display of lists of games."""
+
+
 class _CQLDisplay(ExceptionHandler, Display):
     """Extend and link ChessQL statement to database.
 
@@ -350,7 +354,9 @@ class _CQLDisplay(ExceptionHandler, Display):
                     title="Insert ChessQL Statement",
                     message=msg,
                 )
-                return
+                raise CQLDisplayListGamesError(
+                    "Unable to list games for inserted statement"
+                ) from exc
         else:
 
             # Unfortunatly the existing list will have to be recalculated if
@@ -396,7 +402,9 @@ class _CQLDisplay(ExceptionHandler, Display):
                     title="Insert ChessQL Statement",
                     message=msg,
                 )
-                return
+                raise CQLDisplayListGamesError(
+                    "Unable to list games for edited statement"
+                ) from exc
 
         if self is self.ui.partial_items.active_item:
             if self.sourceobject is not None and key == self.sourceobject.key:
@@ -482,6 +490,9 @@ class _CQLDisplay(ExceptionHandler, Display):
                 title="Delete ChessQL Statement",
                 message=msg,
             )
+            raise CQLDisplayListGamesError(
+                "Unable to list games for deleted statement"
+            ) from exc
         p.fill_view(currentkey=key, exclude=False)
         if p.datasource.not_implemented:
             tkinter.messagebox.showinfo(
@@ -685,6 +696,9 @@ class CQLDisplayInsert(
                 title="ChessQL Statement",
                 message=msg,
             )
+            raise CQLDisplayListGamesError(
+                "Uanble to list games for displayed statement"
+            ) from exc
         return "break"
 
 

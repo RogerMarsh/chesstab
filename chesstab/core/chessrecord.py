@@ -77,17 +77,11 @@ class ChessDBkeyGame(KeyData):
 
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
-        try:
-            return self.recno == other.recno
-        except Exception:
-            return False
+        return self.recno == other.recno
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
-        try:
-            return self.recno != other.recno
-        except Exception:
-            return True
+        return self.recno != other.recno
 
 
 class ChessDBvaluePGN(Value):
@@ -685,28 +679,16 @@ class ChessDBvaluePartial(CQLStatement, Value):
 
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
-        try:
-            if (
-                self.get_name_statement_text()
-                != other.get_name_statement_text()
-            ):
-                return False
-            else:
-                return True
-        except Exception:
+        if self.get_name_statement_text() != other.get_name_statement_text():
             return False
+        else:
+            return True
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
-        try:
-            if (
-                self.get_name_statement_text()
-                == other.get_name_statement_text()
-            ):
-                return False
-            else:
-                return True
-        except Exception:
+        if self.get_name_statement_text() == other.get_name_statement_text():
+            return False
+        else:
             return True
 
     def load(self, value):
@@ -906,28 +888,22 @@ class ChessDBvalueQuery(QueryStatement, Value):
 
     def __eq__(self, other):
         """Return (self == other).  Attributes are compared explicitly."""
-        try:
-            if (
-                self.get_name_query_statement_text()
-                != other.get_name_query_statement_text()
-            ):
-                return False
-            else:
-                return True
-        except Exception:
+        if (
+            self.get_name_query_statement_text()
+            != other.get_name_query_statement_text()
+        ):
             return False
+        else:
+            return True
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
-        try:
-            if (
-                self.get_name_query_statement_text()
-                == other.get_name_query_statement_text()
-            ):
-                return False
-            else:
-                return True
-        except Exception:
+        if (
+            self.get_name_query_statement_text()
+            == other.get_name_query_statement_text()
+        ):
+            return False
+        else:
             return True
 
     def load(self, value):

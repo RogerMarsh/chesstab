@@ -666,7 +666,17 @@ class ChessDeferredUpdate(ExceptionHandler):
                 try:
                     status = self.dumethod(*a)
                 except Exception:
-                    write_error_to_log()
+                    try:
+                        write_error_to_log()
+                    except Exception as error:
+                        raise SystemExit(
+                            " reporting exception in ".join(
+                                ("Exception while", APPLICATION_NAME)
+                            )
+                        ) from error
+                    raise SystemExit(
+                        "Exception reported in " + APPLICATION_NAME
+                    ) from error
                 self.report.append_text("Import finished.")
                 self.report.append_text_only("")
                 if not status:
@@ -720,11 +730,18 @@ class ChessDeferredUpdate(ExceptionHandler):
                         "\n\nDo you want to dismiss the import log?",
                     )
                 )
-            except Exception:
+            except Exception as error:
                 try:
                     write_error_to_log()
-                except Exception:
-                    pass
+                except Exception as error:
+                    raise SystemExit(
+                        " reporting exception in ".join(
+                            ("Exception while", APPLICATION_NAME)
+                        )
+                    ) from error
+                raise SystemExit(
+                    "Exception reported in " + APPLICATION_NAME
+                ) from error
 
         self._import_job = True
         self.queue.put_method(

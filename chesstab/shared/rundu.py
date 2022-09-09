@@ -13,6 +13,10 @@ import os
 import importlib
 
 
+class RunduError(Exception):
+    """Exception class for rundu module."""
+
+
 def rundu(engine_module_name, database_module_name):
     """Do the deferred update using the specified database engine.
 
@@ -44,13 +48,20 @@ def rundu(engine_module_name, database_module_name):
                 resource.setrlimit(
                     resource.RLIMIT_DATA, (min(soft * 2, hard), hard)
                 )
-            except Exception:
+            except Exception as error:
                 try:
                     engine_module.write_error_to_log()
-                except Exception:
+                except Exception as error:
                     # Maybe the import is small enough to get away with
                     # limited memory (~500Mb).
-                    pass
+                    raise SystemExit(
+                        " reporting exception in ".join(
+                            ("Exception while", "set resource limit in rundu")
+                        )
+                    ) from error
+                raise SystemExit(
+                    "Exception in rundu while setting resource limit"
+                ) from error
 
         del resource
     try:
@@ -58,10 +69,16 @@ def rundu(engine_module_name, database_module_name):
             deferred_update_method=database_module.chess_database_du,
             database_class=database_module.ChessDatabase,
         )
-    except Exception:
+    except Exception as error:
         try:
             engine_module.write_error_to_log()
         except Exception:
             # Assume that parent process will report the failure.
-            pass
-        sys.exit(1)
+            raise SystemExit(
+                " reporting exception in ".join(
+                    ("Exception while", "doing deferred update in rundu")
+                )
+            ) from error
+        raise SystemExit(
+            "Reporting exception in rundu while doing deferred update"
+        ) from error

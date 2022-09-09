@@ -467,9 +467,14 @@ class Chess(ExceptionHandler):
             # sibling module chessdu for explanation of this change.
             self.__run_ui_task_from_queue(5000)
 
-        except Exception:
+        except Exception as exc:
             self.root.destroy()
             del self.root
+            # pylint message broad-except.
+            # Can keep going for some exceptions.
+            raise ChessError(
+                " initialize ".join(("Unable to ", APPLICATION_NAME))
+            ) from exc
 
     def __del__(self):
         """Ensure database Close method is called on destruction."""
@@ -680,6 +685,11 @@ class Chess(ExceptionHandler):
             )
             self._database_close()
             self.database = None
+            # pylint message broad-except.
+            # Can keep going for some exceptions.
+            raise ChessError(
+                " database in ".join(("Unable to create", APPLICATION_NAME))
+            ) from exc
 
     def database_open(self):
         """Open chess database."""
@@ -833,6 +843,11 @@ class Chess(ExceptionHandler):
             )
             self._database_close()
             self.opendatabase = None
+            # pylint message broad-except.
+            # Can keep going for some exceptions.
+            raise ChessError(
+                " database in ".join(("Unable to open", APPLICATION_NAME))
+            ) from exc
 
     def database_close(self):
         """Close chess database."""

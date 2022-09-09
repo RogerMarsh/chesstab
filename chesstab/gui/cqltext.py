@@ -21,6 +21,10 @@ from .blanktext import NonTagBind, BlankText
 from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
 
 
+class CQLTextListGamesError(Exception):
+    """Exception class for display of lists of games."""
+
+
 class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
     """ChessQL statement widget.
 
@@ -161,6 +165,9 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                     title="ChessQL Statement",
                     message=msg,
                 )
+                raise CQLTextListGamesError(
+                    "Unable to refresh list of games for statement"
+                ) from exc
         grid.partial = self.get_partial_key_cql_statement()
         # grid.rows = 1
         grid.load_new_index()

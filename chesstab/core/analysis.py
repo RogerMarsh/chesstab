@@ -169,9 +169,6 @@ class Analysis:
 
     def _evalution_score(self, val, to_move):
         """Normalize to white advantage is positive and black negative."""
-        try:
-            return "{:+.2f}".format(
-                (int(val) if to_move != FEN_BLACK_ACTIVE else -int(val)) / 100
-            )
-        except Exception:
-            return "?.??"
+        return "{:+.2f}".format(
+            (int(val) if to_move != FEN_BLACK_ACTIVE else -int(val)) / 100
+        )

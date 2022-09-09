@@ -56,13 +56,9 @@ def save_options(folder, changes):
     if os.path.exists(optionsfilename):
         if not os.path.isfile(optionsfilename):
             return
-    try:
-        optionsfile = open(optionsfilename, "a+")
+    with open(optionsfilename, "a+") as optionsfile:
         defaults = _extract_options(optionsfile)
-    except Exception:
-        return
-    olddefaults, newdefaults = changes
-    try:
+        olddefaults, newdefaults = changes
         for k, v in olddefaults.items():
             if k in font_names:
                 for ak, av in v.items():
@@ -89,8 +85,6 @@ def save_options(folder, changes):
                 newlines.append("".join((k, "=", v, "\n")))
         if newlines:
             optionsfile.writelines(newlines)
-    finally:
-        optionsfile.close()
     return
 
 

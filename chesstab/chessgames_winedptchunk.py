@@ -89,3 +89,8 @@ if __name__ == "__main__":
             title=application_name,
             appname=application_name,
         )
+        raise SystemExit(
+            " reporting exception in ".join(
+                ("Exception while", application_name)
+            )
+        ) from error

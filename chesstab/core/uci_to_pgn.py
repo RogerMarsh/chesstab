@@ -96,12 +96,7 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
     game = GameMove()
     piece_placement_data = game._piece_placement_data
     text = []
-    try:
-        moves = moves.split()
-    except Exception:
-        return "".join(
-            ("{'", str(moves), "' cannot be a move, 'Yz0' inserted.}Yz0")
-        )
+    moves = moves.split()
     if not moves:
         return "{'' is not a move, 'Yz0' inserted. Rest '' ignored.}Yz0"
     tagtext = fen.join(FEN_CONTEXT)

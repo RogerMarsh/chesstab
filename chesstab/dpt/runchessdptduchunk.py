@@ -40,10 +40,14 @@ if __name__ == "__main__":
             deferred_update_method=chessdptdu.chess_dptdu_chunks,
             database_class=chessdptdu.ChessDatabase,
         )
-    except Exception:
+    except Exception as error:
         try:
             chessdu.write_error_to_log()
-        except Exception:
+        except Exception as error:
             # Assume that parent process will report the failure
-            pass
-        sys.exit(1)
+            raise SystemExit(
+                " reporting exception in ".join(
+                    ("Exception while", "DPTchunk")
+                )
+            ) from error
+        raise SystemExit("Reporting exception in DPTchunk") from error
