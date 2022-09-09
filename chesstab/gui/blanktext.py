@@ -126,11 +126,13 @@ class BlankText(ExceptionHandler):
         """Return tuple of event binding definitions passed for menubar."""
         return ((EventSpec.score_enable_F10_menubar, self.press_none),)
 
-    def press_break(self, event=None):
+    @staticmethod
+    def press_break(event=None):
         """Do nothing and prevent event handling by next handlers."""
         return "break"
 
-    def press_none(self, event=None):
+    @staticmethod
+    def press_none(event=None):
         """Do nothing and allow event to be handled by next handler."""
         return None
 
@@ -154,11 +156,13 @@ class BlankText(ExceptionHandler):
                 accelerator=accelerator[2],
             )
 
-    def give_focus_to_widget(self, event=None):
+    @staticmethod
+    def give_focus_to_widget(event=None):
         """Do nothing and return 'break'.  Override in subclasses as needed."""
         return "break"
 
-    def get_F10_popup_events(self, top_left, pointer):
+    @staticmethod
+    def get_F10_popup_events(top_left, pointer):
         """Return tuple of event definitions to post popup menus.
 
         top_left is a method to post the menu at top left corner of widget.
@@ -171,7 +175,8 @@ class BlankText(ExceptionHandler):
         )
 
     # Subclasses with database interfaces may override method.
-    def create_database_submenu(self, menu):
+    @staticmethod
+    def create_database_submenu(menu):
         """Do nothing.
 
         Subclasses should override this method as needed.
@@ -201,9 +206,8 @@ class BlankText(ExceptionHandler):
         # So 'Control-F10' does not fire 'F10' (menubar) binding too.
         return "break"
 
-    def post_menu_at_top_left(
-        self, menu, create_menu, allowed=True, event=None
-    ):
+    @staticmethod
+    def post_menu_at_top_left(menu, create_menu, allowed=True, event=None):
         """Post the popup menu at top left in widget.
 
         create_menu creates a popup menu if menu is None.

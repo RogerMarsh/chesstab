@@ -91,7 +91,8 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         """Return the User Interface object from 'editable' view."""
         return self.newview.ui
 
-    def set_item(self, view, object_):
+    @staticmethod
+    def set_item(view, object_):
         """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)

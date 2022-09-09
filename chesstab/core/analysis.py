@@ -167,7 +167,8 @@ class Analysis:
             new_text.insert(0, self.position.join(FEN_CONTEXT))
         return "".join(new_text)
 
-    def _evalution_score(self, val, to_move):
+    @staticmethod
+    def _evalution_score(val, to_move):
         """Normalize to white advantage is positive and black negative."""
         return "{:+.2f}".format(
             (int(val) if to_move != FEN_BLACK_ACTIVE else -int(val)) / 100

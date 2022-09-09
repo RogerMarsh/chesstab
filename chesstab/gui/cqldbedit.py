@@ -91,7 +91,8 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
         """Return the User Interface object from 'editable' view."""
         return self.newview.ui
 
-    def set_item(self, view, object_):
+    @staticmethod
+    def set_item(view, object_):
         """Populate view with the CQL query extracted from object_."""
         view.cql_statement.process_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)

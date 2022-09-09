@@ -15,7 +15,11 @@ class DptCompatdu:
 
         """
 
-    def get_file_sizes(self):
+    # pylint no-self-use message.
+    # Why this method and not the other two?
+    # Does it imply 'self' should not be removed given purpose of methods?
+    @staticmethod
+    def get_file_sizes():
         """Return an empty dictionary.
 
         No sizes needed.  Method exists for DPT compatibility.

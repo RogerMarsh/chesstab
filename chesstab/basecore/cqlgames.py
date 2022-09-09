@@ -355,7 +355,8 @@ class ChessQLGames:
             return self.squares_matching_piece_designator(filter_)
         return initialsquares
 
-    def pieces_matching_piece_designator(self, filter_):
+    @staticmethod
+    def pieces_matching_piece_designator(filter_):
         """Return pieces matching a piece designator."""
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(
@@ -380,7 +381,8 @@ class ChessQLGames:
                 pieces.add(p)
         return pieces
 
-    def squares_matching_piece_designator(self, filter_):
+    @staticmethod
+    def squares_matching_piece_designator(filter_):
         """Return squares matching a piece designator."""
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
             raise ChessQLGamesError(

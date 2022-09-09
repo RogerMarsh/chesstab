@@ -40,7 +40,8 @@ class SharedText:
             switch=switch,
         )
 
-    def get_primary_activity_events(self):
+    @staticmethod
+    def get_primary_activity_events():
         """Return null tuple of navigation keypresses and callbacks."""
         return ()
 
@@ -52,7 +53,8 @@ class SharedTextEngineText:
     stuff is in a Toplevel instance not the main application widget.
     """
 
-    def get_modifier_buttonpress_suppression_events(self):
+    @staticmethod
+    def get_modifier_buttonpress_suppression_events():
         """Return empty tuple of event binding definitions.
 
         These events suppress buttonpress with Control, Shift, or Alt.

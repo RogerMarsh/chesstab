@@ -2262,7 +2262,8 @@ class GameEdit(Game):
                 return tn
         return None
 
-    def get_rav_tag_for_rav_moves(self, rav_moves):
+    @staticmethod
+    def get_rav_tag_for_rav_moves(rav_moves):
         """Return Tk tag name for RAV_TAG with same suffix as rav_moves."""
         return "".join((RAV_TAG, rav_moves[len(RAV_MOVES) :]))
 
@@ -2273,7 +2274,8 @@ class GameEdit(Game):
                 return tn
         return None
 
-    def get_token_tag_for_position(self, position):
+    @staticmethod
+    def get_token_tag_for_position(position):
         """Return Tk tag name for token with same suffix as position."""
         return "".join((TOKEN, position[len(POSITION) :]))
 
@@ -3956,7 +3958,8 @@ class GameEdit(Game):
                 return self.score.tag_nextrange(tn, "1.0")
         return None
 
-    def get_token_insert(self, tagnames):
+    @staticmethod
+    def get_token_insert(tagnames):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         for tn in tagnames:
             if tn.startswith(TOKEN):

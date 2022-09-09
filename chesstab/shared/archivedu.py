@@ -39,7 +39,8 @@ class Archivedu:
             _archive(names)
         return True
 
-    def delete_archive(self, flag=None, names=None):
+    @staticmethod
+    def delete_archive(flag=None, names=None):
         """Delete a bz2 backup of file containing games."""
         if names is None:
             return False

@@ -208,7 +208,8 @@ class GameListGrid(
         for key in ui.game_items.object_panel_count:
             self.set_properties(key)
 
-    def set_move_highlight(self, game):
+    @staticmethod
+    def set_move_highlight(game):
         """Set move highlight at current position in game.
 
         In particular a game displayed from the list of games matching a

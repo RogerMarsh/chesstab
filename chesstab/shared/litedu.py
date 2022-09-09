@@ -54,7 +54,8 @@ class Litedu(DptCompatdu, Archivedu):
                 "unable to initialize database object"
             ) from error
 
-    def open_context_prepare_import(self):
+    @staticmethod
+    def open_context_prepare_import():
         """Return True.
 
         No preparation actions thet need database open for vedis.

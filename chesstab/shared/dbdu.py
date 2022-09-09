@@ -87,7 +87,8 @@ class Dbdu(DptCompatdu):
                 raise
             raise exception_class("DB description invalid") from error
 
-    def open_context_prepare_import(self):
+    @staticmethod
+    def open_context_prepare_import():
         """Return True.
 
         No preparation actions thet need database open for Berkeley DB.

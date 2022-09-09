@@ -124,7 +124,8 @@ class _GameDisplay(ExceptionHandler, Display):
         """Return game and repertoire items in Toplevels."""
         return self.ui.games_and_repertoires_in_toplevels
 
-    def mark_partial_positions_to_be_recalculated(self, datasource=None):
+    @staticmethod
+    def mark_partial_positions_to_be_recalculated(datasource=None):
         """Mark ChessQL statements, in datasource, to be recalculated."""
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
 

@@ -32,7 +32,8 @@ class Database:
         super().open_database(files=files)
         return True
 
-    def dump_database(self, names=()):
+    @staticmethod
+    def dump_database(names=()):
         """Dump database in compressed files."""
         for n in names:
             c = bz2.BZ2Compressor()
@@ -53,7 +54,8 @@ class Database:
                 fo.close()
                 fi.close()
 
-    def delete_backups(self, names=()):
+    @staticmethod
+    def delete_backups(names=()):
         """Delete backup files."""
         for n in names:
             archiveguard = ".".join((n, "grd"))
@@ -67,7 +69,8 @@ class Database:
             except FileNotFoundError:
                 pass
 
-    def restore_backups(self, names=()):
+    @staticmethod
+    def restore_backups(names=()):
         """Restore database from backup files."""
         for n in names:
             c = bz2.BZ2Decompressor()

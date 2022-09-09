@@ -52,7 +52,8 @@ class CQLNode(Node):
         self.data = None
         self.where = None
 
-    def transform_piece_designators(self, fs_filter):
+    @staticmethod
+    def transform_piece_designators(fs_filter):
         """Apply transforms to piece designators in CQL statement."""
         children = fs_filter.children
         for n in fs_filter.node.children:

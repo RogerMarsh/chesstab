@@ -193,7 +193,8 @@ class EngineGrid(EngineListGrid):
     def set_selection_text(self):
         """Set status bar to display selection rule name."""
 
-    def is_visible(self):
+    @staticmethod
+    def is_visible():
         """Return True if list of selection rules is displayed."""
         # return str(self.get_frame()) in self.ui.selection_rules_pw.panes()
         return True

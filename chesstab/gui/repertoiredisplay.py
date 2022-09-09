@@ -230,7 +230,8 @@ class RepertoireDisplay(
     # Existence of this method prevents delete_game_database being used by
     # instances of superclasses of RepertoireDisplay, emulating the behaviour
     # before introduction of displaypgn module.
-    def pgn_score_original_value(self, original_value):
+    @staticmethod
+    def pgn_score_original_value(original_value):
         """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
@@ -270,7 +271,8 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
     # Existence of this method prevents delete_game_database being used by
     # instances of superclasses of RepertoireDisplay, emulating the behaviour
     # before introduction of displaypgn module.
-    def pgn_score_original_value(self, original_value):
+    @staticmethod
+    def pgn_score_original_value(original_value):
         """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.

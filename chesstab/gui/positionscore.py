@@ -378,7 +378,8 @@ class PositionScore(ExceptionHandler):
         del self._force_movenumber
         del self._vartag
 
-    def compare_two_positions(self, one, two):
+    @staticmethod
+    def compare_two_positions(one, two):
         """Return True if positions one and two are same, otherwise False.
 
         Ignore castling and en passant options when comparing positions.

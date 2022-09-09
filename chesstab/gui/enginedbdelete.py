@@ -75,7 +75,8 @@ class EngineDbDelete(ExceptionHandler, DeleteText, DataDelete):
         """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
-    def set_item(self, view, object_):
+    @staticmethod
+    def set_item(view, object_):
         """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)

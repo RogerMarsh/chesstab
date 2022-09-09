@@ -53,7 +53,8 @@ class CQLGameListQuery:
         self.ui.give_focus_forward(self)
         return "break"
 
-    def traverse_round(self, event=None):
+    @staticmethod
+    def traverse_round(event=None):
         """Give focus to next widget within active item in traversal order."""
         return "break"
 

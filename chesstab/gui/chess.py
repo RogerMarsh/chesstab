@@ -482,7 +482,8 @@ class Chess(ExceptionHandler):
             self.opendatabase.close_database()
             self.opendatabase = None
 
-    def create_menu_changed_callback(self, menu):
+    @staticmethod
+    def create_menu_changed_callback(menu):
         """Return callback to bind to <<MenuSelect>> event for menu."""
 
         def menu_changed(event):
@@ -1951,7 +1952,8 @@ class Chess(ExceptionHandler):
         # Wrap to take account of self.ui.single_view
         self.ui.selection_items.active_item.takefocus_widget.focus_set()
 
-    def _set_error_file_name(self, directory=None):
+    @staticmethod
+    def _set_error_file_name(directory=None):
         """Set the exception report file name to filename."""
         if directory is None:
             Chess.set_error_file_name(None)

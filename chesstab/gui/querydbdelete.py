@@ -78,7 +78,8 @@ class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
         """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
-    def set_item(self, view, object_):
+    @staticmethod
+    def set_item(view, object_):
         """Populate view with the query extracted from object_."""
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text()

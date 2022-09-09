@@ -149,7 +149,8 @@ class Display:
         """Give self the focus."""
         self.give_focus_to_widget(event=DummyEvent(self.get_top_widget()))
 
-    def traverse_backward(self, event=None):
+    @staticmethod
+    def traverse_backward(event=None):
         """Give focus to previous widget type in traversal order.
 
         Subclasses shall override if required.
@@ -157,7 +158,8 @@ class Display:
         # Do nothing.
         return "break"
 
-    def traverse_forward(self, event=None):
+    @staticmethod
+    def traverse_forward(event=None):
         """Give focus to next widget type in traversal order.
 
         Subclasses shall override if required.
@@ -165,7 +167,8 @@ class Display:
         # Do nothing.
         return "break"
 
-    def traverse_round(self, event=None):
+    @staticmethod
+    def traverse_round(event=None):
         """Give focus to next widget within active item in traversal order.
 
         Subclasses shall override if required.
