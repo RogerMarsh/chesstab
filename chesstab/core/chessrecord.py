@@ -198,12 +198,11 @@ class ChessDBrecordGame(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            elif dbname in self.value.collected_game._tags:
+            if dbname in self.value.collected_game._tags:
                 return [
                     (self.value.collected_game._tags[dbname], self.key.pack())
                 ]
-            else:
-                return []
+            return []
         if partial is None:
             return []
 
@@ -577,12 +576,11 @@ class ChessDBrecordGameUpdate(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            elif dbname in self.value.collected_game._tags:
+            if dbname in self.value.collected_game._tags:
                 return [
                     (self.value.collected_game._tags[dbname], self.key.pack())
                 ]
-            else:
-                return []
+            return []
         if partial is None:
             return []
 
@@ -671,15 +669,13 @@ class ChessDBvaluePartial(CQLStatement, Value):
         """Return (self == other).  Attributes are compared explicitly."""
         if self.get_name_statement_text() != other.get_name_statement_text():
             return False
-        else:
-            return True
+        return True
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
         if self.get_name_statement_text() == other.get_name_statement_text():
             return False
-        else:
-            return True
+        return True
 
     def load(self, value):
         """Set partial position from value."""
@@ -713,8 +709,7 @@ class ChessDBrecordPartial(Record):
         """
         if datasource.dbname == PARTIALPOSITION_NAME_FIELD_DEF:
             return [(self.value.get_name_text(), self.key.pack())]
-        else:
-            return super().get_keys(datasource=datasource, partial=partial)
+        return super().get_keys(datasource=datasource, partial=partial)
 
     def load_value(self, value):
         """Load self.value from value which is repr(<data>).
@@ -834,10 +829,9 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
         dbname = datasource.dbname
         if dbname == REPERTOIRE_FILE_DEF:
             return [(self.key.recno, self.srvalue)]
-        elif dbname in self.value.collected_game._tags:
+        if dbname in self.value.collected_game._tags:
             return [(self.value.collected_game._tags[dbname], self.key.pack())]
-        else:
-            return []
+        return []
 
 
 class ChessDBvalueAnalysis(Analysis, Value):
@@ -884,8 +878,7 @@ class ChessDBvalueQuery(QueryStatement, Value):
             != other.get_name_query_statement_text()
         ):
             return False
-        else:
-            return True
+        return True
 
     def __ne__(self, other):
         """Return (self != other).  Attributes are compared explicitly."""
@@ -894,8 +887,7 @@ class ChessDBvalueQuery(QueryStatement, Value):
             == other.get_name_query_statement_text()
         ):
             return False
-        else:
-            return True
+        return True
 
     def load(self, value):
         """Set game selection rule from value."""
@@ -929,8 +921,7 @@ class ChessDBrecordQuery(Record):
         """
         if datasource.dbname == RULE_FIELD_DEF:
             return [(self.value.get_name_text(), self.key.pack())]
-        else:
-            return super().get_keys(datasource=datasource, partial=partial)
+        return super().get_keys(datasource=datasource, partial=partial)
 
     def load_value(self, value):
         """Load self.value from value which is repr(<data>).

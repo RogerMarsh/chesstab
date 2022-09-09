@@ -105,8 +105,7 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
             # return tuple(self.cql_statement.position)
             return self.cql_statement.get_statement_text()  # Maybe!
 
-        else:
-            return False
+        return False
 
     def refresh_game_list(self):
         """Display games with position matching selected ChessQL statement."""

@@ -1018,9 +1018,8 @@ def export_selected_repertoires_pgn(grid, filename):
         finally:
             gamesout.close()
         return True
-    else:
-        export_all_repertoires_pgn(grid.get_data_source().dbhome, filename)
-        return True
+    export_all_repertoires_pgn(grid.get_data_source().dbhome, filename)
+    return True
 
 
 def export_selected_repertoires_pgn_no_comments(grid, filename):
@@ -1051,11 +1050,10 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
         finally:
             gamesout.close()
         return
-    else:
-        export_all_repertoires_pgn_no_comments(
-            grid.get_data_source().dbhome, filename
-        )
-        return
+    export_all_repertoires_pgn_no_comments(
+        grid.get_data_source().dbhome, filename
+    )
+    return
 
 
 def export_selected_repertoires_pgn_import_format(grid, filename):
@@ -1244,25 +1242,24 @@ def export_selected_positions(grid, filename):
         finally:
             gamesout.close()
         return
-    else:
-        database = grid.get_data_source().dbhome
-        rr = chessrecord.ChessDBrecordPartial()
-        rr.set_database(database)
-        gamesout = open(filename, "w")
-        cursor = database.database_cursor(
-            filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
-        )
-        try:
-            r = cursor.first()
-            while r:
-                rr.load_record(r)
-                gamesout.write(rr.get_srvalue())
-                gamesout.write("\n")
-                r = cursor.next()
-        finally:
-            cursor.close()
-            gamesout.close()
-        return
+    database = grid.get_data_source().dbhome
+    rr = chessrecord.ChessDBrecordPartial()
+    rr.set_database(database)
+    gamesout = open(filename, "w")
+    cursor = database.database_cursor(
+        filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
+    )
+    try:
+        r = cursor.first()
+        while r:
+            rr.load_record(r)
+            gamesout.write(rr.get_srvalue())
+            gamesout.write("\n")
+            r = cursor.next()
+    finally:
+        cursor.close()
+        gamesout.close()
+    return
 
 
 def export_selected_selection_rules(grid, filename):
@@ -1287,25 +1284,24 @@ def export_selected_selection_rules(grid, filename):
         finally:
             gamesout.close()
         return
-    else:
-        database = grid.get_data_source().dbhome
-        rr = chessrecord.ChessDBrecordQuery()
-        rr.set_database(database)
-        gamesout = open(filename, "w")
-        cursor = database.database_cursor(
-            filespec.SELECTION_FILE_DEF, filespec.SELECTION_FILE_DEF
-        )
-        try:
-            r = cursor.first()
-            while r:
-                rr.load_record(r)
-                gamesout.write(rr.get_srvalue())
-                gamesout.write("\n")
-                r = cursor.next()
-        finally:
-            cursor.close()
-            gamesout.close()
-        return
+    database = grid.get_data_source().dbhome
+    rr = chessrecord.ChessDBrecordQuery()
+    rr.set_database(database)
+    gamesout = open(filename, "w")
+    cursor = database.database_cursor(
+        filespec.SELECTION_FILE_DEF, filespec.SELECTION_FILE_DEF
+    )
+    try:
+        r = cursor.first()
+        while r:
+            rr.load_record(r)
+            gamesout.write(rr.get_srvalue())
+            gamesout.write("\n")
+            r = cursor.next()
+    finally:
+        cursor.close()
+        gamesout.close()
+    return
 
 
 def export_single_game_pgn_reduced_export_format(collected_game, filename):
@@ -1552,11 +1548,10 @@ def _add_token_to_text(token, text, line_length, token_separator, length):
     if not length:
         text.append(token)
         return len(token)
-    elif len(token) + length >= line_length:
+    if len(token) + length >= line_length:
         text.append("\n")
         text.append(token)
         return len(token)
-    else:
-        text.append(token_separator)
-        text.append(token)
-        return len(token) + length + len(token_separator)
+    text.append(token_separator)
+    text.append(token)
+    return len(token) + length + len(token_separator)

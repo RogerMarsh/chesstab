@@ -126,8 +126,7 @@ class QueryListGrid(
             return self.objects[key].grid_row_on_display(**kargs)
         if dodefaultaction:
             return self.objects[key].grid_row_normal(**kargs)
-        else:
-            return None
+        return None
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""

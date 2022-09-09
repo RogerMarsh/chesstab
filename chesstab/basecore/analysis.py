@@ -72,7 +72,7 @@ class Analysis:
             else:
                 self.find_position_analysis(fen)
             return
-        elif not fen:
+        if not fen:
             self.find_engine_analysis(engine)
             return
 

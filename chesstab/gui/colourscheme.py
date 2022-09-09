@@ -420,12 +420,10 @@ class _ColourScheme(ExceptionHandler):
         if tvc:
             if m:
                 return 2
-            else:
-                return 4
-        elif m:
+            return 4
+        if m:
             return 1
-        else:
-            return 3
+        return 3
 
     def is_ok(self):
         """Return True if dialogue closed using Ok button."""

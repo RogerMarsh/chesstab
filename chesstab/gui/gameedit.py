@@ -866,14 +866,13 @@ class GameEdit(Game):
         self.insert_empty_pgn_tag()
         if self.current:
             return self.show_next_pgn_tag_field_name()
-        elif self.score.compare(tkinter.INSERT, "<", START_SCORE_MARK):
+        if self.score.compare(tkinter.INSERT, "<", START_SCORE_MARK):
             self.score.mark_set(
                 tkinter.INSERT,
                 self.score.index(tkinter.INSERT + " linestart -1 lines"),
             )
             return self.show_next_token()
-        else:
-            return self.show_prev_pgn_tag_field_name()
+        return self.show_prev_pgn_tag_field_name()
 
     def insert_pgn_seven_tag_roster(self, event=None):
         """Insert an empty pgn seven tag roster in game score after current."""
@@ -883,14 +882,13 @@ class GameEdit(Game):
         self.insert_empty_pgn_seven_tag_roster()
         if self.current:
             return self.show_next_pgn_tag_field_name()
-        elif self.score.compare(tkinter.INSERT, "<", START_SCORE_MARK):
+        if self.score.compare(tkinter.INSERT, "<", START_SCORE_MARK):
             self.score.mark_set(
                 tkinter.INSERT,
                 self.score.index(tkinter.INSERT + " linestart -7 lines"),
             )
             return self.show_next_token()
-        else:
-            return self.show_prev_pgn_tag_field_name()
+        return self.show_prev_pgn_tag_field_name()
 
     def insert_rav(self, event):
         """Insert first character of first move in new RAV in game score.
@@ -2317,10 +2315,9 @@ class GameEdit(Game):
                             widget.tag_ranges(prior)[0]
                         )
                     )
-                else:
-                    return self.get_position_tag_of_index(
-                        widget.tag_ranges(prior)[0]
-                    )
+                return self.get_position_tag_of_index(
+                    widget.tag_ranges(prior)[0]
+                )
             r = widget.tag_prevrange(NAVIGATE_TOKEN, r[0], START_SCORE_MARK)
 
     def get_previous_move_to_position(self, position):
@@ -2338,8 +2335,7 @@ class GameEdit(Game):
                     self.score.tag_prevrange(NAVIGATE_TOKEN, tr[0])[0]
                 )
             )
-        else:
-            return False
+        return False
 
     def go_to_move(self, index):
         """Extend, set keyboard bindings for new pointer location."""

@@ -74,8 +74,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
                     object_.value.get_name_text(),
                 )
             )
-        else:
-            return "".join(("Insert ", self.text_name))
+        return "".join(("Insert ", self.text_name))
 
     @property
     def ui_base_table(self):
@@ -132,7 +131,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
                     ),
                 )
             return False
-        elif self.newobject.value.cql_error:
+        if self.newobject.value.cql_error:
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.parent,
                 title=title,

@@ -74,8 +74,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
                     object_.value.get_name_text(),
                 )
             )
-        else:
-            return "".join(("Insert ", self.text_name))
+        return "".join(("Insert ", self.text_name))
 
     @property
     def ui_base_table(self):

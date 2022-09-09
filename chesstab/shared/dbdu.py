@@ -130,14 +130,13 @@ class Dbdu(DptCompatdu):
                 if os.path.exists(".".join((n, "zip")))
             ]
             return names, exists
-        else:
-            names = [self.database_file]
-            exists = [
-                os.path.basename(n)
-                for n in names
-                if os.path.exists(".".join((n, "bz2")))
-            ]
-            return names, exists
+        names = [self.database_file]
+        exists = [
+            os.path.basename(n)
+            for n in names
+            if os.path.exists(".".join((n, "bz2")))
+        ]
+        return names, exists
 
     def archive(self, flag=None, names=None):
         """Write a bz2 or zip backup of files containing games.

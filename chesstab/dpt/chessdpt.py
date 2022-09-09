@@ -343,9 +343,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 ),
             ):
                 return None
-            else:
-                self.close_database()
-                return "Restore without retry"
+            self.close_database()
+            return "Restore without retry"
         # At least one file is not in Normal state.
         # None of these files had deferred updates for Import or the state does
         # not imply a file full condition where deferred updates occured.

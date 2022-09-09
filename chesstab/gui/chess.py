@@ -737,7 +737,7 @@ class Chess(ExceptionHandler):
                 title="Open",
             )
             return
-        elif len(ed) > 1:
+        if len(ed) > 1:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
                 message="".join(

@@ -294,7 +294,7 @@ class ChessQLGames:
                 if not pieces:
                     return pieces
             return pieces
-        elif filter_.tokendef in _OR_FILTERS:
+        if filter_.tokendef in _OR_FILTERS:
             pieces = set(ALL_PIECES)
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
@@ -306,10 +306,9 @@ class ChessQLGames:
                 pieces.union(self.pieces_matching_filter(n, initialpieces))
 
             return pieces
-        else:
-            if filter_.tokendef is Token.PIECE_DESIGNATOR:
-                return self.pieces_matching_piece_designator(filter_)
-            return initialpieces
+        if filter_.tokendef is Token.PIECE_DESIGNATOR:
+            return self.pieces_matching_piece_designator(filter_)
+        return initialpieces
 
     # Not called anywhere.
     # Introduced at revision 3755 as part of 'on' filter implementation which
@@ -340,7 +339,7 @@ class ChessQLGames:
                 if not squares:
                     return squares
             return squares
-        elif filter_.tokendef in _OR_FILTERS:
+        if filter_.tokendef in _OR_FILTERS:
             squares = set(Squares.squares)
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
@@ -352,10 +351,9 @@ class ChessQLGames:
                 squares.union(self.squares_matching_filter(n, initialsquares))
 
             return squares
-        else:
-            if filter_.tokendef is Token.PIECE_DESIGNATOR:
-                return self.squares_matching_piece_designator(filter_)
-            return initialsquares
+        if filter_.tokendef is Token.PIECE_DESIGNATOR:
+            return self.squares_matching_piece_designator(filter_)
+        return initialsquares
 
     def pieces_matching_piece_designator(self, filter_):
         """Return pieces matching a piece designator."""
@@ -465,7 +463,7 @@ class ChessQLGames:
                 if not games.count_records():
                     return games
             return games
-        elif filter_.tokendef in _OR_FILTERS:
+        if filter_.tokendef in _OR_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
             for n in filter_.children:
                 if self.is_filter_not_implemented(n):
@@ -474,18 +472,17 @@ class ChessQLGames:
                     n, initialgames, movenumber, variation
                 )
             return games
-        else:
-            if filter_.tokendef is Token.PIECE_DESIGNATOR:
-                return self._games_matching_piece_designator(
-                    filter_, initialgames, movenumber, variation
-                )
-            if filter_.tokendef is Token.RAY:
-                return self._games_matching_ray_filter(
-                    filter_, initialgames, movenumber, variation
-                )
-            games = self.dbhome.recordlist_nil(self.dbset)
-            games |= initialgames
-            return games
+        if filter_.tokendef is Token.PIECE_DESIGNATOR:
+            return self._games_matching_piece_designator(
+                filter_, initialgames, movenumber, variation
+            )
+        if filter_.tokendef is Token.RAY:
+            return self._games_matching_ray_filter(
+                filter_, initialgames, movenumber, variation
+            )
+        games = self.dbhome.recordlist_nil(self.dbset)
+        games |= initialgames
+        return games
 
     def _games_matching_ray_filter(
         self, filter_, datasource, movenumber, variation

@@ -106,7 +106,7 @@ class Engine:
                     "run chess engine.",
                 )
             )
-        elif not (url.port or url.hostname):
+        if not (url.port or url.hostname):
             if not self.is_run_engine_command():
                 return "".join(
                     (
@@ -127,7 +127,7 @@ class Engine:
                         "'.\n",
                     )
                 )
-            elif url.path:
+            if url.path:
                 return "".join(
                     (
                         "Engine must be query with hostname or port.\n\n",
@@ -136,54 +136,53 @@ class Engine:
                         "'.\n",
                     )
                 )
-            elif not url.query:
+            if not url.query:
                 return "Engine must be query with hostname or port.\n\n"
-            else:
-                try:
-                    query = parse_qs(url.query, strict_parsing=True)
-                except ValueError as exc:
-                    return "".join(
-                        (
-                            "Problem in chess engine specification.  ",
-                            "The reported error is:\n\n'",
-                            str(exc),
-                            "'.\n",
-                        )
+            try:
+                query = parse_qs(url.query, strict_parsing=True)
+            except ValueError as exc:
+                return "".join(
+                    (
+                        "Problem in chess engine specification.  ",
+                        "The reported error is:\n\n'",
+                        str(exc),
+                        "'.\n",
                     )
-                if len(query) > 1:
-                    return "".join(
-                        (
-                            "Engine must be single 'key=value' or ",
-                            "'value'.\n\n",
-                            "Query is: '",
-                            url.query,
-                            "'.\n",
-                        )
+                )
+            if len(query) > 1:
+                return "".join(
+                    (
+                        "Engine must be single 'key=value' or ",
+                        "'value'.\n\n",
+                        "Query is: '",
+                        url.query,
+                        "'.\n",
                     )
-                elif len(query) == 1:
-                    for k, v in query.items():
-                        if k != "name":
-                            return "".join(
-                                (
-                                    "Engine must be single 'key=value' or ",
-                                    "'value'.\n\n",
-                                    "Query is: '",
-                                    url.query,
-                                    "'\n\nand use ",
-                                    "'name' as key.\n",
-                                )
+                )
+            if len(query) == 1:
+                for k, v in query.items():
+                    if k != "name":
+                        return "".join(
+                            (
+                                "Engine must be single 'key=value' or ",
+                                "'value'.\n\n",
+                                "Query is: '",
+                                url.query,
+                                "'\n\nand use ",
+                                "'name' as key.\n",
                             )
-                        elif len(v) > 1:
-                            return "".join(
-                                (
-                                    "Engine must be single 'key=value' or ",
-                                    "'value'.\n\n",
-                                    "Query is: '",
-                                    url.query,
-                                    "' with more ",
-                                    "than one 'value'\n",
-                                )
+                        )
+                    if len(v) > 1:
+                        return "".join(
+                            (
+                                "Engine must be single 'key=value' or ",
+                                "'value'.\n\n",
+                                "Query is: '",
+                                url.query,
+                                "' with more ",
+                                "than one 'value'\n",
                             )
+                        )
         elif url.path and url.query:
             return "".join(
                 (
