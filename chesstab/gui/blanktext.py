@@ -136,7 +136,6 @@ class BlankText(ExceptionHandler):
     def press_none(event=None):
         """Do nothing and allow event to be handled by next handler."""
         del event
-        return None
 
     # This method arose when seeking clarity in the way popup menus were set,
     # and replaces lots of 'add_command' calls scattered all over.
@@ -191,7 +190,6 @@ class BlankText(ExceptionHandler):
         # none = None
         # return none
         del menu
-        return None
 
     def post_menu(self, menu, create_menu, allowed=True, event=None):
         """Post the popup menu at current pointer location in widget.

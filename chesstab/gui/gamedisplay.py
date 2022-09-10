@@ -175,6 +175,7 @@ class _GameDisplay(ExceptionHandler, Display):
 
     def delete_item_view(self, event=None):
         """Remove game item from screen."""
+        del event
         self.set_data_source()
         self.ui.delete_game_view(self)
 
