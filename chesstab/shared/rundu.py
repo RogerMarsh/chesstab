@@ -11,6 +11,9 @@ subprocess.popen.
 import sys
 import importlib
 
+if sys.platform.startswith("openbsd"):
+    import resource
+
 
 class RunduError(Exception):
     """Exception class for rundu module."""
@@ -29,7 +32,6 @@ def rundu(engine_module_name, database_module_name):
     database_module = importlib.import_module(database_module_name)
     engine_module = importlib.import_module(engine_module_name)
     if sys.platform.startswith("openbsd"):
-        import resource
 
         # The default user class is limited to 512Mb memory but imports need
         # ~550Mb at Python3.6 for sqlite3.
@@ -62,7 +64,6 @@ def rundu(engine_module_name, database_module_name):
                     "Exception in rundu while setting resource limit"
                 ) from error
 
-        del resource
     try:
         engine_module.ChessDeferredUpdate(
             deferred_update_method=database_module.chess_database_du,

@@ -13,10 +13,11 @@ See www.dptoolkit.com for details of DPT
 """
 
 import os
-import tkinter
-import tkinter.messagebox
 from io import StringIO
 import multiprocessing  # Removed later by 'del multiprocessing'.
+
+import tkinter
+import tkinter.messagebox
 
 from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
 
