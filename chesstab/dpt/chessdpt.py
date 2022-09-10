@@ -105,6 +105,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         single-step.
 
         """
+        del dptmultistepdu
         if dptchunksize is not None:
             return os.path.join(
                 os.path.basename(os.path.dirname(__file__)),

@@ -480,6 +480,7 @@ class Chess(ExceptionHandler):
     @staticmethod
     def create_menu_changed_callback(menu):
         """Return callback to bind to <<MenuSelect>> event for menu."""
+        del menu
 
         def menu_changed(event):
             """Display menu tip in status bar."""
@@ -490,6 +491,7 @@ class Chess(ExceptionHandler):
             # PERL has same problem as found when looked at www
             # print 'menu changed', menu.entrycget('active', 'label')
             # print menu, event, 'changed', menu.entrycget('active', 'label')
+            del event
 
         return menu_changed
 
@@ -1555,6 +1557,7 @@ class Chess(ExceptionHandler):
         User Interface actions after idletasks.
 
         """
+        del pgnfiles
 
         def completed():
             self.ui.get_import_subprocess().wait()

@@ -160,6 +160,7 @@ def get_position_string(
     pattern: piece name or en passant or castling or whose move.
 
     """
+    del halfmove_clock, fullmove_number
     squares = Squares.squares
     for s, p in board.items():
         p.set_square(s)

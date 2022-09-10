@@ -40,6 +40,7 @@ class EngineText(SharedTextEngineText, BlankText):
         self, panel, ui=None, items_manager=None, itemgrid=None, **ka
     ):
         """Create widgets to display chess engine definition."""
+        del itemgrid
         super().__init__(panel, items_manager=items_manager, **ka)
         self.ui = ui
 
@@ -136,6 +137,7 @@ class EngineText(SharedTextEngineText, BlankText):
         #             'this is expected if running under Wine.')))
         #    return
 
+        del event
         url = self.definition.engine_url_or_error_message()
         if isinstance(url, str):
             tkinter.messagebox.showerror(

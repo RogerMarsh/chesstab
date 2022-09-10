@@ -197,6 +197,7 @@ class UCI(ExceptionHandler):
             return
 
         def get(event):
+            del event
             command = self._contents.get()
             if command == filename:
                 self.run_engine(filename)
@@ -345,6 +346,7 @@ class UCI(ExceptionHandler):
         See uci_net.samples.driver for very similar code.
 
         """
+        del event
         command = self._contents.get()
         if command.split()[0] != self._command:
             if (
@@ -392,6 +394,7 @@ class UCI(ExceptionHandler):
         """Set value of Hash option to use on UCI compliant Chess Engine."""
 
         def get(event):
+            del event
             self.uci.hash_size = self._contents.get()
             self.uci.set_option_on_empty_queues.add(ReservedOptionNames.Hash)
             self._do_toplevel.destroy()
@@ -417,6 +420,7 @@ class UCI(ExceptionHandler):
         """Set value of MultiPV option to use on UCI compliant Chess Engine."""
 
         def get(event):
+            del event
             self.uci.multipv = self._contents.get()
             self._do_toplevel.destroy()
             self._do_toplevel = None
@@ -441,6 +445,7 @@ class UCI(ExceptionHandler):
         """Set depth to use in go commands to UCI compliant Chess Engine."""
 
         def get(event):
+            del event
             self.uci.go_depth = self._contents.get()
             self._do_toplevel.destroy()
             self._do_toplevel = None
@@ -575,6 +580,7 @@ class UCI(ExceptionHandler):
             del self._spinbox
 
         def destroy(event=None):
+            del event
             self._do_toplevel = None
 
         self._spinbox = initial_value
@@ -624,6 +630,7 @@ class UCI(ExceptionHandler):
             return
 
         def destroy(event=None):
+            del event
             if self._show_engines_toplevel is not None:
                 self._close_engine_grid()
             self._show_engines_toplevel = None

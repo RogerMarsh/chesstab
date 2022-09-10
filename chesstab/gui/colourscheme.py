@@ -32,6 +32,7 @@ class _ColourScheme(ExceptionHandler):
         title - use is w.wm_title(title).
 
         """
+        del kargs
         self.ui = ui
         tags = ui.tags_variations_comments_font
         moves = ui.moves_played_in_game_font
@@ -179,6 +180,7 @@ class _ColourScheme(ExceptionHandler):
 
         def focus(w):
             def fs(e=None):
+                del e
                 w.focus_set()
 
             return fs
@@ -313,6 +315,7 @@ class _ColourScheme(ExceptionHandler):
         )
 
         def focus(event=None):
+            del event
             self.game.score.focus_set()
 
         self.game.score.bind("<ButtonPress>", self.try_event(focus))
@@ -431,12 +434,14 @@ class _ColourScheme(ExceptionHandler):
 
     def on_cancel(self, event=None):
         """Process Cancel button event."""
+        del event
         self.ok = False
         self.restore_focus.focus_set()
         self.chooser.destroy()
 
     def on_ok(self, event=None):
         """Process Ok button event."""
+        del event
         self.ok = True
         self.restore_focus.focus_set()
         self.chooser.destroy()
@@ -455,6 +460,7 @@ class _ColourScheme(ExceptionHandler):
 
     def set_board_font_family(self, event=None):
         """Set sample game board family."""
+        del event
         f = self.b_families
         self.boardfont["family"] = f.get(f.curselection()[0])
         self.game.board.font["family"] = f.get(f.curselection()[0])
@@ -509,6 +515,7 @@ class _ColourScheme(ExceptionHandler):
 
     def set_score_font_family(self, event=None):
         """Set game score and variation font family."""
+        del event
         f = self.s_families
         self.tags_variations_comments_font["family"] = f.get(
             f.curselection()[0]
@@ -558,6 +565,7 @@ class _ColourScheme(ExceptionHandler):
 
         def focus(w):
             def fs(e=None):
+                del e
                 w.focus_set()
 
             return fs

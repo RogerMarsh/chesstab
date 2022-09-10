@@ -84,6 +84,7 @@ class ChessDBrowPosition(
         Create textitems argument for ChessDBrowPosition instance.
 
         """
+        del position
         self.row_specification[0][WIDGET_CONFIGURE]["context"] = context
         return super().grid_row(
             textitems=(literal_eval(self.srvalue),), **kargs

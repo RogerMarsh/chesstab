@@ -25,6 +25,7 @@ class Database:
         **kargs - soak up any arguments other database engines need.
 
         """
+        del kargs
         return self._deferred_update_process
 
     def open_database(self, files=None):
@@ -112,6 +113,7 @@ class Database:
 
     def get_archive_names(self, files=()):
         """Return names and operating system files for archives and guards."""
+        del files
         names = (self.database_file,)
         archives = dict()
         guards = dict()
@@ -129,6 +131,7 @@ class Database:
         For SQLite3 and Berkeley DB just call open_database.
 
         """
+        del files
         super().open_database()
 
         # Return True to fit behaviour of chessdpt module version of method.
@@ -140,6 +143,7 @@ class Database:
         For SQLite3 and Berkeley DB just call open_database.
 
         """
+        del files
         super().open_database()
 
         # Return True to fit behaviour of chessdpt module version of method.

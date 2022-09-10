@@ -727,10 +727,12 @@ class Score(SharedTextScore, BlankText):
 
     def show_first_in_game(self, event=None):
         """Display initial position of game score (usually start of game)."""
+        del event
         return self.show_new_current(new_current=None)
 
     def show_first_in_line(self, event=None):
         """Display initial position of line containing current move."""
+        del event
         if self.current is None:
             return "break"
         if self.is_currentmove_in_main_line():
@@ -744,6 +746,7 @@ class Score(SharedTextScore, BlankText):
 
     def show_variation(self, event=None):
         """Enter selected variation and display its initial position."""
+        del event
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self.bind_for_primary_activity()
         self.colour_variation(self.current)
@@ -751,12 +754,14 @@ class Score(SharedTextScore, BlankText):
 
     def show_last_in_game(self, event=None):
         """Display final position of game score."""
+        del event
         return self.show_new_current(
             new_current=self.select_last_move_played_in_game()
         )
 
     def show_last_in_line(self, event=None):
         """Display final position of line containing current move."""
+        del event
         if self.current is None:
             return self.show_last_in_game()
         if self.is_currentmove_in_main_line():
@@ -769,6 +774,7 @@ class Score(SharedTextScore, BlankText):
 
     def show_next_in_line(self, event=None):
         """Display next position of selected line."""
+        del event
         if self.current is None:
             self.current = self.select_first_move_of_game()
         else:
@@ -781,6 +787,7 @@ class Score(SharedTextScore, BlankText):
 
     def show_next_in_variation(self, event=None):
         """Display choices if these exist or next position of selected line."""
+        del event
         if self.current is None:
 
             # No prior to variation tag exists: no move to attach it to.
@@ -811,6 +818,7 @@ class Score(SharedTextScore, BlankText):
 
     def show_prev_in_line(self, event=None):
         """Display previous position of selected line."""
+        del event
         if self.current is None:
             return "break"
         if not self.is_currentmove_in_main_line():
@@ -822,6 +830,7 @@ class Score(SharedTextScore, BlankText):
 
     def show_prev_in_variation(self, event=None):
         """Display choices in previous position of selected line."""
+        del event
         if self.current is None:
             return "break"
         if not self.is_currentmove_in_main_line():
@@ -873,6 +882,7 @@ class Score(SharedTextScore, BlankText):
 
     def variation_cancel(self, event=None):
         """Remove all variation highlighting."""
+        del event
         if self.current is None:
 
             # No prior to variation tag exists: no move to attach it to.
@@ -895,6 +905,7 @@ class Score(SharedTextScore, BlankText):
 
     def variation_cycle(self, event=None):
         """Highlight next variation in choices at current position."""
+        del event
         self.step_one_variation(self.current)
         return "break"
 
@@ -958,6 +969,7 @@ class Score(SharedTextScore, BlankText):
         text are not editable.
 
         """
+        del k
         return self.insert_token_into_text(token, separator)
 
     def add_variation_before_move_to_colouring_tag(self, move):
@@ -1792,6 +1804,7 @@ class Score(SharedTextScore, BlankText):
 
     def map_integer(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
+        del position
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_glyph(self, token):
@@ -1800,6 +1813,7 @@ class Score(SharedTextScore, BlankText):
 
     def map_period(self, token, position):
         """Add token to game text. position is ignored. Return token range."""
+        del position
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_start_reserved(self, token):
@@ -2062,6 +2076,7 @@ class Score(SharedTextScore, BlankText):
         #
         # ######################
 
+        del selected_first_move
         widget = self.score
         if move_prior_to_choice is None:
             index = "1.0"
@@ -2333,6 +2348,7 @@ class Score(SharedTextScore, BlankText):
 
     def export_pgn_reduced_export_format(self, event=None):
         """Export PGN tags and movetext in reduced export format."""
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(
@@ -2356,6 +2372,7 @@ class Score(SharedTextScore, BlankText):
 
     def export_pgn(self, event=None):
         """Export PGN tags and movetext in export format."""
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(
@@ -2383,6 +2400,7 @@ class Score(SharedTextScore, BlankText):
         Comments and RAVs are not included.
 
         """
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(
@@ -2406,6 +2424,7 @@ class Score(SharedTextScore, BlankText):
 
     def export_pgn_no_comments(self, event=None):
         """Export PGN tags and movetext in export format without comments."""
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(
@@ -2436,6 +2455,7 @@ class Score(SharedTextScore, BlankText):
         length.
 
         """
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(
@@ -2470,6 +2490,7 @@ class Score(SharedTextScore, BlankText):
         Newlines are not inserted to keep line lengths below some limit.
 
         """
+        del event
         type_name, game_class = self.pgn_export_type
         collected_game = next(
             PGN(game_class=game_class).read_games(

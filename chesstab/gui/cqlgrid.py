@@ -183,6 +183,7 @@ class CQLListGrid(
 
     def export_partial(self, event=None):
         """Export selected partial position definitions."""
+        del event
         exporters.export_selected_positions(
             self, self.ui.get_export_filename("Partial Positions", pgn=False)
         )
@@ -345,6 +346,7 @@ class CQLGrid(CQLListGrid):
         Call _display_cql_statement after idle tasks to allow message display.
 
         """
+        del event
         if not self.get_visible_selected_key():
             return
         self._set_find_cql_statement_name_games(self.selection[0])
@@ -358,6 +360,7 @@ class CQLGrid(CQLListGrid):
         Call _display_cql_statement after idle tasks to allow message display.
 
         """
+        del event
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(
@@ -388,6 +391,7 @@ class CQLGrid(CQLListGrid):
         Call _edit_cql_statement after idle tasks to allow message display.
 
         """
+        del event
         if not self.get_visible_selected_key():
             return
         self._set_find_cql_statement_name_games(self.selection[0])
@@ -401,6 +405,7 @@ class CQLGrid(CQLListGrid):
         Call _edit_cql_statement after idle tasks to allow message display.
 
         """
+        del event
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(self._edit_cql_statement_from_popup, self.frame)

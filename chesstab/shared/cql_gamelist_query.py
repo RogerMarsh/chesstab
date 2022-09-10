@@ -45,17 +45,20 @@ class CQLGameListQuery:
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
+        del event
         self.ui.give_focus_backward(self)
         return "break"
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order."""
+        del event
         self.ui.give_focus_forward(self)
         return "break"
 
     @staticmethod
     def traverse_round(event=None):
         """Give focus to next widget within active item in traversal order."""
+        del event
         return "break"
 
     def set_focus(self):

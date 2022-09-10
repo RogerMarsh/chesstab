@@ -225,11 +225,13 @@ class EngineGrid(EngineListGrid):
 
     def run_engine(self, event=None):
         """Run chess engine."""
+        del event
         self.launch_chess_engine(self.pointer_popup_selection)
         # self.move_selection_to_popup_selection()
 
     def launch_chess_engine(self, key, modal=True):
         """Launch a chess engine."""
+        del modal
         oldobject = ChessDBrecordEngine()
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)

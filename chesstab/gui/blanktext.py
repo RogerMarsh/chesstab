@@ -129,11 +129,13 @@ class BlankText(ExceptionHandler):
     @staticmethod
     def press_break(event=None):
         """Do nothing and prevent event handling by next handlers."""
+        del event
         return "break"
 
     @staticmethod
     def press_none(event=None):
         """Do nothing and allow event to be handled by next handler."""
+        del event
         return None
 
     # This method arose when seeking clarity in the way popup menus were set,
@@ -159,6 +161,7 @@ class BlankText(ExceptionHandler):
     @staticmethod
     def give_focus_to_widget(event=None):
         """Do nothing and return 'break'.  Override in subclasses as needed."""
+        del event
         return "break"
 
     @staticmethod
@@ -187,6 +190,7 @@ class BlankText(ExceptionHandler):
         # The message is not reported if 'return None' is replaced like:
         # none = None
         # return none
+        del menu
         return None
 
     def post_menu(self, menu, create_menu, allowed=True, event=None):
@@ -197,6 +201,7 @@ class BlankText(ExceptionHandler):
         allowed is True, default, permits display of menu.
 
         """
+        del event
         if menu is None:
             menu = create_menu()
         if not allowed:

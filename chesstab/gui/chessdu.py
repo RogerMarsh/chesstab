@@ -283,6 +283,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         and keypress.
 
         """
+        del event
         if self._import_job:
             return
         names, exists = self.database.get_archive_names(
@@ -340,6 +341,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         and keypress.
 
         """
+        del event
         if self._import_job:
             return
         names, exists = self.database.get_archive_names(
@@ -603,6 +605,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         and keypress.
 
         """
+        del event
         if tkinter.messagebox.askyesno(
             parent=self.root, title="Quit Import", message=self._quit_message
         ):

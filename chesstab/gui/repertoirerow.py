@@ -147,6 +147,7 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
 
     def get_tags_display_order(self, pgn):
         """Return Tags not given their own column in display order."""
+        del pgn
         tag_values = []
         tags = self.collected_game._tags
         for tv in sorted(tags.items()):

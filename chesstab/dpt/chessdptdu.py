@@ -318,6 +318,7 @@ class ChessDatabaseDeferred:
         and keypress,
 
         """
+        del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
         for k, v in self.get_database_parameters(
@@ -380,6 +381,7 @@ class ChessDatabaseDeferred:
         and keypress,
 
         """
+        del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
         for k, v in self.get_database_parameters(
@@ -586,6 +588,7 @@ if __name__ == "__main__":
 
     def quit_(*a):
         """Destroy application."""
+        del a
         root.destroy()
 
     def show_menu(event=None):
@@ -608,6 +611,7 @@ if __name__ == "__main__":
             invoked by KeyPress rather than a menu command.
 
             """
+            del a
             global filepath  # pylint global-statement report: global needed.
             if filepath:
                 text.insert(tkinter.END, "\nProcess started, please wait.\n")

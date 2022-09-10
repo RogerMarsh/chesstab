@@ -230,6 +230,7 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
 
     def get_tags_display_order(self, pgn):
         """Return Tags not given their own column in display order."""
+        del pgn
         str_tags = []
         other_tags = []
         tags = self.value.collected_game._tags

@@ -65,6 +65,7 @@ class Litedu(DptCompatdu, Archivedu):
 
     def get_archive_names(self, files=()):
         """Return vedis database file and existing operating system files."""
+        del files
         names = [self.database_file]
         exists = [
             os.path.basename(n)

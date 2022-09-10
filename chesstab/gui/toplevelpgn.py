@@ -72,6 +72,7 @@ class ToplevelPGN(ScorePGN):
 
     def current_item(self, event=None):
         """Select current PGN score on display."""
+        del event
         self.current_pgn_score(self)
 
 

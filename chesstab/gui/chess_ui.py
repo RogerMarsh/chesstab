@@ -1015,11 +1015,13 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_gamepanel_item(self, event=None):
         """Give game at top of stack the focus."""
+        del event
         self.set_toolbarframe_disabled()
         self.game_items.set_focus()
 
     def set_focus_game_grid(self, event=None):
         """Give widget displaying list of games on database the focus."""
+        del event
         if self.database is not None:
             if self.base_games.datasource.dbname in self.allow_filter:
                 self.set_toolbarframe_normal(
@@ -1032,6 +1034,7 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_partial_game_grid(self, event=None):
         """Give widget displaying list of games for partial position focus."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_disabled()
             self.partial_games.set_focus()
@@ -1039,6 +1042,7 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_partial_grid(self, event=None):
         """Give widget displaying list of partial positions the focus."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_normal(
                 self.move_to_partial, self.filter_partial
@@ -1048,11 +1052,13 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_partialpanel_item(self, event=None):
         """Give partial position at top of stack the focus."""
+        del event
         self.set_toolbarframe_disabled()
         self.partial_items.set_focus()
 
     def set_focus_position_grid(self, event=None):
         """Give widget displaying list of games matching position the focus."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_disabled()
             self.game_games.set_focus()
@@ -1060,6 +1066,7 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_repertoire_game_grid(self, event=None):
         """Give widget displaying list of games for repertoire focus."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_disabled()
             self.repertoire_games.set_focus()
@@ -1067,6 +1074,7 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_repertoire_grid(self, event=None):
         """Give focus to widget showing list of database repertoire games."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_normal(
                 self.move_to_repertoire, self.filter_repertoire
@@ -1076,11 +1084,13 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_repertoirepanel_item(self, event=None):
         """Give repertoire game at top of stack the focus."""
+        del event
         self.set_toolbarframe_disabled()
         self.repertoire_items.set_focus()
 
     def set_focus_selection_rule_grid(self, event=None):
         """Give widget displaying list of selection rules the focus."""
+        del event
         if self.database is not None:
             self.set_toolbarframe_normal(
                 self.move_to_selection, self.filter_selection
@@ -1090,6 +1100,7 @@ class ChessUI(ExceptionHandler):
 
     def set_focus_selectionpanel_item(self, event=None):
         """Give selection rule at top of stack the focus."""
+        del event
         self.set_toolbarframe_disabled()
         self.selection_items.set_focus()
 

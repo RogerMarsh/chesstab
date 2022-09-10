@@ -81,6 +81,7 @@ class PositionScore(ExceptionHandler):
         Canvas must be square leaving Text at least half the Frame.
 
         """
+        del ka
         super().__init__()
         self.ui = ui
         if tags_variations_comments_font:
@@ -166,6 +167,7 @@ class PositionScore(ExceptionHandler):
         editing mode recovers the original score.
 
         """
+        del reset_undo
         self.score.configure(state=tkinter.NORMAL)
         self.score.delete("1.0", tkinter.END)
         self.map_game()

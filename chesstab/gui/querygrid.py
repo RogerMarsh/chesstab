@@ -197,6 +197,7 @@ class QueryListGrid(
 
     def export_selection_rules(self, event=None):
         """Export selected selection rule definitions."""
+        del event
         exporters.export_selected_selection_rules(
             self, self.ui.get_export_filename("Selection Rules", pgn=False)
         )
@@ -353,6 +354,7 @@ class QueryGrid(QueryListGrid):
         Call _display_selection_rule after idle tasks to allow message display.
 
         """
+        del event
         if not self.get_visible_selected_key():
             return
         self._set_find_selection_rule_name_games(self.selection[0])
@@ -366,6 +368,7 @@ class QueryGrid(QueryListGrid):
         Call _display_selection_rule after idle tasks to allow message display.
 
         """
+        del event
         self._set_find_selection_rule_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(
@@ -396,6 +399,7 @@ class QueryGrid(QueryListGrid):
         Call _edit_selection_rule after idle tasks to allow message display.
 
         """
+        del event
         if not self.get_visible_selected_key():
             return
         self._set_find_selection_rule_name_games(self.selection[0])
@@ -409,6 +413,7 @@ class QueryGrid(QueryListGrid):
         Call _edit_selection_rule after idle tasks to allow message display.
 
         """
+        del event
         self._set_find_selection_rule_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(self._edit_selection_rule_from_popup, self.frame)

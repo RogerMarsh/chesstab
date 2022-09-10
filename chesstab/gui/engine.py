@@ -50,6 +50,7 @@ class Engine(EngineText):
         **ka
     ):
         """Create widgets to display chess engine definition."""
+        del boardfont
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
@@ -78,6 +79,7 @@ class Engine(EngineText):
 
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
+        del event
         self.configure_selection_widget()
 
     def configure_selection_widget(self):

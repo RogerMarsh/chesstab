@@ -54,6 +54,7 @@ class CQL(CQLText):
         **ka
     ):
         """Create Frame and delegate to superclass, then set grid geometry."""
+        del boardfont
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
         panel.bind("<Configure>", self.try_event(self.on_configure))
         panel.grid_propagate(False)
@@ -87,6 +88,7 @@ class CQL(CQLText):
 
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
+        del event
         self.configure_cql_statement_widget()
 
     def configure_cql_statement_widget(self):
@@ -157,6 +159,7 @@ class CQL(CQLText):
 
     def export_partial(self, event=None):
         """Export displayed partial position definition."""
+        del event
         exporters.export_single_position(
             self.score.get("1.0", tkinter.END),
             self.ui.get_export_filename_for_single_item(

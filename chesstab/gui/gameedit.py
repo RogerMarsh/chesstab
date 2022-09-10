@@ -769,16 +769,19 @@ class GameEdit(Game):
 
     def delete_char_right(self, event):
         """Handle <Del> event."""
+        del event
         self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
         return "break"
 
     def delete_char_left(self, event):
         """Handle <BackSpace> event."""
+        del event
         self.delete_char_next_to_insert_mark(START_EDIT_MARK, tkinter.INSERT)
         return "break"
 
     def delete_move_char_right(self, event):
         """Handle <Shift-Del> event for move token."""
+        del event
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
             self.process_move()
@@ -788,6 +791,7 @@ class GameEdit(Game):
 
     def delete_move_char_left(self, event):
         """Handle <Shift-BackSpace> event for move token."""
+        del event
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
@@ -799,6 +803,7 @@ class GameEdit(Game):
 
     def delete_token_char_right(self, event):
         """Handle <Shift-Del> event for non-move token."""
+        del event
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
         else:
@@ -807,6 +812,7 @@ class GameEdit(Game):
 
     def delete_token_char_left(self, event):
         """Handle <Shift-BackSpace> event for non-move token."""
+        del event
         if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
@@ -819,6 +825,7 @@ class GameEdit(Game):
     # Maybe use to handle text edit mode
     def edit_gamescore(self, event):
         """Edit game score on keyboard event."""
+        del event
         if not self.is_game_in_text_edit_mode():
             return
 
@@ -830,6 +837,7 @@ class GameEdit(Game):
 
     def insert_comment(self, event=None):
         """Insert comment in game score after current."""
+        del event
         if self.current:
             if not self.is_current_in_movetext():
                 return "break"
@@ -837,6 +845,7 @@ class GameEdit(Game):
 
     def insert_comment_to_eol(self, event=None):
         """Insert comment to eol in game score after current."""
+        del event
         if self.current:
             if not self.is_current_in_movetext():
                 return "break"
@@ -844,6 +853,7 @@ class GameEdit(Game):
 
     def insert_escape_to_eol(self, event=None):
         """Insert escape to eol in game score after current."""
+        del event
         if self.current:
             if not self.is_current_in_movetext():
                 return "break"
@@ -851,6 +861,7 @@ class GameEdit(Game):
 
     def insert_glyph(self, event=None):
         """Insert glyph in game score after current."""
+        del event
         if self.current:
             if not self.is_current_in_movetext():
                 return "break"
@@ -858,6 +869,7 @@ class GameEdit(Game):
 
     def insert_pgn_tag(self, event=None):
         """Insert a single empty pgn tag in game score after current."""
+        del event
         if self.current:
             if self.is_current_in_movetext():
                 return "break"
@@ -874,6 +886,7 @@ class GameEdit(Game):
 
     def insert_pgn_seven_tag_roster(self, event=None):
         """Insert an empty pgn seven tag roster in game score after current."""
+        del event
         if self.current:
             if self.is_current_in_movetext():
                 return "break"
@@ -1041,6 +1054,7 @@ class GameEdit(Game):
 
     def insert_rav_command(self, event=None):
         """Display information dialogue saying how to insert a RAV."""
+        del event
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title="Insert RAV",
@@ -1109,26 +1123,32 @@ class GameEdit(Game):
 
     def insert_result_draw(self, event=None):
         """Set 1/2-1/2 as the game termination sequence and PGN Result Tag."""
+        del event
         self.insert_result(DRAW)
 
     def insert_result_event(self, event=None):
         """Insert or edit the game termination sequence and PGN Result Tag."""
+        del event
         self.insert_result(_TERMINATION_MAP.get(event.keysym))
 
     def insert_result_loss(self, event=None):
         """Set 0-1 as the game termination sequence and PGN Result Tag."""
+        del event
         self.insert_result(BLACK_WIN)
 
     def insert_result_termination(self, event=None):
         """Set * as the game termination sequence and PGN Result Tag."""
+        del event
         self.insert_result(UNKNOWN_RESULT)
 
     def insert_result_win(self, event=None):
         """Set 1-0 as the game termination sequence and PGN Result Tag."""
+        del event
         self.insert_result(WHITE_WIN)
 
     def insert_reserved(self, event=None):
         """Insert reserved in game score after current."""
+        del event
         if self.current:
             if not self.is_current_in_movetext():
                 return "break"
@@ -1391,31 +1411,37 @@ class GameEdit(Game):
 
     def set_insert_first_char_in_token(self, event):
         """Handle <Home> event."""
+        del event
         self.set_insert_mark_at_start_of_token()
         return "break"
 
     def set_insert_last_char_in_token(self, event):
         """Handle <End> event."""
+        del event
         self.set_insert_mark_at_end_of_token()
         return "break"
 
     def set_insert_next_char_in_token(self, event):
         """Handle <Right> event."""
+        del event
         self.set_insert_mark_right_one_char()
         return "break"
 
     def set_insert_next_line_in_token(self, event):
         """Handle <Alt-Down> event."""
+        del event
         self.set_insert_mark_down_one_line()
         return "break"
 
     def set_insert_prev_char_in_token(self, event):
         """Handle <Left> event."""
+        del event
         self.set_insert_mark_left_one_char()
         return "break"
 
     def set_insert_prev_line_in_token(self, event):
         """Handle <Alt-Up> event."""
+        del event
         self.set_insert_mark_up_one_line()
         return "break"
 
@@ -1443,22 +1469,27 @@ class GameEdit(Game):
 
     def show_first_comment(self, event=None):
         """Display first comment in game score."""
+        del event
         return self.show_item(new_item=self.select_first_comment_in_game())
 
     def show_last_comment(self, event=None):
         """Display last comment in game score."""
+        del event
         return self.show_item(new_item=self.select_last_comment_in_game())
 
     def show_next_comment(self, event=None):
         """Display next comment in game score."""
+        del event
         return self.show_item(new_item=self.select_next_comment_in_game())
 
     def show_prev_comment(self, event=None):
         """Display previous comment in game score."""
+        del event
         return self.show_item(new_item=self.select_prev_comment_in_game())
 
     def show_first_token(self, event=None):
         """Display first token in game score (usually first PGN Tag)."""
+        del event
         if self.current is None:
             return "break"
         return self.show_move_or_item(
@@ -1467,6 +1498,7 @@ class GameEdit(Game):
 
     def show_last_token(self, event=None):
         """Display last token in game score (usually termination, 1-0 etc)."""
+        del event
         return self.show_move_or_item(
             new_item=self.select_last_token_in_game()
         )
@@ -1478,6 +1510,7 @@ class GameEdit(Game):
         fired by Shift Right.
 
         """
+        del event
         self.show_move_or_item(new_item=self.select_next_token_in_game())
         return "break"
 
@@ -1488,27 +1521,33 @@ class GameEdit(Game):
         fired by Shift Left.
 
         """
+        del event
         self.show_move_or_item(new_item=self.select_prev_token_in_game())
         return "break"
 
     def show_next_rav_start(self, event=None):
         """Display next RAV Start in game score."""
+        del event
         return self.show_item(new_item=self.select_next_rav_start_in_game())
 
     def show_prev_rav_start(self, event=None):
         """Display previous RAV Start in game score."""
+        del event
         return self.show_item(new_item=self.select_prev_rav_start_in_game())
 
     def show_next_pgn_tag_field_name(self, event=None):
         """Display next pgn tag field name."""
+        del event
         return self.show_item(new_item=self.select_next_pgn_tag_field_name())
 
     def show_prev_pgn_tag_field_name(self, event=None):
         """Display previous pgn tag field name."""
+        del event
         return self.show_item(new_item=self.select_prev_pgn_tag_field_name())
 
     def to_prev_pgn_tag(self, event=None):
         """Position insertion cursor before preceding pgn tag in game score."""
+        del event
         self.clear_moves_played_in_variation_colouring_tag()
         self.clear_choice_colouring_tag()
         self.clear_variation_colouring_tag()
@@ -1539,6 +1578,7 @@ class GameEdit(Game):
 
     def to_next_pgn_tag(self, event=None):
         """Position insertion cursor before following pgn tag in game score."""
+        del event
         self.clear_moves_played_in_variation_colouring_tag()
         self.clear_choice_colouring_tag()
         self.clear_variation_colouring_tag()
@@ -1620,6 +1660,7 @@ class GameEdit(Game):
     # Replaces non_move_show_prev_in_variation which does same thing.
     def show_prev_in_variation_from_non_move_token(self, event=None):
         """Set move before currrent token in variation as current move."""
+        del event
         self.set_nearest_move_to_token_as_currentmove()
 
         # self.set_current() already called but return is not via a method
@@ -1632,6 +1673,7 @@ class GameEdit(Game):
     # Replaces non_move_show_prev_in_line which does same thing.
     def show_prev_in_line_from_non_move_token(self, event=None):
         """Set move before currrent token as current move."""
+        del event
         self.set_nearest_move_to_token_as_currentmove()
 
         # self.set_current() already called but return is not via a method
@@ -1643,12 +1685,14 @@ class GameEdit(Game):
     # to Tk Text widget tag names were introduced.
     def set_edit_bindings_and_to_prev_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at previous PGN tag."""
+        del event
         return self.to_prev_pgn_tag()
 
     # Renamed from 'bind_and_to_next_pgn_tag' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
     def set_edit_bindings_and_to_next_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at next PGN tag."""
+        del event
         return self.to_prev_pgn_tag()  # to start of current PGN tag if in one
 
     # This method may be removed because it is used in only two places, and
@@ -2079,6 +2123,7 @@ class GameEdit(Game):
 
     def delete_empty_pgn_tag(self, event=None):
         """Delete empty PGN tag token."""
+        del event
         widget = self.score
         start = widget.index(tkinter.INSERT + " linestart")
         tr = widget.tag_nextrange(PGN_TAG, start, START_SCORE_MARK)

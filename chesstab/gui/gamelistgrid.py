@@ -231,6 +231,7 @@ class GameListGrid(
 
     def export_text(self, event=None):
         """Export selected games as text."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_text(
                 self,
@@ -243,6 +244,7 @@ class GameListGrid(
 
     def export_pgn_import_format(self, event=None):
         """Export selected games in a PGN import format."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_pgn_import_format(
                 self,
@@ -253,6 +255,7 @@ class GameListGrid(
 
     def export_pgn(self, event=None):
         """Export selected games in PGN export format."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_pgn(
                 self, self.ui.get_export_filename("Games", pgn=True)
@@ -262,6 +265,7 @@ class GameListGrid(
 
     def export_pgn_reduced_export_format(self, event=None):
         """Export selected games in PGN Reduced Export Format."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_pgn_reduced_export_format(
                 self,
@@ -274,6 +278,7 @@ class GameListGrid(
 
     def export_pgn_no_comments_no_ravs(self, event=None):
         """Export selected games as PGN excluding all comments and RAVs."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_pgn_no_comments_no_ravs(
                 self,
@@ -286,6 +291,7 @@ class GameListGrid(
 
     def export_pgn_no_comments(self, event=None):
         """Export selected games as PGN excluding all commentary tokens."""
+        del event
         self.ui.export_report(
             exporters.export_selected_games_pgn_no_comments(
                 self,
@@ -482,6 +488,7 @@ class PartialPositionGames(GameListGrid):
 
     def display_game(self, event=None):
         """Display selected game and cancel selection."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.get_visible_selected_key())
         )
@@ -489,12 +496,14 @@ class PartialPositionGames(GameListGrid):
 
     def display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.pointer_popup_selection)
         )
 
     def edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.get_visible_selected_key())
         )
@@ -502,6 +511,7 @@ class PartialPositionGames(GameListGrid):
 
     def edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.pointer_popup_selection)
         )
@@ -747,6 +757,7 @@ class GamePositionGames(GameListGrid):
 
     def display_game(self, event=None):
         """Display selected game and cancel selection."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.get_visible_selected_key())
         )
@@ -754,12 +765,14 @@ class GamePositionGames(GameListGrid):
 
     def display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.pointer_popup_selection)
         )
 
     def edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.get_visible_selected_key())
         )
@@ -767,6 +780,7 @@ class GamePositionGames(GameListGrid):
 
     def edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.pointer_popup_selection)
         )
@@ -1038,20 +1052,24 @@ class TagRosterGrid(GameListGrid):
 
     def display_game(self, event=None):
         """Display selected game and cancel selection."""
+        del event
         self.display_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
     def display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
+        del event
         self.display_selected_item(self.pointer_popup_selection)
 
     def edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
+        del event
         self.edit_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
     def edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
+        del event
         self.edit_selected_item(self.pointer_popup_selection)
 
     def on_game_change(self, instance):
@@ -1307,20 +1325,24 @@ class RepertoireGrid(GameListGrid):
 
     def display_game(self, event=None):
         """Display selected repertoire and cancel selection."""
+        del event
         self.display_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
     def display_game_from_popup(self, event=None):
         """Display repertoire selected by pointer."""
+        del event
         self.display_selected_item(self.pointer_popup_selection)
 
     def edit_game(self, event=None):
         """Display selected repertoire for editing and cancel selection."""
+        del event
         self.edit_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
     def edit_game_from_popup(self, event=None):
         """Display repertoire with editing allowed selected by pointer."""
+        del event
         self.edit_selected_item(self.pointer_popup_selection)
 
     def on_game_change(self, instance):
@@ -1757,6 +1779,7 @@ class RepertoirePositionGames(GameListGrid):
 
     def display_game(self, event=None):
         """Display selected game and cancel selection."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.get_visible_selected_key())
         )
@@ -1764,12 +1787,14 @@ class RepertoirePositionGames(GameListGrid):
 
     def display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
+        del event
         self.set_move_highlight(
             self.display_selected_item(self.pointer_popup_selection)
         )
 
     def edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.get_visible_selected_key())
         )
@@ -1777,6 +1802,7 @@ class RepertoirePositionGames(GameListGrid):
 
     def edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
+        del event
         self.set_move_highlight(
             self.edit_selected_item(self.pointer_popup_selection)
         )

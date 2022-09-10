@@ -209,6 +209,7 @@ class ChessQLGames:
         initial_recordset is games to which query is applied.
 
         """
+        del commit
         if query is None:
             self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
             return
@@ -486,6 +487,7 @@ class ChessQLGames:
         self, filter_, datasource, movenumber, variation
     ):
         """Return games matching a ray filter."""
+        del datasource
         if filter_.tokendef is not Token.RAY:
             raise ChessQLGamesError(
                 "".join(
@@ -558,6 +560,7 @@ class ChessQLGames:
         Walk node tree for cql parameters and combine evaluated game sets.
 
         """
+        del query
         found = self.dbhome.recordlist_nil(self.dbset)
         found |= games
         return found

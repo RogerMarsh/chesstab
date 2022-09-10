@@ -138,6 +138,7 @@ class Board(ExceptionHandler):
 
     def on_configure_container(self, event=None):
         """Reconfigure board after container widget has been resized."""
+        del event
         cw = self.container.winfo_width()
         ch = self.container.winfo_height()
         side = min(cw, ch)

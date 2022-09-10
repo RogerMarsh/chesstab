@@ -211,10 +211,12 @@ class Game(Score):
         # the control with the right size on creation.
         # Here extra first event has width=1 height=1 followed up by event
         # with required dimensions.
+        del event
         self.panel.bind("<Configure>", self.try_event(self.on_configure))
 
     def on_configure(self, event=None):
         """Reconfigure board and score after container has been resized."""
+        del event
         self.configure_game_widget()
         self.see_current_move()
 
@@ -573,6 +575,7 @@ class Game(Score):
 
     def set_toggle_game_analysis_bindings(self, switch):
         """Set keystoke bindings to switch between game and analysis."""
+        del switch
         self.set_event_bindings_score(
             ((EventSpec.scoresheet_to_analysis, self.analysis_current_item),)
         )

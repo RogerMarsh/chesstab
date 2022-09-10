@@ -154,10 +154,12 @@ class _CQLDisplay(ExceptionHandler, Display):
 
     def delete_item_view(self, event=None):
         """Remove ChessQL statement item from screen."""
+        del event
         self.ui.delete_position_view(self)
 
     def insert_item_database(self, event=None):
         """Add ChessQL statement to database."""
+        del event
         if self.ui.partial_items.active_item is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
@@ -267,6 +269,7 @@ class _CQLDisplay(ExceptionHandler, Display):
         instance is ignored: it is assumed a recalculation is needed.
 
         """
+        del instance
         if self.sourceobject is not None:
             self._get_cql_statement_games_to_grid(
                 self.cql_statement
@@ -517,6 +520,7 @@ class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
 
     def delete_item_database(self, event=None):
         """Remove ChessQL statement from database."""
+        del event
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
@@ -653,6 +657,7 @@ class CQLDisplayInsert(
 
     def process_and_set_cql_statement_list(self, event=None):
         """Display games with position matching edited ChessQL statement."""
+        del event
         s = CQLStatement()
         # Not sure this is needed or wanted.
         # s.dbset = self.ui.base_games.datasource.dbset
@@ -711,6 +716,7 @@ class CQLDisplayEdit(EditText, CQLDisplayInsert):
 
     def update_item_database(self, event=None):
         """Modify existing ChessQL statement record."""
+        del event
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),

@@ -153,6 +153,7 @@ class ShowPGN(ShowText, ScorePGN):
     # to each subclass: see displaytext.ShowText version.
     def insert_item_database(self, event=None):
         """Add PGN score to database on request from item display."""
+        del event
         title = " ".join(("Insert", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui_displayed_items.active_item is None:
@@ -240,6 +241,7 @@ class DisplayPGN(DisplayText):
 
     def delete_item_database(self, event=None):
         """Remove PGN score from database on request from item display."""
+        del event
         title = " ".join(("Delete", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui.database is None:
@@ -410,6 +412,7 @@ class EditPGN(EditText):
 
     def update_item_database(self, event=None):
         """Modify existing PGN score record."""
+        del event
         title = " ".join(("Edit", self.pgn_score_name.title()))
         mt = self.pgn_score_name
         if self.ui.database is None:

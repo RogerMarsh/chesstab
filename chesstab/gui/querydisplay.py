@@ -151,10 +151,12 @@ class _QueryDisplay(ExceptionHandler, Display):
 
     def delete_item_view(self, event=None):
         """Remove game selection rule item from screen."""
+        del event
         self.ui.delete_selection_rule_view(self)
 
     def insert_item_database(self, event=None):
         """Add game selection rule to database."""
+        del event
         if self.ui.selection_items.active_item is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
@@ -291,6 +293,7 @@ class _QueryDisplay(ExceptionHandler, Display):
     # on_game_change() is not called, but do nothing if it is.
     def on_game_change(self, instance):
         """Prevent update from self if instance refers to same record."""
+        del instance
         if self.sourceobject is not None:
             pass
 
@@ -375,6 +378,7 @@ class _QueryDisplay(ExceptionHandler, Display):
 
     def process_and_set_selection_rule_list(self, event=None):
         """Display games matching edited game selection rule."""
+        del event
         if self.ui.base_games.datasource:
             self.query_statement.set_database(
                 self.ui.base_games.datasource.dbhome
@@ -414,6 +418,7 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
 
     def delete_item_database(self, event=None):
         """Remove game selection rule from database."""
+        del event
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
@@ -538,6 +543,7 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
 
     def update_item_database(self, event=None):
         """Modify existing game selection rule record."""
+        del event
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),

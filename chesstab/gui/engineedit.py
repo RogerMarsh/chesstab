@@ -51,6 +51,7 @@ class EngineEdit(engine.Engine):
 
     def browse_engine(self, event=None):
         """Dialogue to replace chess engine definition in editor."""
+        del event
         if _win32_platform:
             filetypes = (("Chess Engines", "*.exe"),)
         else:

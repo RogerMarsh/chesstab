@@ -155,6 +155,7 @@ class Display:
 
         Subclasses shall override if required.
         """
+        del event
         # Do nothing.
         return "break"
 
@@ -164,6 +165,7 @@ class Display:
 
         Subclasses shall override if required.
         """
+        del event
         # Do nothing.
         return "break"
 
@@ -174,6 +176,7 @@ class Display:
         Subclasses shall override if required.
 
         """
+        del event
         # Do nothing.
         return "break"
 

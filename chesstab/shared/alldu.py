@@ -17,6 +17,7 @@ def chess_du(
     cdb, pgnpaths, file_records, reporter=lambda text, timestamp=True: None
 ):
     """Open database, import games and close database."""
+    del file_records
     importer = ChessDBrecordGameImport()
     cdb.open_database()
     cdb.set_defer_update()

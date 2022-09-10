@@ -174,6 +174,7 @@ class _RepertoireDisplay(ExceptionHandler, Display):
 
     def delete_item_view(self, event=None):
         """Remove repertoire item from screen."""
+        del event
         self.set_data_source()
         self.ui.delete_repertoire_view(self)
 

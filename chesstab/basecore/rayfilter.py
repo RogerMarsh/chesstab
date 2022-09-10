@@ -337,6 +337,7 @@ class RayFilter:
         finder is not used.
 
         """
+        del finder
         rg = start & final
         if rg.count_records():
             if rayindex in self.ray_games:

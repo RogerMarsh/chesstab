@@ -126,6 +126,7 @@ class ShowText:
         Call _next_item after 1 millisecond to allow message display.
 
         """
+        del event
         if self.ui_displayed_items.count_items_in_stack() > 1:
             self.ui_set_find_item_games(0)
             self.score.after(1, self.try_command(self.cycle_item, self.score))
@@ -136,6 +137,7 @@ class ShowText:
         Call _prior_item after 1 millisecond to allow message display.
 
         """
+        del event
         if self.ui_displayed_items.count_items_in_stack() > 1:
             self.ui_set_find_item_games(-2)
             self.score.after(
@@ -149,6 +151,7 @@ class ShowText:
         # but style of sibling *_item() methods is followed.
         # cuiai was cuigs in gamedisplay, and cuirs in repertoiredisplay,
         # modules originally.
+        del event
         items = self.ui_displayed_items
         if items.count_items_in_stack():
             cuiai = items.active_item
@@ -157,12 +160,14 @@ class ShowText:
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
+        del event
         self.set_score_pointer_widget_navigation_bindings(True)
         self.ui.give_focus_backward(self.ui_displayed_items)
         return "break"
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order."""
+        del event
         self.set_score_pointer_widget_navigation_bindings(True)
         self.ui.give_focus_forward(self.ui_displayed_items)
         return "break"
