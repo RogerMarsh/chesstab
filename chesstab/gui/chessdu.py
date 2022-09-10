@@ -406,8 +406,7 @@ class ChessDeferredUpdate(ExceptionHandler):
             if gamecount + errorcount >= self.sample:
                 estimate = True
                 break
-            source = open(pp, "r", encoding="iso-8859-1")
-            try:
+            with open(pp, "r", encoding="iso-8859-1") as source:
                 for rcg in reader.read_games(source):
                     if gamecount + errorcount >= self.sample:
                         estimate = True
@@ -426,8 +425,6 @@ class ChessDeferredUpdate(ExceptionHandler):
                         piecesquaremovecount += len(rcg.piecesquaremovekeys)
                         piecemovecount += len(rcg.piecemovekeys)
                     totallen += rawtokenlen
-            finally:
-                source.close()
         time_end = time.monotonic()
         if estimate:
             try:
@@ -808,8 +805,7 @@ class ChessDeferredUpdate(ExceptionHandler):
 
 def write_error_to_log():
     """Write the exception to the error log with a time stamp."""
-    f = open(os.path.join(sys.argv[1], ERROR_LOG), "a")
-    try:
+    with open(os.path.join(sys.argv[1], ERROR_LOG), "a") as f:
         f.write(
             "".join(
                 (
@@ -829,5 +825,3 @@ def write_error_to_log():
                 )
             )
         )
-    finally:
-        f.close()

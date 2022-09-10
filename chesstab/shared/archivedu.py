@@ -55,21 +55,18 @@ def _archive(names):
         c = bz2.BZ2Compressor()
         archiveguard = ".".join((n, "grd"))
         archivename = ".".join((n, "bz2"))
-        fi = open(n, "rb")
-        fo = open(archivename, "wb")
-        inp = fi.read(10000000)
-        while inp:
-            co = c.compress(inp)
+        with open(n, "rb") as fi, open(archivename, "wb") as fo:
+            inp = fi.read(10000000)
+            while inp:
+                co = c.compress(inp)
+                if co:
+                    fo.write(co)
+                inp = fi.read(10000000)
+            co = c.flush()
             if co:
                 fo.write(co)
-            inp = fi.read(10000000)
-        co = c.flush()
-        if co:
-            fo.write(co)
-        fo.close()
-        fi.close()
-        c = open(archiveguard, "wb")
-        c.close()
+        with open(archiveguard, "wb") as c:
+            pass
 
 
 # Snippet needed in dbdu.Dbdu.delete_archive() method too.

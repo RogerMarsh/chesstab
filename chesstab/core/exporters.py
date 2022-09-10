@@ -18,20 +18,19 @@ def export_all_games_text(database, filename):
         return True
     rr = chessrecord.ChessDBrecordGameText()
     rr.set_database(database)
-    gamesout = open(filename, "w", encoding="iso-8859-1")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            gamesout.write(rr.get_srvalue())
-            gamesout.write("\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                gamesout.write(rr.get_srvalue())
+                gamesout.write("\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -45,49 +44,48 @@ def export_all_games_pgn(database, filename):
     no_games_output = True
     games_for_date = []
     prev_date = None
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            if r[0] != prev_date:
-                for gfd in sorted(games_for_date):
-                    gamesout.write(gfd[0])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[2])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[1])
-                    gamesout.write("\n\n")
-                prev_date = r[0]
-                games_for_date = []
-            g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
-            try:
-                rr.load_record(g)
-            except StopIteration:
-                break
-            if rr.value.collected_game.is_pgn_valid_export_format():
-                games_for_date.append(
-                    rr.value.collected_game.get_export_pgn_elements()
-                )
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
-            r = cursor.next()
-        for gfd in sorted(games_for_date):
-            gamesout.write(gfd[0])
-            gamesout.write("\n")
-            gamesout.write(gfd[2])
-            gamesout.write("\n")
-            gamesout.write(gfd[1])
-            gamesout.write("\n\n")
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                if r[0] != prev_date:
+                    for gfd in sorted(games_for_date):
+                        gamesout.write(gfd[0])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[2])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[1])
+                        gamesout.write("\n\n")
+                    prev_date = r[0]
+                    games_for_date = []
+                g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
+                try:
+                    rr.load_record(g)
+                except StopIteration:
+                    break
+                if rr.value.collected_game.is_pgn_valid_export_format():
+                    games_for_date.append(
+                        rr.value.collected_game.get_export_pgn_elements()
+                    )
+                    if all_games_output is None:
+                        all_games_output = True
+                        no_games_output = False
+                elif all_games_output:
+                    if not no_games_output:
+                        all_games_output = False
+                r = cursor.next()
+            for gfd in sorted(games_for_date):
+                gamesout.write(gfd[0])
+                gamesout.write("\n")
+                gamesout.write(gfd[2])
+                gamesout.write("\n")
+                gamesout.write(gfd[1])
+                gamesout.write("\n\n")
     finally:
         cursor.close()
-        gamesout.close()
     return all_games_output
 
 
@@ -99,31 +97,30 @@ def export_all_games_pgn_import_format(database, filename):
     rr.set_database(database)
     all_games_output = None
     no_games_output = True
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            try:
-                rr.load_record(r)
-            except StopIteration:
-                break
-            if rr.value.collected_game.is_pgn_valid_export_format():
-                gamesout.write(
-                    get_game_pgn_import_format(rr.value.collected_game)
-                )
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                try:
+                    rr.load_record(r)
+                except StopIteration:
+                    break
+                if rr.value.collected_game.is_pgn_valid_export_format():
+                    gamesout.write(
+                        get_game_pgn_import_format(rr.value.collected_game)
+                    )
+                    if all_games_output is None:
+                        all_games_output = True
+                        no_games_output = False
+                elif all_games_output:
+                    if not no_games_output:
+                        all_games_output = False
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return all_games_output
 
 
@@ -137,49 +134,48 @@ def export_all_games_pgn_no_comments(database, filename):
     no_games_output = True
     games_for_date = []
     prev_date = None
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            if r[0] != prev_date:
-                for gfd in sorted(games_for_date):
-                    gamesout.write(gfd[0])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[2])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[1])
-                    gamesout.write("\n\n")
-                prev_date = r[0]
-                games_for_date = []
-            g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
-            try:
-                rr.load_record(g)
-            except StopIteration:
-                break
-            if rr.value.collected_game.is_pgn_valid_export_format():
-                games_for_date.append(
-                    rr.value.collected_game.get_export_pgn_rav_elements()
-                )
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
-            r = cursor.next()
-        for gfd in sorted(games_for_date):
-            gamesout.write(gfd[0])
-            gamesout.write("\n")
-            gamesout.write(gfd[2])
-            gamesout.write("\n")
-            gamesout.write(gfd[1])
-            gamesout.write("\n\n")
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                if r[0] != prev_date:
+                    for gfd in sorted(games_for_date):
+                        gamesout.write(gfd[0])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[2])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[1])
+                        gamesout.write("\n\n")
+                    prev_date = r[0]
+                    games_for_date = []
+                g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
+                try:
+                    rr.load_record(g)
+                except StopIteration:
+                    break
+                if rr.value.collected_game.is_pgn_valid_export_format():
+                    games_for_date.append(
+                        rr.value.collected_game.get_export_pgn_rav_elements()
+                    )
+                    if all_games_output is None:
+                        all_games_output = True
+                        no_games_output = False
+                elif all_games_output:
+                    if not no_games_output:
+                        all_games_output = False
+                r = cursor.next()
+            for gfd in sorted(games_for_date):
+                gamesout.write(gfd[0])
+                gamesout.write("\n")
+                gamesout.write(gfd[2])
+                gamesout.write("\n")
+                gamesout.write(gfd[1])
+                gamesout.write("\n\n")
     finally:
         cursor.close()
-        gamesout.close()
     return all_games_output
 
 
@@ -197,51 +193,50 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename):
     no_games_output = True
     games_for_date = []
     prev_date = None
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            if r[0] != prev_date:
-                for gfd in sorted(games_for_date):
-                    gamesout.write(gfd[0])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[2])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[1])
-                    gamesout.write("\n\n")
-                prev_date = r[0]
-                games_for_date = []
-            g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
-            try:
-                rr.load_record(g)
-            except StopIteration:
-                break
-            cg = rr.value.collected_game
-            if cg.is_pgn_valid_export_format():
-                strt = cg.get_seven_tag_roster_tags()
-                nstrt = cg.get_non_seven_tag_roster_tags()
-                am = cg.get_archive_movetext()
-                games_for_date.append((strt, am, nstrt))
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
-            r = cursor.next()
-        for gfd in sorted(games_for_date):
-            gamesout.write(gfd[0])
-            gamesout.write("\n")
-            gamesout.write(gfd[2])
-            gamesout.write("\n")
-            gamesout.write(gfd[1])
-            gamesout.write("\n\n")
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                if r[0] != prev_date:
+                    for gfd in sorted(games_for_date):
+                        gamesout.write(gfd[0])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[2])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[1])
+                        gamesout.write("\n\n")
+                    prev_date = r[0]
+                    games_for_date = []
+                g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
+                try:
+                    rr.load_record(g)
+                except StopIteration:
+                    break
+                cg = rr.value.collected_game
+                if cg.is_pgn_valid_export_format():
+                    strt = cg.get_seven_tag_roster_tags()
+                    nstrt = cg.get_non_seven_tag_roster_tags()
+                    am = cg.get_archive_movetext()
+                    games_for_date.append((strt, am, nstrt))
+                    if all_games_output is None:
+                        all_games_output = True
+                        no_games_output = False
+                elif all_games_output:
+                    if not no_games_output:
+                        all_games_output = False
+                r = cursor.next()
+            for gfd in sorted(games_for_date):
+                gamesout.write(gfd[0])
+                gamesout.write("\n")
+                gamesout.write(gfd[2])
+                gamesout.write("\n")
+                gamesout.write(gfd[1])
+                gamesout.write("\n\n")
     finally:
         cursor.close()
-        gamesout.close()
     return all_games_output
 
 
@@ -255,45 +250,44 @@ def export_all_games_pgn_reduced_export_format(database, filename):
     no_games_output = True
     games_for_date = []
     prev_date = None
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            if r[0] != prev_date:
-                for gfd in sorted(games_for_date):
-                    gamesout.write(gfd[0])
-                    gamesout.write("\n")
-                    gamesout.write(gfd[1])
-                    gamesout.write("\n\n")
-                prev_date = r[0]
-                games_for_date = []
-            g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
-            try:
-                rr.load_record(g)
-            except StopIteration:
-                break
-            if rr.value.collected_game.is_pgn_valid_export_format():
-                games_for_date.append(
-                    rr.value.collected_game.get_archive_pgn_elements()
-                )
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
-            r = cursor.next()
-        for gfd in sorted(games_for_date):
-            gamesout.write(gfd[0])
-            gamesout.write("\n")
-            gamesout.write(gfd[1])
-            gamesout.write("\n\n")
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                if r[0] != prev_date:
+                    for gfd in sorted(games_for_date):
+                        gamesout.write(gfd[0])
+                        gamesout.write("\n")
+                        gamesout.write(gfd[1])
+                        gamesout.write("\n\n")
+                    prev_date = r[0]
+                    games_for_date = []
+                g = database.get_primary_record(filespec.GAMES_FILE_DEF, r[1])
+                try:
+                    rr.load_record(g)
+                except StopIteration:
+                    break
+                if rr.value.collected_game.is_pgn_valid_export_format():
+                    games_for_date.append(
+                        rr.value.collected_game.get_archive_pgn_elements()
+                    )
+                    if all_games_output is None:
+                        all_games_output = True
+                        no_games_output = False
+                elif all_games_output:
+                    if not no_games_output:
+                        all_games_output = False
+                r = cursor.next()
+            for gfd in sorted(games_for_date):
+                gamesout.write(gfd[0])
+                gamesout.write("\n")
+                gamesout.write(gfd[1])
+                gamesout.write("\n\n")
     finally:
         cursor.close()
-        gamesout.close()
     return all_games_output
 
 
@@ -303,21 +297,22 @@ def export_all_repertoires_pgn(database, filename):
         return True
     rr = chessrecord.ChessDBrecordRepertoire()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            if rr.value.collected_game.is_pgn_valid():
-                gamesout.write(rr.value.collected_game.get_repertoire_pgn())
-                gamesout.write("\n\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                if rr.value.collected_game.is_pgn_valid():
+                    gamesout.write(
+                        rr.value.collected_game.get_repertoire_pgn()
+                    )
+                    gamesout.write("\n\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -327,23 +322,21 @@ def export_all_repertoires_pgn_no_comments(database, filename):
         return True
     rr = chessrecord.ChessDBrecordRepertoire()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            if rr.value.collected_game.is_pgn_valid():
-                gamesout.write(
-                    rr.value.collected_game.get_repertoire_pgn_no_comments()
-                )
-                gamesout.write("\n\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                game = rr.value.collected_game  # pycodestyle line too long.
+                if game.is_pgn_valid():
+                    gamesout.write(game.get_repertoire_pgn_no_comments())
+                    gamesout.write("\n\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -353,23 +346,22 @@ def export_all_repertoires_pgn_import_format(database, filename):
         return True
     rr = chessrecord.ChessDBrecordRepertoire()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            if rr.value.collected_game.is_pgn_valid():
-                gamesout.write(
-                    get_game_pgn_import_format(rr.value.collected_game)
-                )
-                gamesout.write("\n\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                if rr.value.collected_game.is_pgn_valid():
+                    gamesout.write(
+                        get_game_pgn_import_format(rr.value.collected_game)
+                    )
+                    gamesout.write("\n\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -379,20 +371,19 @@ def export_all_repertoires_text(database, filename):
         return True
     rr = chessrecord.ChessDBrecordGameText()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            gamesout.write(rr.get_srvalue())
-            gamesout.write("\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                gamesout.write(rr.get_srvalue())
+                gamesout.write("\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -402,20 +393,19 @@ def export_all_positions(database, filename):
         return True
     rr = chessrecord.ChessDBrecordPartial()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            gamesout.write(rr.get_srvalue())
-            gamesout.write("\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                gamesout.write(rr.get_srvalue())
+                gamesout.write("\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return True
 
 
@@ -513,13 +503,10 @@ def export_selected_games_pgn_import_format(grid, filename):
 
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in games:
             gamesout.write(g)
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -615,8 +602,7 @@ def export_selected_games_pgn(grid, filename):
 
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in sorted(games):
             gamesout.write(g[0])
             gamesout.write("\n")
@@ -624,8 +610,6 @@ def export_selected_games_pgn(grid, filename):
             gamesout.write("\n")
             gamesout.write(g[1])
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -709,8 +693,7 @@ def export_selected_games_pgn_no_comments(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in sorted(games):
             gamesout.write(g[0])
             gamesout.write("\n")
@@ -718,8 +701,6 @@ def export_selected_games_pgn_no_comments(grid, filename):
             gamesout.write("\n")
             gamesout.write(g[1])
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -809,8 +790,7 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in sorted(games):
             gamesout.write(g[0])
             gamesout.write("\n")
@@ -818,8 +798,6 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
             gamesout.write("\n")
             gamesout.write(g[1])
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -903,15 +881,12 @@ def export_selected_games_pgn_reduced_export_format(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in sorted(games):
             gamesout.write(g[0])
             gamesout.write("\n")
             gamesout.write(g[1])
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -979,13 +954,10 @@ def export_selected_games_text(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in games:
             gamesout.write(g)
             gamesout.write("\n")
-    finally:
-        gamesout.close()
     return True
 
 
@@ -1002,8 +974,7 @@ def export_selected_repertoires_pgn(grid, filename):
         database = grid.get_data_source().dbhome
         rr = chessrecord.ChessDBrecordRepertoire()
         rr.set_database(database)
-        gamesout = open(filename, "w")
-        try:
+        with open(filename, "w") as gamesout:
             for b in sorted(grid.bookmarks):
                 rr.load_record(
                     database.get_primary_record(
@@ -1014,9 +985,6 @@ def export_selected_repertoires_pgn(grid, filename):
                     gamesout.write(
                         rr.value.collected_game.get_repertoire_pgn()
                     )
-            gamesout = open(filename, "w")
-        finally:
-            gamesout.close()
         return True
     export_all_repertoires_pgn(grid.get_data_source().dbhome, filename)
     return True
@@ -1035,8 +1003,7 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
         database = grid.get_data_source().dbhome
         rr = chessrecord.ChessDBrecordRepertoire()
         rr.set_database(database)
-        gamesout = open(filename, "w")
-        try:
+        with open(filename, "w") as gamesout:
             for b in sorted(grid.bookmarks):
                 rr.load_record(
                     database.get_primary_record(
@@ -1046,9 +1013,6 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
                 if rr.value.collected_game.is_pgn_valid_export_format():
                     rvcg = rr.value.collected_game  # For line length.
                     gamesout.write(rvcg.get_repertoire_pgn_no_comments())
-            gamesout = open(filename, "w")
-        finally:
-            gamesout.close()
         return
     export_all_repertoires_pgn_no_comments(
         grid.get_data_source().dbhome, filename
@@ -1136,13 +1100,10 @@ def export_selected_repertoires_pgn_import_format(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in games:
             gamesout.write(g)
             gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return all_games_output
 
 
@@ -1210,13 +1171,10 @@ def export_selected_repertoires_text(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         for g in games:
             gamesout.write(g)
             gamesout.write("\n")
-    finally:
-        gamesout.close()
     return True
 
 
@@ -1228,8 +1186,7 @@ def export_selected_positions(grid, filename):
         database = grid.get_data_source().dbhome
         rr = chessrecord.ChessDBrecordPartial()
         rr.set_database(database)
-        gamesout = open(filename, "w")
-        try:
+        with open(filename, "w") as gamesout:
             for b in sorted(grid.bookmarks):
                 rr.load_record(
                     database.get_primary_record(
@@ -1238,27 +1195,23 @@ def export_selected_positions(grid, filename):
                 )
                 gamesout.write(rr.get_srvalue())
                 gamesout.write("\n")
-            gamesout = open(filename, "w")
-        finally:
-            gamesout.close()
         return
     database = grid.get_data_source().dbhome
     rr = chessrecord.ChessDBrecordPartial()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            gamesout.write(rr.get_srvalue())
-            gamesout.write("\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                gamesout.write(rr.get_srvalue())
+                gamesout.write("\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return
 
 
@@ -1270,8 +1223,7 @@ def export_selected_selection_rules(grid, filename):
         database = grid.get_data_source().dbhome
         rr = chessrecord.ChessDBrecordQuery()
         rr.set_database(database)
-        gamesout = open(filename, "w")
-        try:
+        with open(filename, "w") as gamesout:
             for b in sorted(grid.bookmarks):
                 rr.load_record(
                     database.get_primary_record(
@@ -1280,27 +1232,23 @@ def export_selected_selection_rules(grid, filename):
                 )
                 gamesout.write(rr.get_srvalue())
                 gamesout.write("\n")
-            gamesout = open(filename, "w")
-        finally:
-            gamesout.close()
         return
     database = grid.get_data_source().dbhome
     rr = chessrecord.ChessDBrecordQuery()
     rr.set_database(database)
-    gamesout = open(filename, "w")
     cursor = database.database_cursor(
         filespec.SELECTION_FILE_DEF, filespec.SELECTION_FILE_DEF
     )
     try:
-        r = cursor.first()
-        while r:
-            rr.load_record(r)
-            gamesout.write(rr.get_srvalue())
-            gamesout.write("\n")
-            r = cursor.next()
+        with open(filename, "w") as gamesout:
+            r = cursor.first()
+            while r:
+                rr.load_record(r)
+                gamesout.write(rr.get_srvalue())
+                gamesout.write("\n")
+                r = cursor.next()
     finally:
         cursor.close()
-        gamesout.close()
     return
 
 
@@ -1312,14 +1260,11 @@ def export_single_game_pgn_reduced_export_format(collected_game, filename):
     """
     if filename is None:
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_archive_movetext())
         gamesout.write("\n\n")
-    finally:
-        gamesout.close()
 
 
 def export_single_game_pgn(collected_game, filename):
@@ -1330,16 +1275,13 @@ def export_single_game_pgn(collected_game, filename):
     """
     if filename is None:
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_all_movetext_in_pgn_export_format())
         gamesout.write("\n\n")
-    finally:
-        gamesout.close()
 
 
 def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
@@ -1353,16 +1295,13 @@ def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
     """
     if filename is None:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_archive_movetext())
         gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return True
 
 
@@ -1374,8 +1313,7 @@ def export_single_game_pgn_no_comments(collected_game, filename):
     """
     if filename is None:
         return None
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
@@ -1384,8 +1322,6 @@ def export_single_game_pgn_no_comments(collected_game, filename):
             collected_game.get_movetext_without_comments_in_pgn_export_format()
         )
         gamesout.write("\n\n")
-    finally:
-        gamesout.close()
     return True
 
 
@@ -1393,11 +1329,8 @@ def export_single_game_pgn_import_format(collected_game, filename):
     """Export collected_game to pgn file in a PGN import format."""
     if filename is None:
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(get_game_pgn_import_format(collected_game))
-    finally:
-        gamesout.close()
 
 
 def export_single_game_text(collected_game, filename):
@@ -1405,12 +1338,9 @@ def export_single_game_text(collected_game, filename):
     if filename is None:
         return
     internal_format = next(PGN().read_games(collected_game.get_text_of_game()))
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(internal_format.get_text_of_game())
         gamesout.write("\n")
-    finally:
-        gamesout.close()
 
 
 def export_single_repertoire_pgn(collected_game, filename):
@@ -1421,11 +1351,8 @@ def export_single_repertoire_pgn(collected_game, filename):
     """
     if filename is None:
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_repertoire_pgn())
-    finally:
-        gamesout.close()
 
 
 def export_single_repertoire_pgn_no_comments(collected_game, filename):
@@ -1436,11 +1363,8 @@ def export_single_repertoire_pgn_no_comments(collected_game, filename):
     """
     if filename is None:
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(collected_game.get_repertoire_pgn_no_comments())
-    finally:
-        gamesout.close()
 
 
 def export_single_position(partialposition, filename):
@@ -1451,11 +1375,8 @@ def export_single_position(partialposition, filename):
     sp.process_statement(partialposition)
     if not sp.is_statement():
         return
-    gamesout = open(filename, "w")
-    try:
+    with open(filename, "w") as gamesout:
         gamesout.write(sp.get_name_position_text())
-    finally:
-        gamesout.close()
 
 
 # Derived from get_all_movetext_in_pgn_export_format method in

@@ -30,15 +30,11 @@ def get_saved_options(folder):
     if not os.path.isfile(optionsfilename):
         return None
     try:
-        optionsfile = open(optionsfilename, "r")
+        with open(optionsfilename, "r") as optionsfile:
+            return _extract_options(optionsfile)
     except OSError:
-        return None
-    defaults = dict()
-    try:
-        defaults = _extract_options(optionsfile)
-    finally:
-        optionsfile.close()
-    return defaults
+        pass
+    return None
 
 
 def save_options(folder, changes):

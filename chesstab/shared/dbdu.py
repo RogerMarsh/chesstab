@@ -156,17 +156,16 @@ class Dbdu(DptCompatdu):
                 for n in names:
                     archiveguard = ".".join((n, "grd"))
                     archivename = ".".join((n, "zip"))
-                    c = zipfile.ZipFile(
+                    with zipfile.ZipFile(
                         archivename,
                         mode="w",
                         compression=zipfile.ZIP_DEFLATED,
                         allowZip64=True,
-                    )
-                    for s in names[n]:
-                        c.write(s, arcname=os.path.basename(s))
-                    c.close()
-                    c = open(archiveguard, "wb")
-                    c.close()
+                    ) as c:
+                        for s in names[n]:
+                            c.write(s, arcname=os.path.basename(s))
+                    with open(archiveguard, "wb") as c:
+                        pass
             else:
                 _archive(names)
         return True
@@ -189,23 +188,21 @@ class Dbdu(DptCompatdu):
                         except FileNotFoundError:
                             pass
                         continue
-                    c = zipfile.ZipFile(
+                    with zipfile.ZipFile(
                         archivename,
                         mode="r",
                         compression=zipfile.ZIP_DEFLATED,
                         allowZip64=True,
-                    )
-                    namelist = c.namelist()
-                    extract = [
-                        e
-                        for e in namelist
-                        if os.path.join(self.home_directory, e) in names[n]
-                    ]
-                    if len(extract) != len(namelist):
-                        not_backups.append(os.path.basename(archivename))
-                        c.close()
-                        continue
-                    c.close()
+                    ) as c:
+                        namelist = c.namelist()
+                        extract = [
+                            e
+                            for e in namelist
+                            if os.path.join(self.home_directory, e) in names[n]
+                        ]
+                        if len(extract) != len(namelist):
+                            not_backups.append(os.path.basename(archivename))
+                            continue
                     try:
                         os.remove(archiveguard)
                     except FileNotFoundError:

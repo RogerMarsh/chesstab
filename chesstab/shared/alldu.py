@@ -21,9 +21,8 @@ def chess_du(
     cdb.open_database()
     cdb.set_defer_update()
     for pp in pgnpaths:
-        s = open(pp, "r", encoding="iso-8859-1")
-        importer.import_pgn(cdb, s, pp, reporter=reporter)
-        s.close()
+        with open(pp, "r", encoding="iso-8859-1") as s:
+            importer.import_pgn(cdb, s, pp, reporter=reporter)
     if reporter is not None:
         reporter("Finishing import: please wait.")
         reporter("", timestamp=False)

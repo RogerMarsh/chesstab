@@ -90,9 +90,8 @@ def chess_dptdu(
     importer = ChessDBrecordGameImport()
     cdb.open_database(files=file_records)
     for pgnfile in pgnpaths:
-        s = open(pgnfile, "r", encoding="iso-8859-1")
-        importer.import_pgn(cdb, s, pgnfile, reporter=reporter)
-        s.close()
+        with open(pgnfile, "r", encoding="iso-8859-1") as s:
+            importer.import_pgn(cdb, s, pgnfile, reporter=reporter)
     reporter("Finishing import: please wait.")
     reporter("", timestamp=False)
     cdb.close_database_contexts(files=file_records)
@@ -133,30 +132,29 @@ def chess_dptdu_chunks(
     records = file_records
     for pgnfile in pgnpaths:
         cdb._text_file_size = os.path.getsize(pgnfile)
-        inp = open(pgnfile, "r", encoding="iso-8859-1")
-        line = inp.readline()
-        reporter("Extracting games from " + pgnfile)
-        count = 0
-        while line:
-            if line.startswith(newgamestring):
-                games.append("".join(gamelines))
-                gamelines = []
-                if len(games) >= CHUNKGAMES:
-                    write_chunk(pgnfile, sample=records)
-                    count += 1
-                    reporter(
-                        " ".join(
-                            (
-                                "Chunk",
-                                str(count),
-                                "written, total games added:",
-                                str(CHUNKGAMES * count),
+        with open(pgnfile, "r", encoding="iso-8859-1") as inp:
+            line = inp.readline()
+            reporter("Extracting games from " + pgnfile)
+            count = 0
+            while line:
+                if line.startswith(newgamestring):
+                    games.append("".join(gamelines))
+                    gamelines = []
+                    if len(games) >= CHUNKGAMES:
+                        write_chunk(pgnfile, sample=records)
+                        count += 1
+                        reporter(
+                            " ".join(
+                                (
+                                    "Chunk",
+                                    str(count),
+                                    "written, total games added:",
+                                    str(CHUNKGAMES * count),
+                                )
                             )
                         )
-                    )
-            gamelines.append(line)
-            line = inp.readline()
-        inp.close()
+                gamelines.append(line)
+                line = inp.readline()
         if gamelines:
             games.append("".join(gamelines))
             write_chunk(pgnfile, sample=records)

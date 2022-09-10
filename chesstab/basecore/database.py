@@ -38,9 +38,7 @@ class Database:
         for n in names:
             c = bz2.BZ2Compressor()
             archivename = ".".join((n, "broken", "bz2"))
-            fi = open(n, "rb")
-            fo = open(archivename, "wb")
-            try:
+            with open(n, "rb") as fi, open(archivename, "wb") as fo:
                 inp = fi.read(10000000)
                 while inp:
                     co = c.compress(inp)
@@ -50,9 +48,6 @@ class Database:
                 co = c.flush()
                 if co:
                     fo.write(co)
-            finally:
-                fo.close()
-                fi.close()
 
     @staticmethod
     def delete_backups(names=()):
@@ -75,18 +70,13 @@ class Database:
         for n in names:
             c = bz2.BZ2Decompressor()
             archivename = ".".join((n, "bz2"))
-            fi = open(archivename, "rb")
-            fo = open(n, "wb")
-            try:
+            with open(archivename, "rb") as fi, open(n, "wb") as fo:
                 inp = fi.read(1000000)
                 while inp:
                     co = c.decompress(inp)
                     if co:
                         fo.write(co)
                     inp = fi.read(1000000)
-            finally:
-                fo.close()
-                fi.close()
         return True
 
     def delete_database(self, names):
