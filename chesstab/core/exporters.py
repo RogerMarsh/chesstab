@@ -4,8 +4,6 @@
 
 """Chess game, repertoire, and partial position exporters."""
 
-import os
-
 from pgn_read.core.parser import PGN
 
 from . import chessrecord, filespec

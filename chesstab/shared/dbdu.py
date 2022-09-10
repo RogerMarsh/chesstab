@@ -9,7 +9,6 @@ DB.
 
 """
 import os
-import bz2
 import zipfile
 
 from bsddb3.db import (

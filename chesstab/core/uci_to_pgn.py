@@ -38,7 +38,6 @@ from pgn_read.core.constants import (
     PGN_BISHOP,
     PGN_KNIGHT,
     PGN_PAWN,
-    OTHER_SIDE,
     FEN_WHITE_PIECES,
     FEN_BLACK_PIECES,
     FEN_WHITE_ACTIVE,
@@ -48,10 +47,7 @@ from pgn_read.core.constants import (
 from pgn_read.core.parser import add_token_to_game
 
 from .pgn import GameMove
-from .constants import (
-    NOPIECE,
-    FEN_CONTEXT,
-)
+from .constants import FEN_CONTEXT
 
 _PIECE_TO_PGN = {
     FEN_WHITE_KING: PGN_KING,

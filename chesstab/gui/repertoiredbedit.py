@@ -4,9 +4,6 @@
 
 """Customise edit toplevel to edit or insert repertoire record."""
 
-import tkinter
-import tkinter.messagebox
-
 from solentware_grid.gui.dataedit import DataEdit
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler

@@ -27,10 +27,7 @@ from pgn_read.core.constants import (
     TAG_DATE,
 )
 
-from ..core.constants import (
-    REPERTOIRE_TAG_ORDER,
-    UNKNOWN_RESULT,
-)
+from ..core.constants import REPERTOIRE_TAG_ORDER
 
 # names of chess board fonts in decreasing preference order.
 # The 'win32' order is my preference, but Merida and Motif are microsoft-symbol

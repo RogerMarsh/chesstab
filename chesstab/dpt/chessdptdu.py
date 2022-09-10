@@ -13,24 +13,17 @@ See www.dptoolkit.com for details of DPT
 """
 
 import os
-import bz2
 import tkinter
 import tkinter.messagebox
 from io import StringIO
 import multiprocessing  # Removed later by 'del multiprocessing'.
 
-from dptdb.dptapi import (
-    FILEDISP_OLD,
-    FISTAT_DEFERRED_UPDATES,
-    APIContextSpecification,
-)
+from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
 
 from solentware_base import dptdu_database
 from solentware_base.core.constants import (
     FILEDESC,
     BRECPPG,
-    BSIZE,
-    DSIZE,
     TABLE_B_SIZE,
 )
 

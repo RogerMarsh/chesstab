@@ -14,11 +14,7 @@ from solentware_grid.gui.datarow import (
     ROW,
 )
 
-from pgn_read.core.constants import (
-    TAG_RESULT,
-    IFG_TAG_NAME,
-    IFG_TAG_VALUE,
-)
+from pgn_read.core.constants import TAG_RESULT
 
 from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordRepertoireTags

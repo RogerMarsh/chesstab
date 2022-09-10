@@ -13,11 +13,6 @@ in the *nix environment.
 import os
 
 from bsddb3.db import (
-    DB_BTREE,
-    DB_HASH,
-    DB_RECNO,
-    DB_DUPSORT,
-    DB_DUP,
     DB_CREATE,
     DB_RECOVER,
     DB_INIT_MPOOL,
@@ -28,12 +23,6 @@ from bsddb3.db import (
 )
 
 from solentware_base import bsddb3_database
-from solentware_base.core.constants import (
-    SUBFILE_DELIMITER,
-    EXISTENCE_BITMAP_SUFFIX,
-    SEGMENT_SUFFIX,
-    SECONDARY,
-)
 
 from ..core.filespec import (
     FileSpec,

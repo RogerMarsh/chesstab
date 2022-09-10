@@ -11,7 +11,6 @@ The ...Update classes allow editing of a, possibly incomplete, game score.
 
 """
 from ast import literal_eval
-import re
 
 from solentware_base.core.record import KeyData, Value, ValueText, Record
 from solentware_base.core.segmentsize import SegmentSize
@@ -53,7 +52,6 @@ from .filespec import (
     SQUAREMOVE_FIELD_DEF,
     GAMES_FILE_DEF,
     REPERTOIRE_FILE_DEF,
-    OPENING_ERROR_FIELD_DEF,
     PGN_DATE_FIELD_DEF,
     VARIATION_FIELD_DEF,
     ENGINE_FIELD_DEF,

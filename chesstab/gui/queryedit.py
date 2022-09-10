@@ -13,7 +13,6 @@ widget.
 """
 
 from .query import Query
-from .eventspec import EventSpec
 
 
 class QueryEdit(Query):

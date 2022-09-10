@@ -20,9 +20,6 @@ text).
 
 """
 
-import tkinter
-import tkinter.messagebox
-
 from solentware_grid.core.dataclient import DataNotify
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler

@@ -4,8 +4,6 @@
 
 """Chess engine analysis for a position."""
 
-import sys
-
 from pgn_read.core.constants import (
     FEN_WHITE_ACTIVE,
     FEN_BLACK_ACTIVE,

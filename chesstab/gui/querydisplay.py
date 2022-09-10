@@ -31,7 +31,6 @@ from solentware_grid.core.dataclient import DataNotify
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from ..core.querystatement import QueryStatement
 from .query import Query
 from .queryedit import QueryEdit
 from ..core.chessrecord import ChessDBrecordQuery

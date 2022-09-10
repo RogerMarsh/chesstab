@@ -32,14 +32,11 @@ from solentware_grid.core.dataclient import DataSource
 
 from solentware_base import modulequery, do_deferred_updates
 from solentware_misc.core import callthreadqueue
-from solentware_misc.gui.textentry import get_text_modal
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
 from .gamerow import make_ChessDBrowGame
-from .cqlrow import make_ChessDBrowCQL
-from .repertoirerow import make_ChessDBrowRepertoire
 from .gamedisplay import GameDisplayInsert
 from .cqldisplay import CQLDisplayInsert
 from .repertoiredisplay import RepertoireDisplayInsert
@@ -57,8 +54,6 @@ from .. import (
 from ..core.filespec import (
     FileSpec,
     GAMES_FILE_DEF,
-    PARTIAL_FILE_DEF,
-    REPERTOIRE_FILE_DEF,
     SOURCE_FIELD_DEF,
     EVENT_FIELD_DEF,
     SITE_FIELD_DEF,

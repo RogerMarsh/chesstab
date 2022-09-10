@@ -5,36 +5,18 @@
 """Chess games database using DPT database via dptdb.dptapi."""
 
 import os
-import shutil
 import tkinter.messagebox
 
 from dptdb.dptapi import (
-    FILEDISP_OLD,
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
     FISTAT_DEFERRED_UPDATES,
-    APIContextSpecification,
-    APIFieldValue,
 )
 
 from solentware_base import dpt_database
-from solentware_base.core.constants import (
-    FILEDESC,
-    BRECPPG,
-    BSIZE,
-    DSIZE,
-    DPT_DEFER_FOLDER,
-    DPT_SYS_FOLDER,
-    SECONDARY,
-)
+from solentware_base.core.constants import FILEDESC
 
-from ..core.filespec import (
-    FileSpec,
-    PARTIAL_FILE_DEF,
-    PARTIAL_FIELD_DEF,
-    NEWGAMES_FIELD_DEF,
-    NEWGAMES_FIELD_VALUE,
-)
+from ..core.filespec import FileSpec
 from ..basecore import database
 from .. import APPLICATION_NAME
 

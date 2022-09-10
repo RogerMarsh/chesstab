@@ -6,7 +6,6 @@
 
 import tkinter
 
-import solentware_misc.gui.textreadonly
 from solentware_misc.gui.help import help_widget
 
 from .. import help as help_

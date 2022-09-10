@@ -25,10 +25,6 @@ from chessql.core.constants import (
 from chessql.core.node import Node
 from chessql.core.piecedesignator import PieceDesignator
 
-from .constants import (
-    MAP_CQL_PIECE_TO_PIECES,
-)
-
 
 class CQLNodeError(Exception):
     """Exception class for cqlnode module."""

@@ -9,7 +9,6 @@ subprocess.popen.
 
 """
 import sys
-import os
 import importlib
 
 

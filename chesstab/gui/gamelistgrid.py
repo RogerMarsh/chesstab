@@ -30,7 +30,6 @@ from .constants import (
     STATUS_SEVEN_TAG_ROSTER_PLAYERS,
     EMPTY_REPERTOIRE_GAME,
 )
-from ..core.filespec import POSITIONS_FIELD_DEF
 from ..core import exporters
 from .eventspec import EventSpec
 from .display import Display

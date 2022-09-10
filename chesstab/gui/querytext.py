@@ -7,11 +7,7 @@
 import tkinter
 import tkinter.messagebox
 
-from .constants import (
-    START_SELECTION_RULE_MARK,
-)
 from ..core.querystatement import QueryStatement
-from .eventspec import EventSpec
 from .gamerow import make_ChessDBrowGame
 from ..core.chessrecord import ChessDBrecordGameTags
 from .blanktext import NonTagBind, BlankText

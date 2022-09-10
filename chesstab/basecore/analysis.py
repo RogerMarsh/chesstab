@@ -7,7 +7,6 @@
 from ..core.filespec import (
     VARIATION_FIELD_DEF,
     ENGINE_FIELD_DEF,
-    ANALYSIS_FILE_DEF,
 )
 
 

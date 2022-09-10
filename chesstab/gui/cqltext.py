@@ -16,7 +16,6 @@ import tkinter
 import tkinter.messagebox
 
 from ..core.cqlstatement import CQLStatement
-from .eventspec import EventSpec
 from .blanktext import NonTagBind, BlankText
 from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
 

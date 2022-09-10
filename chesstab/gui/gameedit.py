@@ -76,7 +76,6 @@ from .constants import (
     ALL_CHOICES,
     POSITION,
     MOVE_TAG,
-    ALTERNATIVE_MOVE_TAG,
     LINE_TAG,
     LINE_END_TAG,
     START_SCORE_MARK,
@@ -94,7 +93,6 @@ from .constants import (
     FORCED_NEWLINE_TAG,
     FORCE_NEWLINE_AFTER_FULLMOVES,
     FORCED_INDENT_TAG,
-    SELECTION,
 )
 
 # Each editable PGN item is tagged with one tag from this set.

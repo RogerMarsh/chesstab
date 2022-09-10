@@ -24,39 +24,25 @@ from pgn_read.core.constants import (
     TAG_RESULT,
 )
 from pgn_read.core.parser import PGN
-from pgn_read.core.squares import Squares
 
 from ..core.pgn import GameDisplayMoves
 from .constants import (
-    LINE_COLOR,
     MOVE_COLOR,
     ALTERNATIVE_MOVE_COLOR,
     VARIATION_COLOR,
     MOVES_PLAYED_IN_GAME_FONT,
     TAGS_VARIATIONS_COMMENTS_FONT,
-    NAVIGATE_TOKEN,
     NAVIGATE_MOVE,
     TOKEN,
     RAV_MOVES,
-    CHOICE,
-    PRIOR_MOVE,
     RAV_SEP,
-    RAV_TAG,
-    ALL_CHOICES,
     POSITION,
     MOVE_TAG,
-    SELECTION,
     ALTERNATIVE_MOVE_TAG,
-    LINE_TAG,
     VARIATION_TAG,
-    LINE_END_TAG,
     START_SCORE_MARK,
-    NAVIGATE_COMMENT,
     TOKEN_MARK,
-    PGN_TAG,
     SPACE_SEP,
-    NEWLINE_SEP,
-    NULL_SEP,
     MOVETEXT_MOVENUMBER_TAG,
 )
 

@@ -35,9 +35,6 @@ from pgn_read.core.constants import (
 )
 from pgn_read.core.squares import Squares
 
-from ..core.constants import (
-    MOVE_NUMBER_KEYS,
-)
 from .rayfilter import RayFilter, move_number_str
 from ..core.filespec import (
     PIECESQUAREMOVE_FIELD_DEF,
@@ -48,7 +45,6 @@ from ..core.filespec import (
     NEWGAMES_FIELD_VALUE,
     PARTIALPOSITION_FIELD_DEF,
 )
-from ..core.chessrecord import ChessDBrecordGameUpdate
 
 # The immediate children of nodes with the names of these filters have 'and'
 # and 'or' applied to evaluate the node's answer.
