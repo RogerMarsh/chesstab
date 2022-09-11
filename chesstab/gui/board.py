@@ -118,19 +118,19 @@ class Board(ExceptionHandler):
         )
         self.board.pack(anchor=tkinter.W)
         self.board.grid_propagate(False)
-        for i in range(8):
-            self.board.grid_rowconfigure(i, weight=1, uniform="r")
-            self.board.grid_columnconfigure(i, weight=1, uniform="c")
-            for j in range(8):
-                s = i * 8 + j
-                if (i + j) % 2 == 0:
+        for index in range(8):
+            self.board.grid_rowconfigure(index, weight=1, uniform="r")
+            self.board.grid_columnconfigure(index, weight=1, uniform="c")
+            for file_index in range(8):
+                s = index * 8 + file_index
+                if (index + file_index) % 2 == 0:
                     scolor = self.litecolor
                 else:
                     scolor = self.darkcolor
                 self.boardsquares[s] = t = tkinter.Label(
                     self.board, font=self.font, background=scolor
                 )
-                t.grid(column=j, row=i, sticky=tkinter.NSEW)
+                t.grid(column=file_index, row=index, sticky=tkinter.NSEW)
 
     def configure_font(self, side):
         """Adjust font size after container widget has been resized."""
@@ -148,20 +148,22 @@ class Board(ExceptionHandler):
 
     def draw_board(self):
         """Set font size to match board size and redraw pieces."""
-        for i in self.squares:
-            p = self.squares[i]
+        for index in self.squares:
+            p = self.squares[index]
             if p in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
             elif p in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
             elif p == NOPIECE:
-                if i % 2 == 0:
+                if index % 2 == 0:
                     pcolor = self.darkcolor
                 else:
                     pcolor = self.litecolor
             else:
                 continue
-            self.boardsquares[i].configure(foreground=pcolor, text=_pieces[p])
+            self.boardsquares[index].configure(
+                foreground=pcolor, text=_pieces[p]
+            )
 
     def get_top_widget(self):
         """Return top level frame of this widget."""
@@ -169,10 +171,10 @@ class Board(ExceptionHandler):
 
     def set_color_scheme(self):
         """Set background color for Canvas for each square."""
-        for i in range(8):
-            for j in range(8):
-                s = i * 8 + j
-                if (i + j) % 2 == 0:
+        for rank_index in range(8):
+            for file_index in range(8):
+                s = rank_index * 8 + file_index
+                if (rank_index + file_index) % 2 == 0:
                     scolor = self.darkcolor
                 else:
                     scolor = self.litecolor
@@ -241,20 +243,20 @@ class PartialBoard(Board):
 
         # End obsolescent comment.
 
-        for i in self.squares:
+        for index in self.squares:
             font = self.font
-            p = self.squares[i]
+            p = self.squares[index]
             if p in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
             elif p in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
             elif p == NOPIECE:
-                if i % 2 == 0:
+                if index % 2 == 0:
                     pcolor = self.darkcolor
                 else:
                     pcolor = self.litecolor
             else:
                 continue
-            self.boardsquares[i].configure(
+            self.boardsquares[index].configure(
                 font=font, foreground=pcolor, text=_pieces.get(p, " ")
             )

@@ -1197,9 +1197,9 @@ class ChessUI(ExceptionHandler):
             self.repertoire_items.active_item.set_game_list()
             self.repertoire_items.set_insert_or_delete_on_all_items()
         if self.selection_items.count_items_in_stack():
-            for i in self.selection_items.order:
-                if i.query_statement.dbset is None:
-                    i.query_statement.dbset = GAMES_FILE_DEF
+            for item in self.selection_items.order:
+                if item.query_statement.dbset is None:
+                    item.query_statement.dbset = GAMES_FILE_DEF
             # self.set_repertoire_data_source()
             # self.selection_items.active_item.set_game_list()
             self.selection_items.set_insert_or_delete_on_all_items()
@@ -1705,12 +1705,12 @@ class ChessUI(ExceptionHandler):
 
     def configure_panedwindows(self):
         """Display available panedwindows subject to single_view status."""
-        for k in self.payload_available:
-            widget = self.payload_parent_map[k]
+        for key in self.payload_available:
+            widget = self.payload_parent_map[key]
             if self.pw_current_weights[widget]:
-                k.insert_payload(widget)
-            elif k in widget.panes():
-                k.forget_payload(widget)
+                key.insert_payload(widget)
+            elif key in widget.panes():
+                key.forget_payload(widget)
             while widget in self.pw_parent_map:
                 self.pw_parent_map[widget].pane(
                     widget, weight=self.pw_current_weights[widget]
@@ -1933,13 +1933,13 @@ class ChessUI(ExceptionHandler):
             self.partials_in_toplevels,
             self.selections_in_toplevels,
         ):
-            for i in items:
+            for item in items:
                 try:
-                    i.hide_scrollbars()
+                    item.hide_scrollbars()
                 except tkinter.TclError:
-                    exceptions.append((i, items))
-        for i, items in exceptions:
-            items.remove(i)
+                    exceptions.append((item, items))
+        for item, items in exceptions:
+            items.remove(item)
 
     def show_scrollbars(self):
         """Show the scrollbars in the game display widgets."""
@@ -1954,13 +1954,13 @@ class ChessUI(ExceptionHandler):
             self.partials_in_toplevels,
             self.selections_in_toplevels,
         ):
-            for i in items:
+            for item in items:
                 try:
-                    i.show_scrollbars()
+                    item.show_scrollbars()
                 except tkinter.TclError:
-                    exceptions.append(i, items)
-        for i, items in exceptions:
-            items.remove(i)
+                    exceptions.append(item, items)
+        for item, items in exceptions:
+            items.remove(item)
 
     def export_report(self, result, title):
         """Show a report dialogue if some game scores could not be exported."""

@@ -267,9 +267,9 @@ class RayFilter:
                         w.evaluate(finder)
                         piece_square_games.add(ps)
                         recordset_cache[ps] = w.node.result.answer
-                i = start_square, final_square
+                ray_ends = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], i, finder
+                    recordset_cache[s], recordset_cache[f], ray_ends, finder
                 )
         start = self.emptycomponents[0]
         final = self.emptycomponents[-1]
@@ -304,9 +304,9 @@ class RayFilter:
                         w.evaluate(finder)
                         empty_square_games.add(ps)
                         recordset_cache[ps] = w.node.result.answer
-                i = start_square, final_square
+                ray_ends = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], i, finder
+                    recordset_cache[s], recordset_cache[f], ray_ends, finder
                 )
         start = self.raycomponents[0]
         final = self.raycomponents[-1]
@@ -318,8 +318,8 @@ class RayFilter:
             for f in final:
                 fc = recordset_cache[f]
                 final_square = f[-3:-1]
-                i = start_square, final_square
-                self._add_recordset_to_ray_games(sc, fc, i, finder)
+                ray_ends = start_square, final_square
+                self._add_recordset_to_ray_games(sc, fc, ray_ends, finder)
         for e in self.emptycomponents[-1]:
             if e not in empty_square_games:
                 continue
@@ -328,8 +328,8 @@ class RayFilter:
             for s in start:
                 sc = recordset_cache[s]
                 start_square = s[-3:-1]
-                i = start_square, final_square
-                self._add_recordset_to_ray_games(sc, fc, i, finder)
+                ray_ends = start_square, final_square
+                self._add_recordset_to_ray_games(sc, fc, ray_ends, finder)
 
     def _add_recordset_to_ray_games(self, start, final, rayindex, finder):
         """Store records in both start and final under key rayindex.
@@ -363,8 +363,8 @@ class RayFilter:
         for e, rc in enumerate(internal_raycomponents):
             sqi = {}
             c_sqi.append(sqi)
-            for i in rc:
-                sqi.setdefault(i[-3:-1], set()).add(i)
+            for item in rc:
+                sqi.setdefault(item[-3:-1], set()).add(item)
         for start, final in self.ray_games:
             line = constants.RAYS[start][final][1:-1]
             if len(line) < len(internal_raycomponents):
@@ -387,11 +387,11 @@ class RayFilter:
                 for lg in linesets:
                     squareset = finder.db.recordlist_nil(finder.dbset)
                     linegames.append(squareset)
-                    for i in lg:
-                        if i in recordset_cache:
-                            squareset |= recordset_cache[i]
+                    for item in lg:
+                        if item in recordset_cache:
+                            squareset |= recordset_cache[item]
                             continue
-                        if i[-1] == nopiece:
+                        if item[-1] == nopiece:
                             w = record_selector(
                                 " ".join(
                                     (
@@ -399,9 +399,9 @@ class RayFilter:
                                         "(",
                                         filespec.SQUAREMOVE_FIELD_DEF,
                                         "eq",
-                                        i[:-1] + anywhitepiece,
+                                        item[:-1] + anywhitepiece,
                                         "or",
-                                        i[:-1] + anyblackpiece,
+                                        item[:-1] + anyblackpiece,
                                         ")",
                                     )
                                 )
@@ -409,16 +409,16 @@ class RayFilter:
                             w.lex()
                             w.parse()
                             w.evaluate(finder)
-                            recordset_cache[i] = w.node.result.answer
-                            squareset |= recordset_cache[i]
+                            recordset_cache[item] = w.node.result.answer
+                            squareset |= recordset_cache[item]
                             continue
-                        if i[-1] in anypiece:
+                        if item[-1] in anypiece:
                             w = record_selector(
                                 " ".join(
                                     (
                                         filespec.SQUAREMOVE_FIELD_DEF,
                                         "eq",
-                                        i,
+                                        item,
                                     )
                                 )
                             )
@@ -428,15 +428,15 @@ class RayFilter:
                                     (
                                         filespec.PIECESQUAREMOVE_FIELD_DEF,
                                         "eq",
-                                        i,
+                                        item,
                                     )
                                 )
                             )
                         w.lex()
                         w.parse()
                         w.evaluate(finder)
-                        recordset_cache[i] = w.node.result.answer
-                        squareset |= recordset_cache[i]
+                        recordset_cache[item] = w.node.result.answer
+                        squareset |= recordset_cache[item]
                 if linegames:
                     squareset = linegames.pop() & self.ray_games[start, final]
                     for lg in linegames:

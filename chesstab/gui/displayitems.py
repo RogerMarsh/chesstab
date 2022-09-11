@@ -111,21 +111,21 @@ class DisplayItems:
         stack = self.stack
         order = self.order
         if prior:
-            i = order.index(stack[-1]) - 1
-            if i < 0:
-                i = len(order) - 1
+            index = order.index(stack[-1]) - 1
+            if index < 0:
+                index = len(order) - 1
         else:
-            i = order.index(stack[-1]) + 1
-            if i >= len(order):
-                i = 0
-        stack.append(stack.pop(stack.index(order[i])))
+            index = order.index(stack[-1]) + 1
+            if index >= len(order):
+                index = 0
+        stack.append(stack.pop(stack.index(order[index])))
 
     def any_items_displayed_of_type(self, class_=None):
         """Return True if instances of class_ displayed, default any class."""
         if class_ is None:
             return bool(self.stack)
-        for i in self.stack:
-            if isinstance(i, class_):
+        for item in self.stack:
+            if isinstance(item, class_):
                 return True
         return False
 

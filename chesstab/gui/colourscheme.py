@@ -129,7 +129,7 @@ class _ColourScheme(ExceptionHandler):
         self.buttons_frame = tkinter.Frame(master=self.chooser)
         self.buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         buttonrow = self.buttons_frame.pack_info()["side"] in ("top", "bottom")
-        for i, b in enumerate(buttons):
+        for index, b in enumerate(buttons):
             button = tkinter.Button(
                 master=self.buttons_frame,
                 text=b[0],
@@ -137,11 +137,11 @@ class _ColourScheme(ExceptionHandler):
                 command=self.try_command(b[4], self.buttons_frame),
             )
             if buttonrow:
-                self.buttons_frame.grid_columnconfigure(i * 2, weight=1)
-                button.grid_configure(column=i * 2 + 1, row=0)
+                self.buttons_frame.grid_columnconfigure(index * 2, weight=1)
+                button.grid_configure(column=index * 2 + 1, row=0)
             else:
-                self.buttons_frame.grid_rowconfigure(i * 2, weight=1)
-                button.grid_configure(row=i * 2 + 1, column=0)
+                self.buttons_frame.grid_rowconfigure(index * 2, weight=1)
+                button.grid_configure(row=index * 2 + 1, column=0)
         if buttonrow:
             self.buttons_frame.grid_columnconfigure(len(buttons * 2), weight=1)
         else:
@@ -284,7 +284,7 @@ class _ColourScheme(ExceptionHandler):
         sf = tkinter.Frame(master=wssf)
         fsize = self.tags_variations_comments_font.cget("size")
         sf.grid_configure(column=1, row=9, columnspan=3, sticky=tkinter.EW)
-        for i, s in enumerate((7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20)):
+        for index, s in enumerate((7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20)):
             sb = tkinter.Radiobutton(
                 master=sf,
                 text=str(s),
@@ -295,8 +295,8 @@ class _ColourScheme(ExceptionHandler):
             )
             if s == abs(fsize):
                 self.s_size.set(s)
-            sb.grid_configure(column=i + 1, row=0, sticky=tkinter.EW)
-            sf.grid_columnconfigure(i + 1, weight=1, uniform="fsb")
+            sb.grid_configure(column=index + 1, row=0, sticky=tkinter.EW)
+            sf.grid_columnconfigure(index + 1, weight=1, uniform="fsb")
             sb.bind("<ButtonPress>", self.try_event(focus(sb)))
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=1)
@@ -570,20 +570,20 @@ class _ColourScheme(ExceptionHandler):
 
             return fs
 
-        for i, t in (
+        for index, text in (
             (1, "Moves Played"),
             (2, "All"),
             (3, "None"),
         ):
             rb = tkinter.Radiobutton(
                 master=frame,
-                text=t,
+                text=text,
                 variable=variable,
-                value=i,
+                value=index,
                 command=self.try_command(command, frame),
                 indicatoron=tkinter.FALSE,
             )
-            rb.grid_configure(column=i, row=baserow, sticky=tkinter.EW)
+            rb.grid_configure(column=index, row=baserow, sticky=tkinter.EW)
             rb.bind("<ButtonPress>", self.try_event(focus(rb)))
         rb = tkinter.Radiobutton(
             master=frame,

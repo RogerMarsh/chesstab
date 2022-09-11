@@ -173,8 +173,8 @@ class Chess(ExceptionHandler):
                 menu=menu102,
                 underline=EventSpec.menu_database_import[3],
             )
-            for i in (6, 5, 3, 0):
-                menu1.insert_separator(i)
+            for index in (6, 5, 3, 0):
+                menu1.insert_separator(index)
             for accelerator, function in (
                 (EventSpec.menu_database_games, self.database_import),
                 (EventSpec.menu_database_repertoires, self.import_repertoires),
@@ -287,8 +287,8 @@ class Chess(ExceptionHandler):
                 menu=menu201,
                 underline=EventSpec.menu_select_index[3],
             )
-            for i in (5, 4, 3, 1, 0):
-                menu2.insert_separator(i)
+            for index in (5, 4, 3, 1, 0):
+                menu2.insert_separator(index)
             for accelerator, field in (
                 (EventSpec.menu_select_index_black, BLACK_FIELD_DEF),
                 (EventSpec.menu_select_index_white, WHITE_FIELD_DEF),
@@ -334,8 +334,8 @@ class Chess(ExceptionHandler):
                     underline=accelerator[3],
                 )
             menu4.add_separator()
-            for i in (1, 0):
-                menu4.insert_separator(i)
+            for index in (1, 0):
+                menu4.insert_separator(index)
 
             menu5 = tkinter.Menu(menubar, name="repertoire", tearoff=False)
             menus.append(menu5)
@@ -351,8 +351,8 @@ class Chess(ExceptionHandler):
                     underline=accelerator[3],
                 )
             menu5.add_separator()
-            for i in (1, 0):
-                menu5.insert_separator(i)
+            for index in (1, 0):
+                menu5.insert_separator(index)
 
             menu6 = tkinter.Menu(menubar, name="tools", tearoff=False)
             menus.append(menu6)
@@ -399,8 +399,8 @@ class Chess(ExceptionHandler):
                     underline=accelerator[3],
                 )
             menu6.add_separator()
-            for i in (9, 8, 7, 5, 3, 0):
-                menu6.insert_separator(i)
+            for index in (9, 8, 7, 5, 3, 0):
+                menu6.insert_separator(index)
 
             menu7 = tkinter.Menu(menubar, name="engines", tearoff=False)
             menus.append(menu7)
@@ -753,7 +753,7 @@ class Chess(ExceptionHandler):
 
         idm = modulequery.installed_database_modules()
         _enginename = None
-        for k, v in idm.items():
+        for key, v in idm.items():
             if v in ed[0]:
                 if _enginename:
                     tkinter.messagebox.showinfo(
@@ -768,7 +768,7 @@ class Chess(ExceptionHandler):
                         title="Open",
                     )
                     return
-                _enginename = k
+                _enginename = key
         if _enginename is None:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),

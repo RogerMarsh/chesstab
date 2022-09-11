@@ -604,10 +604,10 @@ class GameUpdateEstimate(GameUpdate):
         super().append_bad_tag_and_set_error(match)
 
 
-def _convert_integer_to_length_hex(i):
-    """Lookup conversion table or work it out if 'i' is not in lookup table."""
+def _convert_integer_to_length_hex(integer):
+    """Return hexadecimal representation of integer without '0x' prefix."""
     try:
-        return MOVE_NUMBER_KEYS[i]
+        return MOVE_NUMBER_KEYS[integer]
     except IndexError:
-        c = hex(i)
+        c = hex(integer)
         return str(len(c) - 2) + c[2:]

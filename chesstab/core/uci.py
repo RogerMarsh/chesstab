@@ -129,8 +129,8 @@ class UCI:
                 non_joiners.append((ui_name, ei.driver.pid))
                 continue
             joiners.append(ei.driver)
-        for j in joiners:
-            j.join()
+        for item in joiners:
+            item.join()
         self.uci_active_engines.clear()
         self.positions_pending.clear()
         self.engine_queues.clear()
@@ -310,8 +310,8 @@ class UCI:
             v.update({rk: rv.copy() for rk, rv in requests.items()})
 
         uci_drivers_fen = self.uci_drivers_fen
-        for k, ei in self.uci_drivers.items():
-            if uci_drivers_fen[k] is not None:
+        for key, ei in self.uci_drivers.items():
+            if uci_drivers_fen[key] is not None:
                 continue
             eip = ei.parser
             if eip.readyok_expected:
@@ -324,7 +324,7 @@ class UCI:
                 if len(epp[eq[-1]]):
                     position_data = epp[eq[-1]].pop()
                     if self.process_analysis_request(ei, position_data):
-                        uci_drivers_fen[k] = position_data.position
+                        uci_drivers_fen[key] = position_data.position
                         break
                 else:
                     del epp[eq[-1]]
@@ -540,10 +540,10 @@ class UCI:
         cp = ScoreInfoValueNames.cp
         mate = ScoreInfoValueNames.mate
         lines = []
-        for k, v in snapshot.pv_group.items():
+        for key, v in snapshot.pv_group.items():
             lines.append(
                 [
-                    int(k) if k else 0,
+                    int(key) if key else 0,
                     None,
                     v[InfoParameters.depth],
                     generate_pgn_for_uci_moves_in_position(

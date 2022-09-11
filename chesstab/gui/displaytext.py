@@ -249,9 +249,9 @@ class ShowText:
             # on database.
             # instance.newrecord is edited record including index stuff.
             key = None
-            for k in grid.keys:
-                if instance.key.recno != k[0]:
-                    key = k
+            for grid_key in grid.keys:
+                if instance.key.recno != grid_key[0]:
+                    key = grid_key
                     break
             grid.close_client_cursor()
             grid.datasource.get_full_position_games(self.get_position_key())

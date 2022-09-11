@@ -278,10 +278,10 @@ class ChessDatabaseDeferred:
         if files is None:
             files = dict()
         fs = dict()
-        for k, v in self.get_database_parameters(
+        for key, v in self.get_database_parameters(
             files=list(files.keys())
         ).items():
-            fs[k] = (v["BSIZE"], v["BHIGHPG"], v["DSIZE"], v["DPGSUSED"])
+            fs[key] = (v["BSIZE"], v["BHIGHPG"], v["DSIZE"], v["DPGSUSED"])
         fi = self.get_database_increase(files=files)
         self.close_database_contexts()
         return fs, fi
@@ -321,19 +321,19 @@ class ChessDatabaseDeferred:
         del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
-        for k, v in self.get_database_parameters(
+        for key, v in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
         ).items():
             bsize = v["BSIZE"]
             bused = max(0, v["BHIGHPG"])
             bneeded = self.get_pages_for_record_counts(
-                self._notional_record_counts[k]
+                self._notional_record_counts[key]
             )[0]
             bincrease = min(bneeded * 2, bsize - bused)
             message = "".join(
                 (
                     "The free data size of the ",
-                    k,
+                    key,
                     " file will be increased from ",
                     str(bsize - bused),
                     " pages to ",
@@ -341,7 +341,7 @@ class ChessDatabaseDeferred:
                     " pages.",
                 )
             )
-            if len(self.table[k].get_extents()) % 2 == 0:
+            if len(self.table[key].get_extents()) % 2 == 0:
                 message = "".join(
                     (
                         message,
@@ -360,7 +360,7 @@ class ChessDatabaseDeferred:
                 ),
             ):
                 increase_done = True
-                self.table[k].opencontext.Increase(bincrease, False)
+                self.table[key].opencontext.Increase(bincrease, False)
         if increase_done:
             self._reporter.append_text(
                 " ".join(
@@ -384,19 +384,19 @@ class ChessDatabaseDeferred:
         del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
-        for k, v in self.get_database_parameters(
+        for key, v in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
         ).items():
             dsize = v["DSIZE"]
             dused = v["DPGSUSED"]
             dneeded = self.get_pages_for_record_counts(
-                self._notional_record_counts[k]
+                self._notional_record_counts[key]
             )[1]
             dincrease = min(dneeded * 2, dsize - dused)
             message = "".join(
                 (
                     "The free index size of the ",
-                    k,
+                    key,
                     " file will be increased from ",
                     str(dsize - dused),
                     " pages to ",
@@ -404,7 +404,7 @@ class ChessDatabaseDeferred:
                     " pages.",
                 )
             )
-            if len(self.table[k].get_extents()) % 2 != 0:
+            if len(self.table[key].get_extents()) % 2 != 0:
                 message = "".join(
                     (
                         message,
@@ -423,7 +423,7 @@ class ChessDatabaseDeferred:
                 ),
             ):
                 increase_done = True
-                self.table[k].opencontext.Increase(dincrease, True)
+                self.table[key].opencontext.Increase(dincrease, True)
         if increase_done:
             self._reporter.append_text(
                 " ".join(

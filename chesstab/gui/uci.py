@@ -125,11 +125,11 @@ class UCI(ExceptionHandler):
         still_alive = self.uci.quit_all_engines()
         ui_names -= set(n for n, p in still_alive)
         dead_menu_items = []
-        for i in range(self.menu_engines.index("end") + 1):
-            label = self.menu_engines.entryconfigure(i).get("label")
+        for index in range(self.menu_engines.index("end") + 1):
+            label = self.menu_engines.entryconfigure(index).get("label")
             if label is not None:
                 if label[-1] in ui_names:
-                    dead_menu_items.insert(0, i)
+                    dead_menu_items.insert(0, index)
         for dmi in dead_menu_items:
             self.menu_engines.delete(dmi)
         for name, pid in still_alive:
@@ -300,8 +300,8 @@ class UCI(ExceptionHandler):
     def quit_engine(self, number):
         """Stop the engine at index number in the engine table."""
         ui_name = self.uci.uci_drivers_index[number]
-        for i in range(self.menu_engines.index("end")):
-            label = self.menu_engines.entryconfigure(i).get("label")
+        for index in range(self.menu_engines.index("end")):
+            label = self.menu_engines.entryconfigure(index).get("label")
             if label is not None:
                 if label[-1] == ui_name:
                     if (
@@ -320,7 +320,7 @@ class UCI(ExceptionHandler):
                     ):
                         continue
                     if self.uci.kill_engine(number):
-                        self.menu_engines.delete(i)
+                        self.menu_engines.delete(index)
                     else:
                         tkinter.messagebox.showinfo(
                             parent=self.menu_engines,
@@ -465,12 +465,12 @@ class UCI(ExceptionHandler):
         )
 
     def _modify_command_menu_item(self, old, new, command):
-        for i in range(self.menu_commands.index("end")):
-            label = self.menu_commands.entryconfigure(i).get("label")
+        for index in range(self.menu_commands.index("end")):
+            label = self.menu_commands.entryconfigure(index).get("label")
             if label is not None:
                 if label[-1] == old:
                     self.menu_commands.entryconfigure(
-                        i,
+                        index,
                         label=new,
                         command=self.try_command(command, self.menu_commands),
                     )
@@ -702,26 +702,26 @@ class UCI(ExceptionHandler):
         self.visible_scrollbars = True
         exceptions = []
         for items in (self.engines_in_toplevels,):
-            for i in items:
+            for item in items:
                 try:
-                    i.show_scrollbars()
+                    item.show_scrollbars()
                 except tkinter.TclError:
-                    exceptions.append(i, items)
-        for i, items in exceptions:
-            items.remove(i)
+                    exceptions.append(item, items)
+        for item, items in exceptions:
+            items.remove(item)
 
     def hide_scrollbars(self):
         """Show the scrollbars in the engine definition display widgets."""
         self.visible_scrollbars = False
         exceptions = []
         for items in (self.engines_in_toplevels,):
-            for i in items:
+            for item in items:
                 try:
-                    i.hide_scrollbars()
+                    item.hide_scrollbars()
                 except tkinter.TclError:
-                    exceptions.append((i, items))
-        for i, items in exceptions:
-            items.remove(i)
+                    exceptions.append((item, items))
+        for item, items in exceptions:
+            items.remove(item)
 
     def position_queue_status(self):
         """Display counts of position queued for analysis by engines."""

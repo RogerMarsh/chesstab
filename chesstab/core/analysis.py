@@ -57,8 +57,8 @@ class Analysis:
 
         """
         var = self.variations
-        for k, value in var.items():
-            var[k] = [None] * len(value)
+        for key, value in var.items():
+            var[key] = [None] * len(value)
 
     # Rewrite of pgn_read in 2020 forced inclusion of SetUp tag in analysis
     # PGN text: probably best to find a way of avoiding this.

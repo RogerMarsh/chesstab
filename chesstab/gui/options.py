@@ -55,30 +55,30 @@ def save_options(folder, changes):
     with open(optionsfilename, "a+") as optionsfile:
         defaults = _extract_options(optionsfile)
         olddefaults, newdefaults = changes
-        for k, v in olddefaults.items():
-            if k in font_names:
+        for key, v in olddefaults.items():
+            if key in font_names:
                 for ak, av in v.items():
-                    if av == newdefaults[k][ak]:
-                        del newdefaults[k][ak]
-                    elif defaults[k].get(ak) == newdefaults[k][ak]:
-                        del newdefaults[k][ak]
-                if not newdefaults[k]:
-                    del newdefaults[k]
-            elif v == newdefaults[k]:
-                del newdefaults[k]
-            elif defaults.get(k) == newdefaults[k]:
-                del newdefaults[k]
+                    if av == newdefaults[key][ak]:
+                        del newdefaults[key][ak]
+                    elif defaults[key].get(ak) == newdefaults[key][ak]:
+                        del newdefaults[key][ak]
+                if not newdefaults[key]:
+                    del newdefaults[key]
+            elif v == newdefaults[key]:
+                del newdefaults[key]
+            elif defaults.get(key) == newdefaults[key]:
+                del newdefaults[key]
         newlines = []
-        for k, v in newdefaults.items():
-            if k in font_names:
-                newlines.append("".join((k, "\n")))
+        for key, v in newdefaults.items():
+            if key in font_names:
+                newlines.append("".join((key, "\n")))
                 for ak, av in v.items():
                     if ak in fonts.integer_attributes:
                         newlines.append("".join((ak, "=", str(av), "\n")))
                     else:
                         newlines.append("".join((ak, "=", av, "\n")))
             else:
-                newlines.append("".join((k, "=", v, "\n")))
+                newlines.append("".join((key, "=", v, "\n")))
         if newlines:
             optionsfile.writelines(newlines)
     return
@@ -113,10 +113,10 @@ def _extract_options(fileid):
         if text.startswith("#"):
             continue
         try:
-            k, v = text.split("=", 1)
+            key_string, v = text.split("=", 1)
         except ValueError:
-            k, v = text, ""
-        key = k.strip()
+            key_string, v = text, ""
+        key = key_string.strip()
         if key in defaults:
             if key in fonts.modify_font_attributes:
                 if font_details:

@@ -158,8 +158,8 @@ class Engine:
                     )
                 )
             if len(query) == 1:
-                for k, value in query.items():
-                    if k != "name":
+                for key, value in query.items():
+                    if key != "name":
                         return "".join(
                             (
                                 "Engine must be single 'key=value' or ",

@@ -101,27 +101,28 @@ class Dbdu(DptCompatdu):
             return None, []
         if self._file_per_database:
             names = dict()
-            for k in self.specification:
-                if k not in files:
+            for key in self.specification:
+                if key not in files:
                     continue
                 ns = []
-                names[os.path.join(self.home_directory, k)] = ns
-                for i in self.specification[k][SECONDARY]:
+                names[os.path.join(self.home_directory, key)] = ns
+                for item in self.specification[key][SECONDARY]:
                     ns.append(
                         os.path.join(
-                            self.home_directory, SUBFILE_DELIMITER.join((k, i))
+                            self.home_directory,
+                            SUBFILE_DELIMITER.join((key, item)),
                         )
                     )
                 ns.append(
                     os.path.join(
                         self.home_directory,
-                        SUBFILE_DELIMITER.join((k, EXISTENCE_BITMAP_SUFFIX)),
+                        SUBFILE_DELIMITER.join((key, EXISTENCE_BITMAP_SUFFIX)),
                     )
                 )
                 ns.append(
                     os.path.join(
                         self.home_directory,
-                        SUBFILE_DELIMITER.join((k, SEGMENT_SUFFIX)),
+                        SUBFILE_DELIMITER.join((key, SEGMENT_SUFFIX)),
                     )
                 )
             exists = [

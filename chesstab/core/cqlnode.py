@@ -557,23 +557,25 @@ class FSNode:
             return
         sourcefiles = list(FILE_NAMES)
         fileshifts = []
-        i = sourcefiles.index(filelow) + 8 - sourcefiles.index(filehigh)
-        for j in range(sourcefiles.index(filelow)):
+        limit_range = (
+            sourcefiles.index(filelow) + 8 - sourcefiles.index(filehigh)
+        )
+        for count in range(sourcefiles.index(filelow)):
             sourcefiles.append(sourcefiles.pop(0))
-        for j in range(i):
+        for count in range(limit_range):
             fileshifts.append(dict(zip(sourcefiles, FILE_NAMES)))
             sourcefiles.insert(0, sourcefiles.pop())
         # pylint message unused-variable.
-        # Find a way of doing without j in the two preceding loops.
-        del j
+        # Find a way of doing without count in this method's loops.
+        del count
         sourceranks = list(RANK_NAMES)
         rankrange = (
             sourceranks.index(ranklow) + 8 - sourceranks.index(rankhigh)
         )
-        for j in range(sourceranks.index(ranklow)):
+        for count in range(sourceranks.index(ranklow)):
             sourceranks.append(sourceranks.pop(0))
         transforms = []
-        for j in range(rankrange):
+        for count in range(rankrange):
             rankshifts = dict(zip(sourceranks, RANK_NAMES))
             for fs in fileshifts:
                 if fs[filelow] != filelow or rankshifts[ranklow] != ranklow:
@@ -629,15 +631,15 @@ class FSNode:
         """
         source = list(shiftsource)
         shifts = []
-        i = source.index(limits[0]) + 8 - source.index(limits[1])
-        for j in range(source.index(limits[0])):
+        limit_range = source.index(limits[0]) + 8 - source.index(limits[1])
+        for count in range(source.index(limits[0])):
             source.append(source.pop(0))
-        for j in range(i):
+        for count in range(limit_range):
             shifts.append(dict(zip(source, shiftsource)))
             source.insert(0, source.pop())
         # pylint message unused-variable.
-        # Find a way of doing without j in the two preceding loops.
-        del j
+        # Find a way of doing without count in this method's loops.
+        del count
         static = dict(zip(staticsource, staticsource))
         transforms = []
         for fs in shifts:
