@@ -106,8 +106,8 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
             )
         )
     for count, move in enumerate(moves):
-        g = re_move.match(move)
-        if not g:
+        move_match = re_move.match(move)
+        if not move_match:
             text.append(
                 "".join(
                     (
@@ -120,7 +120,7 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
                 )
             )
             break
-        from_square, to_square, promote_to = g.groups()
+        from_square, to_square, promote_to = move_match.groups()
 
         # from_square must contain a piece belonging to side with the move.
         if from_square not in piece_placement_data:

@@ -115,8 +115,12 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
         )
 
 
-def make_ChessDBrowEngine(chessui):
-    """Make ChessDBrowEngine with reference to ChessUI instance."""
+def chess_db_row_engine(chessui):
+    """Return function which returns ChessDBrowEngine instance for chessui.
+
+    The returned function takes an instance of a subclass of Database as
+    it's argument.
+    """
 
     def make_engine(database=None):
         return ChessDBrowEngine(database=database, ui=chessui)

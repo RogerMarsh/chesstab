@@ -8,8 +8,6 @@ from urllib.parse import urlsplit, parse_qs
 
 from .constants import NAME_DELIMITER
 
-_error = 1
-
 
 class Engine:
     """Chess engine program definition.
@@ -30,9 +28,9 @@ class Engine:
 
     def update_engine_definition(self, attributes):
         """Update existing self.__dict__ keys from dict attributes."""
-        for a in self.__dict__:
-            if a in attributes:
-                self.__dict__[a] = attributes[a]
+        for attr in self.__dict__:
+            if attr in attributes:
+                self.__dict__[attr] = attributes[attr]
 
     def extract_engine_definition(self, text):
         """Return True if definition contains a command line and optional name.
@@ -160,7 +158,7 @@ class Engine:
                     )
                 )
             if len(query) == 1:
-                for k, v in query.items():
+                for k, value in query.items():
                     if k != "name":
                         return "".join(
                             (
@@ -172,7 +170,7 @@ class Engine:
                                 "'name' as key.\n",
                             )
                         )
-                    if len(v) > 1:
+                    if len(value) > 1:
                         return "".join(
                             (
                                 "Engine must be single 'key=value' or ",

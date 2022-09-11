@@ -141,7 +141,7 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
     ):
         """Define chess database."""
         dptdsn = FileSpec.dpt_dsn
-        fn = FileSpec.field_name
+        field_name = FileSpec.field_name
 
         super().__init__(
             use_specification_items=use_specification_items,
@@ -158,7 +158,7 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 800,
                     DEFAULT_RECORDS: 10000,
                     DEFAULT_INCREASE_FACTOR: 0.01,
-                    PRIMARY: fn(GAME_FIELD_DEF),
+                    PRIMARY: field_name(GAME_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 200,
                     SECONDARY: {
                         SOURCE_FIELD_DEF: SOURCE_FIELD_DEF.title(),
@@ -177,7 +177,7 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                         PGN_DATE_FIELD_DEF: _PGN_DATE_FIELD_NAME,
                     },
                     FIELDS: {
-                        fn(GAME_FIELD_DEF): None,
+                        field_name(GAME_FIELD_DEF): None,
                         SOURCE_FIELD_DEF.title(): {INV: True, ORD: True},
                         WHITE_FIELD_DEF: {INV: True, ORD: True},
                         BLACK_FIELD_DEF: {INV: True, ORD: True},
@@ -217,14 +217,14 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 100,  # a guess
                     DEFAULT_RECORDS: 10000,
                     DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: fn(PARTIAL_FIELD_DEF),
+                    PRIMARY: field_name(PARTIAL_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 127,
                     SECONDARY: {
                         PARTIALPOSITION_NAME_FIELD_DEF: _PP_NAME_FIELD_NAME,
                         NEWGAMES_FIELD_DEF: _NEWGAMES_FIELD_NAME,
                     },
                     FIELDS: {
-                        fn(PARTIAL_FIELD_DEF): None,
+                        field_name(PARTIAL_FIELD_DEF): None,
                         _PP_NAME_FIELD_NAME: {INV: True, ORD: True},
                         _NEWGAMES_FIELD_NAME: {INV: True, ORD: True},
                     },
@@ -240,14 +240,14 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 800,
                     DEFAULT_RECORDS: 100,
                     DEFAULT_INCREASE_FACTOR: 0.01,
-                    PRIMARY: fn(REPERTOIRE_FIELD_DEF),
+                    PRIMARY: field_name(REPERTOIRE_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 200,
                     SECONDARY: {
                         OPENING_FIELD_DEF: None,
                         OPENING_ERROR_FIELD_DEF: _OPENING_ERROR_FIELD_NAME,
                     },
                     FIELDS: {
-                        fn(REPERTOIRE_FIELD_DEF): None,
+                        field_name(REPERTOIRE_FIELD_DEF): None,
                         OPENING_FIELD_DEF: {INV: True, ORD: True},
                         _OPENING_ERROR_FIELD_NAME: {INV: True, ORD: True},
                     },
@@ -263,14 +263,14 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 800,
                     DEFAULT_RECORDS: 100000,
                     DEFAULT_INCREASE_FACTOR: 1.0,
-                    PRIMARY: fn(ANALYSIS_FIELD_DEF),
+                    PRIMARY: field_name(ANALYSIS_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 200,
                     SECONDARY: {
                         ENGINE_FIELD_DEF: ENGINE_FIELD_DEF.title(),
                         VARIATION_FIELD_DEF: VARIATION_FIELD_DEF.title(),
                     },
                     FIELDS: {
-                        fn(ANALYSIS_FIELD_DEF): None,
+                        field_name(ANALYSIS_FIELD_DEF): None,
                         ENGINE_FIELD_DEF.title(): {INV: True, ORD: True},
                         VARIATION_FIELD_DEF.title(): {INV: True, ORD: True},
                     },
@@ -286,13 +286,13 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 100,  # a guess
                     DEFAULT_RECORDS: 10000,
                     DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: fn(SELECTION_FIELD_DEF),
+                    PRIMARY: field_name(SELECTION_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 127,
                     SECONDARY: {
                         RULE_FIELD_DEF: RULE_FIELD_DEF.title(),
                     },
                     FIELDS: {
-                        fn(SELECTION_FIELD_DEF): None,
+                        field_name(SELECTION_FIELD_DEF): None,
                         RULE_FIELD_DEF.title(): {INV: True, ORD: True},
                     },
                 },
@@ -307,13 +307,13 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     BTOD_CONSTANT: 100,  # a guess
                     DEFAULT_RECORDS: 1000,
                     DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: fn(PROGRAM_FIELD_DEF),
+                    PRIMARY: field_name(PROGRAM_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 127,
                     SECONDARY: {
                         COMMAND_FIELD_DEF: COMMAND_FIELD_DEF.title(),
                     },
                     FIELDS: {
-                        fn(PROGRAM_FIELD_DEF): None,
+                        field_name(PROGRAM_FIELD_DEF): None,
                         COMMAND_FIELD_DEF.title(): {INV: True, ORD: True},
                     },
                 },

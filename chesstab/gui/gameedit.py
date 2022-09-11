@@ -449,7 +449,7 @@ class GameEdit(Game):
             switch=switch,
         )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(popup_top_left, popup_pointer),
+            self.get_f10_popup_events(popup_top_left, popup_pointer),
             switch=switch,
         )
         # Allowed characters defined in set_token_context() call

@@ -59,7 +59,7 @@ from ..core.filespec import (
 from .displayitems import DisplayItems
 from ..core.chessrecord import ChessDBrecordAnalysis
 from .querygrid import QueryGrid
-from .queryrow import make_ChessDBrowQuery
+from .queryrow import chess_db_row_query
 from .score import ScoreNoGameException
 
 
@@ -1796,7 +1796,7 @@ class ChessUI(ExceptionHandler):
                 database,
                 SELECTION_FILE_DEF,
                 RULE_FIELD_DEF,
-                make_ChessDBrowQuery(self),
+                chess_db_row_query(self),
             ),
             self.base_selections.on_data_change,
         )

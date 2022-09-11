@@ -39,9 +39,9 @@ def get_filespec(**kargs):
     """
     names = FileSpec(**kargs)
     if not kargs.get("allowcreate", False):
-        for t in names:
-            if FILEDESC in names[t]:
-                del names[t][FILEDESC]
+        for table_name in names:
+            if FILEDESC in names[table_name]:
+                del names[table_name][FILEDESC]
     return names
 
 

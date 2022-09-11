@@ -297,7 +297,7 @@ class Score(SharedTextScore, BlankText):
             self.get_primary_activity_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(
+            self.get_f10_popup_events(
                 self.post_move_menu_at_top_left, self.post_move_menu
             ),
             switch=switch,
@@ -317,7 +317,7 @@ class Score(SharedTextScore, BlankText):
             self.get_select_move_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(
+            self.get_f10_popup_events(
                 self.post_select_move_menu_at_top_left,
                 self.post_select_move_menu,
             ),

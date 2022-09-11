@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     from . import APPLICATION_NAME
 
-    application_name = " ".join((APPLICATION_NAME, "(WineDPTMulti)"))
+    APP_NAME = " ".join((APPLICATION_NAME, "(WineDPTMulti)"))
     try:
         from solentware_misc.gui.startstop import (
             start_application_exception,
@@ -46,20 +46,16 @@ if __name__ == "__main__":
     try:
         from .gui.chess import Chess
     except Exception as error:
-        start_application_exception(
-            error, appname=application_name, action="import"
-        )
-        raise SystemExit(
-            " import ".join(("Unable to", application_name))
-        ) from error
+        start_application_exception(error, appname=APP_NAME, action="import")
+        raise SystemExit(" import ".join(("Unable to", APP_NAME))) from error
     try:
         app = Chess(allowcreate=True, dptmultistepdu=True)
     except Exception as error:
         start_application_exception(
-            error, appname=application_name, action="initialise"
+            error, appname=APP_NAME, action="initialise"
         )
         raise SystemExit(
-            " initialise ".join(("Unable to", application_name))
+            " initialise ".join(("Unable to", APP_NAME))
         ) from error
     try:
         app.root.mainloop()
@@ -71,11 +67,9 @@ if __name__ == "__main__":
             error,
             app,
             app.root,
-            title=application_name,
-            appname=application_name,
+            title=APP_NAME,
+            appname=APP_NAME,
         )
         raise SystemExit(
-            " reporting exception in ".join(
-                ("Exception while", application_name)
-            )
+            " reporting exception in ".join(("Exception while", APP_NAME))
         ) from error

@@ -39,9 +39,9 @@ class ChessDatabase(database.Database, ndbm_database.Database):
 
         if not kargs.get("allowcreate", False):
             try:
-                for t in names:
-                    if FILEDESC in names[t]:
-                        del names[t][FILEDESC]
+                for table_name in names:
+                    if FILEDESC in names[table_name]:
+                        del names[table_name][FILEDESC]
             except Exception as error:
                 if __name__ == "__main__":
                     raise

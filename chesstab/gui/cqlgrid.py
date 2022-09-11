@@ -452,10 +452,15 @@ class CQLGrid(CQLListGrid):
     def set_selection_text(self):
         """Set status bar to display ChessQL statement name."""
         if self.selection:
-            p = self.objects[self.selection[0]].value
+            value = self.objects[self.selection[0]].value
             self.ui.statusbar.set_status_text(
                 "".join(
-                    (p.get_name_text(), "   (", p.get_statement_text(), ")")
+                    (
+                        value.get_name_text(),
+                        "   (",
+                        value.get_statement_text(),
+                        ")",
+                    )
                 )
             )
         else:

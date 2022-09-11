@@ -116,28 +116,28 @@ class QueryStatement:
 
             self._reset_rule_state()
             self._description_string, self._query_statement_string = rule
-            w = self.__database.record_selector(self._query_statement_string)
-            w.lex()
-            w.parse()
-            if w.validate(self.__database, self.dbset):
-                self._where_error = w.error_information
+            wqs = self.__database.record_selector(self._query_statement_string)
+            wqs.lex()
+            wqs.parse()
+            if wqs.validate(self.__database, self.dbset):
+                self._where_error = wqs.error_information
                 continue
-            self.where = w
+            self.where = wqs
             self.textok = self._query_statement_string
             self.texterror = ""
             self._where_error = False
-            for n in w.node.get_clauses_from_root_in_walk_order():
-                if n.field in (TAG_WHITE, TAG_BLACK):
-                    if n.condition == LIKE:
+            for node in wqs.node.get_clauses_from_root_in_walk_order():
+                if node.field in (TAG_WHITE, TAG_BLACK):
+                    if node.condition == LIKE:
                         continue
-                    if not isinstance(n.value, tuple):
-                        n.value = " ".join(
-                            re_normalize_player_name.findall(n.value)
+                    if not isinstance(node.value, tuple):
+                        node.value = " ".join(
+                            re_normalize_player_name.findall(node.value)
                         )
                     else:
-                        n.value = tuple(
+                        node.value = tuple(
                             " ".join(re_normalize_player_name.findall(nv))
-                            for nv in n.value
+                            for nv in node.value
                         )
             return True
 

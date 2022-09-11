@@ -60,7 +60,7 @@ class EngineText(SharedTextEngineText, BlankText):
             self.get_primary_activity_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_F10_popup_events(
+            self.get_f10_popup_events(
                 self.post_active_menu_at_top_left, self.post_active_menu
             ),
             switch=switch,

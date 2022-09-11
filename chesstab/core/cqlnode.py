@@ -52,14 +52,14 @@ class CQLNode(Node):
     def transform_piece_designators(fs_filter):
         """Apply transforms to piece designators in CQL statement."""
         children = fs_filter.children
-        for n in fs_filter.node.children:
-            children.append(FSNode(n))
-            r = n.transform_piece_designators(children[-1])
-            if r:
-                return r
-        r = fs_filter.transform_descendant_piece_designators()
-        if r:
-            return r
+        for node in fs_filter.node.children:
+            children.append(FSNode(node))
+            transformation = node.transform_piece_designators(children[-1])
+            if transformation:
+                return transformation
+        transformation = fs_filter.transform_descendant_piece_designators()
+        if transformation:
+            return transformation
         return None
 
     def expand_child_piece_designators(self):
@@ -69,8 +69,8 @@ class CQLNode(Node):
         and cache for optimizing index access.
 
         """
-        for n in self.children:
-            n.expand_child_piece_designators()
+        for node in self.children:
+            node.expand_child_piece_designators()
         if self.leaf:
             if self.tokendef is Token.PIECE_DESIGNATOR:
                 pd = PieceDesignator(self.leaf)

@@ -19,7 +19,7 @@ from uci_net.engine import (
 
 from ..core.uci import UCI as _UCI
 from .enginegrid import EngineGrid
-from .enginerow import make_ChessDBrowEngine
+from .enginerow import chess_db_row_engine
 from ..core.filespec import (
     ENGINE_FILE_DEF,
     COMMAND_FIELD_DEF,
@@ -688,7 +688,7 @@ class UCI(ExceptionHandler):
                     self.database,
                     ENGINE_FILE_DEF,
                     COMMAND_FIELD_DEF,
-                    make_ChessDBrowEngine(self),
+                    chess_db_row_engine(self),
                 ),
                 self.base_engines.on_data_change,
             )

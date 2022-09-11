@@ -23,7 +23,7 @@ class SharedText:
     def set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing query statement on or off."""
         self.set_event_bindings_score(
-            self.get_F10_popup_events(
+            self.get_f10_popup_events(
                 self.post_active_menu_at_top_left, self.post_active_menu
             ),
             switch=switch,

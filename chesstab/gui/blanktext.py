@@ -164,7 +164,7 @@ class BlankText(ExceptionHandler):
         return "break"
 
     @staticmethod
-    def get_F10_popup_events(top_left, pointer):
+    def get_f10_popup_events(top_left, pointer):
         """Return tuple of event definitions to post popup menus.
 
         top_left is a method to post the menu at top left corner of widget.

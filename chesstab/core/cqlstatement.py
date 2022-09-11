@@ -166,20 +166,22 @@ class CQLStatement(Statement):
         # valid Chess QL statement.
         if self.cql_filters is None:
             return
-        r = self.cql_filters.transform_piece_designators(
+        transformation = self.cql_filters.transform_piece_designators(
             FSNode(self.cql_filters)
         )
-        if r:
-            self.cql_error = r
+        if transformation:
+            self.cql_error = transformation
         return
 
     def _rotate45_specific_squares(self, filter_, rotate45stack):
         if filter_.name == "rotate45":
             rotate45stack.append(None)
-        for n in filter_.children:
-            if rotate45stack and n.name == "piecedesignator":
-                # if {c for c in n.leaf}.intersection('12345678'))
-                if n.leaf != n.leaf.translate(_ROTATE45_VALIDATION_TABLE):
+        for node in filter_.children:
+            if rotate45stack and node.name == "piecedesignator":
+                # if {c for c in node.leaf}.intersection('12345678'))
+                if node.leaf != node.leaf.translate(
+                    _ROTATE45_VALIDATION_TABLE
+                ):
                     self._error_information = ErrorInformation(
                         self._statement_string.strip()
                     )
@@ -187,7 +189,7 @@ class CQLStatement(Statement):
                         "rotate45 on specific squares"
                     )
                     return self._error_information
-            r45ss = self._rotate45_specific_squares(n, rotate45stack)
+            r45ss = self._rotate45_specific_squares(node, rotate45stack)
             if r45ss:
                 return r45ss
         if filter_.name == "rotate45":
