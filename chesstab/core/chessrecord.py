@@ -898,7 +898,7 @@ class ChessDBvalueQuery(QueryStatement, Value):
     def pack(self):
         """Extend, return game selection rule record and index data."""
         value = super().pack()
-        index = valu[1]
+        index = value[1]
         index[RULE_FIELD_DEF] = [self.get_name_text()]
         return value
 
