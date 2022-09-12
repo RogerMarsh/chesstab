@@ -234,12 +234,12 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
         str_tags = []
         other_tags = []
         tags = self.value.collected_game._tags
-        for t in SEVEN_TAG_ROSTER:
-            if t not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
-                str_tags.append((t, tags.get(t, DEFAULT_TAG_VALUE)))
-        for t, v in sorted(tags.items()):
-            if t not in SEVEN_TAG_ROSTER:
-                other_tags.append((t, v))
+        for tag in SEVEN_TAG_ROSTER:
+            if tag not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
+                str_tags.append((tag, tags.get(tag, DEFAULT_TAG_VALUE)))
+        for key, value in sorted(tags.items()):
+            if key not in SEVEN_TAG_ROSTER:
+                other_tags.append((key, value))
         return str_tags + other_tags
 
 

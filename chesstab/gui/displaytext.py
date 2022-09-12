@@ -92,8 +92,8 @@ class ShowText:
 
         super().set_and_tag_item_text(reset_undo=reset_undo)
         if mrb != NonTagBind.NO_EDITABLE_TAGS:
-            for es in (self.get_inactive_button_events(),):
-                self.set_event_bindings_score(es, switch=True)
+            for event_spec in (self.get_inactive_button_events(),):
+                self.set_event_bindings_score(event_spec, switch=True)
 
     def create_database_submenu(self, menu):
         """Create and return popup submenu for database events."""

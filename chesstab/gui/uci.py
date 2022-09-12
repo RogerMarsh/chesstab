@@ -367,9 +367,9 @@ class UCI(ExceptionHandler):
                 self._do_toplevel.destroy()
                 self._do_toplevel = None
             return
-        for ui_name, ei in self.uci.uci_drivers.items():
+        for ui_name, engine_interface in self.uci.uci_drivers.items():
             try:
-                ei.to_driver_queue.put(command)
+                engine_interface.to_driver_queue.put(command)
             except Exception:
                 tkinter.messagebox.showinfo(
                     parent=self.menu_commands,
@@ -551,8 +551,12 @@ class UCI(ExceptionHandler):
             message="Isready not implemented.",
         )
 
+    # pylint message invalid-name for to argument.
+    # Name was 'to' to fit tkinter.Spinbox argument name: change to 'to_' to
+    # resolve pylint message.  ('from' is Python syntax so that got changed
+    # too, right at start of module's life.)
     def do_spinbox(
-        self, initial_value, from_, to, callback, hint=None, wraplength=None
+        self, initial_value, from_, to_, callback, hint=None, wraplength=None
     ):
         """Show spinbox to get value in range from_:to with initial value."""
         # Comapare with show_engines() method.
@@ -607,7 +611,7 @@ class UCI(ExceptionHandler):
             underline=0,
             command=self.try_command(cancel, buttonbar),
         ).pack(expand=tkinter.TRUE, side=tkinter.LEFT)
-        entrythingy.configure(from_=from_, to=to, increment=1)
+        entrythingy.configure(from_=from_, to=to_, increment=1)
         self._contents = tkinter.IntVar()
         self._contents.set(initial_value)
         entrythingy["textvariable"] = self._contents
@@ -738,8 +742,8 @@ class UCI(ExceptionHandler):
             )
             return
         pce = []
-        for e, pc in sorted(pending_counts):
-            pce.append("\t".join((str(pc), e)))
+        for engine, count in sorted(pending_counts):
+            pce.append("\t".join((str(count), engine)))
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
             title="Position Queues",

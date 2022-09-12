@@ -104,9 +104,9 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         started.
 
         """
-        ed = self.newview.get_name_engine_definition_dict()
+        nedd = self.newview.get_name_engine_definition_dict()
         title = (self.get_title_for_object(),)
-        if not ed:
+        if not nedd:
             tkinter.messagebox.showerror(
                 parent=self.parent,
                 title=title,
@@ -120,7 +120,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
                 ),
             )
             return False
-        self.newobject.value.load(repr(ed))
+        self.newobject.value.load(repr(nedd))
         if not self.newobject.value.get_engine_command_text():
             tkinter.messagebox.showerror(
                 parent=self.parent,

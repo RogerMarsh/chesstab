@@ -476,13 +476,14 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
             message="Confirm request to delete game selection rule.",
         ):
             return
-        s = self.query_statement
-        if s.where_error is not None:
-            v = self.sourceobject.value
+        statement = self.query_statement
+        if statement.where_error is not None:
+            value = self.sourceobject.value
             if (
-                s.get_name_text() != v.get_name_text()
-                or s.where_error != v.where_error
-                or s.get_query_statement_text() != v.get_query_statement_text()
+                statement.get_name_text() != value.get_name_text()
+                or statement.where_error != value.where_error
+                or statement.get_query_statement_text()
+                != value.get_query_statement_text()
             ):
                 tkinter.messagebox.showinfo(
                     parent=self.ui.get_toplevel(),

@@ -449,14 +449,16 @@ class _CQLDisplay(ExceptionHandler, Display):
         version 5.0 of CQL.  Thus "cql" is now a better name for the argument.
 
         """
-        p = self.ui.partial_games
-        if len(p.keys):
-            key = p.keys[0]
+        pgd = self.ui.partial_games
+        if len(pgd.keys):
+            key = pgd.keys[0]
         else:
             key = None
-        p.close_client_cursor()
+        pgd.close_client_cursor()
         try:
-            p.datasource.get_cql_statement_games(statement, self.sourceobject)
+            pgd.datasource.get_cql_statement_games(
+                statement, self.sourceobject
+            )
         except AttributeError as exc:
             if str(exc) == "'NoneType' object has no attribute 'answer'":
                 msg = "".join(
@@ -496,8 +498,8 @@ class _CQLDisplay(ExceptionHandler, Display):
             raise CQLDisplayListGamesError(
                 "Unable to list games for deleted statement"
             ) from exc
-        p.fill_view(currentkey=key, exclude=False)
-        if p.datasource.not_implemented:
+        pgd.fill_view(currentkey=key, exclude=False)
+        if pgd.datasource.not_implemented:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="ChessQL Statement Not Implemented",
@@ -505,7 +507,7 @@ class _CQLDisplay(ExceptionHandler, Display):
                     (
                         "These filters are not implemented and ",
                         "are ignored:\n\n",
-                        "\n".join(sorted(p.datasource.not_implemented)),
+                        "\n".join(sorted(pgd.datasource.not_implemented)),
                     )
                 ),
             )
@@ -578,16 +580,16 @@ class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
             message="Confirm request to delete ChessQL statement.",
         ):
             return
-        s = self.cql_statement
+        statement = self.cql_statement
 
         # Consider changing this since the call no longer ever returns None.
-        if s.is_statement() is not None:
+        if statement.is_statement() is not None:
 
-            v = self.sourceobject.value
+            value = self.sourceobject.value
             if (
-                s.get_name_text() != v.get_name_text()
-                or s.is_statement() != v.is_statement()
-                or s.get_statement_text() != v.get_statement_text()
+                statement.get_name_text() != value.get_name_text()
+                or statement.is_statement() != value.is_statement()
+                or statement.get_statement_text() != value.get_statement_text()
             ):
                 tkinter.messagebox.showinfo(
                     parent=self.ui.get_toplevel(),
@@ -658,11 +660,11 @@ class CQLDisplayInsert(
     def process_and_set_cql_statement_list(self, event=None):
         """Display games with position matching edited ChessQL statement."""
         del event
-        s = CQLStatement()
+        statement = CQLStatement()
         # Not sure this is needed or wanted.
-        # s.dbset = self.ui.base_games.datasource.dbset
-        s.process_statement(self.get_name_cql_statement_text())
-        self.cql_statement = s
+        # statement.dbset = self.ui.base_games.datasource.dbset
+        statement.process_statement(self.get_name_cql_statement_text())
+        self.cql_statement = statement
         try:
             self.refresh_game_list()
         except AttributeError as exc:

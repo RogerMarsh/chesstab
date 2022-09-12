@@ -532,11 +532,14 @@ class PartialPositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].value.collected_game._tags
+                tags = self.objects[ss0].value.collected_game._tags
                 supiai = self.ui.partial_items.active_item  # For line length.
                 self.ui.statusbar.set_status_text(
                     "  ".join(
-                        [t.get(k, "") for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]
+                        [
+                            tags.get(k, "")
+                            for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS
+                        ]
                     )
                     + supiai.get_selection_text_for_statusbar().join(
                         ("   (", ")")
@@ -812,10 +815,13 @@ class GamePositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].score.collected_game._tags
+                tags = self.objects[ss0].score.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     "  ".join(
-                        [t.get(k, "") for k in STATUS_SEVEN_TAG_ROSTER_EVENT]
+                        [
+                            tags.get(k, "")
+                            for k in STATUS_SEVEN_TAG_ROSTER_EVENT
+                        ]
                     )
                 )
         else:
@@ -1832,10 +1838,13 @@ class RepertoirePositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                t = self.objects[ss0].score.collected_game._tags
+                tags = self.objects[ss0].score.collected_game._tags
                 self.ui.statusbar.set_status_text(
                     "  ".join(
-                        [t.get(k, "") for k in STATUS_SEVEN_TAG_ROSTER_EVENT]
+                        [
+                            tags.get(k, "")
+                            for k in STATUS_SEVEN_TAG_ROSTER_EVENT
+                        ]
                     )
                 )
         else:

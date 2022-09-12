@@ -24,10 +24,10 @@ class AllGrid:
         self, instance, newobject, oldobject, showinitial, modal, title=""
     ):
         """Extend to do chess initialization."""
-        for x in (newobject, oldobject):
-            if x:
-                self._set_grid_database(x)
-                x.load_record((instance.key.pack(), instance.srvalue))
+        for obj in (newobject, oldobject):
+            if obj:
+                self._set_grid_database(obj)
+                obj.load_record((instance.key.pack(), instance.srvalue))
         super().create_edit_dialog(
             instance, newobject, oldobject, showinitial, modal, title=title
         )
@@ -112,10 +112,10 @@ class AllGrid:
 
     def is_payload_available(self):
         """Return True if grid is connected to a database."""
-        ds = self.get_data_source()
-        if ds is None:
+        data_source = self.get_data_source()
+        if data_source is None:
             return False
-        if ds.get_database() is None:
+        if data_source.get_database() is None:
 
             # Avoid exception scrolling visible grid not connected to database.
             # Make still just be hack to cope with user interface activity

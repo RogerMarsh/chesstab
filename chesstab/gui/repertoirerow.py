@@ -150,9 +150,9 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         del pgn
         tag_values = []
         tags = self.collected_game._tags
-        for tv in sorted(tags.items()):
-            if tv[0] not in REPERTOIRE_GAME_TAGS:
-                tag_values.append(tv)
+        for item in sorted(tags.items()):
+            if item[0] not in REPERTOIRE_GAME_TAGS:
+                tag_values.append(item)
         return tag_values
 
 

@@ -404,11 +404,11 @@ class ChessDeferredUpdate(ExceptionHandler):
         piecemovecount = 0
         estimate = False
         time_start = time.monotonic()
-        for pp in sys.argv[2:]:
+        for pgnfile in sys.argv[2:]:
             if gamecount + errorcount >= self.sample:
                 estimate = True
                 break
-            with open(pp, "r", encoding="iso-8859-1") as source:
+            with open(pgnfile, "r", encoding="iso-8859-1") as source:
                 for rcg in reader.read_games(source):
                     if gamecount + errorcount >= self.sample:
                         estimate = True
@@ -507,13 +507,13 @@ class ChessDeferredUpdate(ExceptionHandler):
 
         # positions_per_game == 0 if there are no valid games.
         ppp = "Not a number"
-        for c, t in (
+        for count, text in (
             (pieces_per_game, "Pieces per position:"),
             (piecetypes_per_game, "Piece types per position:"),
         ):
             if positions_per_game:
-                ppp = str(c // positions_per_game)
-            self.report.append_text(" ".join((t, ppp)), timestamp=False)
+                ppp = str(count // positions_per_game)
+            self.report.append_text(" ".join((text, ppp)), timestamp=False)
         self.report.append_text("", timestamp=False)
 
         # Check if import can proceed
@@ -808,8 +808,8 @@ class ChessDeferredUpdate(ExceptionHandler):
 
 def write_error_to_log():
     """Write the exception to the error log with a time stamp."""
-    with open(os.path.join(sys.argv[1], ERROR_LOG), "a") as f:
-        f.write(
+    with open(os.path.join(sys.argv[1], ERROR_LOG), "a") as file:
+        file.write(
             "".join(
                 (
                     "\n\n\n",

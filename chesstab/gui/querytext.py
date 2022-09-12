@@ -103,33 +103,35 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
             ),
             self.ui.base_games.on_data_change,
         )
-        qs = self.query_statement
-        if qs.where_error:
+        statement = self.query_statement
+        if statement.where_error:
             self.ui.base_games.datasource.get_selection_rule_games(None)
             self.ui.base_games.load_new_index()
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title="Display Game Selection Rule",
-                message=qs.where_error.get_error_report(grid.datasource),
+                message=statement.where_error.get_error_report(
+                    grid.datasource
+                ),
             )
-        elif qs.where:
-            qs.where.evaluate(
+        elif statement.where:
+            statement.where.evaluate(
                 grid.datasource.dbhome.record_finder(
                     grid.datasource.dbset, ChessDBrecordGameTags
                 )
             )
 
             # Workaround problem with query ''.  See Where.evaluate() also.
-            r = qs.where.node.get_root().result
-            if r is None:
+            result = statement.where.node.get_root().result
+            if result is None:
                 self.ui.base_games.datasource.get_selection_rule_games(None)
             else:
                 self.ui.base_games.datasource.get_selection_rule_games(
-                    r.answer
+                    result.answer
                 )
             self.ui.base_games.load_new_index()
 
-        elif qs.get_query_statement_text():
+        elif statement.get_query_statement_text():
             self.ui.base_games.load_new_index()
         # else:
         #    tkinter.messagebox.showinfo(

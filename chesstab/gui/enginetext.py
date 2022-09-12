@@ -95,11 +95,11 @@ class EngineText(SharedTextEngineText, BlankText):
 
     def get_name_engine_definition_dict(self):
         """Extract chess engine definition from Text widget."""
-        e = Engine()
-        if e.extract_engine_definition(
+        engine = Engine()
+        if engine.extract_engine_definition(
             self.score.get("1.0", tkinter.END).strip()
         ):
-            return e.__dict__
+            return engine.__dict__
         return {}
 
     def map_engine_definition(self):

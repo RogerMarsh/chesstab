@@ -101,9 +101,9 @@ class ChessDBrowPosition(
         in a data row.
 
         """
-        for w, rs in zip(widgets, self.row_specification):
-            if "background" not in rs[WIDGET_CONFIGURE]:
-                w[0].configure(background=background)
+        for widget, rowspec in zip(widgets, self.row_specification):
+            if "background" not in rowspec[WIDGET_CONFIGURE]:
+                widget[0].configure(background=background)
 
     # Resolve pylint message arguments-differ deferred.
     # Different arguments are correct.

@@ -99,8 +99,8 @@ class ShowPGN(ShowText, ScorePGN):
         except ScoreNoGameException:
             return
         if mrb != NonTagBind.NO_EDITABLE_TAGS:
-            for es in (self.get_inactive_button_events(),):
-                self.set_event_bindings_score(es, switch=True)
+            for event_spec in (self.get_inactive_button_events(),):
+                self.set_event_bindings_score(event_spec, switch=True)
 
     def set_select_variation_bindings(self, switch=True):
         """Delegate then set navigation and close item bindings."""
@@ -155,12 +155,12 @@ class ShowPGN(ShowText, ScorePGN):
         """Add PGN score to database on request from item display."""
         del event
         title = " ".join(("Insert", self.pgn_score_name.title()))
-        mt = self.pgn_score_name
+        psn = self.pgn_score_name
         if self.ui_displayed_items.active_item is None:
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("No active ", " to insert into database.")),
+                message=psn.join(("No active ", " to insert into database.")),
             )
             return None
 
@@ -170,7 +170,7 @@ class ShowPGN(ShowText, ScorePGN):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot add ", ":\n\nNo database open.")),
+                message=psn.join(("Cannot add ", ":\n\nNo database open.")),
             )
             return None
 
@@ -179,18 +179,18 @@ class ShowPGN(ShowText, ScorePGN):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot add ", ":\n\n", " list hidden.")),
+                message=psn.join(("Cannot add ", ":\n\n", " list hidden.")),
             )
             return None
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(("Confirm request to add ", " to database")),
+            message=psn.join(("Confirm request to add ", " to database")),
         ):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Add ", " to database abandonned.")),
+                message=psn.join(("Add ", " to database abandonned.")),
             )
             return None
         updater = self.game_updater(repr(self.score.get("1.0", tkinter.END)))
@@ -198,7 +198,7 @@ class ShowPGN(ShowText, ScorePGN):
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "The new ",
                         "".join(
@@ -226,7 +226,7 @@ class ShowPGN(ShowText, ScorePGN):
             title=title,
             message="".join(
                 (
-                    mt.title(),
+                    psn.title(),
                     ' "',
                     "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
                     '" added to database.',
@@ -243,12 +243,12 @@ class DisplayPGN(DisplayText):
         """Remove PGN score from database on request from item display."""
         del event
         title = " ".join(("Delete", self.pgn_score_name.title()))
-        mt = self.pgn_score_name
+        psn = self.pgn_score_name
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot delete ", ":\n\nNo database open.")),
+                message=psn.join(("Cannot delete ", ":\n\nNo database open.")),
             )
             return
         datasource = self.ui_base_table.get_data_source()
@@ -256,14 +256,14 @@ class DisplayPGN(DisplayText):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot delete ", ":\n\n", " list hidden.")),
+                message=psn.join(("Cannot delete ", ":\n\n", " list hidden.")),
             )
             return
         if self.sourceobject is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "Cannot delete ",
                         "".join(
@@ -280,7 +280,7 @@ class DisplayPGN(DisplayText):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "Cannot delete ",
                         "".join(
@@ -296,7 +296,7 @@ class DisplayPGN(DisplayText):
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(("Confirm request to delete ", " from database")),
+            message=psn.join(("Confirm request to delete ", " from database")),
         ):
             return
         original = self.pgn_score_updater()
@@ -314,7 +314,7 @@ class DisplayPGN(DisplayText):
             title=title,
             message="".join(
                 (
-                    mt.title(),
+                    psn.title(),
                     ' "',
                     "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
                     '" deleted from database.',
@@ -414,12 +414,12 @@ class EditPGN(EditText):
         """Modify existing PGN score record."""
         del event
         title = " ".join(("Edit", self.pgn_score_name.title()))
-        mt = self.pgn_score_name
+        psn = self.pgn_score_name
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot edit ", ":\n\nNo database open.")),
+                message=psn.join(("Cannot edit ", ":\n\nNo database open.")),
             )
             return
         datasource = self.ui_base_table.get_data_source()
@@ -427,14 +427,14 @@ class EditPGN(EditText):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(("Cannot edit ", ":\n\n", " list hidden.")),
+                message=psn.join(("Cannot edit ", ":\n\n", " list hidden.")),
             )
             return
         if self.sourceobject is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "Cannot edit ",
                         "".join(
@@ -451,7 +451,7 @@ class EditPGN(EditText):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "Cannot edit ",
                         "".join(
@@ -467,7 +467,7 @@ class EditPGN(EditText):
         if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
-            message=mt.join(("Confirm request to edit ", ".")),
+            message=psn.join(("Confirm request to edit ", ".")),
         ):
             return
         original = self.pgn_score_updater()
@@ -488,7 +488,7 @@ class EditPGN(EditText):
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=mt.join(
+                message=psn.join(
                     (
                         "The edited ",
                         "".join(
@@ -518,7 +518,7 @@ class EditPGN(EditText):
             title=title,
             message="".join(
                 (
-                    mt.title(),
+                    psn.title(),
                     ' "',
                     "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
                     '" amended on database.',

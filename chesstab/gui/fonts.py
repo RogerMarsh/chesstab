@@ -63,14 +63,14 @@ def make_chess_fonts(root, preferred_pieces=constants.PREFERRED_PIECES):
         root=root, name=constants.WILDPIECES_ON_BOARD_FONT, **default
     )
 
-    ff = set(tkinter.font.families())
-    for pff in preferred_pieces:
-        if pff in ff:
+    font_families = set(tkinter.font.families())
+    for preference in preferred_pieces:
+        if preference in font_families:
             del default["family"]
             pieces = tkinter.font.Font(
                 root=root,
                 name=constants.PIECES_ON_BOARD_FONT,
-                family=pff,
+                family=preference,
                 **default
             )
             break
@@ -95,9 +95,9 @@ def make_list_fonts(root):
 
 def _copy_font_attributes(attributes, source, target):
     """Copy attributes from source font to target font."""
-    for fa in attributes:
-        if fa in source:
-            target[fa] = source[fa]
+    for attr in attributes:
+        if attr in source:
+            target[attr] = source[attr]
 
 
 def _get_default_font_actual(widget_class):

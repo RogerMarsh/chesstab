@@ -52,8 +52,8 @@ class RepertoireEdit(GameEdit):
     def insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""
         self.set_insertion_point_before_next_pgn_tag()
-        for t in REPERTOIRE_TAG_ORDER:
-            self.add_pgntag_to_map(t, "")
+        for tag in REPERTOIRE_TAG_ORDER:
+            self.add_pgntag_to_map(tag, "")
 
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.

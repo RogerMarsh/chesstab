@@ -65,6 +65,7 @@ class ShowText(_ToplevelText):
         """Close the show record toplevel."""
         if self.ui.database is None:
             # pylint message access-member-before-definition.
+            # pylint message invalid-name.
             # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
@@ -89,6 +90,7 @@ class DeleteText(_ToplevelText):
                 text="Cannot delete because not connected to a database"
             )
             # pylint message access-member-before-definition.
+            # pylint message invalid-name.
             # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
@@ -124,6 +126,7 @@ class EditText(_ToplevelText):
                 text="Cannot update because not connected to a database"
             )
             # pylint message access-member-before-definition.
+            # pylint message invalid-name.
             # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
