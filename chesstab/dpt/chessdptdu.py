@@ -597,7 +597,17 @@ if __name__ == "__main__":
 
     menu = tkinter.Menu(master=root, tearoff=False)
     if databasepath:
-        filepath = None
+
+        class _FilePath:
+            """Wrap filepath as a class attribute.
+
+            pylint by default reports problems with filepath as a module
+            constant and as a global in the proceed() method.
+
+            Class attributes are allowed any format by pylint by default.
+            """
+
+            filepath = None
 
         def do_function(dbp, fp):
             """Run chess_dptdu with database at dbp and PGN file at fp."""
@@ -612,15 +622,16 @@ if __name__ == "__main__":
 
             """
             del a
-            global filepath  # pylint global-statement report: global needed.
+            filepath = _FilePath.filepath  # Used to be 'global filepath'.
             if filepath:
                 text.insert(tkinter.END, "\nProcess started, please wait.\n")
                 text.after(1, do_function, *(databasepath, [filepath]))
-                filepath = None
+                _FilePath.filepath = None
             elif databasepath:
                 filepath = tkinter.filedialog.askopenfilename(
                     parent=root, title="Select data file", initialdir="~"
                 )
+                _FilePath.filepath = filepath
                 if filepath:
                     text.insert(tkinter.END, "Data file: " + filepath + "\n")
                 else:
