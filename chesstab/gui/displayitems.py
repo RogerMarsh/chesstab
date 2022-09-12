@@ -143,14 +143,14 @@ class DisplayItems:
 
     def delete_item_counters(self, item):
         """Delete panel, decrement counters, and return grid key for reset."""
-        s = self.panel_object_map.get(item.panel, None)
-        if s:
+        key = self.panel_object_map.get(item.panel, None)
+        if key:
             del self.panel_object_map[item.panel]
-        if s in self.object_panel_count:
-            self.object_panel_count[s] -= 1
-            if self.object_panel_count[s] == 0:
-                del self.object_panel_count[s]
-                return s
+        if key in self.object_panel_count:
+            self.object_panel_count[key] -= 1
+            if self.object_panel_count[key] == 0:
+                del self.object_panel_count[key]
+                return key
         return None
 
     def set_itemmap(self, item, objectkey):
@@ -216,23 +216,27 @@ class DisplayItems:
                 raise
             gain = ".".join((widget.winfo_parent(), widget.winfo_name()))
 
-        for s in stack:
-            sw = s.get_top_widget()
+        for item in stack:
+            top_widget = item.get_top_widget()
 
             # win32 amd64 workaround. See comment at top of module.
             # Code in except clause is semantically closer to try clause than
             # a str(widget) version.
             try:
-                if gain.startswith(sw.winfo_pathname(sw.winfo_id())):
-                    gainfocus = s
+                if gain.startswith(
+                    top_widget.winfo_pathname(top_widget.winfo_id())
+                ):
+                    gainfocus = item
                     break
             except tkinter.TclError:
                 if not _win32_platform or not _amd64:
                     raise
                 if gain.startswith(
-                    ".".join((sw.winfo_parent(), sw.winfo_name()))
+                    ".".join(
+                        (top_widget.winfo_parent(), top_widget.winfo_name())
+                    )
                 ):
-                    gainfocus = s
+                    gainfocus = item
                     break
 
         else:
@@ -259,18 +263,22 @@ class DisplayItems:
         """Adjust items panel grid row sizes after navigate add or delete."""
         if active_weight is None:
             active_weight = max(2, len(self.order) - 1)
-        for e, g in enumerate(self.order):
-            g.get_top_widget().grid(row=e, column=0, sticky=tkinter.NSEW)
+        for index, item in enumerate(self.order):
+            item.get_top_widget().grid(
+                row=index, column=0, sticky=tkinter.NSEW
+            )
             panel.grid_columnconfigure(0, weight=1, uniform="c")
 
             # next line may do as alternative to line above
             # panel.grid_columnconfigure(0, weight=1)
 
-            if g is self.active_item:
-                panel.grid_rowconfigure(e, weight=active_weight, uniform="v")
+            if item is self.active_item:
+                panel.grid_rowconfigure(
+                    index, weight=active_weight, uniform="v"
+                )
             else:
                 panel.grid_rowconfigure(
-                    e, weight=0 if g.ui.single_view else 1, uniform="v"
+                    index, weight=0 if item.ui.single_view else 1, uniform="v"
                 )
 
     def object_display_count(self, key):
@@ -279,8 +287,8 @@ class DisplayItems:
 
     def set_insert_or_delete_on_all_items(self):
         """Call instance.set_insert_or_delete() for all items."""
-        for g in self.stack:
-            g.set_insert_or_delete()
+        for item in self.stack:
+            item.set_insert_or_delete()
 
     def forget_payload(self, parent):
         """Do nothing: compatibility with instances of Display subclasses."""

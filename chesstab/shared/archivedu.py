@@ -51,29 +51,29 @@ class Archivedu:
 
 # Snippet needed in dbdu.Dbdu.archive() method too.
 def _archive(names):
-    for n in names:
-        c = bz2.BZ2Compressor()
-        archiveguard = ".".join((n, "grd"))
-        archivename = ".".join((n, "bz2"))
-        with open(n, "rb") as fi, open(archivename, "wb") as fo:
-            inp = fi.read(10000000)
+    for name in names:
+        compressor = bz2.BZ2Compressor()
+        archiveguard = ".".join((name, "grd"))
+        archivename = ".".join((name, "bz2"))
+        with open(name, "rb") as file_in, open(archivename, "wb") as file_out:
+            inp = file_in.read(10000000)
             while inp:
-                co = c.compress(inp)
-                if co:
-                    fo.write(co)
-                inp = fi.read(10000000)
-            co = c.flush()
-            if co:
-                fo.write(co)
-        with open(archiveguard, "wb") as c:
+                compressed = compressor.compress(inp)
+                if compressed:
+                    file_out.write(compressed)
+                inp = file_in.read(10000000)
+            compressed = compressor.flush()
+            if compressed:
+                file_out.write(compressed)
+        with open(archiveguard, "wb"):
             pass
 
 
 # Snippet needed in dbdu.Dbdu.delete_archive() method too.
 def _delete_archive(names):
-    for n in names:
-        archiveguard = ".".join((n, "grd"))
-        archivename = ".".join((n, "bz2"))
+    for name in names:
+        archiveguard = ".".join((name, "grd"))
+        archivename = ".".join((name, "bz2"))
         try:
             os.remove(archiveguard)
         except FileNotFoundError:

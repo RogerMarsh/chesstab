@@ -104,22 +104,22 @@ class Dbdu(DptCompatdu):
             for key in self.specification:
                 if key not in files:
                     continue
-                ns = []
-                names[os.path.join(self.home_directory, key)] = ns
+                name_list = []
+                names[os.path.join(self.home_directory, key)] = name_list
                 for item in self.specification[key][SECONDARY]:
-                    ns.append(
+                    name_list.append(
                         os.path.join(
                             self.home_directory,
                             SUBFILE_DELIMITER.join((key, item)),
                         )
                     )
-                ns.append(
+                name_list.append(
                     os.path.join(
                         self.home_directory,
                         SUBFILE_DELIMITER.join((key, EXISTENCE_BITMAP_SUFFIX)),
                     )
                 )
-                ns.append(
+                name_list.append(
                     os.path.join(
                         self.home_directory,
                         SUBFILE_DELIMITER.join((key, SEGMENT_SUFFIX)),
@@ -153,18 +153,20 @@ class Dbdu(DptCompatdu):
             return None
         if flag:
             if self._file_per_database:
-                for n in names:
-                    archiveguard = ".".join((n, "grd"))
-                    archivename = ".".join((n, "zip"))
+                for name in names:
+                    archiveguard = ".".join((name, "grd"))
+                    archivename = ".".join((name, "zip"))
                     with zipfile.ZipFile(
                         archivename,
                         mode="w",
                         compression=zipfile.ZIP_DEFLATED,
                         allowZip64=True,
-                    ) as c:
-                        for s in names[n]:
-                            c.write(s, arcname=os.path.basename(s))
-                    with open(archiveguard, "wb") as c:
+                    ) as zip_archive:
+                        for source in names[name]:
+                            zip_archive.write(
+                                source, arcname=os.path.basename(source)
+                            )
+                    with open(archiveguard, "wb"):
                         pass
             else:
                 _archive(names)
@@ -179,9 +181,9 @@ class Dbdu(DptCompatdu):
         if flag:
             if self._file_per_database:
                 not_backups = []
-                for n in names:
-                    archiveguard = ".".join((n, "grd"))
-                    archivename = ".".join((n, "zip"))
+                for name in names:
+                    archiveguard = ".".join((name, "grd"))
+                    archivename = ".".join((name, "zip"))
                     if not os.path.exists(archivename):
                         try:
                             os.remove(archiveguard)
@@ -193,12 +195,13 @@ class Dbdu(DptCompatdu):
                         mode="r",
                         compression=zipfile.ZIP_DEFLATED,
                         allowZip64=True,
-                    ) as c:
-                        namelist = c.namelist()
+                    ) as zip_archive:
+                        namelist = zip_archive.namelist()
                         extract = [
                             e
                             for e in namelist
-                            if os.path.join(self.home_directory, e) in names[n]
+                            if os.path.join(self.home_directory, e)
+                            in names[name]
                         ]
                         if len(extract) != len(namelist):
                             not_backups.append(os.path.basename(archivename))

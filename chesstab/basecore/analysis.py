@@ -97,16 +97,16 @@ class Analysis:
         """
         self.find_position_analysis(fen)
         analysis = self.newrow().value
-        ar = self.newrow()
-        arv = ar.value
+        row = self.newrow()
+        arv = row.value
         rsc = self.get_cursor()
         try:
-            r = rsc.first()
-            while r:
-                ar.load_record(r)
+            rec = rsc.first()
+            while rec:
+                row.load_record(rec)
                 analysis.scale.update(arv.scale)
                 analysis.variations.update(arv.variations)
-                r = rsc.next()
+                rec = rsc.next()
             analysis.position = fen
         finally:
             rsc.close()
@@ -118,12 +118,12 @@ class Analysis:
         records = []
         rsc = self.get_cursor()
         try:
-            r = rsc.first()
-            while r:
-                ar = self.newrow()
-                ar.load_record(r)
-                records.append(ar)
-                r = rsc.next()
+            rec = rsc.first()
+            while rec:
+                row = self.newrow()
+                row.load_record(rec)
+                records.append(row)
+                rec = rsc.next()
         finally:
             rsc.close()
         return records
