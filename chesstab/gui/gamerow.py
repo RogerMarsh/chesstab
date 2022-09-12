@@ -243,8 +243,13 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
         return str_tags + other_tags
 
 
-def make_ChessDBrowGame(chessui):
-    """Make ChessDBrowGame with reference to ChessUI instance."""
+def chess_db_row_game(chessui):
+    """Return function that returns ChessDBrowGame instance for chessui.
+
+    chessui is a chess_ui.ChessUI instance.
+
+    The returned function takes a ChessDatabase instance as it's argument.
+    """
 
     def make_position(database=None):
         return ChessDBrowGame(database=database, ui=chessui)

@@ -36,7 +36,7 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
-from .gamerow import make_ChessDBrowGame
+from .gamerow import chess_db_row_game
 from .gamedisplay import GameDisplayInsert
 from .cqldisplay import CQLDisplayInsert
 from .repertoiredisplay import RepertoireDisplayInsert
@@ -68,13 +68,6 @@ from .uci import UCI
 from .chess_ui import ChessUI
 from .eventspec import EventSpec
 
-# for runtime "from <db|dpt>results import ChessDatabase" and similar
-_ChessDB = "ChessDatabase"
-_FullPositionDS = "FullPositionDS"
-_ChessQueryLanguageDS = "ChessQueryLanguageDS"
-_AnalysisDS = "AnalysisDS"
-_SelectionDS = "SelectionDS"
-
 STARTUP_MINIMUM_WIDTH = 340
 STARTUP_MINIMUM_HEIGHT = 400
 
@@ -83,6 +76,21 @@ ExceptionHandler.set_application_name(APPLICATION_NAME)
 
 class ChessError(Exception):
     """Exception class fo chess module."""
+
+
+# Convert module constants _FullPositionDS and others to class attribute
+# names because the default class-attribute-naming-style is 'any'.
+class _Import:
+    """Names of classes imported by import_module from alternative modules.
+
+    For runtime "from <db|dpt>results import ChessDatabase" and similar.
+    """
+
+    ChessDatabase = "ChessDatabase"
+    FullPositionDS = "FullPositionDS"
+    ChessQueryLanguageDS = "ChessQueryLanguageDS"
+    AnalysisDS = "AnalysisDS"
+    SelectionDS = "SelectionDS"
 
 
 class Chess(ExceptionHandler):
@@ -515,7 +523,7 @@ class Chess(ExceptionHandler):
                     self.opendatabase,
                     GAMES_FILE_DEF,
                     self._index,
-                    make_ChessDBrowGame(ui),
+                    chess_db_row_game(ui),
                 ),
                 ui.base_games.on_data_change,
             )
@@ -652,18 +660,21 @@ class Chess(ExceptionHandler):
                     return None
                 return getattr(module, name)
 
-            self._database_class = import_name(_modulename, _ChessDB)
+            self._database_class = import_name(
+                _modulename, _Import.ChessDatabase
+            )
             self._fullposition_class = import_name(
-                FULL_POSITION_MODULE[_enginename], _FullPositionDS
+                FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
             )
             self._partialposition_class = import_name(
-                PARTIAL_POSITION_MODULE[_enginename], _ChessQueryLanguageDS
+                PARTIAL_POSITION_MODULE[_enginename],
+                _Import.ChessQueryLanguageDS,
             )
             self._engineanalysis_class = import_name(
-                ANALYSIS_MODULE[_enginename], _AnalysisDS
+                ANALYSIS_MODULE[_enginename], _Import.AnalysisDS
             )
             self._selection_class = import_name(
-                SELECTION_MODULE[_enginename], _SelectionDS
+                SELECTION_MODULE[_enginename], _Import.SelectionDS
             )
 
         try:
@@ -810,18 +821,21 @@ class Chess(ExceptionHandler):
                     return None
                 return getattr(module, name)
 
-            self._database_class = import_name(_modulename, _ChessDB)
+            self._database_class = import_name(
+                _modulename, _Import.ChessDatabase
+            )
             self._fullposition_class = import_name(
-                FULL_POSITION_MODULE[_enginename], _FullPositionDS
+                FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
             )
             self._partialposition_class = import_name(
-                PARTIAL_POSITION_MODULE[_enginename], _ChessQueryLanguageDS
+                PARTIAL_POSITION_MODULE[_enginename],
+                _Import.ChessQueryLanguageDS,
             )
             self._engineanalysis_class = import_name(
-                ANALYSIS_MODULE[_enginename], _AnalysisDS
+                ANALYSIS_MODULE[_enginename], _Import.AnalysisDS
             )
             self._selection_class = import_name(
-                SELECTION_MODULE[_enginename], _SelectionDS
+                SELECTION_MODULE[_enginename], _Import.SelectionDS
             )
 
         try:
@@ -1530,7 +1544,7 @@ class Chess(ExceptionHandler):
                 self.opendatabase,
                 GAMES_FILE_DEF,
                 self._index,
-                make_ChessDBrowGame(self.ui),
+                chess_db_row_game(self.ui),
             )
         )
         self.ui.show_game_grid(self.opendatabase)

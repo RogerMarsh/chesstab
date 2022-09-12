@@ -23,10 +23,10 @@ from solentware_grid.core.dataclient import DataSource
 
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
-from .gamerow import make_ChessDBrowGame
-from .positionrow import make_ChessDBrowPosition
-from .cqlrow import make_ChessDBrowCQL
-from .repertoirerow import make_ChessDBrowRepertoire
+from .gamerow import chess_db_row_game
+from .positionrow import chess_db_row_position
+from .cqlrow import chess_db_row_cql
+from .repertoirerow import chess_db_row_repertoire
 from .gamelistgrid import (
     TagRosterGrid,
     GamePositionGames,
@@ -1111,7 +1111,7 @@ class ChessUI(ExceptionHandler):
                 self.database,
                 GAMES_FILE_DEF,
                 GAMES_FILE_DEF,
-                make_ChessDBrowPosition(self),
+                chess_db_row_position(self),
             )
         else:
             sqds = None
@@ -1124,7 +1124,7 @@ class ChessUI(ExceptionHandler):
                 self.database,
                 GAMES_FILE_DEF,
                 GAMES_FILE_DEF,
-                make_ChessDBrowGame(self),
+                chess_db_row_game(self),
             )
         else:
             sqds = None
@@ -1143,7 +1143,7 @@ class ChessUI(ExceptionHandler):
                 self.database,
                 GAMES_FILE_DEF,
                 GAMES_FILE_DEF,
-                make_ChessDBrowPosition(self),
+                chess_db_row_position(self),
             )
         else:
             sqds = None
@@ -1327,7 +1327,7 @@ class ChessUI(ExceptionHandler):
                 database,
                 PARTIAL_FILE_DEF,
                 PARTIALPOSITION_NAME_FIELD_DEF,
-                make_ChessDBrowCQL(self),
+                chess_db_row_cql(self),
             ),
             self.base_partials.on_data_change,
         )
@@ -1369,7 +1369,7 @@ class ChessUI(ExceptionHandler):
                 database,
                 REPERTOIRE_FILE_DEF,
                 OPENING_FIELD_DEF,
-                make_ChessDBrowRepertoire(self),
+                chess_db_row_repertoire(self),
             ),
             self.base_repertoires.on_data_change,
         )

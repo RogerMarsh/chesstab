@@ -8,7 +8,7 @@ import tkinter
 import tkinter.messagebox
 
 from ..core.querystatement import QueryStatement
-from .gamerow import make_ChessDBrowGame
+from .gamerow import chess_db_row_game
 from ..core.chessrecord import ChessDBrecordGameTags
 from .blanktext import NonTagBind, BlankText
 from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
@@ -99,7 +99,7 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                 grid.datasource.dbhome,
                 self.ui.base_games.datasource.dbset,
                 self.ui.base_games.datasource.dbset,
-                make_ChessDBrowGame(self.ui),
+                chess_db_row_game(self.ui),
             ),
             self.ui.base_games.on_data_change,
         )

@@ -119,8 +119,13 @@ class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
         )
 
 
-def make_ChessDBrowCQL(chessui):
-    """Make ChessDBrowCQL with reference to ChessUI instance."""
+def chess_db_row_cql(chessui):
+    """Return function that returns ChessDBrowCQL instance for chessui.
+
+    chessui is a chess_ui.ChessUI instance.
+
+    The returned function takes a ChessDatabase instance as it's argument.
+    """
 
     def make_selection(database=None):
         return ChessDBrowCQL(database=database, ui=chessui)

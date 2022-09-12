@@ -172,7 +172,7 @@ class _ColourScheme(ExceptionHandler):
                 row=row,
                 colour=color,
                 label=label,
-                TagConfigureBGcolour=setter,
+                tag_onfigure_bachground_colour=setter,
             )
 
     def create_font_frame(self):
@@ -676,7 +676,7 @@ class ChessColourSlider(ColourSlider):
         label="",
         resolution=2,
         colour="grey",
-        TagConfigureBGcolour=None,
+        tag_onfigure_bachground_colour=None,
     ):
         """Extend with callback to attach a colour to a Text tag."""
         super().__init__(
@@ -686,34 +686,34 @@ class ChessColourSlider(ColourSlider):
             resolution=resolution,
             colour=colour,
         )
-        self.TagConfigureBGcolour = TagConfigureBGcolour
+        self.tag_onfigure_bachground_colour = tag_onfigure_bachground_colour
 
     def delta_red_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Red."""
         super().delta_red_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())
 
     def set_red_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Red."""
         super().set_red_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())
 
     def delta_green_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Green."""
         super().delta_green_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())
 
     def set_green_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Green."""
         super().set_green_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())
 
     def delta_blue_colour(self, event=None):
         """Extend to attach colour to Text tag after change to Blue."""
         super().delta_blue_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())
 
     def set_blue_colour(self, event=None):
         """Extend to attach colour to Text tag after setting Blue."""
         super().set_blue_colour(event=event)
-        self.TagConfigureBGcolour(self.get_colour())
+        self.tag_onfigure_bachground_colour(self.get_colour())

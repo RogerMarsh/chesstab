@@ -17,7 +17,7 @@ font_names = {
     constants.TAGS_VARIATIONS_COMMENTS_FONT,
 }
 
-_options_filename = "options"
+_OPTIONS_FILENAME = "options"
 
 
 def get_saved_options(folder):
@@ -26,7 +26,7 @@ def get_saved_options(folder):
     Return None if options file cannot be read or does not exist.
 
     """
-    optionsfilename = os.path.join(folder, _options_filename)
+    optionsfilename = os.path.join(folder, _OPTIONS_FILENAME)
     if not os.path.isfile(optionsfilename):
         return None
     try:
@@ -48,7 +48,7 @@ def save_options(folder, changes):
     Leading and trailing whitespace is removed from <value> before use.
 
     """
-    optionsfilename = os.path.join(folder, _options_filename)
+    optionsfilename = os.path.join(folder, _OPTIONS_FILENAME)
     if os.path.exists(optionsfilename):
         if not os.path.isfile(optionsfilename):
             return

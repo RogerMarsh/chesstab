@@ -126,8 +126,13 @@ class ChessDBrowPosition(
         widget.configure(cnf=cnf, **kw)
 
 
-def make_ChessDBrowPosition(chessui):
-    """Make ChessDBrowPosition with reference to ChessUI instance."""
+def chess_db_row_position(chessui):
+    """Return function that returns ChessDBrowPosition instance for chessui.
+
+    chessui is a chess_ui.ChessUI instance.
+
+    The returned function takes a ChessDatabase instance as it's argument.
+    """
 
     def make_position(database=None):
         return ChessDBrowPosition(database=database, ui=chessui)

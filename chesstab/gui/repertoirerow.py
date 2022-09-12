@@ -156,8 +156,13 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         return tag_values
 
 
-def make_ChessDBrowRepertoire(chessui):
-    """Make ChessDBrowRepertoire with reference to ChessUI instance."""
+def chess_db_row_repertoire(chessui):
+    """Return function that returns ChessDBrowRepertoire instance for chessui.
+
+    chessui is a chess_ui.ChessUI instance.
+
+    The returned function takes a ChessDatabase instance as it's argument.
+    """
 
     def make_position(database=None):
         return ChessDBrowRepertoire(database=database, ui=chessui)

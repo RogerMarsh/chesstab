@@ -2,5 +2,9 @@
 # pre-pydocstyle days and there is no point fixing it's pydocstyle
 # deficiencies since any future analogue will copy pydocstyle
 # compliant code.
+# Noticed no invalid-names are reported by pylint for the matched module,
+# but the same names in gui.chess are reported.
+# In particular, for example, _ChessDB before fixing it.
+# It is assumed pylint is taking notice of the match specified here.
 [pydocstyle]
 match=(?!chesstab-4-1-1_castling-option-correction)\.py

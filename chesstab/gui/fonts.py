@@ -25,9 +25,9 @@ from . import constants
 
 try:
     multiprocessing.Queue()
-    _assume_wine = False
+    _ASSUME_WINE = False
 except OSError:
-    _assume_wine = True
+    _ASSUME_WINE = True
 del multiprocessing
 
 modify_font_attributes = ("family", "weight", "slant", "size")
@@ -102,7 +102,7 @@ def _copy_font_attributes(attributes, source, target):
 
 def _get_default_font_actual(widget_class):
     """Return actuals for widget_class font or Courier if it does not exist."""
-    if _assume_wine:
+    if _ASSUME_WINE:
         return tkinter.font.Font(family="Courier").actual()
 
     # On MS Windows the named font from widget_class exists at Python2.6
