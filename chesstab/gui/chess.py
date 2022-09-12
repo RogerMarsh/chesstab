@@ -43,7 +43,7 @@ from .repertoiredisplay import RepertoireDisplayInsert
 from .querydisplay import QueryDisplayInsert
 from . import constants, options
 from . import colourscheme
-from . import help
+from . import help_
 from .. import APPLICATION_DATABASE_MODULE, APPLICATION_NAME, ERROR_LOG
 from .. import (
     PARTIAL_POSITION_MODULE,
@@ -993,23 +993,23 @@ class Chess(ExceptionHandler):
 
     def help_about(self):
         """Display information about Chess application."""
-        help.help_about(self.root)
+        help_.help_about(self.root)
 
     def help_file_size(self):
         """Display brief instructions for file size dialogue."""
-        help.help_file_size(self.root)
+        help_.help_file_size(self.root)
 
     def help_guide(self):
         """Display brief User Guide for Chess application."""
-        help.help_guide(self.root)
+        help_.help_guide(self.root)
 
     def help_notes(self):
         """Display technical notes about Chess application."""
-        help.help_notes(self.root)
+        help_.help_notes(self.root)
 
     def help_selection(self):
         """Display description of selection rules for Chess application."""
-        help.help_selection(self.root)
+        help_.help_selection(self.root)
 
     def new_game(self):
         """Enter a new game."""
