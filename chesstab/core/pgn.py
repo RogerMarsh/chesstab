@@ -122,8 +122,8 @@ class GameAnalysis(GameDisplayMoves):
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
-        for v in tags.values():
-            if len(v) == 0:
+        for value in tags.values():
+            if len(value) == 0:
                 # Tag value must not be null
                 return False
         return True
@@ -162,8 +162,8 @@ def get_position_string(
     """
     del halfmove_clock, fullmove_number
     squares = Squares.squares
-    for s, p in board.items():
-        p.set_square(s)
+    for square, piece in board.items():
+        piece.set_square(square)
     return (
         sum(squares[s].bit for s in board)
         .to_bytes(8, "big")
@@ -196,8 +196,8 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
-        for v in tags.values():
-            if len(v) == 0:
+        for value in tags.values():
+            if len(value) == 0:
                 # Tag value must not be null
                 return False
         if TAG_OPENING not in tags:
@@ -208,32 +208,46 @@ class GameRepertoireDisplayMoves(GameDisplayMoves):
     def get_repertoire_pgn(self):
         """Return export format PGN for repertoire."""
         tags = self._tags
-        pb = []
-        for t in REPERTOIRE_TAG_ORDER:
-            pb.extend(
-                ["[", t, ' "', tags.get(t, REPERTOIRE_GAME_TAGS[t]), '"]\n']
+        tokens = []
+        for tag in REPERTOIRE_TAG_ORDER:
+            tokens.extend(
+                [
+                    "[",
+                    tag,
+                    ' "',
+                    tags.get(tag, REPERTOIRE_GAME_TAGS[tag]),
+                    '"]\n',
+                ]
             )
-        for t, v in sorted(
+        for tag, value in sorted(
             [tv for tv in tags.items() if tv[0] not in REPERTOIRE_GAME_TAGS]
         ):
-            pb.extend(["[", t, ' "', v, '"]\n'])
-        pb.append(self.get_all_movetext_in_pgn_export_format())
-        return "".join(pb)
+            tokens.extend(["[", tag, ' "', value, '"]\n'])
+        tokens.append(self.get_all_movetext_in_pgn_export_format())
+        return "".join(tokens)
 
     def get_repertoire_pgn_no_comments(self):
         """Return export format PGN for repertoire excluding comments."""
         tags = self._tags
-        pb = []
-        for t in REPERTOIRE_TAG_ORDER:
-            pb.extend(
-                ["[", t, ' "', tags.get(t, REPERTOIRE_GAME_TAGS[t]), '"]\n']
+        tokens = []
+        for tag in REPERTOIRE_TAG_ORDER:
+            tokens.extend(
+                [
+                    "[",
+                    tag,
+                    ' "',
+                    tags.get(tag, REPERTOIRE_GAME_TAGS[tag]),
+                    '"]\n',
+                ]
             )
-        for t, v in sorted(
+        for tag, value in sorted(
             [tv for tv in tags.items() if tv[0] not in REPERTOIRE_GAME_TAGS]
         ):
-            pb.extend(["[", t, ' "', v, '"]\n'])
-        pb.append(self.get_movetext_without_comments_in_pgn_export_format())
-        return "".join(pb)
+            tokens.extend(["[", tag, ' "', value, '"]\n'])
+        tokens.append(
+            self.get_movetext_without_comments_in_pgn_export_format()
+        )
+        return "".join(tokens)
 
 
 class GameRepertoireUpdate(Game):
@@ -242,8 +256,8 @@ class GameRepertoireUpdate(Game):
     def is_tag_roster_valid(self):
         """Return True if the repertoire's tag roster is valid."""
         tags = self._tags
-        for v in tags.values():
-            if len(v) == 0:
+        for value in tags.values():
+            if len(value) == 0:
                 # Tag value must not be null
                 return False
         if TAG_OPENING not in tags:
@@ -455,8 +469,8 @@ class GameRepertoireTags(GameTags):
     def is_tag_roster_valid(self):
         """Return True if the game's tag roster is valid."""
         tags = self._tags
-        for v in tags.values():
-            if len(v) == 0:
+        for value in tags.values():
+            if len(value) == 0:
                 # Tag value must not be null
                 return False
         if TAG_OPENING not in tags:
@@ -541,7 +555,7 @@ class GameUpdate(Game):
         squaremovekeys = self.squaremovekeys
         pieces = [""] * 64
         bits = []
-        mv = movenumber + self._variation
+        mnv = movenumber + self._variation
         for piece in self._piece_placement_data.values():
             piece_name = piece.name
             piece_square = piece.square
@@ -549,14 +563,14 @@ class GameUpdate(Game):
             pieces[piece_square.number] = piece_name
             bits.append(piece_square.bit)
 
-            # piecesquaremovekeys.append(mv + piece_name + square_name)
-            # squaremovekeys.append(mv + mp[piece_name] + square_name)
+            # piecesquaremovekeys.append(mnv + piece_name + square_name)
+            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
 
             # If 'square piece' is better order than 'piece square'
-            piecesquaremovekeys.append(mv + square_name + piece_name)
+            piecesquaremovekeys.append(mnv + square_name + piece_name)
             squaremovekeys.append(
                 (
-                    mv
+                    mnv
                     + square_name
                     + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
                 )
@@ -564,14 +578,14 @@ class GameUpdate(Game):
 
         pieces = "".join(pieces)
         for piece_name in set(pieces):
-            piecemovekeys.append(mv + piece_name)
-        bs = position_delta[1]
+            piecemovekeys.append(mnv + piece_name)
+        delta_after = position_delta[1]
         self.positionkeys.append(
             sum(bits).to_bytes(8, "big").decode("iso-8859-1")
             + pieces
-            + bs[1]
-            + bs[3]
-            + bs[2]
+            + delta_after[1]
+            + delta_after[3]
+            + delta_after[2]
         )
 
 
@@ -609,5 +623,5 @@ def _convert_integer_to_length_hex(integer):
     try:
         return MOVE_NUMBER_KEYS[integer]
     except IndexError:
-        c = hex(integer)
-        return str(len(c) - 2) + c[2:]
+        base16 = hex(integer)
+        return str(len(base16) - 2) + base16[2:]

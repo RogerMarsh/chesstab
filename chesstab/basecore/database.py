@@ -122,8 +122,8 @@ class Database:
         archives = dict()
         guards = dict()
         for name in names:
-            archiveguard = ".".join((n, "grd"))
-            archivefile = ".".join((n, "bz2"))
+            archiveguard = ".".join((name, "grd"))
+            archivefile = ".".join((name, "bz2"))
             for box, file in ((archives, archivefile), (guards, archiveguard)):
                 if os.path.exists(file):
                     box[name] = file

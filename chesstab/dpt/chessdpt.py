@@ -52,9 +52,9 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
         if not kargs.get("allowcreate", False):
             try:
-                for dd in ddnames:
-                    if FILEDESC in ddnames[dd]:
-                        del ddnames[dd][FILEDESC]
+                for dd_name in ddnames:
+                    if FILEDESC in ddnames[dd_name]:
+                        del ddnames[dd_name][FILEDESC]
             except Exception as error:
                 if __name__ == "__main__":
                     raise
@@ -138,7 +138,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
             return True
 
         # At least one file is not in Normal state
-        r = "\n".join(
+        report = "\n".join(
             [
                 "\t".join((os.path.basename(dbo.file), fistat[dbo][1]))
                 for dbo in self.table.values()
@@ -151,7 +151,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     APPLICATION_NAME,
                     " has opened the database but some of the files are ",
                     "not in the Normal state.\n\n",
-                    r,
+                    report,
                     "\n\n",
                     APPLICATION_NAME,
                     " will close the database on dismissing this ",
@@ -167,8 +167,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
     def delete_database(self):
         """Close and delete the open chess database."""
         names = [self.sysfolder]
-        for v in self.table.values():
-            names.append(v.file)
+        for value in self.table.values():
+            names.append(value.file)
         return super().delete_database(names)
 
     def get_archive_names(self, files=()):
@@ -177,12 +177,12 @@ class ChessDatabase(database.Database, dpt_database.Database):
         names = [v.file for k, v in self.table.items() if k in specs]
         archives = dict()
         guards = dict()
-        for n in names:
-            archiveguard = ".".join((n, "grd"))
-            archivefile = ".".join((n, "bz2"))
-            for d, f in ((archives, archivefile), (guards, archiveguard)):
-                if os.path.exists(f):
-                    d[n] = f
+        for name in names:
+            archiveguard = ".".join((name, "grd"))
+            archivefile = ".".join((name, "bz2"))
+            for box, file in ((archives, archivefile), (guards, archiveguard)):
+                if os.path.exists(file):
+                    box[name] = file
         return (names, archives, guards)
 
     def open_after_import_without_backups(self, files=()):
@@ -244,7 +244,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         # At least one file is not in Normal state.
         # None of these files had deferred updates for Import or the state does
         # not imply a file full condition where deferred updates occured.
-        r = "\n".join(
+        report = "\n".join(
             [
                 "\t".join((os.path.basename(dbo.file), fistat[dbo][1]))
                 for dbo in self.table.values()
@@ -257,7 +257,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     APPLICATION_NAME,
                     " has opened the database but some of the files are ",
                     "not in the Normal state.\n\n",
-                    r,
+                    report,
                     "\n\nAt least one of these files is neither just ",
                     "marked Deferred Update nor marked Full, and backups ",
                     "were not taken, so ",
@@ -331,7 +331,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         # At least one file is not in Normal state.
         # None of these files had deferred updates for Import or the state does
         # not imply a file full condition where deferred updates occured.
-        r = "\n".join(
+        report = "\n".join(
             [
                 "\t".join((os.path.basename(dbo.file), fistat[dbo][1]))
                 for dbo in self.table.values()
@@ -344,7 +344,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     APPLICATION_NAME,
                     " has opened the database but some of the files are ",
                     "not in the Normal state.\n\n",
-                    r,
+                    report,
                     "\n\nAt least one of these files is neither just ",
                     "marked Deferred Update nor marked Full so ",
                     APPLICATION_NAME,
@@ -367,6 +367,6 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
         """
         self._broken_sizes.clear()
-        bs = self._broken_sizes
-        for f in files:
-            bs[f] = self.table[f].get_file_parameters(self.dbenv)
+        broken = self._broken_sizes
+        for file in files:
+            broken[file] = self.table[file].get_file_parameters(self.dbenv)

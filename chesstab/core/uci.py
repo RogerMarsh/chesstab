@@ -94,13 +94,13 @@ class UCI:
     def kill_engine(self, number):
         """Attempt to kill engine and return True if successful."""
         ui_name = self.uci_drivers_index[number]
-        ei = self.uci_drivers[ui_name]
+        engine_interface = self.uci_drivers[ui_name]
         try:
-            ei.to_driver_queue.put(CommandsToEngine.quit_)
+            engine_interface.to_driver_queue.put(CommandsToEngine.quit_)
         except (Full, ValueError, AssertionError):
             return False
-        ei.driver.join()
-        engine_name = ei.parser.name
+        engine_interface.driver.join()
+        engine_name = engine_interface.parser.name
         if engine_name in self.uci_active_engines:
 
             # The command 'stockfish argument' starts stockfish but the engine
@@ -122,13 +122,13 @@ class UCI:
         """Attempt to kill all engines and return list of those not killed."""
         joiners = []
         non_joiners = []
-        for ui_name, ei in self.uci_drivers.items():
+        for ui_name, engine_interface in self.uci_drivers.items():
             try:
-                ei.to_driver_queue.put(CommandsToEngine.quit_)
+                engine_interface.to_driver_queue.put(CommandsToEngine.quit_)
             except (Full, ValueError, AssertionError):
-                non_joiners.append((ui_name, ei.driver.pid))
+                non_joiners.append((ui_name, engine_interface.driver.pid))
                 continue
-            joiners.append(ei.driver)
+            joiners.append(engine_interface.driver)
         for item in joiners:
             item.join()
         self.uci_active_engines.clear()
@@ -222,16 +222,16 @@ class UCI:
             raise
         driver.parser.process_engine_commands(response)
 
-        c = commands[-1].split(None, maxsplit=1)[0]
-        if c == CommandsFromEngine.bestmove:
+        command = commands[-1].split(None, maxsplit=1)[0]
+        if command == CommandsFromEngine.bestmove:
             self.bestmove(ui_name)
-        elif c == CommandsFromEngine.readyok:
+        elif command == CommandsFromEngine.readyok:
             self.readyok(ui_name)
-        elif c == CommandsFromEngine.uciok:
+        elif command == CommandsFromEngine.uciok:
             self.uciok(ui_name)
-        elif c == CommandsFromEngine.registration:
+        elif command == CommandsFromEngine.registration:
             self.registration(ui_name)
-        elif c == CommandsFromEngine.copyprotection:
+        elif command == CommandsFromEngine.copyprotection:
             self.copyprotection(ui_name)
         else:
             pass
@@ -245,13 +245,13 @@ class UCI:
             if ReservedOptionNames.Hash in self.set_option_on_empty_queues:
 
                 # Postpone Hash action until all engines ready.
-                for ei in self.uci_drivers.values():
-                    eip = ei.parser
+                for engine_interface in self.uci_drivers.values():
+                    eip = engine_interface.parser
                     if eip.readyok_expected or eip.uciok_expected is not False:
                         return
 
-                for ei in self.uci_drivers.values():
-                    eip = ei.parser
+                for engine_interface in self.uci_drivers.values():
+                    eip = engine_interface.parser
                     eipoh = eip.options.get(ReservedOptionNames.Hash)
                     if eipoh is None:
                         continue
@@ -267,7 +267,7 @@ class UCI:
                         newhash = max(
                             min(self.hash_size, int(max_)), int(min_)
                         )
-                    ei.to_driver_queue.put(
+                    engine_interface.to_driver_queue.put(
                         " ".join(
                             (
                                 CommandsToEngine.setoption,
@@ -278,8 +278,10 @@ class UCI:
                             )
                         )
                     )
-                    ei.to_driver_queue.put(CommandsToEngine.isready)
-                    ei.parser.readyok_expected = True
+                    engine_interface.to_driver_queue.put(
+                        CommandsToEngine.isready
+                    )
+                    engine_interface.parser.readyok_expected = True
                 self.set_option_on_empty_queues.discard(
                     ReservedOptionNames.Hash
                 )
@@ -301,42 +303,44 @@ class UCI:
             if game is position_data:
                 continue
             requests.setdefault(game, []).append(position_data)
-            for v in engine_queues.values():
-                if game in v:
-                    v.append(v.pop(v.index(game)))
+            for value in engine_queues.values():
+                if game in value:
+                    value.append(value.pop(value.index(game)))
                 else:
-                    v.append(game)
-        for v in positions_pending.values():
-            v.update({rk: rv.copy() for rk, rv in requests.items()})
+                    value.append(game)
+        for value in positions_pending.values():
+            value.update({rk: rv.copy() for rk, rv in requests.items()})
 
         uci_drivers_fen = self.uci_drivers_fen
-        for key, ei in self.uci_drivers.items():
+        for key, engine_interface in self.uci_drivers.items():
             if uci_drivers_fen[key] is not None:
                 continue
-            eip = ei.parser
+            eip = engine_interface.parser
             if eip.readyok_expected:
                 continue
             if eip.uciok_expected is not False:
                 continue
-            eq = engine_queues[eip.name]
+            engq = engine_queues[eip.name]
             epp = positions_pending[eip.name]
-            while len(eq):
-                if len(epp[eq[-1]]):
-                    position_data = epp[eq[-1]].pop()
-                    if self.process_analysis_request(ei, position_data):
+            while len(engq):
+                if len(epp[engq[-1]]):
+                    position_data = epp[engq[-1]].pop()
+                    if self.process_analysis_request(
+                        engine_interface, position_data
+                    ):
                         uci_drivers_fen[key] = position_data.position
                         break
                 else:
-                    del epp[eq[-1]]
-                    del eq[-1]
+                    del epp[engq[-1]]
+                    del engq[-1]
 
     def set_analysis_queue(self, queue):
         """Note queue for return of UCI engine analysis to user interface."""
         self.ui_analysis_queue = queue
 
-    def process_analysis_request(self, ei, position_data):
+    def process_analysis_request(self, engine_interface, position_data):
         """Return True if deeper or wider analysis requested from engine."""
-        engine_name = ei.parser.name
+        engine_name = engine_interface.parser.name
 
         # (0, 0) or value read from database by requestor.
         depth, multipv = position_data.scale.get(engine_name, (0, 0))
@@ -354,7 +358,7 @@ class UCI:
 
         # Can the engine cope with the multiPV option value?
         ronmpv = ReservedOptionNames.MultiPV
-        udpo = ei.parser.options
+        udpo = engine_interface.parser.options
         if multipv < self._multipv:
             if ronmpv not in udpo:
                 if depth >= self._go_depth:
@@ -377,7 +381,7 @@ class UCI:
         # If analysis already exists do not reduce depth; multipv is already
         # as high as possible given requested value.
         if ronmpv in udpo:
-            ei.to_driver_queue.put(
+            engine_interface.to_driver_queue.put(
                 " ".join(
                     (
                         CommandsToEngine.setoption,
@@ -388,10 +392,10 @@ class UCI:
                     )
                 )
             )
-        ei.to_driver_queue.put(
+        engine_interface.to_driver_queue.put(
             " ".join((CommandsToEngine.position, PositionSubCommands.fen, fen))
         )
-        ei.to_driver_queue.put(
+        engine_interface.to_driver_queue.put(
             " ".join(
                 (
                     CommandsToEngine.go,
@@ -404,26 +408,26 @@ class UCI:
 
     def uciok(self, ui_name):
         """Process uciok command from UCI chess engine."""
-        ei = self.uci_drivers[ui_name]
-        eip = ei.parser
+        engine_interface = self.uci_drivers[ui_name]
+        eip = engine_interface.parser
         eip.uciok_expected = False
         self.uci_active_engines.setdefault(eip.name, set()).add(ui_name)
         self.positions_pending.setdefault(eip.name, {})
         self.engine_queues.setdefault(eip.name, [])
         if self.use_ucinewgame:
-            ei.to_driver_queue.put(CommandsToEngine.ucinewgame)
-            ei.to_driver_queue.put(CommandsToEngine.isready)
+            engine_interface.to_driver_queue.put(CommandsToEngine.ucinewgame)
+            engine_interface.to_driver_queue.put(CommandsToEngine.isready)
             eip.readyok_expected = True
 
     def readyok(self, ui_name):
         """Process readyok command from UCI chess engine."""
-        ei = self.uci_drivers[ui_name]
+        engine_interface = self.uci_drivers[ui_name]
         if self.clear_hash_after_bestmove[ui_name]:
-            ei.to_driver_queue.put(CommandsToEngine.isready)
+            engine_interface.to_driver_queue.put(CommandsToEngine.isready)
 
             # Assume all engines have the 'Clear Hash' option.
             # Partly to avoid changing uci package right now to ask.
-            ei.to_driver_queue.put(
+            engine_interface.to_driver_queue.put(
                 " ".join(
                     (
                         CommandsToEngine.setoption,
@@ -435,7 +439,7 @@ class UCI:
 
             self.clear_hash_after_bestmove[ui_name] = False
             return
-        ei.parser.readyok_expected = False
+        engine_interface.parser.readyok_expected = False
 
     def bestmove(self, ui_name):
         """Extract engine analysis and tidy up engine.
@@ -447,10 +451,10 @@ class UCI:
         self.extract_variations_from_engine_bestmove(ui_name)
         self.uci_drivers_fen[ui_name] = None
         if self.use_ucinewgame:
-            ei = self.uci_drivers[ui_name]
-            ei.to_driver_queue.put(CommandsToEngine.ucinewgame)
-            ei.to_driver_queue.put(CommandsToEngine.isready)
-            ei.parser.readyok_expected = True
+            engine_interface = self.uci_drivers[ui_name]
+            engine_interface.to_driver_queue.put(CommandsToEngine.ucinewgame)
+            engine_interface.to_driver_queue.put(CommandsToEngine.isready)
+            engine_interface.parser.readyok_expected = True
         if self.clear_hash:
             self.clear_hash_after_bestmove[ui_name] = True
 
@@ -520,8 +524,8 @@ class UCI:
 
     def any_readyok_pending(self):
         """Return True if expected engine readyok commands not yet received."""
-        for ei in self.uci_drivers.values():
-            if ei.parser.readyok_expected:
+        for engine_interface in self.uci_drivers.values():
+            if engine_interface.parser.readyok_expected:
                 return True
         return False
 
@@ -537,61 +541,63 @@ class UCI:
         # in chess engine 'score' info when mate, or checkmate and stalemate
         # positions, are involved.
         score = InfoParameters.score
-        cp = ScoreInfoValueNames.cp
+        centipawns = ScoreInfoValueNames.cp
         mate = ScoreInfoValueNames.mate
         lines = []
-        for key, v in snapshot.pv_group.items():
+        for key, value in snapshot.pv_group.items():
             lines.append(
                 [
                     int(key) if key else 0,
                     None,
-                    v[InfoParameters.depth],
+                    value[InfoParameters.depth],
                     generate_pgn_for_uci_moves_in_position(
-                        v[InfoParameters.pv][0], fen
+                        value[InfoParameters.pv][0], fen
                     ),
                 ]
             )
-            if cp in v[score]:
-                lines[-1][1] = v[score][cp]
-            elif mate in v[score]:
-                lines[-1][1] = v[score][mate] + "0000"
+            if centipawns in value[score]:
+                lines[-1][1] = value[score][centipawns]
+            elif mate in value[score]:
+                lines[-1][1] = value[score][mate] + "0000"
             else:
                 lines[-1][1] = 0
         lines = sorted(lines)[: int(multipv) if multipv is not None else 1]
 
-        a = Analysis()
-        a.scale = {engine_name: (min([int(d[2]) for d in lines]), len(lines))}
-        a.position = fen
-        a.variations = {engine_name: [(d[1], d[3]) for d in lines]}
+        eng_a = Analysis()
+        eng_a.scale = {
+            engine_name: (min([int(d[2]) for d in lines]), len(lines))
+        }
+        eng_a.position = fen
+        eng_a.variations = {engine_name: [(d[1], d[3]) for d in lines]}
 
         # The write to analysis file will be done here.
         asd = self.analysis_data_source
         if asd:
-            records = asd.get_position_analysis_records(a.position)
-            for r in records:
-                if engine_name in r.value.scale:
-                    er = r.clone()
-                    er.value.scale.update(a.scale)
-                    er.value.variations.update(a.variations)
-                    inserter = RecordEdit(er, r)
+            records = asd.get_position_analysis_records(eng_a.position)
+            for rec in records:
+                if engine_name in rec.value.scale:
+                    erc = rec.clone()
+                    erc.value.scale.update(eng_a.scale)
+                    erc.value.variations.update(eng_a.variations)
+                    inserter = RecordEdit(erc, rec)
                     inserter.set_data_source(asd, inserter.on_data_change)
                     inserter.edit()
                     break
             else:
                 if records:
-                    r = records[-1]
-                    er = r.clone()
-                    er.value.scale.update(a.scale)
-                    er.value.variations.update(a.variations)
-                    inserter = RecordEdit(er, r)
+                    rec = records[-1]
+                    erc = rec.clone()
+                    erc.value.scale.update(eng_a.scale)
+                    erc.value.variations.update(eng_a.variations)
+                    inserter = RecordEdit(erc, rec)
                     inserter.set_data_source(asd, inserter.on_data_change)
                     inserter.edit()
                 else:
-                    v = self.analysis_record.value
-                    v.empty()
-                    v.scale = a.scale
-                    v.position = a.position
-                    v.variations = a.variations
+                    value = self.analysis_record.value
+                    value.empty()
+                    value.scale = eng_a.scale
+                    value.position = eng_a.position
+                    value.variations = eng_a.variations
                     inserter = RecordEdit(self.analysis_record, None)
                     inserter.set_data_source(asd, None)
                     self.analysis_record.set_database(
@@ -600,10 +606,10 @@ class UCI:
                     self.analysis_record.key.recno = None  # 0
                     inserter.put()
         else:
-            pa = self.position_analysis.setdefault(a.position, a)
-            if pa is not a:
-                pa.scale.update(a.scale)
-                pa.variations.update(a.variations)
+            pos_a = self.position_analysis.setdefault(eng_a.position, eng_a)
+            if pos_a is not eng_a:
+                pos_a.scale.update(eng_a.scale)
+                pos_a.variations.update(eng_a.variations)
 
     def set_position_analysis_data_source(self, datasource=None):
         """Link database analysis reader to open database."""
@@ -616,8 +622,8 @@ class UCI:
     def is_positions_pending_empty(self):
         """Return True if no positions are in the queue for analysis."""
         for pending in self.positions_pending.values():
-            for p in pending.values():
-                if len(p):
+            for value in pending.values():
+                if len(value):
                     return False
         return True
 

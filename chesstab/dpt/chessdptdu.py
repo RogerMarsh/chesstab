@@ -84,19 +84,19 @@ def chess_dptdu(
     importer = ChessDBrecordGameImport()
     cdb.open_database(files=file_records)
     for pgnfile in pgnpaths:
-        with open(pgnfile, "r", encoding="iso-8859-1") as s:
-            importer.import_pgn(cdb, s, pgnfile, reporter=reporter)
+        with open(pgnfile, "r", encoding="iso-8859-1") as source:
+            importer.import_pgn(cdb, source, pgnfile, reporter=reporter)
     reporter("Finishing import: please wait.")
     reporter("", timestamp=False)
     cdb.close_database_contexts(files=file_records)
     cdb.open_database_contexts(files=file_records)
     status = True
-    for f in (
+    for file in (
         cdb.specification.keys() if file_records is None else file_records
     ):
         if (
             FISTAT_DEFERRED_UPDATES
-            != cdb.table[f].get_file_parameters(cdb.dbenv)["FISTAT"][0]
+            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
         ):
             status = False
     cdb.close_database_contexts()
@@ -158,10 +158,10 @@ def chess_dptdu_chunks(
     reporter("", timestamp=False)
     cdb.open_database_contexts(files=file_records)
     status = True
-    for f in file_records:
+    for file in file_records:
         if (
             FISTAT_DEFERRED_UPDATES
-            != cdb.get_database_instance(f, None).get_file_parameters(
+            != cdb.get_database_instance(file, None).get_file_parameters(
                 cdb.dbenv
             )["FISTAT"][0]
         ):
@@ -198,15 +198,15 @@ class ChessDatabaseDeferred:
         """
         ddnames = FileSpec(**kargs)
         # Deferred update for games file only
-        for dd in list(ddnames.keys()):
-            if dd != GAMES_FILE_DEF:
-                del ddnames[dd]
+        for ddname in list(ddnames.keys()):
+            if ddname != GAMES_FILE_DEF:
+                del ddnames[ddname]
 
         if not kargs.get("allowcreate", False):
             try:
-                for dd in ddnames:
-                    if FILEDESC in ddnames[dd]:
-                        del ddnames[dd][FILEDESC]
+                for ddname in ddnames:
+                    if FILEDESC in ddnames[ddname]:
+                        del ddnames[ddname][FILEDESC]
             except Exception as error:
                 if __name__ == "__main__":
                     raise
@@ -235,10 +235,10 @@ class ChessDatabaseDeferred:
 
         """
         super().open_database(files=files)
-        vr = self.dbenv.Core().GetViewerResetter()
+        viewer = self.dbenv.Core().GetViewerResetter()
         for dbo in self.table.values():
             if (
-                vr.ViewAsInt("FISTAT", dbo.opencontext)
+                viewer.ViewAsInt("FISTAT", dbo.opencontext)
                 != FISTAT_DEFERRED_UPDATES
             ):
                 break
@@ -277,14 +277,19 @@ class ChessDatabaseDeferred:
         """Return Table B and D size and usage in pages for files."""
         if files is None:
             files = dict()
-        fs = dict()
-        for key, v in self.get_database_parameters(
+        filesize = dict()
+        for key, value in self.get_database_parameters(
             files=list(files.keys())
         ).items():
-            fs[key] = (v["BSIZE"], v["BHIGHPG"], v["DSIZE"], v["DPGSUSED"])
-        fi = self.get_database_increase(files=files)
+            filesize[key] = (
+                value["BSIZE"],
+                value["BHIGHPG"],
+                value["DSIZE"],
+                value["DPGSUSED"],
+            )
+        increase = self.get_database_increase(files=files)
         self.close_database_contexts()
-        return fs, fi
+        return filesize, increase
 
     def add_import_buttons(
         self, master, try_command_wrapper, try_event_wrapper, widget
@@ -321,11 +326,11 @@ class ChessDatabaseDeferred:
         del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
-        for key, v in self.get_database_parameters(
+        for key, value in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
         ).items():
-            bsize = v["BSIZE"]
-            bused = max(0, v["BHIGHPG"])
+            bsize = value["BSIZE"]
+            bused = max(0, value["BHIGHPG"])
             bneeded = self.get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[0]
@@ -384,11 +389,11 @@ class ChessDatabaseDeferred:
         del event
         self.open_context_normal(files=(GAMES_FILE_DEF,))
         increase_done = False
-        for key, v in self.get_database_parameters(
+        for key, value in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
         ).items():
-            dsize = v["DSIZE"]
-            dused = v["DPGSUSED"]
+            dsize = value["DSIZE"]
+            dused = value["DPGSUSED"]
             dneeded = self.get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[1]
@@ -498,11 +503,11 @@ class ChessDatabaseDeferred:
         sizes, increases = self.get_database_table_sizes(
             files=self._notional_record_counts
         )
-        for fn, ds in sizes.items():
-            bsize, bused, dsize, dused = ds
+        for filename, bdsize in sizes.items():
+            bsize, bused, dsize, dused = bdsize
             bused = max(0, bused)
-            free[fn] = (bsize - bused, dsize - dused)
-            append_text_only(fn)
+            free[filename] = (bsize - bused, dsize - dused)
+            append_text_only(filename)
             append_text_only(
                 " ".join(("Current data area size", str(bsize), "pages"))
             )
@@ -521,32 +526,34 @@ class ChessDatabaseDeferred:
             )
         append_text_only("")
         append_text("File space needed for import:")
-        for fn, fc in self._notional_record_counts.items():
-            append_text_only(fn)
-            b, d = self.get_pages_for_record_counts(fc)
+        for filename, nr_count in self._notional_record_counts.items():
+            append_text_only(filename)
+            b_pages, d_pages = self.get_pages_for_record_counts(nr_count)
             append_text_only(
-                " ".join(("Estimated", str(b), "pages needed for data"))
+                " ".join(("Estimated", str(b_pages), "pages needed for data"))
             )
             append_text_only(
-                " ".join(("Estimated", str(d), "pages needed for indexes"))
+                " ".join(
+                    ("Estimated", str(d_pages), "pages needed for indexes")
+                )
             )
         append_text_only("")
         append_text("File size increases planned and free space when done:")
-        for fn, ti in increases.items():
-            bi, di = ti
-            bf, df = free[fn]
-            append_text_only(fn)
+        for filename, increments in increases.items():
+            b_incr, d_incr = increments
+            b_free, d_free = free[filename]
+            append_text_only(filename)
             append_text_only(
-                " ".join(("Data area increase", str(bi), "pages"))
+                " ".join(("Data area increase", str(b_incr), "pages"))
             )
             append_text_only(
-                " ".join(("Index area increase", str(di), "pages"))
+                " ".join(("Index area increase", str(d_incr), "pages"))
             )
             append_text_only(
-                " ".join(("Data area free", str(bi + bf), "pages"))
+                " ".join(("Data area free", str(b_incr + b_free), "pages"))
             )
             append_text_only(
-                " ".join(("Index area free", str(di + df), "pages"))
+                " ".join(("Index area free", str(d_incr + d_free), "pages"))
             )
         append_text_only("")
         append_text_only(
@@ -609,9 +616,9 @@ if __name__ == "__main__":
 
             filepath = None
 
-        def do_function(dbp, fp):
+        def do_function(dbp, pgnpath):
             """Run chess_dptdu with database at dbp and PGN file at fp."""
-            chess_dptdu(dbp, fp)
+            chess_dptdu(dbp, pgnpath)
             text.insert(tkinter.END, "Process finished\nProceed or Quit?\n\n")
 
         def proceed(*a):
