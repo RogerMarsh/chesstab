@@ -36,26 +36,28 @@ class Database:
     @staticmethod
     def dump_database(names=()):
         """Dump database in compressed files."""
-        for n in names:
-            c = bz2.BZ2Compressor()
-            archivename = ".".join((n, "broken", "bz2"))
-            with open(n, "rb") as fi, open(archivename, "wb") as fo:
-                inp = fi.read(10000000)
+        for name in names:
+            compressor = bz2.BZ2Compressor()
+            archivename = ".".join((name, "broken", "bz2"))
+            with open(name, "rb") as file_in, open(
+                archivename, "wb"
+            ) as file_out:
+                inp = file_in.read(10000000)
                 while inp:
-                    co = c.compress(inp)
-                    if co:
-                        fo.write(co)
-                    inp = fi.read(10000000)
-                co = c.flush()
-                if co:
-                    fo.write(co)
+                    compressed = compressor.compress(inp)
+                    if compressed:
+                        file_out.write(compressed)
+                    inp = file_in.read(10000000)
+                compressed = compressor.flush()
+                if compressed:
+                    file_out.write(compressed)
 
     @staticmethod
     def delete_backups(names=()):
         """Delete backup files."""
-        for n in names:
-            archiveguard = ".".join((n, "grd"))
-            archivename = ".".join((n, "bz2"))
+        for name in names:
+            archiveguard = ".".join((name, "grd"))
+            archivename = ".".join((name, "bz2"))
             try:
                 os.remove(archiveguard)
             except FileNotFoundError:
@@ -68,16 +70,18 @@ class Database:
     @staticmethod
     def restore_backups(names=()):
         """Restore database from backup files."""
-        for n in names:
-            c = bz2.BZ2Decompressor()
-            archivename = ".".join((n, "bz2"))
-            with open(archivename, "rb") as fi, open(n, "wb") as fo:
-                inp = fi.read(1000000)
+        for name in names:
+            decompressor = bz2.BZ2Decompressor()
+            archivename = ".".join((name, "bz2"))
+            with open(archivename, "rb") as file_in, open(
+                name, "wb"
+            ) as file_out:
+                inp = file_in.read(1000000)
                 while inp:
-                    co = c.decompress(inp)
-                    if co:
-                        fo.write(co)
-                    inp = fi.read(1000000)
+                    decompressed = decompressor.decompress(inp)
+                    if decompressed:
+                        file_out.write(decompressed)
+                    inp = file_in.read(1000000)
         return True
 
     def delete_database(self, names):
@@ -100,11 +104,11 @@ class Database:
         else:
             message = None
         self.close_database()
-        for h in homenames:
-            if os.path.isdir(h):
-                shutil.rmtree(h, ignore_errors=True)
+        for pathname in homenames:
+            if os.path.isdir(pathname):
+                shutil.rmtree(pathname, ignore_errors=True)
             else:
-                os.remove(h)
+                os.remove(pathname)
         try:
             os.rmdir(self.home_directory)
         except FileNotFoundError:
@@ -117,12 +121,12 @@ class Database:
         names = (self.database_file,)
         archives = dict()
         guards = dict()
-        for n in names:
+        for name in names:
             archiveguard = ".".join((n, "grd"))
             archivefile = ".".join((n, "bz2"))
-            for d, f in ((archives, archivefile), (guards, archiveguard)):
-                if os.path.exists(f):
-                    d[n] = f
+            for box, file in ((archives, archivefile), (guards, archiveguard)):
+                if os.path.exists(file):
+                    box[name] = file
         return (names, archives, guards)
 
     def open_after_import_without_backups(self, files=()):

@@ -117,8 +117,8 @@ class ChessDBvalueGame(PGN, ChessDBvaluePGN):
 
     def pack(self):
         """Return PGN text and indexes for game."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = value[1]
         tags = self.collected_game._tags
         for field in tags:
             if field in PLAYER_NAME_TAGS:
@@ -136,7 +136,7 @@ class ChessDBvalueGame(PGN, ChessDBvaluePGN):
             index[PGN_DATE_FIELD_DEF] = [
                 tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
             ]
-        return v
+        return value
 
 
 class ChessDBrecordGame(Record):
@@ -211,16 +211,16 @@ class ChessDBrecordGame(Record):
         keys = []
         convert_format = datasource.dbhome.db_compatibility_hack
 
-        p = tuple(partial)
-        for mt in moves:
-            if mt == START_RAV:
+        elements = tuple(partial)
+        for token in moves:
+            if token == START_RAV:
                 rav += 1
-            elif mt == END_RAV:
+            elif token == END_RAV:
                 rav -= 1
-            elif mt == NON_MOVE:
+            elif token == NON_MOVE:
                 pass
             else:
-                if mt[-1] == p:
+                if token[-1] == elements:
                     record = (partial, None)
                     keys.append(convert_format(record, gamekey))
             ref += 1
@@ -465,11 +465,11 @@ class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
     # the version of pack() below.
     def pack(self):
         """Return PGN text and indexes for game."""
-        v = super().pack()
-        index = v[1]
-        cg = self.collected_game
+        value = super().pack()
+        index = value[1]
+        game = self.collected_game
         if self.do_full_indexing():
-            tags = cg._tags
+            tags = game._tags
             for field in SEVEN_TAG_ROSTER:
                 if field in PLAYER_NAME_TAGS:
 
@@ -490,10 +490,10 @@ class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
                     except KeyError:
                         if field in tags:
                             raise
-            index[POSITIONS_FIELD_DEF] = cg.positionkeys
-            index[PIECESQUAREMOVE_FIELD_DEF] = cg.piecesquaremovekeys
-            index[PIECEMOVE_FIELD_DEF] = cg.piecemovekeys
-            index[SQUAREMOVE_FIELD_DEF] = cg.squaremovekeys
+            index[POSITIONS_FIELD_DEF] = game.positionkeys
+            index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
+            index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
+            index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
             try:
                 index[PGN_DATE_FIELD_DEF] = [
                     tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
@@ -503,7 +503,7 @@ class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
                     raise
         else:
             index[SOURCE_FIELD_DEF] = [self.gamesource]
-        return v
+        return value
 
     def set_game_source(self, source):
         """Set the index value to use if full indexing is not to be done."""
@@ -589,16 +589,16 @@ class ChessDBrecordGameUpdate(Record):
         keys = []
         convert_format = datasource.dbhome.db_compatibility_hack
 
-        p = tuple(partial)
-        for mt in moves:
-            if mt == START_RAV:
+        elements = tuple(partial)
+        for token in moves:
+            if token == START_RAV:
                 rav += 1
-            elif mt == END_RAV:
+            elif token == END_RAV:
                 rav -= 1
-            elif mt == NON_MOVE:
+            elif token == NON_MOVE:
                 pass
             else:
-                if mt[-1] == p:
+                if token[-1] == elements:
                     record = (partial, None)
                     keys.append(convert_format(record, gamekey))
             ref += 1
@@ -685,10 +685,10 @@ class ChessDBvaluePartial(CQLStatement, Value):
 
     def pack(self):
         """Extend, return partial position record and index data."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = value[1]
         index[PARTIALPOSITION_NAME_FIELD_DEF] = [self.get_name_text()]
-        return v
+        return value
 
 
 class ChessDBrecordPartial(Record):
@@ -755,8 +755,8 @@ class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
 
     def pack(self):
         """Return PGN text and indexes for game."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = value[1]
         tags = self.collected_game._tags
         if self.collected_game.is_pgn_valid():
             index[TAG_OPENING] = [tags[TAG_OPENING]]
@@ -764,7 +764,7 @@ class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
             index[TAG_OPENING] = [tags[TAG_OPENING]]
         else:
             index[TAG_OPENING] = [self.gamesource]
-        return v
+        return value
 
     def set_game_source(self, source):
         """Set game source (the PGN file name or '')."""
@@ -841,11 +841,11 @@ class ChessDBvalueAnalysis(Analysis, Value):
 
     def pack(self):
         """Extend, return analysis record and index data."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = value[1]
         index[VARIATION_FIELD_DEF] = [self.position]
         index[ENGINE_FIELD_DEF] = list(self.scale)
-        return v
+        return value
 
 
 class ChessDBrecordAnalysis(Record):
@@ -897,10 +897,10 @@ class ChessDBvalueQuery(QueryStatement, Value):
 
     def pack(self):
         """Extend, return game selection rule record and index data."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = valu[1]
         index[RULE_FIELD_DEF] = [self.get_name_text()]
-        return v
+        return value
 
 
 class ChessDBrecordQuery(Record):
@@ -942,10 +942,10 @@ class ChessDBvalueEngine(Engine, Value):
 
     def pack(self):
         """Extend, return game selection rule record and index data."""
-        v = super().pack()
-        index = v[1]
+        value = super().pack()
+        index = value[1]
         index[COMMAND_FIELD_DEF] = [self.get_name_text()]
-        return v
+        return value
 
 
 class ChessDBrecordEngine(Record):

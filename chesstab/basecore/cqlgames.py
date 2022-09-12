@@ -275,32 +275,32 @@ class ChessQLGames:
         """
         if filter_.tokendef in _AND_FILTERS:
             pieces = set(initialpieces)
-            for n in filter_.children:
-                if n.tokendef is Token.PIECE_DESIGNATOR:
+            for node in filter_.children:
+                if node.tokendef is Token.PIECE_DESIGNATOR:
                     pieces.intersection_update(
-                        self.pieces_matching_piece_designator(n)
+                        self.pieces_matching_piece_designator(node)
                     )
                     if not pieces:
                         return pieces
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
                 pieces.intersection_update(
-                    self.pieces_matching_filter(n, pieces)
+                    self.pieces_matching_filter(node, pieces)
                 )
                 if not pieces:
                     return pieces
             return pieces
         if filter_.tokendef in _OR_FILTERS:
             pieces = set(ALL_PIECES)
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
 
                 # This cannot be correct given pieces initialisation, or
                 # more likely pieces initialisation is not correct too.
                 # However pieces_matching_filter is not called anywhere!
-                pieces.union(self.pieces_matching_filter(n, initialpieces))
+                pieces.union(self.pieces_matching_filter(node, initialpieces))
 
             return pieces
         if filter_.tokendef is Token.PIECE_DESIGNATOR:
@@ -320,32 +320,34 @@ class ChessQLGames:
         """
         if filter_.tokendef in _AND_FILTERS:
             squares = set(initialsquares)
-            for n in filter_.children:
-                if n.tokendef is Token.PIECE_DESIGNATOR:
+            for node in filter_.children:
+                if node.tokendef is Token.PIECE_DESIGNATOR:
                     squares.intersection_update(
-                        self.squares_matching_piece_designator(n)
+                        self.squares_matching_piece_designator(node)
                     )
                     if not squares:
                         return squares
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
                 squares.intersection_update(
-                    self.squares_matching_filter(n, squares)
+                    self.squares_matching_filter(node, squares)
                 )
                 if not squares:
                     return squares
             return squares
         if filter_.tokendef in _OR_FILTERS:
             squares = set(Squares.squares)
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
 
                 # This cannot be correct given squares initialisation, or
                 # more likely squares initialisation is not correct too.
                 # However squares_matching_filter is not called anywhere!
-                squares.union(self.squares_matching_filter(n, initialsquares))
+                squares.union(
+                    self.squares_matching_filter(node, initialsquares)
+                )
 
             return squares
         if filter_.tokendef is Token.PIECE_DESIGNATOR:
@@ -368,14 +370,14 @@ class ChessQLGames:
                 )
             )
         pieces = set()
-        for ps in filter_.data.designator_set:
-            p = ps[0]
-            if p == ANY_WHITE_PIECE_NAME:
+        for pdesignator in filter_.data.designator_set:
+            piece = pdesignator[0]
+            if piece == ANY_WHITE_PIECE_NAME:
                 pieces.update(WHITE_PIECE_NAMES)
-            elif p == ANY_BLACK_PIECE_NAME:
+            elif piece == ANY_BLACK_PIECE_NAME:
                 pieces.update(BLACK_PIECE_NAMES)
             else:
-                pieces.add(p)
+                pieces.add(piece)
         return pieces
 
     @staticmethod
@@ -394,11 +396,11 @@ class ChessQLGames:
                 )
             )
         squares = set()
-        for ps in filter_.data.designator_set:
-            if len(ps) == 1:
+        for pdesignator in filter_.data.designator_set:
+            if len(pdesignator) == 1:
                 squares.update(Squares.squares)
             else:
-                squares.add(ps[1:])
+                squares.add(pdesignator[1:])
         return squares
 
     def is_filter_not_implemented(self, filter_):
@@ -446,29 +448,29 @@ class ChessQLGames:
         if filter_.tokendef in _AND_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
             games |= initialgames
-            for n in filter_.children:
-                if n.tokendef is Token.PIECE_DESIGNATOR:
+            for node in filter_.children:
+                if node.tokendef is Token.PIECE_DESIGNATOR:
                     games &= self._games_matching_piece_designator(
-                        n, games, movenumber, variation
+                        node, games, movenumber, variation
                     )
                     if not games.count_records():
                         return games
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
                 games &= self._games_matching_filter(
-                    n, games, movenumber, variation
+                    node, games, movenumber, variation
                 )
                 if not games.count_records():
                     return games
             return games
         if filter_.tokendef in _OR_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
-            for n in filter_.children:
-                if self.is_filter_not_implemented(n):
+            for node in filter_.children:
+                if self.is_filter_not_implemented(node):
                     continue
                 games |= self._games_matching_filter(
-                    n, initialgames, movenumber, variation
+                    node, initialgames, movenumber, variation
                 )
             return games
         if filter_.tokendef is Token.PIECE_DESIGNATOR:
@@ -500,15 +502,15 @@ class ChessQLGames:
                     )
                 )
             )
-        rf = RayFilter(filter_, movenumber, variation)
-        rf.prune_end_squares(self.dbhome, self.cqlfinder)
-        rf.find_games_for_end_squares(self.cqlfinder)
-        rf.find_games_for_middle_squares(self.cqlfinder)
+        ray = RayFilter(filter_, movenumber, variation)
+        ray.prune_end_squares(self.dbhome, self.cqlfinder)
+        ray.find_games_for_end_squares(self.cqlfinder)
+        ray.find_games_for_middle_squares(self.cqlfinder)
 
         # So that downstream methods have a valid object to work with.
         recordset = self.dbhome.recordlist_nil(self.dbset)
-        for gs in rf.ray_games.values():
-            recordset |= gs
+        for value in ray.ray_games.values():
+            recordset |= value
         return recordset
 
     def _evaluate_piece_designator(
@@ -522,16 +524,16 @@ class ChessQLGames:
         meaning of move in this context.
 
         """
-        w = Where(
+        wqs = Where(
             where_eq_piece_designator(
                 move_number, variation_code, piecesquares
             )
         )
-        w.lex()
-        w.parse()
-        w.validate(self.cqlfinder.db, self.cqlfinder.dbset)
-        w.evaluate(self.cqlfinder)
-        return w.get_node_result_answer()
+        wqs.lex()
+        wqs.parse()
+        wqs.validate(self.cqlfinder.db, self.cqlfinder.dbset)
+        wqs.evaluate(self.cqlfinder)
+        return wqs.get_node_result_answer()
 
     def get_games_matching_filters(self, query, games):
         """Select the games which meet the ChessQL cql() ... filters.
@@ -596,12 +598,12 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
     pmds = set()
     emptyds = set()
     smds = set()
-    for ps in designator_set:
-        if len(ps) == 1:
+    for pdesignator in designator_set:
+        if len(pdesignator) == 1:
 
             # Rules of chess imply whole piece designator finds all games if
             # any of 'A', 'a', 'K', 'k', and '_', are in designator set.
-            if ps[0] in ALL_GAMES_MATCH_PIECE_DESIGNATORS:
+            if pdesignator[0] in ALL_GAMES_MATCH_PIECE_DESIGNATORS:
                 return " ".join(
                     (
                         pmfield,
@@ -610,10 +612,10 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
                     )
                 )
 
-            pmds.add("".join((mns, variation_code, ps[0])))
+            pmds.add("".join((mns, variation_code, pdesignator[0])))
             continue
-        if ps[0] == EMPTY_SQUARE_NAME:
-            sq = ps[1:]
+        if pdesignator[0] == EMPTY_SQUARE_NAME:
+            sqr = pdesignator[1:]
 
             # 'not field eq value1 or value2' does not work, it should, but
             # 'not field eq value1 and not field eq value2' does work.
@@ -621,9 +623,9 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
             #    (NOT,
             #     smfield,
             #     EQ,
-            #     ''.join((mns, variation_code, sq + ANY_WHITE_PIECE_NAME)),
+            #     ''.join((mns, variation_code, sqr + ANY_WHITE_PIECE_NAME)),
             #     OR,
-            #     ''.join((mns, variation_code, sq + ANY_BLACK_PIECE_NAME)),
+            #     ''.join((mns, variation_code, sqr + ANY_BLACK_PIECE_NAME)),
             #     )))
             emptyds.add(
                 " ".join(
@@ -632,27 +634,27 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
                         smfield,
                         EQ,
                         "".join(
-                            (mns, variation_code, sq + ANY_WHITE_PIECE_NAME)
+                            (mns, variation_code, sqr + ANY_WHITE_PIECE_NAME)
                         ),
                         AND,
                         NOT,
                         smfield,
                         EQ,
                         "".join(
-                            (mns, variation_code, sq + ANY_BLACK_PIECE_NAME)
+                            (mns, variation_code, sqr + ANY_BLACK_PIECE_NAME)
                         ),
                     )
                 )
             )
 
             continue
-        if ps[0] in anypiece:
+        if pdesignator[0] in anypiece:
             smds.add(
                 "".join(
                     (
                         mns,
                         variation_code,
-                        ps[1:] + ps[0],
+                        pdesignator[1:] + pdesignator[0],
                     )
                 )
             )
@@ -662,7 +664,7 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
                 (
                     mns,
                     variation_code,
-                    ps[1:] + ps[0],
+                    pdesignator[1:] + pdesignator[0],
                 )
             )
         )
@@ -695,5 +697,5 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
 
 def move_number_in_key_range(key):
     """Yield the move number keys in a range one-by-one."""
-    for n in range(1, literal_eval("0x" + key[1 : int(key[0]) + 1])):
-        yield n
+    for number in range(1, literal_eval("0x" + key[1 : int(key[0]) + 1])):
+        yield number
