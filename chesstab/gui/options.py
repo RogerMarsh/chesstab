@@ -55,30 +55,32 @@ def save_options(folder, changes):
     with open(optionsfilename, "a+") as optionsfile:
         defaults = _extract_options(optionsfile)
         olddefaults, newdefaults = changes
-        for key, v in olddefaults.items():
+        for key, value in olddefaults.items():
             if key in font_names:
-                for ak, av in v.items():
-                    if av == newdefaults[key][ak]:
-                        del newdefaults[key][ak]
-                    elif defaults[key].get(ak) == newdefaults[key][ak]:
-                        del newdefaults[key][ak]
+                for vikey, vivalue in value.items():
+                    if vivalue == newdefaults[key][vikey]:
+                        del newdefaults[key][vikey]
+                    elif defaults[key].get(vikey) == newdefaults[key][vikey]:
+                        del newdefaults[key][vikey]
                 if not newdefaults[key]:
                     del newdefaults[key]
-            elif v == newdefaults[key]:
+            elif value == newdefaults[key]:
                 del newdefaults[key]
             elif defaults.get(key) == newdefaults[key]:
                 del newdefaults[key]
         newlines = []
-        for key, v in newdefaults.items():
+        for key, value in newdefaults.items():
             if key in font_names:
                 newlines.append("".join((key, "\n")))
-                for ak, av in v.items():
-                    if ak in fonts.integer_attributes:
-                        newlines.append("".join((ak, "=", str(av), "\n")))
+                for vikey, vivalue in value.items():
+                    if vikey in fonts.integer_attributes:
+                        newlines.append(
+                            "".join((vikey, "=", str(vivalue), "\n"))
+                        )
                     else:
-                        newlines.append("".join((ak, "=", av, "\n")))
+                        newlines.append("".join((vikey, "=", vivalue, "\n")))
             else:
-                newlines.append("".join((key, "=", v, "\n")))
+                newlines.append("".join((key, "=", value, "\n")))
         if newlines:
             optionsfile.writelines(newlines)
     return
@@ -105,34 +107,34 @@ def _extract_options(fileid):
         constants.LISTS_OF_GAMES_FONT: dict(),
         constants.TAGS_VARIATIONS_COMMENTS_FONT: dict(),
     }
-    for fa in fonts.modify_font_attributes:
-        defaults[fa] = None
+    for attr in fonts.modify_font_attributes:
+        defaults[attr] = None
     font_details = False
     for line in fileid.readlines():
         text = line.strip()
         if text.startswith("#"):
             continue
         try:
-            key_string, v = text.split("=", 1)
+            key_string, value_string = text.split("=", 1)
         except ValueError:
-            key_string, v = text, ""
+            key_string, value_string = text, ""
         key = key_string.strip()
         if key in defaults:
             if key in fonts.modify_font_attributes:
                 if font_details:
-                    defaults[font_details][key] = v.strip()
+                    defaults[font_details][key] = value_string.strip()
                 continue
             if font_details:
                 font_attributes = defaults[font_details]
-                for fa in fonts.modify_font_attributes:
-                    if defaults[fa]:
-                        font_attributes[fa] = defaults[fa]
-                        defaults[fa] = None
+                for attr in fonts.modify_font_attributes:
+                    if defaults[attr]:
+                        font_attributes[attr] = defaults[attr]
+                        defaults[attr] = None
                 font_details = False
             if key in font_names:
                 font_details = key
             else:
-                defaults[key] = v.strip()
-    for fa in fonts.modify_font_attributes:
-        del defaults[fa]
+                defaults[key] = value_string.strip()
+    for attr in fonts.modify_font_attributes:
+        del defaults[attr]
     return defaults

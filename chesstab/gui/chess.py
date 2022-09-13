@@ -438,10 +438,10 @@ class Chess(ExceptionHandler):
 
             self.root.configure(menu=menubar)
 
-            for m in menus:
-                m.bind(
+            for menu in menus:
+                menu.bind(
                     "<<MenuSelect>>",
-                    self.try_event(self.create_menu_changed_callback(m)),
+                    self.try_event(self.create_menu_changed_callback(menu)),
                 )
 
             toolbarframe = tkinter.ttk.Frame(self.root)
@@ -615,11 +615,11 @@ class Chess(ExceptionHandler):
             return
         _modulename = None
         _enginename = None
-        for e in modulequery.DATABASE_MODULES_IN_DEFAULT_PREFERENCE_ORDER:
-            if e in idm:
-                if e in APPLICATION_DATABASE_MODULE:
-                    _enginename = e
-                    _modulename = APPLICATION_DATABASE_MODULE[e]
+        for ename in modulequery.DATABASE_MODULES_IN_DEFAULT_PREFERENCE_ORDER:
+            if ename in idm:
+                if ename in APPLICATION_DATABASE_MODULE:
+                    _enginename = ename
+                    _modulename = APPLICATION_DATABASE_MODULE[ename]
                     break
         if _modulename is None:
             tkinter.messagebox.showinfo(
@@ -727,12 +727,12 @@ class Chess(ExceptionHandler):
         # Set the error file in top folder of chess database
         self._set_error_file_name(directory=chessfolder)
 
-        ed = modulequery.modules_for_existing_databases(
+        interface_modules = modulequery.modules_for_existing_databases(
             chessfolder, FileSpec()
         )
         # A database module is chosen when creating the database
         # so there should be either only one entry in edt or None
-        if not ed:
+        if not interface_modules:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
                 message="".join(
@@ -746,7 +746,7 @@ class Chess(ExceptionHandler):
                 title="Open",
             )
             return
-        if len(ed) > 1:
+        if len(interface_modules) > 1:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
                 message="".join(
@@ -764,8 +764,8 @@ class Chess(ExceptionHandler):
 
         idm = modulequery.installed_database_modules()
         _enginename = None
-        for key, v in idm.items():
-            if v in ed[0]:
+        for key, value in idm.items():
+            if value in interface_modules[0]:
                 if _enginename:
                     tkinter.messagebox.showinfo(
                         parent=self.get_toplevel(),
@@ -1172,36 +1172,36 @@ class Chess(ExceptionHandler):
 
     def select_board_colours(self):
         """Choose and set colour scheme for board."""
-        cs = colourscheme.ColourChooser(ui=self.ui)
-        if cs.is_ok():
+        decor = colourscheme.ColourChooser(ui=self.ui)
+        if decor.is_ok():
             if self.opendatabase:
                 options.save_options(
-                    self.opendatabase.home_directory, cs.get_options()
+                    self.opendatabase.home_directory, decor.get_options()
                 )
-            self.ui.set_board_colours(cs)
+            self.ui.set_board_colours(decor)
 
     def select_board_fonts(self):
         """Choose and set font for board."""
-        cs = colourscheme.FontChooser(ui=self.ui)
-        if cs.is_ok():
+        decor = colourscheme.FontChooser(ui=self.ui)
+        if decor.is_ok():
             if self.opendatabase:
                 options.save_options(
-                    self.opendatabase.home_directory, cs.get_options()
+                    self.opendatabase.home_directory, decor.get_options()
                 )
-            cs.apply_to_named_fonts()
-            self.ui.set_board_fonts(cs)
+            decor.apply_to_named_fonts()
+            self.ui.set_board_fonts(decor)
 
     def select_board_style(self):
         """Choose and set colour scheme and font forchessboard."""
-        cs = colourscheme.FontColourChooser(ui=self.ui)
-        if cs.is_ok():
+        decor = colourscheme.FontColourChooser(ui=self.ui)
+        if decor.is_ok():
             if self.opendatabase:
                 options.save_options(
-                    self.opendatabase.home_directory, cs.get_options()
+                    self.opendatabase.home_directory, decor.get_options()
                 )
-            cs.apply_to_named_fonts()
-            self.ui.set_board_fonts(cs)
-            self.ui.set_board_colours(cs)
+            decor.apply_to_named_fonts()
+            self.ui.set_board_fonts(decor)
+            self.ui.set_board_colours(decor)
 
     def hide_game_analysis(self):
         """Hide the widgets which show analysis from chess engines."""
@@ -1212,13 +1212,13 @@ class Chess(ExceptionHandler):
             self.ui.repertoire_items.order,
             self.ui.games_and_repertoires_in_toplevels,
         ):
-            for g in games:
+            for game in games:
                 try:
-                    g.hide_game_analysis()
+                    game.hide_game_analysis()
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((game, games))
+        for game, games in exceptions:
+            games.remove(game)
 
     def show_game_analysis(self):
         """Show the widgets which show analysis from chess engines."""
@@ -1229,13 +1229,13 @@ class Chess(ExceptionHandler):
             self.ui.repertoire_items.order,
             self.ui.games_and_repertoires_in_toplevels,
         ):
-            for g in games:
+            for game in games:
                 try:
-                    g.show_game_analysis()
+                    game.show_game_analysis()
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((game, games))
+        for game, games in exceptions:
+            games.remove(game)
 
     def hide_scrollbars(self):
         """Hide the scrollbars in the game display widgets."""
@@ -1255,13 +1255,13 @@ class Chess(ExceptionHandler):
             self.ui.repertoire_items.order,
             self.ui.games_and_repertoires_in_toplevels,
         ):
-            for g in games:
+            for game in games:
                 try:
-                    g.toggle_analysis_fen()
+                    game.toggle_analysis_fen()
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((game, games))
+        for game, games in exceptions:
+            games.remove(game)
 
     def toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
@@ -1271,13 +1271,13 @@ class Chess(ExceptionHandler):
             self.ui.repertoire_items.order,
             self.ui.games_and_repertoires_in_toplevels,
         ):
-            for g in games:
+            for game in games:
                 try:
-                    g.toggle_game_move_numbers()
+                    game.toggle_game_move_numbers()
                 except tkinter.TclError:
-                    exceptions.append((g, games))
-        for g, games in exceptions:
-            games.remove(g)
+                    exceptions.append((game, games))
+        for game, games in exceptions:
+            games.remove(game)
 
     def is_import_subprocess_active(self):
         """Return the exception report file object."""
@@ -1757,15 +1757,19 @@ class Chess(ExceptionHandler):
         # closed.
         # This only affects DPT databases (_dpt module) but the _sqlite and _db
         # modules have 'do-nothing' methods to fit.
-        ds = ui.base_games.datasource
-        if ds and hasattr(ds, "recordset") and ds.recordset is not None:
-            ds.recordset.close()
+        data_source = ui.base_games.datasource
+        if (
+            data_source
+            and hasattr(data_source, "recordset")
+            and data_source.recordset is not None
+        ):
+            data_source.recordset.close()
 
         for grid in ui.game_games, ui.repertoire_games, ui.partial_games:
-            ds = grid.datasource
-            if ds:
-                if ds.recordset:
-                    ds.recordset.close()
+            data_source = grid.datasource
+            if data_source:
+                if data_source.recordset:
+                    data_source.recordset.close()
 
         # This closes one of the five _DPTRecordSet instances which cause a
         # RuntimeError, because of an APIDatabaseContext.DestroyRecordSets()
@@ -1784,10 +1788,10 @@ class Chess(ExceptionHandler):
         # Not sure why these need an undefined lifetime.
         for item in ui.game_items, ui.repertoire_items:
             for widget in item.order:
-                ds = widget.analysis_data_source
-                if ds:
-                    if ds.recordset:
-                        ds.recordset.close()
+                data_source = widget.analysis_data_source
+                if data_source:
+                    if data_source.recordset:
+                        data_source.recordset.close()
         for widget in ui.selection_items.order:
 
             # widget.query_statement.where.node.result.answer is an example

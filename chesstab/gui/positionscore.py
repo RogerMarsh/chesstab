@@ -175,9 +175,9 @@ class PositionScore(ExceptionHandler):
 
     def clear_current_range(self):
         """Remove existing MOVE_TAG ranges."""
-        tr = self.score.tag_ranges(MOVE_TAG)
-        if tr:
-            self.score.tag_remove(MOVE_TAG, tr[0], tr[1])
+        tagrange = self.score.tag_ranges(MOVE_TAG)
+        if tagrange:
+            self.score.tag_remove(MOVE_TAG, tagrange[0], tagrange[1])
 
     def get_tags_display_order(self):
         """Return tags in alphabetic order except any chosen to be last.
@@ -203,12 +203,12 @@ class PositionScore(ExceptionHandler):
             return None
         tag_values = []
         tags = self.collected_game._tags
-        for tv in sorted(tags.items()):
-            if tv[0] not in last:
-                tag_values.append(tv)
-        for t in last:
-            if t in tags:
-                tag_values.append((t, tags[t]))
+        for value in sorted(tags.items()):
+            if value[0] not in last:
+                tag_values.append(value)
+        for tag in last:
+            if tag in tags:
+                tag_values.append((tag, tags[tag]))
         return tag_values
 
     def get_variation_tag_names(self):
@@ -230,9 +230,9 @@ class PositionScore(ExceptionHandler):
 
     def get_position_tag_of_index(self, index):
         """Return Tk tag name if index is in a position tag."""
-        for tn in self.score.tag_names(index):
-            if tn.startswith(POSITION):
-                return tn
+        for tagname in self.score.tag_names(index):
+            if tagname.startswith(POSITION):
+                return tagname
         return None
 
     def get_current_tag_and_mark_names(self):
@@ -301,16 +301,16 @@ class PositionScore(ExceptionHandler):
         assert len(position) == 1
         spm = self._square_piece_map
         spm.clear()
-        for p, s in position[0][0]:
-            spm[s] = p
+        for piece, square in position[0][0]:
+            spm[square] = piece
 
     def _modify_square_piece_map(self, position):
         assert len(position) == 2
         spm = self._square_piece_map
-        for s, p in position[0][0]:
-            del spm[s]
-        for s, p in position[1][0]:
-            spm[s] = p
+        for square, piece in position[0][0]:
+            del spm[square]
+        for square, piece in position[1][0]:
+            spm[square] = piece
 
     # Attempt to re-design map_game method to fit new pgn_read package.
     def map_game(self):
@@ -328,36 +328,36 @@ class PositionScore(ExceptionHandler):
 
         self._square_piece_map = {}
 
-        cg = self.collected_game
+        game = self.collected_game
         spm = self._square_piece_map
-        for p, s in cg._initial_position[0]:
-            spm[s] = p
-        assert len(cg._text) == len(cg._position_deltas)
-        for text, delta in zip(cg._text, cg._position_deltas):
-            t0 = text[0]
-            if t0 in "abcdefghKQRBNkqrnO":
+        for piece, square in game._initial_position[0]:
+            spm[square] = piece
+        assert len(game._text) == len(game._position_deltas)
+        for text, delta in zip(game._text, game._position_deltas):
+            text0 = text[0]
+            if text0 in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, delta)
-            elif t0 == "(":
+            elif text0 == "(":
                 self.map_start_rav(text, delta)
-            elif t0 == ")":
+            elif text0 == ")":
                 self.map_end_rav(text, delta)
-            elif t0 in "10*":
+            elif text0 in "10*":
                 self.map_termination(text)
             else:
                 self.map_non_move(text)
         self.insert_token_into_text(
-            cg._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
+            game._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
         )
         self.insert_token_into_text(
-            cg._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
+            game._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
         )
         self.insert_token_into_text(
-            cg._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
+            game._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
         )
 
-        tr = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
-        if tr:
-            self.score.mark_set(START_SCORE_MARK, str(tr[0]))
+        tagrange = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
+        if tagrange:
+            self.score.mark_set(START_SCORE_MARK, str(tagrange[0]))
         else:
             self.score.mark_set(START_SCORE_MARK, "1.0")
 
@@ -389,8 +389,8 @@ class PositionScore(ExceptionHandler):
         if set(one[0]) != set(two[0]):
             return False
         two0 = two[0]
-        for s, p in one[0].items():
-            if p.name != two0[s].name:
+        for square, piece in one[0].items():
+            if piece.name != two0[square].name:
                 return False
         return True
 
@@ -452,16 +452,16 @@ class PositionScore(ExceptionHandler):
         if not (curr_match_currcontext or next_match_nextcontext):
             # token is move out of position and  different from context
             widget.tag_add(ALTERNATIVE_MOVE_TAG, start, end)
-        tr = widget.tag_prevrange(self._vartag, start)
-        if not tr:
+        tagrange = widget.tag_prevrange(self._vartag, start)
+        if not tagrange:
             varstack = list(self.varstack)
             while varstack:
                 var = varstack.pop()
                 tpr = widget.tag_prevrange(var, start)
                 if not tpr:
                     break
-                tr = widget.tag_prevrange(var, tpr[0])
-                if tr:
+                tagrange = widget.tag_prevrange(var, tpr[0])
+                if tagrange:
                     break
 
     def map_start_rav(self, token, position):
@@ -513,10 +513,10 @@ class PositionScore(ExceptionHandler):
         # Superclass set_current method may adjust bindings so do not call
         # context independent binding setup methods after this method for
         # an event.
-        tr = self.set_current_range()
-        if tr:
-            self.set_move_tag(tr[0], tr[1])
-            return tr
+        tagrange = self.set_current_range()
+        if tagrange:
+            self.set_move_tag(tagrange[0], tagrange[1])
+            return tagrange
         return None
 
     def set_current_range(self):
@@ -532,10 +532,10 @@ class PositionScore(ExceptionHandler):
         self.clear_current_range()
         if self.current is None:
             return None
-        tr = self.score.tag_ranges(self.current)
-        if not tr:
+        tagrange = self.score.tag_ranges(self.current)
+        if not tagrange:
             return None
-        return tr
+        return tagrange
 
     def set_move_tag(self, start, end):
         """Add range start to end to MOVE_TAG (which is expected to be empty).

@@ -116,21 +116,28 @@ class Board(ExceptionHandler):
         self.board = tkinter.Frame(
             self.container, borderwidth=boardborder, relief=tkinter.SUNKEN
         )
-        self.board.pack(anchor=tkinter.W)
-        self.board.grid_propagate(False)
+        board = self.board
+        boardsquares = self.boardsquares
+        font = self.font
+        litecolor = self.litecolor
+        darkcolor = self.darkcolor
+        board.pack(anchor=tkinter.W)
+        board.grid_propagate(False)
         for index in range(8):
-            self.board.grid_rowconfigure(index, weight=1, uniform="r")
-            self.board.grid_columnconfigure(index, weight=1, uniform="c")
+            board.grid_rowconfigure(index, weight=1, uniform="r")
+            board.grid_columnconfigure(index, weight=1, uniform="c")
             for file_index in range(8):
-                s = index * 8 + file_index
+                square = index * 8 + file_index
                 if (index + file_index) % 2 == 0:
-                    scolor = self.litecolor
+                    scolor = litecolor
                 else:
-                    scolor = self.darkcolor
-                self.boardsquares[s] = t = tkinter.Label(
-                    self.board, font=self.font, background=scolor
+                    scolor = darkcolor
+                boardsquares[square] = tkinter.Label(
+                    board, font=font, background=scolor
                 )
-                t.grid(column=file_index, row=index, sticky=tkinter.NSEW)
+                boardsquares[square].grid(
+                    column=file_index, row=index, sticky=tkinter.NSEW
+                )
 
     def configure_font(self, side):
         """Adjust font size after container widget has been resized."""
@@ -139,9 +146,7 @@ class Board(ExceptionHandler):
     def on_configure_container(self, event=None):
         """Reconfigure board after container widget has been resized."""
         del event
-        cw = self.container.winfo_width()
-        ch = self.container.winfo_height()
-        side = min(cw, ch)
+        side = min(self.container.winfo_width(), self.container.winfo_height())
         self.board.configure(width=side, height=side)
         self.configure_font(side)
         self.draw_board()
@@ -149,12 +154,12 @@ class Board(ExceptionHandler):
     def draw_board(self):
         """Set font size to match board size and redraw pieces."""
         for index in self.squares:
-            p = self.squares[index]
-            if p in FEN_WHITE_PIECES:
+            piece = self.squares[index]
+            if piece in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
-            elif p in FEN_BLACK_PIECES:
+            elif piece in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
-            elif p == NOPIECE:
+            elif piece == NOPIECE:
                 if index % 2 == 0:
                     pcolor = self.darkcolor
                 else:
@@ -162,7 +167,7 @@ class Board(ExceptionHandler):
             else:
                 continue
             self.boardsquares[index].configure(
-                foreground=pcolor, text=_pieces[p]
+                foreground=pcolor, text=_pieces[piece]
             )
 
     def get_top_widget(self):
@@ -173,12 +178,12 @@ class Board(ExceptionHandler):
         """Set background color for Canvas for each square."""
         for rank_index in range(8):
             for file_index in range(8):
-                s = rank_index * 8 + file_index
+                square = rank_index * 8 + file_index
                 if (rank_index + file_index) % 2 == 0:
                     scolor = self.darkcolor
                 else:
                     scolor = self.litecolor
-                self.boardsquares[s].configure(background=scolor)
+                self.boardsquares[square].configure(background=scolor)
 
     def set_board(self, board):
         """Redraw widget to display the new position in board.
@@ -186,19 +191,19 @@ class Board(ExceptionHandler):
         board is a list of pieces where element index maps to square.
 
         """
-        sq = self.squares
-        occupied = list(sq.keys())
-        sq.clear()
-        squares = Squares.squares
-        for s, p in board.items():
-            sq[squares[s].number] = p.name
-        for s in occupied:
-            if s not in sq:
-                sq[s] = NOPIECE
+        squares = self.squares
+        occupied = list(squares.keys())
+        squares.clear()
+        square_properties = Squares.squares
+        for square, piece in board.items():
+            squares[square_properties[square].number] = piece.name
+        for square in occupied:
+            if square not in squares:
+                squares[square] = NOPIECE
         self.draw_board()
-        for s in occupied:
-            if sq[s] == NOPIECE:
-                del sq[s]
+        for square in occupied:
+            if squares[square] == NOPIECE:
+                del squares[square]
 
 
 class PartialBoard(Board):
@@ -245,12 +250,12 @@ class PartialBoard(Board):
 
         for index in self.squares:
             font = self.font
-            p = self.squares[index]
-            if p in FEN_WHITE_PIECES:
+            piece = self.squares[index]
+            if piece in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
-            elif p in FEN_BLACK_PIECES:
+            elif piece in FEN_BLACK_PIECES:
                 pcolor = self.blackcolor
-            elif p == NOPIECE:
+            elif piece == NOPIECE:
                 if index % 2 == 0:
                     pcolor = self.darkcolor
                 else:
@@ -258,5 +263,5 @@ class PartialBoard(Board):
             else:
                 continue
             self.boardsquares[index].configure(
-                font=font, foreground=pcolor, text=_pieces.get(p, " ")
+                font=font, foreground=pcolor, text=_pieces.get(piece, " ")
             )
