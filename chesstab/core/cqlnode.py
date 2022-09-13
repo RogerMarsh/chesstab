@@ -73,10 +73,10 @@ class CQLNode(Node):
             node.expand_child_piece_designators()
         if self.leaf:
             if self.tokendef is Token.PIECE_DESIGNATOR:
-                pd = PieceDesignator(self.leaf)
-                pd.parse()
-                pd.expand_piece_designator()
-                self.data = pd
+                piece_designator = PieceDesignator(self.leaf)
+                piece_designator.parse()
+                piece_designator.expand_piece_designator()
+                self.data = piece_designator
 
     def get_shift_limits(self, ranklimits=None, filelimits=None):
         """Set rank and file shift limits."""
@@ -84,8 +84,8 @@ class CQLNode(Node):
             data = PieceDesignator(self.leaf)
             data.parse()
             data.get_shift_limits(ranklimits, filelimits)
-        for c in self.children:
-            c.get_shift_limits(ranklimits=ranklimits, filelimits=filelimits)
+        for node in self.children:
+            node.get_shift_limits(ranklimits=ranklimits, filelimits=filelimits)
 
     def shift(self, shiftfiles, shiftranks):
         """Shift shiftfiles and shiftranks for pieces referenced."""
@@ -101,8 +101,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.shift(shiftfiles, shiftranks)
+        for node in self.children:
+            node.shift(shiftfiles, shiftranks)
 
     def rotate(self, rotation):
         """Rotate rotation for pieces referenced."""
@@ -118,8 +118,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.rotate(rotation)
+        for node in self.children:
+            node.rotate(rotation)
 
     def reflect_horizontal(self):
         """Reflect ranks for pieces referenced."""
@@ -140,8 +140,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.reflect_horizontal()
+        for node in self.children:
+            node.reflect_horizontal()
 
     def reflect_vertical(self):
         """Reflect files for pieces referenced."""
@@ -162,8 +162,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.reflect_vertical()
+        for node in self.children:
+            node.reflect_vertical()
 
     def rotate_and_reflect_horizontal(self):
         """Rotate 90 and reflect ranks for pieces referenced."""
@@ -184,8 +184,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.rotate_and_reflect_horizontal()
+        for node in self.children:
+            node.rotate_and_reflect_horizontal()
 
     def rotate_and_reflect_vertical(self):
         """Rotate 90 and reflect files for pieces referenced."""
@@ -206,8 +206,8 @@ class CQLNode(Node):
             if data.is_compound_pieces():
                 pieces = pieces.join(("[", "]"))
             self.leaf = pieces + squares
-        for c in self.children:
-            c.rotate_and_reflect_vertical()
+        for node in self.children:
+            node.rotate_and_reflect_vertical()
 
     def flip_color(self):
         """Flip the colour of pieces referenced."""
@@ -236,8 +236,8 @@ class CQLNode(Node):
         elif self.name in FSNode.FLIP_COLOR_FILTER:
             self.name = FSNode.FLIP_COLOR_FILTER[self.name]
             return
-        for c in self.children:
-            c.flip_color()
+        for node in self.children:
+            node.flip_color()
 
     def __deepcopy__(self, memo):
         """Return a deepcopy of memo."""
@@ -441,10 +441,12 @@ class FSNode:
         ≡ K
 
         """
-        for c in self.children:
-            r = self._transform.get(c.node.tokendef, lambda s: None)(c)
-            if r:
-                return r
+        for node in self.children:
+            transformed = self._transform.get(
+                node.node.tokendef, lambda s: None
+            )(node)
+            if transformed:
+                return transformed
         return None
 
     def _flip(self):
@@ -455,12 +457,12 @@ class FSNode:
         ) == FSNode.INITIAL_FILE_LIMITS:
             return
         transforms = []
-        for r in (
+        for transformed in (
             FSNode.ROTATE_90,
             FSNode.ROTATE_180,
             FSNode.ROTATE_270,
         ):
-            transforms.extend(self._generate_rotated_filters(r))
+            transforms.extend(self._generate_rotated_filters(transformed))
         transforms.extend(self._generate_vertical_reflection_filters())
         transforms.extend(self._generate_horizontal_reflection_filters())
         transforms.extend(
@@ -469,8 +471,8 @@ class FSNode:
         transforms.extend(
             self._generate_rotate_90_horizontal_reflection_filters()
         )
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _fliphorizontal(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
@@ -480,8 +482,8 @@ class FSNode:
         ) == FSNode.INITIAL_FILE_LIMITS:
             return
         transforms = self._generate_horizontal_reflection_filters()
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _flipvertical(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
@@ -491,8 +493,8 @@ class FSNode:
         ) == FSNode.INITIAL_FILE_LIMITS:
             return
         transforms = self._generate_vertical_reflection_filters()
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _rotate90(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
@@ -502,14 +504,14 @@ class FSNode:
         ) == FSNode.INITIAL_FILE_LIMITS:
             return
         transforms = []
-        for r in (
+        for transformed in (
             FSNode.ROTATE_90,
             FSNode.ROTATE_180,
             FSNode.ROTATE_270,
         ):
-            transforms.extend(self._generate_rotated_filters(r))
-        for t in transforms:
-            self.node.children.append(t.node)
+            transforms.extend(self._generate_rotated_filters(transformed))
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _rotate45(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
@@ -539,8 +541,8 @@ class FSNode:
 
         """
         transforms = self._generate_flipped_color_filters()
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _shift(self):
         ranklow, rankhigh, filelow, filehigh = self._get_transform_limits()
@@ -577,14 +579,17 @@ class FSNode:
         transforms = []
         for count in range(rankrange):
             rankshifts = dict(zip(sourceranks, RANK_NAMES))
-            for fs in fileshifts:
-                if fs[filelow] != filelow or rankshifts[ranklow] != ranklow:
+            for fshift in fileshifts:
+                if (
+                    fshift[filelow] != filelow
+                    or rankshifts[ranklow] != ranklow
+                ):
                     transforms.extend(
-                        self._generate_shifted_filters(fs, rankshifts)
+                        self._generate_shifted_filters(fshift, rankshifts)
                     )
             sourceranks.insert(0, sourceranks.pop())
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _shiftvertical(self):
         ranklimits = list(FSNode.INITIAL_RANK_LIMITS)
@@ -613,10 +618,10 @@ class FSNode:
     }
 
     def _get_transform_limits(self):
-        rl = list(FSNode.INITIAL_RANK_LIMITS)
-        fl = list(FSNode.INITIAL_FILE_LIMITS)
-        self.node.get_shift_limits(ranklimits=rl, filelimits=fl)
-        return rl[0], rl[1], fl[0], fl[1]
+        ranklimit = list(FSNode.INITIAL_RANK_LIMITS)
+        filelimit = list(FSNode.INITIAL_FILE_LIMITS)
+        self.node.get_shift_limits(ranklimits=ranklimit, filelimits=filelimit)
+        return ranklimit[0], ranklimit[1], filelimit[0], filelimit[1]
 
     def _shift_one_direction(self, limits, shiftsource, staticsource):
         """Extend children with one-direction transformed filters.
@@ -642,114 +647,129 @@ class FSNode:
         del count
         static = dict(zip(staticsource, staticsource))
         transforms = []
-        for fs in shifts:
-            if fs[limits[0]] != limits[0]:
-                transforms.extend(self._generate_shifted_filters(fs, static))
-        for t in transforms:
-            self.node.children.append(t.node)
+        for tshift in shifts:
+            if tshift[limits[0]] != limits[0]:
+                transforms.extend(
+                    self._generate_shifted_filters(tshift, static)
+                )
+        for tnode in transforms:
+            self.node.children.append(tnode.node)
 
     def _generate_shifted_filters(self, shiftfiles, shiftranks):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.shift(shiftfiles, shiftranks)
         return transforms
 
     def _generate_rotated_filters(self, rotation):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.rotate(rotation)
         return transforms
 
     def _generate_horizontal_reflection_filters(self):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.reflect_horizontal()
         return transforms
 
     def _generate_vertical_reflection_filters(self):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.reflect_vertical()
         return transforms
 
     def _generate_rotate_90_horizontal_reflection_filters(self):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.rotate_and_reflect_horizontal()
         return transforms
 
     def _generate_rotate_90_vertical_reflection_filters(self):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.rotate_and_reflect_vertical()
         return transforms
 
     def _generate_flipped_color_filters(self):
         transforms = []
-        for c in self.children:
-            transforms.append(copy.deepcopy(c))
+        for node in self.children:
+            transforms.append(copy.deepcopy(node))
             transforms[-1].node.flip_color()
         return transforms
 
     def _trace(self, level=0):
         if self.leaf:
             print(level, self.leaf._token)
-        for c in self.children:
+        for node in self.children:
             print(level, self.node.name, id(self.node))
-            c._trace(level=level + 1)
+            node._trace(level=level + 1)
 
 
 def _normalize_rotated_squares(squares):
-    ns = []
-    for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
-        s = list(s)
-        if len(s) == 2:
-            if s[0] in RANK_NAMES:
-                s[0], s[1] = s[1], s[0]
-        elif len(s) == 6:
-            if s[0] > s[2]:
-                s[0], s[2] = s[2], s[0]
-            if s[3] > s[5]:
-                s[3], s[5] = s[5], s[3]
-            if s[0] in RANK_NAMES:
-                s[0], s[2], s[3], s[5] = s[3], s[5], s[0], s[2]
-        elif s[1] == RANGE_SEPARATOR:
-            if s[0] > s[2]:
-                s[0], s[2] = s[2], s[0]
-            if s[0] in RANK_NAMES:
-                s.insert(0, s.pop())
-        elif s[2] == RANGE_SEPARATOR:
-            if s[1] > s[3]:
-                s[1], s[3] = s[3], s[1]
-            if s[0] in RANK_NAMES:
-                s.append(s.pop(0))
-        ns.append("".join(s))
-    return SQUARE_DESIGNATOR_SEPARATOR.join(ns)
+    normalized_squares = []
+    for designator in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
+        square = list(designator)
+        if len(square) == 2:
+            if square[0] in RANK_NAMES:
+                square[0], square[1] = square[1], square[0]
+        elif len(square) == 6:
+            if square[0] > square[2]:
+                square[0], square[2] = square[2], square[0]
+            if square[3] > square[5]:
+                square[3], square[5] = square[5], square[3]
+            if square[0] in RANK_NAMES:
+                square[0], square[2], square[3], square[5] = (
+                    square[3],
+                    square[5],
+                    square[0],
+                    square[2],
+                )
+        elif square[1] == RANGE_SEPARATOR:
+            if square[0] > square[2]:
+                square[0], square[2] = square[2], square[0]
+            if square[0] in RANK_NAMES:
+                square.insert(0, square.pop())
+        elif square[2] == RANGE_SEPARATOR:
+            if square[1] > square[3]:
+                square[1], square[3] = square[3], square[1]
+            if square[0] in RANK_NAMES:
+                square.append(square.pop(0))
+        normalized_squares.append("".join(square))
+    return SQUARE_DESIGNATOR_SEPARATOR.join(normalized_squares)
 
 
 def _normalize_horizontally_reflected_squares(squares):
-    ns = []
-    for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
-        if len(s) == 6 or len(s) == 4 and s[2] == RANGE_SEPARATOR:
-            s = list(s)
-            s[-3], s[-1] = s[-1], s[-3]
-            s = "".join(s)
-        ns.append("".join(s))
-    return SQUARE_DESIGNATOR_SEPARATOR.join(ns)
+    normalized_squares = []
+    for square in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
+        if (
+            len(square) == 6
+            or len(square) == 4
+            and square[2] == RANGE_SEPARATOR
+        ):
+            square = list(square)
+            square[-3], square[-1] = square[-1], square[-3]
+            square = "".join(square)
+        normalized_squares.append("".join(square))
+    return SQUARE_DESIGNATOR_SEPARATOR.join(normalized_squares)
 
 
 def _normalize_vertically_reflected_squares(squares):
-    ns = []
-    for s in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
-        if len(s) == 6 or len(s) == 4 and s[1] == RANGE_SEPARATOR:
-            s = list(s)
-            s[0], s[2] = s[2], s[0]
-            s = "".join(s)
-        ns.append("".join(s))
-    return SQUARE_DESIGNATOR_SEPARATOR.join(ns)
+    normalized_squares = []
+    for square in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
+        if (
+            len(square) == 6
+            or len(square) == 4
+            and square[1] == RANGE_SEPARATOR
+        ):
+            square = list(square)
+            square[0], square[2] = square[2], square[0]
+            square = "".join(square)
+        normalized_squares.append("".join(square))
+    return SQUARE_DESIGNATOR_SEPARATOR.join(normalized_squares)

@@ -37,7 +37,7 @@ class _ColourScheme(ExceptionHandler):
         tags = ui.tags_variations_comments_font
         moves = ui.moves_played_in_game_font
         pieces = ui.boardfont
-        self.ok = False
+        self._ok = False
         if tags:
             self.tags_variations_comments_font = tags.copy()
         else:
@@ -129,12 +129,12 @@ class _ColourScheme(ExceptionHandler):
         self.buttons_frame = tkinter.Frame(master=self.chooser)
         self.buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         buttonrow = self.buttons_frame.pack_info()["side"] in ("top", "bottom")
-        for index, b in enumerate(buttons):
+        for index, item in enumerate(buttons):
             button = tkinter.Button(
                 master=self.buttons_frame,
-                text=b[0],
-                underline=b[3],
-                command=self.try_command(b[4], self.buttons_frame),
+                text=item[0],
+                underline=item[3],
+                command=self.try_command(item[4], self.buttons_frame),
             )
             if buttonrow:
                 self.buttons_frame.grid_columnconfigure(index * 2, weight=1)
@@ -151,12 +151,32 @@ class _ColourScheme(ExceptionHandler):
         """Create colour selector widgets."""
         colour_frame = tkinter.Frame(master=self.chooser)
         colour_frame.pack(fill=tkinter.X)
-        gb = self.game.board
+        gboard = self.game.board
         for row, label, color, setter in (
-            (0, "Light squares", gb.litecolor, self.set_lite_square_bgcolour),
-            (1, "Dark squares", gb.darkcolor, self.set_dark_square_bgcolour),
-            (2, "White pieces", gb.whitecolor, self.set_white_piece_fgcolour),
-            (3, "Black pieces", gb.blackcolor, self.set_black_piece_fgcolour),
+            (
+                0,
+                "Light squares",
+                gboard.litecolor,
+                self.set_lite_square_bgcolour,
+            ),
+            (
+                1,
+                "Dark squares",
+                gboard.darkcolor,
+                self.set_dark_square_bgcolour,
+            ),
+            (
+                2,
+                "White pieces",
+                gboard.whitecolor,
+                self.set_white_piece_fgcolour,
+            ),
+            (
+                3,
+                "Black pieces",
+                gboard.blackcolor,
+                self.set_black_piece_fgcolour,
+            ),
             (4, "Rest of line", self.game.l_color, self.set_tag_rest_of_line),
             (5, "Move", self.game.m_color, self.set_tag_move),
             (6, "Alternatives", self.game.am_color, self.set_tag_alternatives),
@@ -178,12 +198,12 @@ class _ColourScheme(ExceptionHandler):
     def create_font_frame(self):
         """Create font selection widget."""
 
-        def focus(w):
-            def fs(e=None):
-                del e
-                w.focus_set()
+        def focus(widget):
+            def fset(event=None):
+                del event
+                widget.focus_set()
 
-            return fs
+            return fset
 
         font_frame = tkinter.Frame(master=self.chooser)
         font_frame.pack(fill=tkinter.X)
@@ -193,35 +213,35 @@ class _ColourScheme(ExceptionHandler):
             row=0, column=0
         )
         fontfr = tkinter.Frame(master=font_frame, padx=5)
-        fr = tkinter.Frame(master=fontfr)
-        self.b_families = tkinter.Listbox(fr)
-        scrollfont = tkinter.Scrollbar(fr)
+        boardfr = tkinter.Frame(master=fontfr)
+        self.b_families = tkinter.Listbox(boardfr)
+        scrollfont = tkinter.Scrollbar(boardfr)
         scrollfont.configure(
             command=self.try_command(self.b_families.yview, scrollfont)
         )
         self.b_families.configure(yscrollcommand=scrollfont.set)
-        for f in sorted(tkinter.font.families()):
-            self.b_families.insert(tkinter.END, f)
+        for family in sorted(tkinter.font.families()):
+            self.b_families.insert(tkinter.END, family)
         self.b_families.pack(
             side=tkinter.LEFT, expand=tkinter.TRUE, fill=tkinter.Y
         )
         scrollfont.pack(side=tkinter.LEFT, fill=tkinter.Y)
-        fr.pack(fill=tkinter.Y, expand=tkinter.TRUE)
+        boardfr.pack(fill=tkinter.Y, expand=tkinter.TRUE)
         wssf = tkinter.Frame(master=fontfr)
         self.b_family = tkinter.Label(
             master=wssf, text=self.boardfont["family"]
         )
         self.b_family.grid_configure(column=0, row=1, sticky=tkinter.EW)
         self.b_weight = tkinter.IntVar()
-        cb = tkinter.Checkbutton(
+        checkbutton = tkinter.Checkbutton(
             master=wssf,
             text="Bold",
             variable=self.b_weight,
             command=self.try_command(self.set_board_font_weight, wssf),
             indicatoron=tkinter.FALSE,
         )
-        cb.grid_configure(column=0, row=3, sticky=tkinter.EW)
-        cb.bind("<ButtonPress>", self.try_event(focus(cb)))
+        checkbutton.grid_configure(column=0, row=3, sticky=tkinter.EW)
+        checkbutton.bind("<ButtonPress>", self.try_event(focus(checkbutton)))
         self.b_weight.set(tkinter.TRUE)
         wssf.grid_columnconfigure(0, weight=1)
         wssf.grid_rowconfigure(0, minsize=5)
@@ -238,20 +258,20 @@ class _ColourScheme(ExceptionHandler):
             row=0, column=1
         )
         fontfr = tkinter.Frame(master=font_frame, padx=5)
-        fr = tkinter.Frame(master=fontfr)
-        self.s_families = tkinter.Listbox(fr)
-        scrollfont = tkinter.Scrollbar(fr)
+        scorefr = tkinter.Frame(master=fontfr)
+        self.s_families = tkinter.Listbox(scorefr)
+        scrollfont = tkinter.Scrollbar(scorefr)
         scrollfont.configure(
             command=self.try_command(self.s_families.yview, scrollfont)
         )
         self.s_families.configure(yscrollcommand=scrollfont.set)
-        for f in sorted(tkinter.font.families()):
-            self.s_families.insert(tkinter.END, f)
+        for family in sorted(tkinter.font.families()):
+            self.s_families.insert(tkinter.END, family)
         self.s_families.pack(
             side=tkinter.LEFT, expand=tkinter.TRUE, fill=tkinter.X
         )
         scrollfont.pack(side=tkinter.LEFT, fill=tkinter.Y)
-        fr.pack()
+        scorefr.pack()
         wssf = tkinter.Frame(master=fontfr)
         self.s_family = tkinter.Label(
             master=wssf, text=self.tags_variations_comments_font["family"]
@@ -281,23 +301,27 @@ class _ColourScheme(ExceptionHandler):
         tkinter.Label(master=wssf, text="Size:").grid_configure(
             column=0, row=9
         )
-        sf = tkinter.Frame(master=wssf)
+        sizeframe = tkinter.Frame(master=wssf)
         fsize = self.tags_variations_comments_font.cget("size")
-        sf.grid_configure(column=1, row=9, columnspan=3, sticky=tkinter.EW)
-        for index, s in enumerate((7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20)):
-            sb = tkinter.Radiobutton(
-                master=sf,
-                text=str(s),
+        sizeframe.grid_configure(
+            column=1, row=9, columnspan=3, sticky=tkinter.EW
+        )
+        for index, item in enumerate(
+            (7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20)
+        ):
+            sbutton = tkinter.Radiobutton(
+                master=sizeframe,
+                text=str(item),
                 variable=self.s_size,
-                value=s,
+                value=item,
                 indicatoron=tkinter.FALSE,
-                command=self.try_command(self.set_score_font_size, sf),
+                command=self.try_command(self.set_score_font_size, sizeframe),
             )
-            if s == abs(fsize):
-                self.s_size.set(s)
-            sb.grid_configure(column=index + 1, row=0, sticky=tkinter.EW)
-            sf.grid_columnconfigure(index + 1, weight=1, uniform="fsb")
-            sb.bind("<ButtonPress>", self.try_event(focus(sb)))
+            if item == abs(fsize):
+                self.s_size.set(item)
+            sbutton.grid_configure(column=index + 1, row=0, sticky=tkinter.EW)
+            sizeframe.grid_columnconfigure(index + 1, weight=1, uniform="fsb")
+            sbutton.bind("<ButtonPress>", self.try_event(focus(sbutton)))
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=1)
         self.s_families.bind(
@@ -319,7 +343,7 @@ class _ColourScheme(ExceptionHandler):
             self.game.score.focus_set()
 
         self.game.score.bind("<ButtonPress>", self.try_event(focus))
-        gs = "".join(
+        gamescore = "".join(
             (
                 '[Event"National Club: Gosport - Wood Green"]',
                 '[Site"Gosport"]',
@@ -343,7 +367,7 @@ class _ColourScheme(ExceptionHandler):
                 "\n",
             )
         )
-        self.game.collected_game = next(PGN().read_games(gs))
+        self.game.collected_game = next(PGN().read_games(gamescore))
         self.game.set_and_tag_item_text()
         self.game.get_top_widget().pack(fill=tkinter.BOTH, expand=1)
         self.game.get_top_widget().pack_propagate(False)
@@ -362,8 +386,8 @@ class _ColourScheme(ExceptionHandler):
             constants.ALTERNATIVE_MOVE_COLOR_NAME: cg.am_color,
             constants.VARIATION_COLOR_NAME: cg.v_color,
         }
-        for fn in options.font_names:
-            olddefaults[fn] = dict()
+        for fontname in options.font_names:
+            olddefaults[fontname] = dict()
         fonts.copy_font_attributes(
             tkinter.font.nametofont(
                 constants.MOVES_PLAYED_IN_GAME_FONT
@@ -396,8 +420,8 @@ class _ColourScheme(ExceptionHandler):
             constants.ALTERNATIVE_MOVE_COLOR_NAME: self.game.am_color,
             constants.VARIATION_COLOR_NAME: self.game.v_color,
         }
-        for fn in options.font_names:
-            newdefaults[fn] = dict()
+        for fontname in options.font_names:
+            newdefaults[fontname] = dict()
         fonts.copy_font_attributes(
             self.tags_variations_comments_font.actual(),
             newdefaults[constants.TAGS_VARIATIONS_COMMENTS_FONT],
@@ -419,30 +443,30 @@ class _ColourScheme(ExceptionHandler):
     def get_combination(self, option, value):
         """Return numeric code for move and non-move font combination."""
         tvc = self.tags_variations_comments_font[option] == value
-        m = self.moves_played_in_game_font[option] == value
+        movesplayed = self.moves_played_in_game_font[option] == value
         if tvc:
-            if m:
+            if movesplayed:
                 return 2
             return 4
-        if m:
+        if movesplayed:
             return 1
         return 3
 
     def is_ok(self):
         """Return True if dialogue closed using Ok button."""
-        return self.ok
+        return self._ok
 
     def on_cancel(self, event=None):
         """Process Cancel button event."""
         del event
-        self.ok = False
+        self._ok = False
         self.restore_focus.focus_set()
         self.chooser.destroy()
 
     def on_ok(self, event=None):
         """Process Ok button event."""
         del event
-        self.ok = True
+        self._ok = True
         self.restore_focus.focus_set()
         self.chooser.destroy()
 
@@ -461,15 +485,15 @@ class _ColourScheme(ExceptionHandler):
     def set_board_font_family(self, event=None):
         """Set sample game board family."""
         del event
-        f = self.b_families
-        self.boardfont["family"] = f.get(f.curselection()[0])
-        self.game.board.font["family"] = f.get(f.curselection()[0])
-        self.b_family["text"] = f.get(f.curselection()[0])
+        family = self.b_families
+        self.boardfont["family"] = family.get(family.curselection()[0])
+        self.game.board.font["family"] = family.get(family.curselection()[0])
+        self.b_family["text"] = family.get(family.curselection()[0])
 
     def set_board_font_weight(self):
         """Set sample game board pieces font."""
-        w = {0: "normal", 1: "bold"}
-        bfweight = w[self.b_weight.get()]
+        weights = {0: "normal", 1: "bold"}
+        bfweight = weights[self.b_weight.get()]
         self.boardfont["weight"] = bfweight
         self.game.board.font["weight"] = bfweight
 
@@ -516,13 +540,15 @@ class _ColourScheme(ExceptionHandler):
     def set_score_font_family(self, event=None):
         """Set game score and variation font family."""
         del event
-        f = self.s_families
-        self.tags_variations_comments_font["family"] = f.get(
-            f.curselection()[0]
+        family = self.s_families
+        self.tags_variations_comments_font["family"] = family.get(
+            family.curselection()[0]
         )
-        self.moves_played_in_game_font["family"] = f.get(f.curselection()[0])
-        self.wildpiecesfont["family"] = f.get(f.curselection()[0])
-        self.s_family["text"] = f.get(f.curselection()[0])
+        self.moves_played_in_game_font["family"] = family.get(
+            family.curselection()[0]
+        )
+        self.wildpiecesfont["family"] = family.get(family.curselection()[0])
+        self.s_family["text"] = family.get(family.curselection()[0])
 
     def set_score_font_size(self):
         """Set game score and variation font size to selected size."""
@@ -531,31 +557,31 @@ class _ColourScheme(ExceptionHandler):
 
     def set_score_font_slant(self):
         """Set game score and variation font slants to selected slants."""
-        s = {
+        slant = {
             4: ("italic", "roman"),
             2: ("italic", "italic"),
             3: ("roman", "roman"),
             1: ("roman", "italic"),
         }
-        tvcfslant, mfslant = s[self.s_slant.get()]
+        tvcfslant, mfslant = slant[self.s_slant.get()]
         self.tags_variations_comments_font["slant"] = tvcfslant
         self.moves_played_in_game_font["slant"] = mfslant
 
     def set_score_font_weight(self):
         """Set game score and variation font weights to selected weights."""
-        w = {
+        weights = {
             4: ("bold", "normal"),
             2: ("bold", "bold"),
             3: ("normal", "normal"),
             1: ("normal", "bold"),
         }
-        tvcfweight, mfweight = w[self.s_weight.get()]
+        tvcfweight, mfweight = weights[self.s_weight.get()]
         self.tags_variations_comments_font["weight"] = tvcfweight
         self.moves_played_in_game_font["weight"] = mfweight
 
     def __del__(self):
         """Force IsOk to return False after destructor call."""
-        self.ok = False
+        self._ok = False
 
     def _make_font_selector(self, frame, title, variable, baserow, command):
         """Create a font selector."""
@@ -563,19 +589,19 @@ class _ColourScheme(ExceptionHandler):
             column=0, row=baserow
         )
 
-        def focus(w):
-            def fs(e=None):
-                del e
-                w.focus_set()
+        def focus(widget):
+            def fset(event=None):
+                del event
+                widget.focus_set()
 
-            return fs
+            return fset
 
         for index, text in (
             (1, "Moves Played"),
             (2, "All"),
             (3, "None"),
         ):
-            rb = tkinter.Radiobutton(
+            radiobutton = tkinter.Radiobutton(
                 master=frame,
                 text=text,
                 variable=variable,
@@ -583,9 +609,13 @@ class _ColourScheme(ExceptionHandler):
                 command=self.try_command(command, frame),
                 indicatoron=tkinter.FALSE,
             )
-            rb.grid_configure(column=index, row=baserow, sticky=tkinter.EW)
-            rb.bind("<ButtonPress>", self.try_event(focus(rb)))
-        rb = tkinter.Radiobutton(
+            radiobutton.grid_configure(
+                column=index, row=baserow, sticky=tkinter.EW
+            )
+            radiobutton.bind(
+                "<ButtonPress>", self.try_event(focus(radiobutton))
+            )
+        radiobutton = tkinter.Radiobutton(
             master=frame,
             text="Tags Variations Comments",
             variable=variable,
@@ -593,10 +623,10 @@ class _ColourScheme(ExceptionHandler):
             command=self.try_command(command, frame),
             indicatoron=tkinter.FALSE,
         )
-        rb.grid_configure(
+        radiobutton.grid_configure(
             column=1, row=baserow + 1, columnspan=3, sticky=tkinter.EW
         )
-        rb.bind("<ButtonPress>", self.try_event(focus(rb)))
+        radiobutton.bind("<ButtonPress>", self.try_event(focus(radiobutton)))
 
 
 class ColourChooser(_ColourScheme):

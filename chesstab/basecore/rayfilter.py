@@ -161,10 +161,10 @@ class RayFilter:
         self.variation_code = variation_code
         raycomponents = []
         mvi = move_number_str(move_number) + variation_code
-        for c in filter_.children[0].children:
+        for node in filter_.children[0].children:
             designator_set = set()
             raycomponents.append(designator_set)
-            stack = [c]
+            stack = [node]
             while stack:
                 if stack[-1].tokendef is Token.PIECE_DESIGNATOR:
                     designator_set.update(
@@ -174,8 +174,8 @@ class RayFilter:
                     )
                     stack.pop()
                     continue
-                sp = stack.pop()
-                for spc in sp.children:
+                topnode = stack.pop()
+                for spc in topnode.children:
                     stack.append(spc)
         self.raycomponents = raycomponents
         self.emptycomponents = [set() for i in range(len(raycomponents))]
@@ -190,20 +190,22 @@ class RayFilter:
             constants.ANY_WHITE_PIECE_NAME + constants.ANY_BLACK_PIECE_NAME
         )
         nopiece = constants.EMPTY_SQUARE_NAME
-        fd = filespec.PIECESQUAREMOVE_FIELD_DEF, filespec.SQUAREMOVE_FIELD_DEF
         values_finder = database.values_finder(finder.dbset)
         move = move_number_str(self.move_number)
         nextmove = move_number_str(self.move_number + 1)
         psmwhere, smwhere = [
             database.values_selector(
-                " ".join((f, "from", move, "below", nextmove))
+                " ".join((final_element, "from", move, "below", nextmove))
             )
-            for f in fd
+            for final_element in (
+                filespec.PIECESQUAREMOVE_FIELD_DEF,
+                filespec.SQUAREMOVE_FIELD_DEF,
+            )
         ]
-        for w in psmwhere, smwhere:
-            w.lex()
-            w.parse()
-            w.evaluate(values_finder)
+        for selector in psmwhere, smwhere:
+            selector.lex()
+            selector.parse()
+            selector.evaluate(values_finder)
         moveindex = set(psmwhere.node.result + smwhere.node.result)
         for end in 0, -1:
             if nopiece in "".join(self.raycomponents[end]):
@@ -211,11 +213,11 @@ class RayFilter:
                 empty = [
                     s[:-1] for s in self.raycomponents[end] if nopiece in s
                 ]
-                for p in anypiece:
-                    for e in empty:
-                        if e + p in moveindex:
+                for piece in anypiece:
+                    for square in empty:
+                        if square + piece in moveindex:
                             continue
-                        emptyset.add(e)
+                        emptyset.add(square)
             self.raycomponents[end].intersection_update(moveindex)
 
     def find_games_for_end_squares(self, finder):
@@ -230,106 +232,122 @@ class RayFilter:
         recordset_cache = self.recordset_cache
         start = self.raycomponents[0]
         final = self.raycomponents[-1]
-        for s in start:
-            start_square = s[-3:-1]
-            rs = rays[start_square]
-            for f in final:
-                final_square = f[-3:-1]
-                if final_square not in rs:
+        for start_element in start:
+            start_square = start_element[-3:-1]
+            ray_squares = rays[start_square]
+            for final_element in final:
+                final_square = final_element[-3:-1]
+                if final_square not in ray_squares:
                     continue
-                for ps in (
-                    s,
-                    f,
+                for psqkey in (
+                    start_element,
+                    final_element,
                 ):
-                    if ps not in piece_square_games:
-                        if ps[-1] in anypiece:
-                            w = record_selector(
+                    if psqkey not in piece_square_games:
+                        if psqkey[-1] in anypiece:
+                            selector = record_selector(
                                 " ".join(
                                     (
                                         filespec.SQUAREMOVE_FIELD_DEF,
                                         "eq",
-                                        ps,
+                                        psqkey,
                                     )
                                 )
                             )
                         else:
-                            w = record_selector(
+                            selector = record_selector(
                                 " ".join(
                                     (
                                         filespec.PIECESQUAREMOVE_FIELD_DEF,
                                         "eq",
-                                        ps,
+                                        psqkey,
                                     )
                                 )
                             )
-                        w.lex()
-                        w.parse()
-                        w.evaluate(finder)
-                        piece_square_games.add(ps)
-                        recordset_cache[ps] = w.node.result.answer
+                        selector.lex()
+                        selector.parse()
+                        selector.evaluate(finder)
+                        piece_square_games.add(psqkey)
+                        recordset_cache[psqkey] = selector.node.result.answer
                 ray_ends = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], ray_ends, finder
+                    recordset_cache[start_element],
+                    recordset_cache[final_element],
+                    ray_ends,
+                    finder,
                 )
         start = self.emptycomponents[0]
         final = self.emptycomponents[-1]
-        for s in start:
-            start_square = s[-2:]
-            rs = rays[start_square]
-            for f in final:
-                final_square = f[-2:]
-                if final_square not in rs:
+        for start_element in start:
+            start_square = start_element[-2:]
+            ray_squares = rays[start_square]
+            for final_element in final:
+                final_square = final_element[-2:]
+                if final_square not in ray_squares:
                     continue
-                for ps in (
-                    s,
-                    f,
+                for esqkey in (
+                    start_element,
+                    final_element,
                 ):
-                    if ps not in empty_square_games:
-                        w = record_selector(
+                    if esqkey not in empty_square_games:
+                        selector = record_selector(
                             " ".join(
                                 (
                                     "not",
                                     "(",
                                     filespec.SQUAREMOVE_FIELD_DEF,
                                     "eq",
-                                    ps + anywhitepiece,
+                                    esqkey + anywhitepiece,
                                     "or",
-                                    ps + anyblackpiece,
+                                    esqkey + anyblackpiece,
                                     ")",
                                 )
                             )
                         )
-                        w.lex()
-                        w.parse()
-                        w.evaluate(finder)
-                        empty_square_games.add(ps)
-                        recordset_cache[ps] = w.node.result.answer
+                        selector.lex()
+                        selector.parse()
+                        selector.evaluate(finder)
+                        empty_square_games.add(esqkey)
+                        recordset_cache[esqkey] = selector.node.result.answer
                 ray_ends = start_square, final_square
                 self._add_recordset_to_ray_games(
-                    recordset_cache[s], recordset_cache[f], ray_ends, finder
+                    recordset_cache[start_element],
+                    recordset_cache[final_element],
+                    ray_ends,
+                    finder,
                 )
         start = self.raycomponents[0]
         final = self.raycomponents[-1]
-        for e in self.emptycomponents[0]:
-            if e not in empty_square_games:
+        for start_element in self.emptycomponents[0]:
+            if start_element not in empty_square_games:
                 continue
-            start_square = e[-2:]
-            sc = recordset_cache[e]
-            for f in final:
-                fc = recordset_cache[f]
-                final_square = f[-3:-1]
+            start_square = start_element[-2:]
+            cached_start_element = recordset_cache[start_element]
+            for final_element in final:
+                cached_final_element = recordset_cache[final_element]
+                final_square = final_element[-3:-1]
                 ray_ends = start_square, final_square
-                self._add_recordset_to_ray_games(sc, fc, ray_ends, finder)
-        for e in self.emptycomponents[-1]:
-            if e not in empty_square_games:
+                self._add_recordset_to_ray_games(
+                    cached_start_element,
+                    cached_final_element,
+                    ray_ends,
+                    finder,
+                )
+        for start_element in self.emptycomponents[-1]:
+            if start_element not in empty_square_games:
                 continue
-            final_square = e[-2:]
-            fc = recordset_cache[e]
-            for s in start:
-                sc = recordset_cache[s]
-                start_square = s[-3:-1]
+            final_square = start_element[-2:]
+            cached_final_element = recordset_cache[start_element]
+            for component in start:
+                cached_start_element = recordset_cache[component]
+                start_square = component[-3:-1]
                 ray_ends = start_square, final_square
-                self._add_recordset_to_ray_games(sc, fc, ray_ends, finder)
+                self._add_recordset_to_ray_games(
+                    cached_start_element,
+                    cached_final_element,
+                    ray_ends,
+                    finder,
+                )
 
     def _add_recordset_to_ray_games(self, start, final, rayindex, finder):
         """Store records in both start and final under key rayindex.
@@ -338,12 +356,12 @@ class RayFilter:
 
         """
         del finder
-        rg = start & final
-        if rg.count_records():
+        raygames = start & final
+        if raygames.count_records():
             if rayindex in self.ray_games:
-                self.ray_games[rayindex] |= rg
+                self.ray_games[rayindex] |= raygames
             else:
-                self.ray_games[rayindex] = rg
+                self.ray_games[rayindex] = raygames
 
     def find_games_for_middle_squares(self, finder):
         """Remove ray-end squares with no game references."""
@@ -360,10 +378,10 @@ class RayFilter:
         internal_raycomponents = raycomponents[1:-1]
         mvi = move_number_str(self.move_number) + self.variation_code
         c_sqi = [{}]  # Maybe the empty square index values?
-        for e, rc in enumerate(internal_raycomponents):
+        for component in internal_raycomponents:
             sqi = {}
             c_sqi.append(sqi)
-            for item in rc:
+            for item in component:
                 sqi.setdefault(item[-3:-1], set()).add(item)
         for start, final in self.ray_games:
             line = constants.RAYS[start][final][1:-1]
@@ -376,23 +394,25 @@ class RayFilter:
                     if mrtl[len(line)]:
                         break
                 linesets = []
-                for e, v in enumerate(mrtl[: len(line)]):
-                    if line[e] not in c_sqi[v]:
-                        if v:
+                for index, item in enumerate(mrtl[: len(line)]):
+                    if line[index] not in c_sqi[item]:
+                        if item:
                             linesets.clear()
                             break
-                        c_sqi[v][line[e]] = {mvi + line[e] + nopiece}
-                    linesets.append(c_sqi[v][line[e]])
+                        c_sqi[item][line[index]] = {
+                            mvi + line[index] + nopiece
+                        }
+                    linesets.append(c_sqi[item][line[index]])
                 linegames = []
-                for lg in linesets:
+                for gameset in linesets:
                     squareset = finder.db.recordlist_nil(finder.dbset)
                     linegames.append(squareset)
-                    for item in lg:
+                    for item in gameset:
                         if item in recordset_cache:
                             squareset |= recordset_cache[item]
                             continue
                         if item[-1] == nopiece:
-                            w = record_selector(
+                            selector = record_selector(
                                 " ".join(
                                     (
                                         "not",
@@ -406,14 +426,14 @@ class RayFilter:
                                     )
                                 )
                             )
-                            w.lex()
-                            w.parse()
-                            w.evaluate(finder)
-                            recordset_cache[item] = w.node.result.answer
+                            selector.lex()
+                            selector.parse()
+                            selector.evaluate(finder)
+                            recordset_cache[item] = selector.node.result.answer
                             squareset |= recordset_cache[item]
                             continue
                         if item[-1] in anypiece:
-                            w = record_selector(
+                            selector = record_selector(
                                 " ".join(
                                     (
                                         filespec.SQUAREMOVE_FIELD_DEF,
@@ -423,7 +443,7 @@ class RayFilter:
                                 )
                             )
                         else:
-                            w = record_selector(
+                            selector = record_selector(
                                 " ".join(
                                     (
                                         filespec.PIECESQUAREMOVE_FIELD_DEF,
@@ -432,20 +452,20 @@ class RayFilter:
                                     )
                                 )
                             )
-                        w.lex()
-                        w.parse()
-                        w.evaluate(finder)
-                        recordset_cache[item] = w.node.result.answer
+                        selector.lex()
+                        selector.parse()
+                        selector.evaluate(finder)
+                        recordset_cache[item] = selector.node.result.answer
                         squareset |= recordset_cache[item]
                 if linegames:
                     squareset = linegames.pop() & self.ray_games[start, final]
-                    for lg in linegames:
-                        squareset &= lg
+                    for gameset in linegames:
+                        squareset &= gameset
                     raygames.append(squareset)
             if raygames:
                 rayset = raygames.pop()
-                for rg in raygames:
-                    rayset |= rg
+                for gameset in raygames:
+                    rayset |= gameset
                 self.ray_games[start, final].replace_records(rayset)
             else:
                 self.ray_games[start, final].replace_records(
@@ -468,14 +488,14 @@ class RayFilter:
 
 #    """
 #    ecs = piecedesignator.PieceDesignator._expand_composite_square
-#    ds = set()
-#    for ps in designator_set:
-#        if len(ps) != 1:
-#            ds.add(index_prefix + ps)
+#    indexset = set()
+#    for piece_square in designator_set:
+#        if len(piece_square) != 1:
+#            indexset.add(index_prefix + piece_square)
 #        else:
-#            ds.update(
+#            indexset.update(
 #                {
-#                    index_prefix + ps + s
+#                    index_prefix + piece_square + s
 #                    for s in ecs(
 #                        FILE_NAMES[0],
 #                        FILE_NAMES[-1],
@@ -484,7 +504,7 @@ class RayFilter:
 #                    )
 #                }
 #            )
-#    return ds
+#    return indexset
 
 
 # If 'square piece' is better order than 'piece square'
@@ -499,14 +519,14 @@ def piece_square_to_index(designator_set, index_prefix):
     file_names = constants.FILE_NAMES
     rank_names = constants.RANK_NAMES
     ecs = piecedesignator.PieceDesignator._expand_composite_square
-    ds = set()
-    for ps in designator_set:
-        if len(ps) != 1:
-            ds.add(index_prefix + ps[1:] + ps[0])
+    indexset = set()
+    for piece_square in designator_set:
+        if len(piece_square) != 1:
+            indexset.add(index_prefix + piece_square[1:] + piece_square[0])
         else:
-            ds.update(
+            indexset.update(
                 {
-                    index_prefix + s + ps
+                    index_prefix + s + piece_square
                     for s in ecs(
                         file_names[0],
                         file_names[-1],
@@ -515,7 +535,7 @@ def piece_square_to_index(designator_set, index_prefix):
                     )
                 }
             )
-    return ds
+    return indexset
 
 
 def move_number_str(move_number):
@@ -528,5 +548,5 @@ def move_number_str(move_number):
     try:
         return MOVE_NUMBER_KEYS[move_number]
     except IndexError:
-        c = hex(move_number)
-        return str(len(c) - 2) + c[2:]
+        base16 = hex(move_number)
+        return str(len(base16) - 2) + base16[2:]
