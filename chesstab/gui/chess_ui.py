@@ -27,10 +27,12 @@ from .gamerow import chess_db_row_game
 from .positionrow import chess_db_row_position
 from .cqlrow import chess_db_row_cql
 from .repertoirerow import chess_db_row_repertoire
-from .gamelistgrid import (
+from .gamegrid import (
     TagRosterGrid,
     GamePositionGames,
     PartialPositionGames,
+)
+from .repertoiregrid import (
     RepertoireGrid,
     RepertoirePositionGames,
 )

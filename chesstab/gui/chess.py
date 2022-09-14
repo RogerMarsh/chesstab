@@ -1077,9 +1077,7 @@ class Chess(ExceptionHandler):
         game.set_position_analysis_data_source()
         game.collected_game = next(
             PGN(game_class=game.gameclass).read_games(
-                "".join(
-                    (constants.EMPTY_REPERTOIRE_GAME, UNKNOWN_RESULT)
-                )
+                "".join((constants.EMPTY_REPERTOIRE_GAME, UNKNOWN_RESULT))
             )
         )
         game.set_and_tag_item_text(reset_undo=True)
