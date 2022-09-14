@@ -63,6 +63,7 @@ from ..core.filespec import (
     BLACK_FIELD_DEF,
     RESULT_FIELD_DEF,
 )
+from ..core.constants import UNKNOWN_RESULT
 from ..core import exporters
 from .uci import UCI
 from .chess_ui import ChessUI
@@ -1025,7 +1026,7 @@ class Chess(ExceptionHandler):
                 "".join(
                     (
                         constants.EMPTY_SEVEN_TAG_ROSTER,
-                        constants.UNKNOWN_RESULT,
+                        UNKNOWN_RESULT,
                     )
                 )
             )
@@ -1077,7 +1078,7 @@ class Chess(ExceptionHandler):
         game.collected_game = next(
             PGN(game_class=game.gameclass).read_games(
                 "".join(
-                    (constants.EMPTY_REPERTOIRE_GAME, constants.UNKNOWN_RESULT)
+                    (constants.EMPTY_REPERTOIRE_GAME, UNKNOWN_RESULT)
                 )
             )
         )
