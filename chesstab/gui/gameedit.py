@@ -3935,26 +3935,26 @@ class GameEdit(Game):
             widget.mark_set(tkinter.INSERT, START_SCORE_MARK)
             return
         trc = widget.tag_ranges(self.current)
-        tag_nextrange = widget.tag_nextrange(NAVIGATE_TOKEN, trc[-1])
-        if not tag_nextrange:
-            tag_nextrange = [
+        tag_range = widget.tag_nextrange(NAVIGATE_TOKEN, trc[-1])
+        if not tag_range:
+            tag_range = [
                 widget.index(
                     widget.tag_nextrange(EDIT_RESULT, trc[-1])[0]
                     + "-1 lines lineend"
                 )
             ]
         trfnl = widget.tag_prevrange(
-            FORCED_NEWLINE_TAG, tag_nextrange[0], trc[-1]
+            FORCED_NEWLINE_TAG, tag_range[0], trc[-1]
         )
         if trfnl:
-            tag_prevrange = trfnl
+            tag_range = trfnl
         else:
             trmm = widget.tag_prevrange(
-                MOVETEXT_MOVENUMBER_TAG, tag_nextrange[0], trc[-1]
+                MOVETEXT_MOVENUMBER_TAG, tag_range[0], trc[-1]
             )
             if trmm:
-                tag_prevrange = trmm
-        widget.mark_set(tkinter.INSERT, tag_nextrange[0])
+                tag_range = trmm
+        widget.mark_set(tkinter.INSERT, tag_range[0])
         if between_newlines:
             if not trfnl:
                 self.insert_forced_newline_into_text()
