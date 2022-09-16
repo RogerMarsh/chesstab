@@ -42,7 +42,8 @@ from ..core.pgn import (
     GameAnalysis,
 )
 from .board import Board
-from .score import Score, AnalysisScore, ScoreNoGameException
+from .score import Score, ScoreNoGameException
+from .analysisscore import AnalysisScore
 from .constants import (
     ANALYSIS_INDENT_TAG,
     ANALYSIS_PGN_TAGS_TAG,
@@ -51,6 +52,7 @@ from .constants import (
     MOVETEXT_MOVENUMBER_TAG,
     STATUS_SEVEN_TAG_ROSTER_PLAYERS,
 )
+from .blanktext import NonTagBind
 from .eventspec import EventSpec
 from ..core.analysis import Analysis
 from ..core.constants import (
@@ -263,11 +265,53 @@ class Game(Score):
         self._analyse_position(*position)
 
     def set_and_tag_item_text(self, reset_undo=False):
-        """Delegate then queue analysis request to chess engines."""
+        """Display the game as board and moves.
+
+        reset_undo causes the undo redo stack to be cleared if True.  Set True
+        on first display of a game for editing so that repeated Ctrl-Z in text
+        editing mode recovers the original score.
+
+        """
+        if not self._is_text_editable:
+            self.score.configure(state=tkinter.NORMAL)
+        self.score.delete("1.0", tkinter.END)
         try:
-            super().set_and_tag_item_text(reset_undo=reset_undo)
+            self.map_game()
         except ScoreNoGameException:
+            self.score.insert(
+                tkinter.END,
+                "".join(
+                    (
+                        "The following text was probably found between two ",
+                        "games in a file expected to be in PGN format.\n\n",
+                    )
+                ),
+            )
+            self.score.insert(tkinter.END, self.collected_game._text)
+
+            # Must be replaced because bind_for_primary_activity() sets the
+            # board pointer bindings wrong for initial display of game.
+            if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+                self.bind_for_primary_activity()
+                self.set_board_pointer_widget_navigation_bindings(True)
+
+            if not self._is_text_editable:
+                self.score.configure(state=tkinter.DISABLED)
+            if reset_undo:
+                self.score.edit_reset()
             return
+
+        # Must be replaced because bind_for_primary_activity() sets the
+        # board pointer bindings wrong for initial display of game.
+        if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
+            self.bind_for_primary_activity()
+            self.set_board_pointer_widget_navigation_bindings(True)
+
+        if not self._is_text_editable:
+            self.score.configure(state=tkinter.DISABLED)
+        if reset_undo:
+            self.score.edit_reset()
+        self.board.set_board(self.fen_tag_square_piece_map())
         self.score.tag_add(MOVETEXT_INDENT_TAG, "1.0", tkinter.END)
         self._analyse_position(*self.fen_tag_tuple_square_piece_map())
 
