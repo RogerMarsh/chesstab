@@ -13,7 +13,7 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 from ..core.chessrecord import ChessDBrecordQuery
 from .querydisplay import QueryDisplay, QueryDisplayEdit
 from .queryrow import ChessDBrowQuery
-from ..core import exporters
+from ..core import export_selection_rule
 from .eventspec import EventSpec
 from .display import Display
 from ..shared.cql_gamelist_query import CQLGameListQuery
@@ -198,7 +198,7 @@ class QueryListGrid(
     def export_selection_rules(self, event=None):
         """Export selected selection rule definitions."""
         del event
-        exporters.export_selected_selection_rules(
+        export_selection_rule.export_selected_selection_rules(
             self, self.ui.get_export_filename("Selection Rules", pgn=False)
         )
 

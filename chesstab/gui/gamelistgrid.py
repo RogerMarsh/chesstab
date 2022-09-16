@@ -13,7 +13,7 @@ from pgn_read.core.parser import PGN
 from ..core.chessrecord import ChessDBrecordGameUpdate
 from .gamedisplay import GameDisplay, GameDisplayEdit
 from .constants import EMPTY_SEVEN_TAG_ROSTER
-from ..core import exporters
+from ..core import export_game
 from .display import Display
 from ..shared.cql_gamelist_query import CQLGameListQuery
 from ..shared.allgrid import AllGrid
@@ -215,7 +215,7 @@ class GameListGrid(
         """Export selected games as text."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_text(
+            export_game.export_selected_games_text(
                 self,
                 self.ui.get_export_filename(
                     "Games (internal format)", pgn=False
@@ -228,7 +228,7 @@ class GameListGrid(
         """Export selected games in a PGN import format."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_pgn_import_format(
+            export_game.export_selected_games_pgn_import_format(
                 self,
                 self.ui.get_export_filename("Games (import format)", pgn=True),
             ),
@@ -239,7 +239,7 @@ class GameListGrid(
         """Export selected games in PGN export format."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_pgn(
+            export_game.export_selected_games_pgn(
                 self, self.ui.get_export_filename("Games", pgn=True)
             ),
             "Games",
@@ -249,7 +249,7 @@ class GameListGrid(
         """Export selected games in PGN Reduced Export Format."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_pgn_reduced_export_format(
+            export_game.export_selected_games_pgn_reduced_export_format(
                 self,
                 self.ui.get_export_filename(
                     "Games (reduced export format)", pgn=True
@@ -262,7 +262,7 @@ class GameListGrid(
         """Export selected games as PGN excluding all comments and RAVs."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_pgn_no_comments_no_ravs(
+            export_game.export_selected_games_pgn_no_comments_no_ravs(
                 self,
                 self.ui.get_export_filename(
                     "Games (no comments no ravs)", pgn=True
@@ -275,7 +275,7 @@ class GameListGrid(
         """Export selected games as PGN excluding all commentary tokens."""
         del event
         self.ui.export_report(
-            exporters.export_selected_games_pgn_no_comments(
+            export_game.export_selected_games_pgn_no_comments(
                 self,
                 self.ui.get_export_filename("Games (no comments)", pgn=True),
             ),

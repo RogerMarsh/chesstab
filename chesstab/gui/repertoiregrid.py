@@ -18,7 +18,7 @@ from .constants import (
     STATUS_SEVEN_TAG_ROSTER_EVENT,
     EMPTY_REPERTOIRE_GAME,
 )
-from ..core import exporters
+from ..core import export_repertoire
 from .eventspec import EventSpec
 from ..core.constants import REPERTOIRE_TAG_ORDER, UNKNOWN_RESULT
 from .gamelistgrid import GameListGrid
@@ -356,7 +356,7 @@ class RepertoireGrid(GameListGrid):
     def export_pgn(self, event=None):
         """Export selected repertoires in PGN export format."""
         self.ui.export_report(
-            exporters.export_selected_repertoires_pgn(
+            export_repertoire.export_selected_repertoires_pgn(
                 self, self.ui.get_export_filename("Repertoires", pgn=True)
             ),
             "Repertoires",
@@ -365,7 +365,7 @@ class RepertoireGrid(GameListGrid):
     def export_pgn_no_comments(self, event=None):
         """Export selected repertoires in PGN export format no comments."""
         self.ui.export_report(
-            exporters.export_selected_repertoires_pgn_no_comments(
+            export_repertoire.export_selected_repertoires_pgn_no_comments(
                 self,
                 self.ui.get_export_filename(
                     "Repertoires (no comments)", pgn=True
@@ -377,7 +377,7 @@ class RepertoireGrid(GameListGrid):
     def export_text(self, event=None):
         """Export selected repertoires as text."""
         self.ui.export_report(
-            exporters.export_selected_repertoires_text(
+            export_repertoire.export_selected_repertoires_text(
                 self,
                 self.ui.get_export_filename(
                     "Repertoires (internal format)", pgn=False
@@ -389,7 +389,7 @@ class RepertoireGrid(GameListGrid):
     def export_pgn_import_format(self, event=None):
         """Export selected games in a PGN import format."""
         self.ui.export_report(
-            exporters.export_selected_repertoires_pgn_import_format(
+            export_repertoire.export_selected_repertoires_pgn_import_format(
                 self,
                 self.ui.get_export_filename(
                     "Repertoires (import format)", pgn=True

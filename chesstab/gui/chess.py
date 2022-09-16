@@ -64,7 +64,9 @@ from ..core.filespec import (
     RESULT_FIELD_DEF,
 )
 from ..core.constants import UNKNOWN_RESULT
-from ..core import exporters
+from ..core import export_game
+from ..core import export_repertoire
+from ..core import export_chessql
 from .uci import UCI
 from .chess_ui import ChessUI
 from .eventspec import EventSpec
@@ -1348,7 +1350,7 @@ class Chess(ExceptionHandler):
     def export_all_games_pgn_reduced_export_format(self):
         """Export all database games in PGN reduced export format."""
         self.ui.export_report(
-            exporters.export_all_games_pgn_reduced_export_format(
+            export_game.export_all_games_pgn_reduced_export_format(
                 self.opendatabase,
                 self.ui.get_export_filename(
                     "Games (reduced export format)", pgn=True
@@ -1360,7 +1362,7 @@ class Chess(ExceptionHandler):
     def export_all_games_pgn(self):
         """Export all database games in PGN export format."""
         self.ui.export_report(
-            exporters.export_all_games_pgn(
+            export_game.export_all_games_pgn(
                 self.opendatabase,
                 self.ui.get_export_filename("Games", pgn=True),
             ),
@@ -1370,7 +1372,7 @@ class Chess(ExceptionHandler):
     def export_all_games_pgn_import_format(self):
         """Export all database games in a PGN import format."""
         self.ui.export_report(
-            exporters.export_all_games_pgn_import_format(
+            export_game.export_all_games_pgn_import_format(
                 self.opendatabase,
                 self.ui.get_export_filename("Games (import format)", pgn=True),
             ),
@@ -1380,7 +1382,7 @@ class Chess(ExceptionHandler):
     def export_all_games_pgn_no_comments(self):
         """Export all games in PGN export format excluding comments."""
         self.ui.export_report(
-            exporters.export_all_games_pgn_no_comments(
+            export_game.export_all_games_pgn_no_comments(
                 self.opendatabase,
                 self.ui.get_export_filename("Games (no comments)", pgn=True),
             ),
@@ -1390,7 +1392,7 @@ class Chess(ExceptionHandler):
     def export_all_games_pgn_no_comments_no_ravs(self):
         """Export games in PGN export format excluding comments and RAVs."""
         self.ui.export_report(
-            exporters.export_all_games_pgn_no_comments_no_ravs(
+            export_game.export_all_games_pgn_no_comments_no_ravs(
                 self.opendatabase,
                 self.ui.get_export_filename(
                     "Games (no comments no ravs)", pgn=True
@@ -1401,28 +1403,28 @@ class Chess(ExceptionHandler):
 
     def export_all_games_text(self):
         """Export all games as a text file."""
-        exporters.export_all_games_text(
+        export_game.export_all_games_text(
             self.opendatabase,
             self.ui.get_export_filename("Games (internal format)", pgn=False),
         )
 
     def export_positions(self):
         """Export all positions as a text file."""
-        exporters.export_all_positions(
+        export_chessql.export_all_positions(
             self.opendatabase,
             self.ui.get_export_filename("Partial Positions", pgn=False),
         )
 
     def export_all_repertoires_pgn(self):
         """Export all repertoires in PGN export format."""
-        exporters.export_all_repertoires_pgn(
+        export_repertoire.export_all_repertoires_pgn(
             self.opendatabase,
             self.ui.get_export_filename("Repertoires", pgn=True),
         )
 
     def export_all_repertoires_pgn_import_format(self):
         """Export all repertoires in a PGN import format."""
-        exporters.export_all_repertoires_pgn_import_format(
+        export_repertoire.export_all_repertoires_pgn_import_format(
             self.opendatabase,
             self.ui.get_export_filename(
                 "Repertoires (import format)", pgn=True
@@ -1431,14 +1433,14 @@ class Chess(ExceptionHandler):
 
     def export_all_repertoires_pgn_no_comments(self):
         """Export all repertoires in PGN export format without comments."""
-        exporters.export_all_repertoires_pgn_no_comments(
+        export_repertoire.export_all_repertoires_pgn_no_comments(
             self.opendatabase,
             self.ui.get_export_filename("Repertoires (no comments)", pgn=True),
         )
 
     def export_all_repertoires_text(self):
         """Export all repertoires as a text file."""
-        exporters.export_all_repertoires_text(
+        export_repertoire.export_all_repertoires_text(
             self.opendatabase,
             self.ui.get_export_filename(
                 "Repertoires (internal format)", pgn=False

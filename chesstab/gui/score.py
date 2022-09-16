@@ -19,7 +19,7 @@ from .eventspec import EventSpec
 from .blanktext import BlankText, NonTagBind
 from .sharedtext import SharedTextScore
 from .scoreshow import ScoreShow
-from ..core import exporters
+from ..core import export_game
 
 
 class ScoreNoGameException(Exception):
@@ -526,7 +526,7 @@ class Score(ScoreShow, SharedTextScore):
                 + " score is not PGN export format compliant",
             )
             return
-        exporters.export_single_game_pgn_reduced_export_format(
+        export_game.export_single_game_pgn_reduced_export_format(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name + " (reduced export format)", pgn=True
@@ -550,7 +550,7 @@ class Score(ScoreShow, SharedTextScore):
                 + " score is not PGN export format compliant",
             )
             return
-        exporters.export_single_game_pgn(
+        export_game.export_single_game_pgn(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 "Game", pgn=True
@@ -578,7 +578,7 @@ class Score(ScoreShow, SharedTextScore):
                 + " score is not PGN export format compliant",
             )
             return
-        exporters.export_single_game_pgn_no_comments_no_ravs(
+        export_game.export_single_game_pgn_no_comments_no_ravs(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name + " (no comments or RAVs)", pgn=True
@@ -602,7 +602,7 @@ class Score(ScoreShow, SharedTextScore):
                 + " score is not PGN export format compliant",
             )
             return
-        exporters.export_single_game_pgn_no_comments(
+        export_game.export_single_game_pgn_no_comments(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name + " (no comments)", pgn=True
@@ -633,7 +633,7 @@ class Score(ScoreShow, SharedTextScore):
                 + " score is not PGN import format compliant",
             )
             return
-        exporters.export_single_game_pgn_import_format(
+        export_game.export_single_game_pgn_import_format(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name + " (import format)", pgn=True
@@ -660,7 +660,7 @@ class Score(ScoreShow, SharedTextScore):
                 self.score.get("1.0", tkinter.END)
             )
         )
-        exporters.export_single_game_text(
+        export_game.export_single_game_text(
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name, pgn=False

@@ -13,7 +13,7 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 from ..core.chessrecord import ChessDBrecordPartial
 from .cqldisplay import CQLDisplay, CQLDisplayEdit
 from .cqlrow import ChessDBrowCQL
-from ..core import exporters
+from ..core import export_chessql
 from .eventspec import EventSpec
 from .display import Display
 from ..shared.cql_gamelist_query import CQLGameListQuery
@@ -184,7 +184,7 @@ class CQLListGrid(
     def export_partial(self, event=None):
         """Export selected partial position definitions."""
         del event
-        exporters.export_selected_positions(
+        export_chessql.export_selected_positions(
             self, self.ui.get_export_filename("Partial Positions", pgn=False)
         )
 

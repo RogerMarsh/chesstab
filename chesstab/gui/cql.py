@@ -28,7 +28,7 @@ import tkinter
 
 from .cqltext import CQLText
 from .eventspec import EventSpec
-from ..core import exporters
+from ..core import export_chessql
 
 
 class CQL(CQLText):
@@ -160,7 +160,7 @@ class CQL(CQLText):
     def export_partial(self, event=None):
         """Export displayed partial position definition."""
         del event
-        exporters.export_single_position(
+        export_chessql.export_single_position(
             self.score.get("1.0", tkinter.END),
             self.ui.get_export_filename_for_single_item(
                 "Partial Position", pgn=False
