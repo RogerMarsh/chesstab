@@ -2,6 +2,14 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
+# Resolve pylint message too-many-lines (1990/1000 as pylint counts).
+# Do nothing except add this block comment.
+# Number of lines is too close to 2000 for even just an arbitrary split to
+# give two modules both 1000 lines or less.  At least 10 lines are needed
+# to name and document the second module and class.
+# The module is already considered a reasonable unit of behaviour, having
+# been split off from the chess module for that reason.
+# Adding this block comment takes the module size to 1998 lines (pylint).
 """Define the User Interface in detail.
 
 A number of PanedWindows display scrollable grids which show lists of records
