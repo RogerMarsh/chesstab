@@ -13,8 +13,8 @@ and sqlite3.
 
 from solentware_grid.dpt.datasourcecursor import DataSourceCursor
 
-from ..basecore.analysis import Analysis
+from ..basecore.analysis_index import AnalysisIndex
 
 
-class AnalysisDS(Analysis, DataSourceCursor):
-    """Combine a DPT DataSourceCursor with Analysis."""
+class AnalysisDS(AnalysisIndex, DataSourceCursor):
+    """Combine a DPT DataSourceCursor with AnalysisIndex."""

@@ -12,8 +12,8 @@ See the ..dpt.analysisds module for the AnalysisDS class for DPT.
 """
 from solentware_grid.core.datasourcecursor import DataSourceCursor
 
-from .analysis import Analysis
+from .analysis_index import AnalysisIndex
 
 
-class AnalysisDS(Analysis, DataSourceCursor):
-    """Combine a standard DataSourceCursor with Analysis."""
+class AnalysisDS(AnalysisIndex, DataSourceCursor):
+    """Combine a standard DataSourceCursor with AnalysisIndex."""

@@ -1,4 +1,4 @@
-# analysis.py
+# analysis_index.py
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -10,7 +10,7 @@ from ..core.filespec import (
 )
 
 
-class Analysis:
+class AnalysisIndex:
     """Represent chess engine analysis on file that matches a postion.
 
     Notes:
