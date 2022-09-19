@@ -14,8 +14,8 @@ db, and sqlite3.
 
 from solentware_grid.dpt.datasourcecursor import DataSourceCursor
 
-from ..basecore.fullposition import FullPosition
+from ..basecore.fullposition import FullPosition, _FullPosition
 
 
-class FullPositionDS(FullPosition, DataSourceCursor):
+class FullPositionDS(_FullPosition, FullPosition, DataSourceCursor):
     """Combine a DPT DataSourceCursor with FullPosition."""

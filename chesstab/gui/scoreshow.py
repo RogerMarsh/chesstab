@@ -205,7 +205,8 @@ class ScoreShow(ScoreWidget):
                 grid.partial = newpartialkey
                 grid.rows = 1
                 grid.close_client_cursor()
-                grid.datasource.get_full_position_games(newpartialkey)
+                gds = grid.datasource
+                gds.fullposition = gds.get_full_position_games(newpartialkey)
                 grid.load_new_index()
 
     def add_move_to_moves_played_colouring_tag(self, move):

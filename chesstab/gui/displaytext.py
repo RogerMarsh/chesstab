@@ -254,7 +254,10 @@ class ShowText:
                     key = grid_key
                     break
             grid.close_client_cursor()
-            grid.datasource.get_full_position_games(self.get_position_key())
+            gds = grid.datasource
+            gds.fullposition = gds.get_full_position_games(
+                self.get_position_key()
+            )
             grid.fill_view(currentkey=key, exclude=False)
 
 

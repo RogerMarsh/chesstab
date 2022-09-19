@@ -12,8 +12,8 @@ See the ..dpt.fullpositionds module for the FullPositionDS class for DPT.
 """
 from solentware_grid.core.datasourcecursor import DataSourceCursor
 
-from .fullposition import FullPosition
+from .fullposition import FullPosition, _FullPosition
 
 
-class FullPositionDS(FullPosition, DataSourceCursor):
+class FullPositionDS(_FullPosition, FullPosition, DataSourceCursor):
     """Combine a standard DataSourceCursor with FullPosition."""
