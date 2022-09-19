@@ -11,7 +11,7 @@ from ..core.filespec import (
 
 
 class AnalysisIndex:
-    """Represent chess engine analysis on file that matches a postion.
+    """Represent chess engine analysis on file that matches a position.
 
     Notes:
     The find_*() methods should migrate to the database engine modules and the
