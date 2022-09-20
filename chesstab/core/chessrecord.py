@@ -82,12 +82,12 @@ class ChessDBkeyGame(KeyData):
         return self.recno != other.recno
 
 
-class ChessDBvaluePGN(Value):
+class ChessDBvaluePGN(PGN, Value):
     """Methods common to all chess PGN data classes."""
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         """Delegate then initialize collected game."""
-        super().__init__()
+        super().__init__(**kwargs)
         self.collected_game = None
 
     @staticmethod
@@ -104,7 +104,7 @@ class ChessDBvaluePGN(Value):
         return repr("".join(self.collected_game._text))
 
 
-class ChessDBvalueGame(PGN, ChessDBvaluePGN):
+class ChessDBvalueGame(ChessDBvaluePGN):
     """Chess game data.
 
     Data is indexed by PGN Seven Tag Roster tags.
@@ -441,7 +441,7 @@ class _GameUpdate(GameUpdate):
         return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
-class ChessDBvaluePGNUpdate(PGN, ChessDBvaluePGN):
+class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
     """Chess game data with position, piece location, and PGN Tag, indexes."""
 
     # Replaces ChessDBvaluePGNUpdate and ChessDBvalueGameImport which had been
@@ -745,7 +745,7 @@ class ChessDBvalueRepertoireTags(ChessDBvalueRepertoire):
 
 
 # Not quite sure what customization needed yet
-class ChessDBvalueRepertoireUpdate(PGN, ChessDBvaluePGN):
+class ChessDBvalueRepertoireUpdate(ChessDBvaluePGN):
     """Repertoire data using custom non-standard tags in PGN format."""
 
     def __init__(self):
