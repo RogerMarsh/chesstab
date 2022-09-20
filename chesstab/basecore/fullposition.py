@@ -13,35 +13,21 @@ from ..core.filespec import POSITIONS_FIELD_DEF
 
 
 class FullPosition:
-    """Represent subset of games on file that match a position."""
+    """Represent subset of games on file that match a postion."""
 
     def __init__(self, dbhome, dbset, dbname, newrow=None):
         """Extend to provide placeholder for position used to select games."""
         super().__init__(dbhome, dbset, dbname, newrow=newrow)
 
         # Position used as key to select games
-        self._fullposition = None
-
-    @property
-    def fullposition(self):
-        """Return FEN representation of a game position."""
-        return self._fullposition
-
-    @fullposition.setter
-    def fullposition(self, value):
-        """Set fullposition to value which should be a FEN string or None."""
-        assert isinstance(value, str) or value is None
-        self._fullposition = value
-
-
-class _FullPosition:
-    """Methods shared by basecore and dpt subclasses of FullPosition."""
+        self.fullposition = None
 
     def get_full_position_games(self, fullposition):
         """Find game records matching full position."""
+        self.fullposition = None
         if not fullposition:
             self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
-            return None
+            return
 
         recordset = self.dbhome.recordlist_key(
             self.dbset,
@@ -50,4 +36,4 @@ class _FullPosition:
         )
 
         self.set_recordset(recordset)
-        return fullposition
+        self.fullposition = fullposition

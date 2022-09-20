@@ -531,8 +531,7 @@ class ChessUI(ExceptionHandler):
             if self.database:
                 self.game_games.close_client_cursor()
 
-                gds = self.game_games.get_data_source()
-                gds.fullposition = gds.get_full_position_games(None)
+                self.game_games.get_data_source().get_full_position_games(None)
                 # Line above is reasonable if dealing with a built record set.
                 # Line below seemed hackish at first.
                 # However it is probably correct and the dubious code is likely
