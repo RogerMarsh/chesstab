@@ -6,9 +6,6 @@
 
 The Board class is used to show positions in a game of chess.
 
-The PartialBoard class is used to show partial positions representing criteria
-for selecting games by pattern of pieces on the board.
-
 Fonts such as Chess Merida, if installed, are used to represent pieces on the
 board.
 
@@ -204,64 +201,3 @@ class Board(ExceptionHandler):
         for square in occupied:
             if squares[square] == NOPIECE:
                 del squares[square]
-
-
-class PartialBoard(Board):
-    """Partial board widget.
-
-    Customise Board to display wildpieces.
-
-    """
-
-    wildpiecesfont = constants.WILDPIECES_ON_BOARD_FONT
-
-    def __init__(self, master, **ka):
-        """Create partial board widget.
-
-        Define the font for wildpieces then delegate to superclass
-
-        """
-        # self.wildpiecesfont is name of named font or a font instance
-        try:
-            self.wildfont = tkinter.font.nametofont(self.wildpiecesfont).copy()
-        except AttributeError:
-            self.wildfont = self.wildpiecesfont.copy()
-        super().__init__(master, **ka)
-
-    def configure_font(self, side):
-        """Adjust font size after container widget has been resized."""
-        self.wildfont.configure(size=-(side * 3) // 32)
-        super().configure_font(side)
-
-    def draw_board(self):
-        """Set font size to match board size and redraw pieces."""
-        # Obsolescent comment because board no longer shown for partial
-        # position after conversion to CQL statements.
-
-        # Explicit setting of fonts used to get Microsoft Windows to show
-        # wildpiece characters on board.
-        # Possibly good fortune that wildpiece characters are shown without
-        # explicit action on FreeBSD.
-        # As implemented the font size used does not vary with square size.
-        # Perhaps try adjust font size as well but wildpiece characters may
-        # look better if smaller then pieces.
-
-        # End obsolescent comment.
-
-        for index in self.squares:
-            font = self.font
-            piece = self.squares[index]
-            if piece in FEN_WHITE_PIECES:
-                pcolor = self.whitecolor
-            elif piece in FEN_BLACK_PIECES:
-                pcolor = self.blackcolor
-            elif piece == NOPIECE:
-                if index % 2 == 0:
-                    pcolor = self.darkcolor
-                else:
-                    pcolor = self.litecolor
-            else:
-                continue
-            self.boardsquares[index].configure(
-                font=font, foreground=pcolor, text=_pieces.get(piece, " ")
-            )

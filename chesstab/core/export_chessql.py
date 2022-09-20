@@ -76,4 +76,4 @@ def export_single_position(partialposition, filename):
     if not cql_statement.is_statement():
         return
     with open(filename, "w") as gamesout:
-        gamesout.write(cql_statement.get_name_position_text())
+        gamesout.write(cql_statement.get_statement_text())

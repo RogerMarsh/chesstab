@@ -705,8 +705,8 @@ class FSNode:
         return transforms
 
     def _trace(self, level=0):
-        if self.leaf:
-            print(level, self.leaf._token)
+        if self.node.leaf:
+            print(level, self.node.leaf._token)
         for node in self.children:
             print(level, self.node.name, id(self.node))
             node._trace(level=level + 1)

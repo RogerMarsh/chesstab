@@ -141,7 +141,7 @@ class EngineText(SharedTextEngineText, BlankText):
         url = self.definition.engine_url_or_error_message()
         if isinstance(url, str):
             tkinter.messagebox.showerror(
-                parent=self.parent, title="Run Engine", message=url
+                parent=self.panel, title="Run Engine", message=url
             )
             return
         if url.query:
@@ -154,7 +154,7 @@ class EngineText(SharedTextEngineText, BlankText):
                 self.ui.run_engine(command[0], args=command[1].strip())
         else:
             tkinter.messagebox.showerror(
-                parent=self.parent,
+                parent=self.panel,
                 title="Run Engine",
                 message="".join(
                     (
