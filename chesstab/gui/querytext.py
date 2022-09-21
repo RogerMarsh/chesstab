@@ -43,9 +43,6 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.ui = ui
         self.itemgrid = itemgrid
 
-        # The popup menus for the selection rule.
-        self.primary_activity_popup = None
-
         # Selection rule parser instance to process text.
         self.query_statement = QueryStatement()
         if ui.base_games.datasource:

@@ -45,7 +45,9 @@ from .displaytext import (
 )
 
 
-class _QueryDisplay(ExceptionHandler, Display):
+class _QueryDisplay(
+    ShowText, DisplayText, Query, Display, DataNotify, ExceptionHandler
+):
     """Extend and link game selection rule to database.
 
     sourceobject - link to database.
@@ -400,7 +402,7 @@ class _QueryDisplay(ExceptionHandler, Display):
         return "break"
 
 
-class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
+class QueryDisplay(_QueryDisplay, Query, DataNotify):
     """Display game selection rule from database and allow delete and insert.
 
     Method delete_item_database allows records to be deleted from a database.
@@ -518,7 +520,7 @@ class QueryDisplay(_QueryDisplay, DisplayText, ShowText, Query, DataNotify):
 
 
 class QueryDisplayInsert(
-    _QueryDisplay, ListGamesText, InsertText, ShowText, QueryEdit, DataNotify
+    ListGamesText, InsertText, _QueryDisplay, QueryEdit, DataNotify
 ):
     """Display game selection rule from database allowing insert.
 
