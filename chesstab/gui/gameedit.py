@@ -988,3 +988,11 @@ class GameEdit(gameedit_handlers.GameEdit):
                 self.show_last_in_game_from_non_move_token,
             ),
         )
+
+    def add_pgn_navigation_to_submenu_of_popup(self, popup, index=tkinter.END):
+        """Add non-move PGN navigation to a submenu of popup."""
+        navigate_score_submenu = tkinter.Menu(master=popup, tearoff=False)
+        self.populate_navigate_score_submenu(navigate_score_submenu)
+        popup.insert_cascade(
+            index=index, label="Navigate Score", menu=navigate_score_submenu
+        )

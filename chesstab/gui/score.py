@@ -200,20 +200,6 @@ class Score(ScoreShow, SharedTextScore):
             buttonpress1=self.go_to_token, buttonpress3=self.post_move_menu
         )
 
-    # Subclasses which need non-move PGN navigation should call this method.
-    # Intended for editors.
-    def add_pgn_navigation_to_submenu_of_popup(self, popup, index=tkinter.END):
-        """Add non-move PGN navigation to a submenu of popup.
-
-        Subclasses must provide the methods named.
-
-        """
-        navigate_score_submenu = tkinter.Menu(master=popup, tearoff=False)
-        self.populate_navigate_score_submenu(navigate_score_submenu)
-        popup.insert_cascade(
-            index=index, label="Navigate Score", menu=navigate_score_submenu
-        )
-
     # These get_xxx_events methods are used by event bind and popup creation
     # methods.
 
