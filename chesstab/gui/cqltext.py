@@ -53,9 +53,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.ui = ui
         self.itemgrid = itemgrid
 
-        # The popup menus for the ChessQL statement.
-        self.primary_activity_popup = None
-
         # Selection rule parser instance to process text.
         self.cql_statement = CQLStatement()
         # Not sure this is needed or wanted.

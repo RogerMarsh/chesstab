@@ -50,7 +50,9 @@ class CQLDisplayListGamesError(Exception):
     """Exception class for display of lists of games."""
 
 
-class _CQLDisplay(ExceptionHandler, Display):
+class _CQLDisplay(
+    ShowText, DisplayText, CQL, Display, DataNotify, ExceptionHandler
+):
     """Extend and link ChessQL statement to database.
 
     sourceobject - link to database.
@@ -513,7 +515,7 @@ class _CQLDisplay(ExceptionHandler, Display):
             )
 
 
-class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
+class CQLDisplay(_CQLDisplay, CQL, DataNotify):
     """Display ChessQL statement from database and allow delete and insert.
 
     Method delete_item_database allows records to be deleted from a database.
@@ -624,7 +626,7 @@ class CQLDisplay(_CQLDisplay, DisplayText, ShowText, CQL, DataNotify):
 
 
 class CQLDisplayInsert(
-    _CQLDisplay, ListGamesText, InsertText, ShowText, CQLEdit, DataNotify
+    ListGamesText, InsertText, _CQLDisplay, CQLEdit, DataNotify
 ):
     """Display ChessQL statement from database allowing insert.
 
