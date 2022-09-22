@@ -28,6 +28,13 @@ class Litedu(DptCompatdu, Archivedu):
     while opening and checking the database.
     """
 
+    # Fix pylint no-member message E1101.
+    # Class usage is 'class C(..., Litedu, ...) where '...' classes give
+    # mro 'C, ..., Litedu, ..., <class defining database_file>, ..., object'.
+    # Each C has a different <class defining database_file> with various
+    # rules for generating the value.
+    database_file = None
+
     def __init__(self, databasefile, exception_class, **kargs):
         """Define chess database.
 
@@ -64,7 +71,7 @@ class Litedu(DptCompatdu, Archivedu):
         return True
 
     def get_archive_names(self, files=()):
-        """Return vedis database file and existing operating system files."""
+        """Return database file name and existing operating system files."""
         del files
         names = [self.database_file]
         exists = [
