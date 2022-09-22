@@ -34,9 +34,7 @@ from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 from .game import Game
 
 
-class _RepertoireDisplay(
-    ShowPGN, Game, DataNotify, ExceptionHandler, Display
-):
+class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
     """Extend and link PGN repertoire text to database.
 
     sourceobject - link to database.
