@@ -170,7 +170,7 @@ def chess_dptdu_chunks(
     return status
 
 
-class ChessDatabaseDeferred:
+class ChessDatabaseDeferred(dptdu_database.Database):
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
@@ -324,7 +324,7 @@ class ChessDatabaseDeferred:
 
         """
         del event
-        self.open_context_normal(files=(GAMES_FILE_DEF,))
+        self.open_database_contexts(files=(GAMES_FILE_DEF,))
         increase_done = False
         for key, value in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
@@ -387,7 +387,7 @@ class ChessDatabaseDeferred:
 
         """
         del event
-        self.open_context_normal(files=(GAMES_FILE_DEF,))
+        self.open_database_contexts(files=(GAMES_FILE_DEF,))
         increase_done = False
         for key, value in self.get_database_parameters(
             files=(GAMES_FILE_DEF,)
@@ -570,7 +570,7 @@ class ChessDatabaseDeferred:
         append_text_only("")
 
 
-class ChessDatabase(Archivedu, ChessDatabaseDeferred, dptdu_database.Database):
+class ChessDatabase(Archivedu, ChessDatabaseDeferred):
     """Provide single-step deferred update for a database of games of chess."""
 
 
