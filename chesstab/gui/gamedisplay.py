@@ -32,7 +32,9 @@ from .display import Display
 from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
-class _GameDisplay(ExceptionHandler, Display):
+class _GameDisplay(
+    ShowPGN, DisplayPGN, Game, Display, DataNotify, ExceptionHandler
+):
     """Extend and link PGN game text to database.
 
     sourceobject - link to database.
@@ -201,7 +203,7 @@ class _GameDisplay(ExceptionHandler, Display):
         return navigation_map, local_map
 
 
-class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
+class GameDisplay(_GameDisplay, Game, DataNotify):
     """Display a chess game from a database allowing delete and insert."""
 
     # Notes here because GameDisplay instances used extensively to diagnose
@@ -247,9 +249,7 @@ class GameDisplay(_GameDisplay, DisplayPGN, ShowPGN, Game, DataNotify):
         return popup
 
 
-class GameDisplayInsert(
-    _GameDisplay, InsertPGN, ShowPGN, GameEdit, DataNotify
-):
+class GameDisplayInsert(InsertPGN, _GameDisplay, GameEdit, DataNotify):
     """Display a chess game from a database allowing insert.
 
     GameEdit provides the widget and _GameDisplay the database interface.

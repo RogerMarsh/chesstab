@@ -195,7 +195,6 @@ class ScoreWidget(BlankText):
         self.score.tag_configure(MOVE_TAG, background=self.m_color)
 
         # The popup menus for the game score.
-        self.primary_activity_popup = None
         self.select_move_popup = None
 
         # None implies initial position and is deliberately not a valid Tk tag.
