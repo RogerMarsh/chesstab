@@ -31,9 +31,12 @@ from ..core.chessrecord import ChessDBrecordRepertoireUpdate
 from .eventspec import EventSpec
 from .display import Display
 from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
+from .game import Game
 
 
-class _RepertoireDisplay(ExceptionHandler, Display):
+class _RepertoireDisplay(
+    ShowPGN, Game, DataNotify, ExceptionHandler, Display
+):
     """Extend and link PGN repertoire text to database.
 
     sourceobject - link to database.
@@ -195,6 +198,8 @@ class _RepertoireDisplay(ExceptionHandler, Display):
             ):
                 self.blockchange = True
 
+    # Method not used: pylint no-member message for pgn indicates bug which
+    # is never encountered.  Method will be fixed or removed.
     def get_text_for_statusbar(self):
         """Return 'Please wait ..' message for status bar."""
         return "".join(
@@ -204,6 +209,8 @@ class _RepertoireDisplay(ExceptionHandler, Display):
             )
         )
 
+    # Method not used: pylint no-member message for pgn indicates bug which
+    # is never encountered.  Method will be fixed or removed.
     def get_selection_text_for_statusbar(self):
         """Return opening name for display in status bar."""
         return self.pgn.tags.get(TAG_OPENING, "?")
