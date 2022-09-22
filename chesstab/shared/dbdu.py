@@ -26,6 +26,7 @@ from solentware_base.core.constants import (
     EXISTENCE_BITMAP_SUFFIX,
     SEGMENT_SUFFIX,
 )
+from solentware_base.core._db import Database
 
 from ..core.filespec import (
     SECONDARY,
@@ -38,7 +39,7 @@ from .alldu import get_filespec
 from .dptcompatdu import DptCompatdu
 
 
-class Dbdu(DptCompatdu):
+class Dbdu(DptCompatdu, Database):
     """Provide deferred update methods shared by the Berkeley DB interfaces.
 
     The whole database can be put in a single file, or each table (called a
