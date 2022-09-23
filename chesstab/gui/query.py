@@ -30,9 +30,10 @@ import tkinter
 
 from .querytext import QueryText
 from .eventspec import EventSpec
+from .eventbinding import EventBinding
 
 
-class Query(QueryText):
+class Query(QueryText, EventBinding):
     """Game selection rule widget.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -119,18 +120,6 @@ class Query(QueryText):
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
         else:
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
-
-    def set_database_navigation_close_item_bindings(self, switch=True):
-        """Unset navigation bindings when query is closed."""
-        self.set_event_bindings_score(
-            self.get_database_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_close_item_events(), switch=switch
-        )
 
     def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""

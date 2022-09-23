@@ -60,9 +60,10 @@ from ..core.constants import (
     END_TAG,
     START_TAG,
 )
+from .eventbinding import EventBinding, AnalysisEventBinding
 
 
-class Game(Score):
+class Game(Score, EventBinding, AnalysisEventBinding):
     """Chess game widget composed from Board and Text widgets.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -568,18 +569,8 @@ class Game(Score):
     # engine analysis.
     def set_database_navigation_close_item_bindings(self, switch=True):
         """Enable or disable bindings for navigation and database selection."""
-        self.set_event_bindings_score(
-            self.get_database_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_close_item_events(), switch=switch
-        )
-        self.analysis.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
-        )
+        super().set_database_navigation_close_item_bindings(switch=switch)
+        self.set_analysis_event_bindings_score(switch=switch)
 
     def set_board_pointer_widget_navigation_bindings(self, switch):
         """Enable or disable bindings for widget selection."""
@@ -616,29 +607,6 @@ class Game(Score):
             self.analysis.set_event_bindings_score(
                 ((EventSpec.buttonpress_3, self.analysis.post_inactive_menu),)
             )
-
-    def set_toggle_game_analysis_bindings(self, switch):
-        """Set keystoke bindings to switch between game and analysis."""
-        del switch
-        self.set_event_bindings_score(
-            ((EventSpec.scoresheet_to_analysis, self.analysis_current_item),)
-        )
-        self.analysis.set_event_bindings_score(
-            ((EventSpec.analysis_to_scoresheet, self.current_item),)
-        )
-
-    def set_score_pointer_to_score_bindings(self, switch):
-        """Set score pointer bindings to go to game."""
-        self.set_event_bindings_score(
-            ((EventSpec.alt_buttonpress_1, self.current_item),), switch=switch
-        )
-
-    def set_analysis_score_pointer_to_analysis_score_bindings(self, switch):
-        """Set analysis score pointer bindings to go to analysis score."""
-        self.analysis.set_event_bindings_score(
-            ((EventSpec.alt_buttonpress_1, self.analysis_current_item),),
-            switch=switch,
-        )
 
     def set_colours(self, sbg, bbg, bfg):
         """Set colours and fonts used to display games.

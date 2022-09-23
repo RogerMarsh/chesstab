@@ -29,9 +29,10 @@ import tkinter
 from .cqltext import CQLText
 from .eventspec import EventSpec
 from ..core import export_chessql
+from .eventbinding import EventBinding
 
 
-class CQL(CQLText):
+class CQL(CQLText, EventBinding):
     """ChessQL statement widget.
 
     master is used as the master argument for the tkinter Frame widget passed
@@ -118,18 +119,6 @@ class CQL(CQLText):
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
         else:
             self.takefocus_widget.configure(takefocus=tkinter.FALSE)
-
-    def set_database_navigation_close_item_bindings(self, switch=True):
-        """Unset navigation bindings when CQL query is closed."""
-        self.set_event_bindings_score(
-            self.get_database_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
-        )
-        self.set_event_bindings_score(
-            self.get_close_item_events(), switch=switch
-        )
 
     def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""
