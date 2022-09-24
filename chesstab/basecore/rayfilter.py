@@ -226,6 +226,10 @@ class RayFilter:
         anyblackpiece = constants.ANY_BLACK_PIECE_NAME
         anypiece = anywhitepiece + anyblackpiece
         record_selector = finder.db.record_selector
+        # Bug: no RAYS attribute in constants module.
+        # pylint gives E1101 no-member message.
+        # Resolution depends on fixing or completing implementation of
+        # ray filter handling in chessql project.
         rays = constants.RAYS
         empty_square_games = self.empty_square_games
         piece_square_games = self.piece_square_games
@@ -384,6 +388,10 @@ class RayFilter:
             for item in component:
                 sqi.setdefault(item[-3:-1], set()).add(item)
         for start, final in self.ray_games:
+            # Bug: no RAYS attribute in constants module.
+            # pylint gives E1101 no-member message.
+            # Resolution depends on fixing or completing implementation of
+            # ray filter handling in chessql project.
             line = constants.RAYS[start][final][1:-1]
             if len(line) < len(internal_raycomponents):
                 continue
