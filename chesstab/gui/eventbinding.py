@@ -76,3 +76,30 @@ class AnalysisEventBinding:
         self.analysis.set_event_bindings_score(
             self.get_navigation_events(), switch=switch
         )
+
+
+class BlankTextEventBinding:
+    """The event binding methods which refer to classes without __init__."""
+
+    def get_button_events(self, buttonpress1=None, buttonpress3=None):
+        """Return tuple of buttonpress event bindings.
+
+        buttonpress1 and buttonpress3 default to self.press_none().
+
+        """
+        if buttonpress1 is None:
+            buttonpress1 = self.press_none
+        if buttonpress3 is None:
+            buttonpress3 = self.press_none
+        return self.get_modifier_buttonpress_suppression_events() + (
+            (EventSpec.buttonpress_1, buttonpress1),
+            (EventSpec.buttonpress_3, buttonpress3),
+        )
+
+    def _set_popup_bindings_get_primary_activity_events(self, popup):
+        """Call get_primary_activity_events in isolation."""
+        self.set_popup_bindings(popup, self.get_primary_activity_events())
+
+    def _bind_for_set_primary_activity_bindings(self, switch):
+        """Call set_primary_activity_bindings in isolation."""
+        self.set_primary_activity_bindings(switch=switch)

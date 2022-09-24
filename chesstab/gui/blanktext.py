@@ -16,6 +16,7 @@ from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
+from .eventbinding import BlankTextEventBinding
 
 
 # 'Tag' in these names refers to tags in Tk Text widgets, not PGN tags.
@@ -41,7 +42,7 @@ class NonTagBind(enum.Enum):
     SELECT_VARIATION = 6
 
 
-class BlankText(ExceptionHandler):
+class BlankText(BlankTextEventBinding, ExceptionHandler):
     """Create Text widget with configuration shared by subclasses.
 
     The subclasses are cqltext.CQLText, querytext.QueryText, score.Score,
@@ -243,7 +244,7 @@ class BlankText(ExceptionHandler):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.NO_EDITABLE_TAGS
-        self.set_primary_activity_bindings(switch=switch)
+        self._bind_for_set_primary_activity_bindings(switch)
 
     def bind_for_initial_state(self, switch=True):
         """Clear the most recently set bindings if bool(switch) is True.
@@ -279,7 +280,7 @@ class BlankText(ExceptionHandler):
         # enginetext module.
         assert self.primary_activity_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_primary_activity_events())
+        self._set_popup_bindings_get_primary_activity_events(popup)
         # pylint message assignment-from-none is false positive.
         # However it is sensible to do an isinstance test.
         database_submenu = self.create_database_submenu(popup)
@@ -287,18 +288,3 @@ class BlankText(ExceptionHandler):
             popup.add_cascade(label="Database", menu=database_submenu)
         self.primary_activity_popup = popup
         return popup
-
-    def get_button_events(self, buttonpress1=None, buttonpress3=None):
-        """Return tuple of buttonpress event bindings.
-
-        buttonpress1 and buttonpress3 default to self.press_none().
-
-        """
-        if buttonpress1 is None:
-            buttonpress1 = self.press_none
-        if buttonpress3 is None:
-            buttonpress3 = self.press_none
-        return self.get_modifier_buttonpress_suppression_events() + (
-            (EventSpec.buttonpress_1, buttonpress1),
-            (EventSpec.buttonpress_3, buttonpress3),
-        )
