@@ -20,8 +20,28 @@ from ..shared.allgrid import AllGrid
 from ..core.constants import UNKNOWN_RESULT
 
 
+class _BookmarkStatusText:
+    """Isolate set_selection_text call.
+
+    This class is added to the ignored-classes list in pylint.conf.
+
+    The associated super().bookmark_up and super().bookmark_down calls
+    refer to DataGrid methods in the solentware_grid project.
+
+    """
+
+    def _set_selection_text_bookmark(self):
+        """Show selection summary in status bar and hide call from pylint."""
+        self.set_selection_text()
+
+
 class GameListGrid(
-    ExceptionHandler, AllGrid, CQLGameListQuery, DataGrid, Display
+    ExceptionHandler,
+    AllGrid,
+    CQLGameListQuery,
+    _BookmarkStatusText,
+    DataGrid,
+    Display,
 ):
     """A DataGrid for lists of chess games.
 
@@ -204,12 +224,12 @@ class GameListGrid(
     def bookmark_down(self):
         """Extend to show selection summary in status bar."""
         super().bookmark_down()
-        self.set_selection_text()
+        self._set_selection_text_bookmark()
 
     def bookmark_up(self):
         """Extend to show selection summary in status bar."""
         super().bookmark_up()
-        self.set_selection_text()
+        self._set_selection_text_bookmark()
 
     def export_text(self, event=None):
         """Export selected games as text."""
