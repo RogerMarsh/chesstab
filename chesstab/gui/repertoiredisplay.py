@@ -196,23 +196,6 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
             ):
                 self.blockchange = True
 
-    # Method not used: pylint no-member message for pgn indicates bug which
-    # is never encountered.  Method will be fixed or removed.
-    def get_text_for_statusbar(self):
-        """Return 'Please wait ..' message for status bar."""
-        return "".join(
-            (
-                "Please wait while finding games for repertoire position in ",
-                self.pgn.tags.get(TAG_OPENING, "?"),
-            )
-        )
-
-    # Method not used: pylint no-member message for pgn indicates bug which
-    # is never encountered.  Method will be fixed or removed.
-    def get_selection_text_for_statusbar(self):
-        """Return opening name for display in status bar."""
-        return self.pgn.tags.get(TAG_OPENING, "?")
-
     def generate_popup_navigation_maps(self):
         """Return genenal and current widget navigation binding maps."""
         navigation_map = dict(self.get_navigation_events())
