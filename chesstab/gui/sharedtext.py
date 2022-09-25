@@ -146,13 +146,24 @@ class SharedTextScore:
 
     def create_inactive_popup(self):
         """Create popup menu for an inactive widget."""
-        # pylint message access-member-before-definition.
-        # Action deferred till later (whatever it turns out to be).
+        # Use the defining-attr-methods list in pylint configuration to
+        # suppress the attribute-defined-outside-init message: side effect
+        # is stopping the access-member-before-definition message too.
+        # The assert ensures some __init__ has set inactive_popup to None,
+        # although the real purpose is to insist it is not set already.
         assert self.inactive_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
         self.set_popup_bindings(popup, self.get_inactive_events())
-        self.inactive_popup = popup
+        self._init_inactive_popup(popup)
         return popup
+
+    def _init_inactive_popup(self, popup):
+        """Initialize inactive_popup to popup.
+
+        This method exists to be added to the defining-attr-methods list
+        in pylint configuration.
+        """
+        self.inactive_popup = popup
 
     def get_inactive_button_events(self):
         """Return pointer event specifications for an inactive widget."""
