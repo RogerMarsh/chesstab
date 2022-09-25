@@ -8,6 +8,9 @@ The records are games, repertoires, and rule lists.  The rules are selection
 rules, CQL statements, and run engine commands in Toplevels.
 
 """
+from solentware_grid.gui.datashow import DataShow
+from solentware_grid.gui.dataedit import DataEdit
+from solentware_grid.gui.datadelete import DataDelete
 
 
 class ToplevelText:
@@ -58,15 +61,12 @@ class _ToplevelText:
         self.ui_base_table.selection.clear()
 
 
-class ShowText(_ToplevelText):
+class ShowText(_ToplevelText, DataShow):
     """Show original text."""
 
     def dialog_ok(self):
         """Close the show record toplevel."""
         if self.ui.database is None:
-            # pylint message access-member-before-definition.
-            # pylint message invalid-name.
-            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None
@@ -75,7 +75,7 @@ class ShowText(_ToplevelText):
         return super().dialog_ok()
 
 
-class DeleteText(_ToplevelText):
+class DeleteText(_ToplevelText, DataDelete):
     """Show original text for record deletion."""
 
     def dialog_ok(self):
@@ -89,9 +89,6 @@ class DeleteText(_ToplevelText):
             self.status.configure(
                 text="Cannot delete because not connected to a database"
             )
-            # pylint message access-member-before-definition.
-            # pylint message invalid-name.
-            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None
@@ -100,7 +97,7 @@ class DeleteText(_ToplevelText):
         return super().dialog_ok()
 
 
-class EditText(_ToplevelText):
+class EditText(_ToplevelText, DataEdit):
     """Show original and editable text versions for record editing."""
 
     def initialize(self):
@@ -125,9 +122,6 @@ class EditText(_ToplevelText):
             self.status.configure(
                 text="Cannot update because not connected to a database"
             )
-            # pylint message access-member-before-definition.
-            # pylint message invalid-name.
-            # ok defined in solentware_grid superclass of a sibling class.
             if self.ok:
                 self.ok.destroy()
                 self.ok = None
