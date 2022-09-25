@@ -30,8 +30,11 @@ class QueryStatement:
     """Game selection rule parser.
 
     Parse text for a game selection rule specification.
-
     """
+
+    where = None
+    textok = ""
+    texterror = ""
 
     def __init__(self):
         """Initialize the query statement text and derived query."""
@@ -46,18 +49,6 @@ class QueryStatement:
         self._description_string = ""
         self._query_statement_string = ""
         self._where_error = None
-
-        self._reset_rule_state()
-
-    def _reset_rule_state(self):
-        """Initialiase the selection rule parsing state.
-
-        The analyser is able to have at least two goes at a statement.
-
-        """
-        self.where = None
-        self.textok = ""
-        self.texterror = ""
 
     @property
     def where_error(self):
@@ -114,7 +105,9 @@ class QueryStatement:
                 # self._where_error is bound to a WhereStatementError instance.
                 return False
 
-            self._reset_rule_state()
+            self.where = None
+            self.textok = ""
+            self.texterror = ""
             self._description_string, self._query_statement_string = rule
             wqs = self.__database.record_selector(self._query_statement_string)
             wqs.lex()
