@@ -26,8 +26,6 @@ class ScorePGN:
 
     def analysis_current_item(self, event=None):
         """Select current PGN score analysis."""
-        # pylint message access-member-before-definition.
-        # Action deferred till later (whatever it turns out to be).
         del event
         if self.game_position_analysis:
             self.analysis.apply_colouring_to_variation_back_to_main_line()
@@ -45,8 +43,8 @@ class ScorePGN:
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
         self.set_toggle_game_analysis_bindings(True)
         self.analysis.score.focus_set()
-        self.game_position_analysis = True
-        self.takefocus_widget = self.analysis.score
+        self._init_game_position_analysis()
+        self._init_takefocus_widget(self.analysis.score)
 
     def current_pgn_score(self, cuiai):
         """Select current PGN score on display.
@@ -74,5 +72,21 @@ class ScorePGN:
         cuiai.set_score_pointer_to_score_bindings(False)
         cuiai.set_analysis_score_pointer_to_analysis_score_bindings(True)
         cuiai.set_toggle_game_analysis_bindings(True)
-        self.takefocus_widget = self.score
+        self._init_takefocus_widget(self.score)
         cuiai.takefocus_widget.focus_set()
+
+    def _init_takefocus_widget(self, widget):
+        """Initialize takefocus_widget to widget.
+
+        This method exists to be added to the defining-attr-methods list
+        in pylint configuration.
+        """
+        self.takefocus_widget = widget
+
+    def _init_game_position_analysis(self):
+        """Initialize game_position_analysis to True.
+
+        This method exists to be added to the defining-attr-methods list
+        in pylint configuration.
+        """
+        self.game_position_analysis = True
