@@ -34,6 +34,10 @@ del sys
 class UCI(ExceptionHandler):
     """Provide menu interface to run and control Chess Engines."""
 
+    _command = None
+    _contents = None
+    _spinbox = None
+
     def __init__(self, menu_engines, menu_commands):
         """Build the engine and command menus for the menubar."""
         self._do_toplevel = None
