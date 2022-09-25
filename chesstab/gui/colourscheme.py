@@ -21,8 +21,18 @@ class _ColourScheme(ExceptionHandler):
 
     Use the subclasses defined in this module depending on what fits on
     the screen.
-
     """
+
+    restore_focus = None
+    game = None
+    b_families = None
+    b_family = None
+    b_weight = None
+    s_families = None
+    s_family = None
+    s_weight = None
+    s_slant = None
+    s_size = None
 
     def __init__(self, ui=None, height=500, title="Style", **kargs):
         """Create Toplevel and fonts to be modified.
@@ -126,26 +136,26 @@ class _ColourScheme(ExceptionHandler):
 
     def create_buttons(self, buttons):
         """Create buttons."""
-        self.buttons_frame = tkinter.Frame(master=self.chooser)
-        self.buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
-        buttonrow = self.buttons_frame.pack_info()["side"] in ("top", "bottom")
+        buttons_frame = tkinter.Frame(master=self.chooser)
+        buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+        buttonrow = buttons_frame.pack_info()["side"] in ("top", "bottom")
         for index, item in enumerate(buttons):
             button = tkinter.Button(
-                master=self.buttons_frame,
+                master=buttons_frame,
                 text=item[0],
                 underline=item[3],
-                command=self.try_command(item[4], self.buttons_frame),
+                command=self.try_command(item[4], buttons_frame),
             )
             if buttonrow:
-                self.buttons_frame.grid_columnconfigure(index * 2, weight=1)
+                buttons_frame.grid_columnconfigure(index * 2, weight=1)
                 button.grid_configure(column=index * 2 + 1, row=0)
             else:
-                self.buttons_frame.grid_rowconfigure(index * 2, weight=1)
+                buttons_frame.grid_rowconfigure(index * 2, weight=1)
                 button.grid_configure(row=index * 2 + 1, column=0)
         if buttonrow:
-            self.buttons_frame.grid_columnconfigure(len(buttons * 2), weight=1)
+            buttons_frame.grid_columnconfigure(len(buttons * 2), weight=1)
         else:
-            self.buttons_frame.grid_rowconfigure(len(buttons * 2), weight=1)
+            buttons_frame.grid_rowconfigure(len(buttons * 2), weight=1)
 
     def create_colour_frame(self):
         """Create colour selector widgets."""
