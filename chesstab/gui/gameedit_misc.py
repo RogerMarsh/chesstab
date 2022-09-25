@@ -33,6 +33,7 @@ from ..core.constants import (
 )
 from . import gameedit_widget
 from .score import NonTagBind
+from ._lead_trail import _LeadTrail
 from .constants import (
     EDIT_GLYPH,
     EDIT_RESULT,
@@ -822,30 +823,31 @@ class GameEdit(gameedit_widget.GameEdit):
             tokenprefix
         ]
         start, end = tagranges
-        lead_trail = _TOKEN_LEAD_TRAIL[tokenprefix]
         insert = self.get_token_insert(tagnames)
-        self._lead, self._trail = lead_trail
-        self._header_length = self._lead + self._trail
-        if self._lead:
+        self._lead_trail = _LeadTrail(*_TOKEN_LEAD_TRAIL[tokenprefix])
+        lead_trail = self._lead_trail
+        if lead_trail.lead:
             sem = self.score.index(
-                "".join((str(start), " +", str(self._lead), " chars"))
+                "".join((str(start), " +", str(lead_trail.lead), " chars"))
             )
         else:
             sem = start
-        if self._trail:
+        if lead_trail.trail:
             eem = self.score.index(
-                "".join((str(end), " -", str(self._trail), " chars"))
+                "".join((str(end), " -", str(lead_trail.trail), " chars"))
             )
         else:
             eem = end
-        offset = self.get_token_text_length(start, end) - self._header_length
+        offset = (
+            self.get_token_text_length(start, end) - lead_trail.header_length
+        )
         if offset:
-            if self._lead:
+            if lead_trail.lead:
                 start = sem
-            if self._trail:
+            if lead_trail.trail:
                 end = eem
         else:
-            if self._lead:
+            if lead_trail.lead:
                 start = self.score.index("".join((str(sem), " -1 chars")))
             end = sem
         if not insert:

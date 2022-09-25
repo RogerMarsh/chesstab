@@ -85,6 +85,9 @@ class GameEdit(Game):
     # Values are Tk tag names or members of NonTagBind enumeration.
     _most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
+    # Indicate number of leading and trailing spaces for a token.
+    _lead_trail = None
+
     def __init__(self, gameclass=GameDisplayMoves, **ka):
         """Extend with bindings to edit game score."""
         super().__init__(gameclass=gameclass, **ka)

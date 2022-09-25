@@ -249,7 +249,7 @@ class GameEdit(gameedit_misc.GameEdit):
                 widget.delete(tkinter.INSERT + "-1 chars")
             if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] == 0:
                 if (
-                    self._lead
+                    self._lead_trail.lead
                 ):  # self.current will have a range. Or test range.
                     widget.tag_add(
                         MOVE_TAG,
@@ -257,7 +257,7 @@ class GameEdit(gameedit_misc.GameEdit):
                             (
                                 str(widget.tag_ranges(self.current)[0]),
                                 " +",
-                                str(self._lead - 1),
+                                str(self._lead_trail.lead - 1),
                                 "chars",
                             )
                         ),
@@ -732,7 +732,9 @@ class GameEdit(gameedit_misc.GameEdit):
                 return None
         widget = self.score
         start, end = widget.tag_ranges(self.current)
-        non_empty = widget.count(start, end)[0] - self._header_length
+        non_empty = (
+            widget.count(start, end)[0] - self._lead_trail.header_length
+        )
         insert = str(widget.index(tkinter.INSERT))
         copy_from_insert = widget.compare(start, "==", insert)
         widget.insert(tkinter.INSERT, char)
@@ -747,7 +749,9 @@ class GameEdit(gameedit_misc.GameEdit):
         if not non_empty:
             widget.tag_remove(
                 MOVE_TAG,
-                "".join((str(start), " +", str(self._lead - 1), "chars")),
+                "".join(
+                    (str(start), " +", str(self._lead_trail.lead - 1), "chars")
+                ),
             )
         return True
 
