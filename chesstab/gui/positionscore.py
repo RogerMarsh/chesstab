@@ -60,6 +60,7 @@ class PositionScore(ExceptionHandler):
     moves_played_in_game_font = MOVES_PLAYED_IN_GAME_FONT
 
     tags_displayed_last = SEVEN_TAG_ROSTER
+    _context = None
 
     def __init__(
         self,
