@@ -45,6 +45,7 @@ from .constants import (
     SPACE_SEP,
     MOVETEXT_MOVENUMBER_TAG,
 )
+from ._score_scaffold import _ScoreScaffold
 
 
 # May need to make this a superclass of Tkinter.Text because DataRow method
@@ -105,10 +106,9 @@ class PositionScore(ExceptionHandler):
         self.current = None  # Tk tag of current move
         self._clear_tag_maps()
         self.collected_game = None
-        # map_game uses self._force_movenumber to insert movenumber before
-        # black moves after start and end of recursive annotation variation
-        # markers.
-        self._force_movenumber = False
+
+        self.gamevartag = None
+        self._game_scaffold = None
 
     # Nothing needed on <Unmap> event at present
     def on_map(self, event):
@@ -211,8 +211,8 @@ class PositionScore(ExceptionHandler):
                 tag_values.append((tag, tags[tag]))
         return tag_values
 
-    def get_variation_tag_names(self):
-        """Return suffixed RAV_MOVES tag names.
+    def get_variation_tag_name(self):
+        """Return suffixed RAV_MOVES tag name.
 
         The suffixes are arbitrary so increment then generate suffix would be
         just as acceptable but generate then increment uses all numbers
@@ -220,8 +220,7 @@ class PositionScore(ExceptionHandler):
 
         """
         self.variation_number += 1
-        suffix = str(self.variation_number)
-        return "".join((RAV_MOVES, suffix))
+        return "".join((RAV_MOVES, str(self.variation_number)))
 
     def get_next_positiontag_name(self):
         """Return suffixed POSITION tag name."""
@@ -299,14 +298,14 @@ class PositionScore(ExceptionHandler):
 
     def _set_square_piece_map(self, position):
         assert len(position) == 1
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         spm.clear()
         for piece, square in position[0][0]:
             spm[square] = piece
 
     def _modify_square_piece_map(self, position):
         assert len(position) == 2
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         for square, piece in position[0][0]:
             del spm[square]
         for square, piece in position[1][0]:
@@ -319,17 +318,13 @@ class PositionScore(ExceptionHandler):
         The tags and marks are used for colouring and navigating the score.
 
         """
-        self._force_movenumber = True
-
-        # With get_current_...() methods as well do not need self._vartag
-        # state attributes.
-        self._vartag = self.get_variation_tag_names()
-        self.gamevartag = self._vartag
-
-        self._square_piece_map = {}
+        self._game_scaffold = _ScoreScaffold(
+            self.get_variation_tag_name(), None
+        )
+        self.gamevartag = self._game_scaffold.vartag
 
         game = self.collected_game
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         for piece, square in game._initial_position[0]:
             spm[square] = piece
         assert len(game._text) == len(game._position_deltas)
@@ -361,10 +356,7 @@ class PositionScore(ExceptionHandler):
         else:
             self.score.mark_set(START_SCORE_MARK, "1.0")
 
-        # Delete the attributes used to build the self.score Text widget.
-        del self._square_piece_map
-        del self._force_movenumber
-        del self._vartag
+        self._game_scaffold = None
 
     @staticmethod
     def compare_two_positions(one, two):
@@ -397,10 +389,11 @@ class PositionScore(ExceptionHandler):
     def map_move_text(self, token, delta):
         """Add token to game text and modify game position by delta."""
         prevcontext, currcontext, nextcontext = self._context
+        scaffold = self._game_scaffold
 
         # Does position in which move is played match the previous or current
         # position in self._context?
-        prev_position = (self._square_piece_map.copy(),) + delta[0][1:]
+        prev_position = (scaffold.square_piece_map.copy(),) + delta[0][1:]
         prev_match_prevcontext = self.compare_two_positions(
             prev_position, prevcontext
         )
@@ -412,7 +405,7 @@ class PositionScore(ExceptionHandler):
 
         # Does position after move is played match the current or next
         # position in self._context?
-        curr_position = (self._square_piece_map.copy(),) + delta[1][1:]
+        curr_position = (scaffold.square_piece_map.copy(),) + delta[1][1:]
         curr_match_currcontext = self.compare_two_positions(
             curr_position, currcontext
         )
@@ -433,26 +426,26 @@ class PositionScore(ExceptionHandler):
                 str(delta[1][5]) + ".", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-        elif self._force_movenumber:
+        elif scaffold.force_movenumber:
             start, end, sepend = self.insert_token_into_text(
                 str(delta[0][5]) + "...", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-        self._force_movenumber = False
+        scaffold.force_movenumber = False
         positiontag = self.get_next_positiontag_name()
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
-        for tag in positiontag, self._vartag, NAVIGATE_MOVE:
+        for tag in positiontag, scaffold.vartag, NAVIGATE_MOVE:
             widget.tag_add(tag, start, end)
-        if self._vartag is self.gamevartag:
+        if scaffold.vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
+        widget.tag_add("".join((RAV_SEP, scaffold.vartag)), start, sepend)
         if not (prev_match_prevcontext or prev_match_currcontext):
             # token is move to reach position and different from context
             widget.tag_add(VARIATION_TAG, start, end)
         if not (curr_match_currcontext or next_match_nextcontext):
             # token is move out of position and  different from context
             widget.tag_add(ALTERNATIVE_MOVE_TAG, start, end)
-        tagrange = widget.tag_prevrange(self._vartag, start)
+        tagrange = widget.tag_prevrange(scaffold.vartag, start)
         if not tagrange:
             varstack = list(self.varstack)
             while varstack:
@@ -467,29 +460,30 @@ class PositionScore(ExceptionHandler):
     def map_start_rav(self, token, position):
         """Add token to game text. position is ignored. Return range and prior.
 
-        Variation tags are set for guiding move navigation. self._vartag
-        is placed on
-        a stack for restoration at the end of the variation.
+        Variation tags are set for guiding move navigation.  vartag
+        is placed on a stack for restoration at the end of the variation.
 
         """
+        scaffold = self._game_scaffold
         self._set_square_piece_map(position)
-        self.varstack.append(self._vartag)
-        self._vartag = self.get_variation_tag_names()
+        self.varstack.append(scaffold.vartag)
+        scaffold.vartag = self.get_variation_tag_name()
         self.insert_token_into_text(token, SPACE_SEP)
-        self._force_movenumber = True
+        scaffold.force_movenumber = True
 
     def map_end_rav(self, token, position):
         """Add token to game text. position is ignored. Return token range.
 
-        Variation tags are set for guiding move navigation. self._vartag
-        is restored
-        from the stack for restoration at the end of the variation.
+        Variation tags are set for guiding move navigation.  vartag
+        is restored from the stack for restoration at the end of the
+        variation.
 
         """
+        scaffold = self._game_scaffold
         self._set_square_piece_map(position)
         self.insert_token_into_text(token, SPACE_SEP)
-        self._vartag = self.varstack.pop()
-        self._force_movenumber = True
+        scaffold.vartag = self.varstack.pop()
+        scaffold.force_movenumber = True
 
     def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""

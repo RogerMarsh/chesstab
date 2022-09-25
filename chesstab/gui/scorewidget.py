@@ -51,6 +51,7 @@ from .constants import (
     FORCED_NEWLINE_TAG,
 )
 from .blanktext import BlankText, NonTagBind
+from ._score_scaffold import _ScoreScaffold
 
 
 class ScoreNoInitialPositionException(Exception):
@@ -216,17 +217,8 @@ class ScoreWidget(BlankText):
         self.gameclass = gameclass
         self.collected_game = None
 
-        # Used to force a newline before a white move in large games after a
-        # after FORCE_NEWLINE_AFTER_FULLMOVES black moves have been added to
-        # a line.
-        # map_game uses self._force_newline as a fullmove number clock which
-        # is reset after comments, the start or end of recursive annotation
-        # variations, escaped lines '\n%...\n', and reserved '<...>'
-        # sequences.  In each case a newline is added before the next token.
-        # The AnalysisScore subclass makes its own arrangements because the
-        # Score technique does not work, forced newlines are not needed, and
-        # only the first move gets numbered.
-        self._force_newline = False
+        self.gamevartag = None
+        self._game_scaffold = None
 
     def fen_tag_square_piece_map(self):
         """Return square to piece mapping for position in game's FEN tag.
@@ -336,12 +328,13 @@ class ScoreWidget(BlankText):
         # displayed by positionscore.py
 
         widget = self.score
-        tag_range = widget.tag_prevrange(self._vartag, start)
+        vartag = self._game_scaffold.vartag
+        tag_range = widget.tag_prevrange(vartag, start)
         if tag_range:
             self.previousmovetags[positiontag] = (
                 self.get_position_tag_of_index(tag_range[0]),
-                self._vartag,
-                self._vartag,
+                vartag,
+                vartag,
             )
         else:
             varstack = list(self.varstack)
@@ -363,12 +356,12 @@ class ScoreWidget(BlankText):
                 if tag_range:
                     self.previousmovetags[positiontag] = (
                         self.get_position_tag_of_index(tag_range[0]),
-                        self._vartag,
+                        vartag,
                         var,
                     )
                     break
             else:
-                if self._vartag is self.gamevartag:
+                if vartag == self.gamevartag:
                     self.previousmovetags[positiontag] = (None, None, None)
                 else:
                     self.previousmovetags[positiontag] = (None, False, None)
@@ -546,25 +539,14 @@ class ScoreWidget(BlankText):
         The tags and marks are used for colouring and navigating the score.
 
         """
-        self._force_newline = 0
-
-        # With get_current_...() methods as well do not need self._vartag
-        # and self._choicetag state attributes.
-        self._vartag = self.get_variation_tag_name()
-        self._choicetag = self.get_choice_tag_name()
-        self.gamevartag = self._vartag
-
-        self._start_latest_move = ""
-        self._end_latest_move = ""
-        self._next_move_is_choice = False
-        self._unresolved_choice_count = 0
-        self._token_position = None
-        self._square_piece_map = {}
-
+        self._game_scaffold = _ScoreScaffold(
+            self.get_variation_tag_name(), self.get_choice_tag_name()
+        )
+        self.gamevartag = self._game_scaffold.vartag
         self.score.mark_set(START_SCORE_MARK, "1.0")
         self.score.mark_gravity(START_SCORE_MARK, tkinter.LEFT)
         game = self.collected_game
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         try:
             for piece, square in game._initial_position[0]:
                 spm[square] = piece
@@ -616,15 +598,7 @@ class ScoreWidget(BlankText):
         self.score.tag_delete(BUILD_TAG)
 
         # Delete the attributes used to build the self.score Text widget.
-        del self._start_latest_move
-        del self._end_latest_move
-        del self._next_move_is_choice
-        del self._unresolved_choice_count
-        del self._token_position
-        del self._square_piece_map
-        del self._force_newline
-        del self._vartag
-        del self._choicetag
+        self._game_scaffold = None
 
     def map_move_text(self, token, position):
         """Add token to game text. Set navigation tags. Return token range.
@@ -634,42 +608,43 @@ class ScoreWidget(BlankText):
         more moves are processed.
 
         """
+        scaffold = self._game_scaffold
         self._modify_square_piece_map(position)
         widget = self.score
         positiontag = self.get_next_positiontag_name()
         next_position = position[1]
         self.tagpositionmap[positiontag] = (
-            self._square_piece_map.copy(),
+            scaffold.square_piece_map.copy(),
         ) + next_position[1:]
         fwa = next_position[1] == FEN_WHITE_ACTIVE
         if not fwa:
-            self._force_newline += 1
-        if self._force_newline > FORCE_NEWLINE_AFTER_FULLMOVES:
+            scaffold.force_newline += 1
+        if scaffold.force_newline > FORCE_NEWLINE_AFTER_FULLMOVES:
             self.insert_forced_newline_into_text()
-            self._force_newline = 1
+            scaffold.force_newline = 1
         if not fwa:
             start, end, sepend = self.insert_token_into_text(
                 str(next_position[5]) + ".", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-            if self._is_text_editable or self._force_newline == 1:
+            if self._is_text_editable or scaffold.force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
-        elif self._next_move_is_choice:
+        elif scaffold.next_move_is_choice:
             start, end, sepend = self.insert_token_into_text(
                 str(position[0][5]) + "...", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
-            if self._is_text_editable or self._force_newline == 1:
+            if self._is_text_editable or scaffold.force_newline == 1:
                 widget.tag_add(FORCED_INDENT_TAG, start, end)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
-        if self._is_text_editable or self._force_newline == 1:
+        if self._is_text_editable or scaffold.force_newline == 1:
             widget.tag_add(FORCED_INDENT_TAG, start, end)
-        for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
+        for tag in positiontag, scaffold.vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
-        if self._vartag is self.gamevartag:
+        if scaffold.vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
-        if self._next_move_is_choice:
+        widget.tag_add("".join((RAV_SEP, scaffold.vartag)), start, sepend)
+        if scaffold.next_move_is_choice:
             widget.tag_add(ALL_CHOICES, start, end)
 
             # A START_RAV is needed to define and set choicetag and set
@@ -678,12 +653,12 @@ class ScoreWidget(BlankText):
             # So define and set choicetag then increment choice_number
             # in 'type_ is START_RAV' processing rather than other way
             # round, with initialization, to avoid tag name clutter.
-            widget.tag_add(self._choicetag, start, end)
-            self._next_move_is_choice = False
-            self._unresolved_choice_count -= 1
+            widget.tag_add(scaffold.choicetag, start, end)
+            scaffold.next_move_is_choice = False
+            scaffold.unresolved_choice_count -= 1
 
-        self._start_latest_move = start
-        self._end_latest_move = end
+        scaffold.start_latest_move = start
+        scaffold.end_latest_move = end
         self.create_previousmovetag(positiontag, start)
         return start, end, sepend
 
@@ -699,10 +674,11 @@ class ScoreWidget(BlankText):
         The _square_piece_map is reset from position.
 
         """
+        scaffold = self._game_scaffold
         self._set_square_piece_map(position)
         widget = self.score
         if not widget.tag_nextrange(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+            ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         ):
 
             # start_latest_move will be the second move, at earliest,
@@ -710,11 +686,11 @@ class ScoreWidget(BlankText):
             # the game.  Thus the move before start_latest_move using
             # tag_prevrange() can be tagged as the move creating the
             # position in which the choice of moves occurs.
-            self._choicetag = self.get_choice_tag_name()
+            scaffold.choicetag = self.get_choice_tag_name()
             widget.tag_add(
                 "".join((SELECTION, str(self.choice_number))),
-                self._start_latest_move,
-                self._end_latest_move,
+                scaffold.start_latest_move,
+                scaffold.end_latest_move,
             )
             prior = self.get_range_for_prior_move_before_insert()
             if prior:
@@ -723,42 +699,45 @@ class ScoreWidget(BlankText):
                 )
 
         widget.tag_add(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+            ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         )
         widget.tag_add(
-            self._choicetag, self._start_latest_move, self._end_latest_move
+            scaffold.choicetag,
+            scaffold.start_latest_move,
+            scaffold.end_latest_move,
         )
-        self.varstack.append((self._vartag, self._token_position))
-        self.choicestack.append(self._choicetag)
-        self._vartag = self.get_variation_tag_name()
+        self.varstack.append((scaffold.vartag, scaffold.token_position))
+        self.choicestack.append(scaffold.choicetag)
+        scaffold.vartag = self.get_variation_tag_name()
         nttpr = widget.tag_prevrange(BUILD_TAG, widget.index(tkinter.END))
         if nttpr:
             if widget.get(*nttpr) != "(":
                 self.insert_forced_newline_into_text()
-                self._force_newline = 0
+                scaffold.force_newline = 0
         else:
             self.insert_forced_newline_into_text()
-            self._force_newline = 0
+            scaffold.force_newline = 0
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
-        self._next_move_is_choice = True
-        self._unresolved_choice_count += 1
+        scaffold.next_move_is_choice = True
+        scaffold.unresolved_choice_count += 1
         return start, end, sepend
 
     def map_end_rav(self, token, position):
         """Add token to game text.  Return token range.
 
-        Variation tags are set for guiding move navigation. self._vartag
-        self._token_position and self._choicetag are restored from the stack
-        for restoration at the end of the variation.
-        (self._start_latest_move, self._end_latest_move) is set to the range
-        of the move which the first move of the variation replaced.
+        Variation tags are set for guiding move navigation. scaffold.vartag
+        scaffold.token_position and scaffold.choicetag are restored from the
+        stack for restoration at the end of the variation.
+        (scaffold.start_latest_move, scaffold.end_latest_move) is set to the
+        range of the move which the first move of the variation replaced.
 
         The _square_piece_map is reset from position.
 
         """
-        if self._unresolved_choice_count:
-            self._next_move_is_choice = True
+        scaffold = self._game_scaffold
+        if scaffold.unresolved_choice_count:
+            scaffold.next_move_is_choice = True
 
         # ValueError exception has happened if and only if opening an invalid
         # game generated from an arbitrary text file completely unlike a PGN
@@ -766,8 +745,8 @@ class ScoreWidget(BlankText):
         # cause this exception.
         try:
             (
-                self._start_latest_move,
-                self._end_latest_move,
+                scaffold.start_latest_move,
+                scaffold.end_latest_move,
             ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
         except ValueError:
             return tkinter.END, tkinter.END, tkinter.END
@@ -775,9 +754,9 @@ class ScoreWidget(BlankText):
         self._set_square_piece_map(position)
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
-        self._vartag, self._token_position = self.varstack.pop()
-        self._choicetag = self.choicestack.pop()
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        scaffold.vartag, scaffold.token_position = self.varstack.pop()
+        scaffold.choicetag = self.choicestack.pop()
+        scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return start, end, sepend
 
     def map_tag(self, token):
@@ -804,10 +783,10 @@ class ScoreWidget(BlankText):
     def map_start_comment(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self.insert_forced_newline_into_text()
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    # self._force_newline is not set by gameedit.GameEdit.add_comment_to_eol().
+    # force_newline is not set by gameedit.GameEdit.add_comment_to_eol().
     def _map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
@@ -821,10 +800,10 @@ class ScoreWidget(BlankText):
         """Add token to game text. position is ignored. Return token range."""
         self.insert_forced_newline_into_text()
         token_indicies = self._map_comment_to_eol(token)
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return token_indicies
 
-    # self._force_newline is not set by gameedit.GameEdit.add_escape_to_eol().
+    # force_newline is not set by gameedit.GameEdit.add_escape_to_eol().
     def _map_escape_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
@@ -846,7 +825,7 @@ class ScoreWidget(BlankText):
     def map_escape_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         token_indicies = self._map_comment_to_eol(token)
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return token_indicies
 
     def map_integer(self, token, position):
@@ -866,7 +845,7 @@ class ScoreWidget(BlankText):
     def map_start_reserved(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self.insert_forced_newline_into_text()
-        self._force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
+        self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):
@@ -875,14 +854,14 @@ class ScoreWidget(BlankText):
 
     def _set_square_piece_map(self, position):
         assert len(position) == 1
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         spm.clear()
         for piece, square in position[0][0]:
             spm[square] = piece
 
     def _modify_square_piece_map(self, position):
         assert len(position) == 2
-        spm = self._square_piece_map
+        spm = self._game_scaffold.square_piece_map
         for square, piece in position[0][0]:
             del spm[square]
         for square, piece in position[1][0]:

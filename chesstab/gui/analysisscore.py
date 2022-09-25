@@ -204,9 +204,10 @@ class AnalysisScore(Score):
         """
         self._modify_square_piece_map(position)
         widget = self.score
+        scaffold = self._game_scaffold
         positiontag = self.get_next_positiontag_name()
         self.tagpositionmap[positiontag] = (
-            self._square_piece_map.copy(),
+            scaffold.square_piece_map.copy(),
         ) + position[1][1:]
 
         # The only way found to get the move number at start of analysis.
@@ -227,12 +228,12 @@ class AnalysisScore(Score):
         else:
             start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
 
-        for tag in positiontag, self._vartag, NAVIGATE_MOVE, BUILD_TAG:
+        for tag in positiontag, scaffold.vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
-        if self._vartag is self.gamevartag:
+        if scaffold.vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
-        widget.tag_add("".join((RAV_SEP, self._vartag)), start, sepend)
-        if self._next_move_is_choice:
+        widget.tag_add("".join((RAV_SEP, scaffold.vartag)), start, sepend)
+        if scaffold.next_move_is_choice:
             widget.tag_add(ALL_CHOICES, start, end)
 
             # A START_RAV is needed to define and set choicetag and set
@@ -241,11 +242,11 @@ class AnalysisScore(Score):
             # So define and set choicetag then increment choice_number
             # in 'type_ is START_RAV' processing rather than other way
             # round, with initialization, to avoid tag name clutter.
-            widget.tag_add(self._choicetag, start, end)
-            self._next_move_is_choice = False
+            widget.tag_add(scaffold.choicetag, start, end)
+            scaffold.next_move_is_choice = False
 
-        self._start_latest_move = start
-        self._end_latest_move = end
+        scaffold.start_latest_move = start
+        scaffold.end_latest_move = end
         self.create_previousmovetag(positiontag, start)
         return start, end, sepend
 
@@ -263,8 +264,9 @@ class AnalysisScore(Score):
         """
         self._set_square_piece_map(position)
         widget = self.score
+        scaffold = self._game_scaffold
         if not widget.tag_nextrange(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+            ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         ):
 
             # start_latest_move will be the second move, at earliest,
@@ -272,11 +274,11 @@ class AnalysisScore(Score):
             # the game.  Thus the move before start_latest_move using
             # tag_prevrange() can be tagged as the move creating the
             # position in which the choice of moves occurs.
-            self._choicetag = self.get_choice_tag_name()
+            scaffold.choicetag = self.get_choice_tag_name()
             widget.tag_add(
                 "".join((SELECTION, str(self.choice_number))),
-                self._start_latest_move,
-                self._end_latest_move,
+                scaffold.start_latest_move,
+                scaffold.end_latest_move,
             )
             prior = self.get_range_for_prior_move_before_insert()
             if prior:
@@ -285,17 +287,19 @@ class AnalysisScore(Score):
                 )
 
         widget.tag_add(
-            ALL_CHOICES, self._start_latest_move, self._end_latest_move
+            ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         )
         widget.tag_add(
-            self._choicetag, self._start_latest_move, self._end_latest_move
+            scaffold.choicetag,
+            scaffold.start_latest_move,
+            scaffold.end_latest_move,
         )
-        self.varstack.append((self._vartag, self._token_position))
-        self.choicestack.append(self._choicetag)
-        self._vartag = self.get_variation_tag_name()
+        self.varstack.append((scaffold.vartag, scaffold.token_position))
+        self.choicestack.append(scaffold.choicetag)
+        scaffold.vartag = self.get_variation_tag_name()
         start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
-        self._next_move_is_choice = True
+        scaffold.next_move_is_choice = True
         return start, end, sepend
 
     def map_end_rav(self, token, position):
@@ -308,20 +312,21 @@ class AnalysisScore(Score):
         of the move which the first move of the variation replaced.
 
         """
+        scaffold = self._game_scaffold
         try:
             (
-                self._start_latest_move,
-                self._end_latest_move,
+                scaffold.start_latest_move,
+                scaffold.end_latest_move,
             ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
         except TypeError:
-            (self._start_latest_move, self._end_latest_move) = (
+            (scaffold.start_latest_move, scaffold.end_latest_move) = (
                 tkinter.END,
                 tkinter.END,
             )
         start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
-        self._vartag, self._token_position = self.varstack.pop()
-        self._choicetag = self.choicestack.pop()
+        scaffold.vartag, scaffold.token_position = self.varstack.pop()
+        scaffold.choicetag = self.choicestack.pop()
         return start, end, sepend
 
     def map_start_comment(self, token):

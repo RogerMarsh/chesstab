@@ -312,7 +312,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         ):
             widget.tag_add(tag, start, end)
 
-        if vartag is self.gamevartag:
+        if vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         for tag in (
             tokentag,
@@ -687,7 +687,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         ):
             widget.tag_add(tag, start, end)
 
-        if vartag is self.gamevartag:
+        if vartag == self.gamevartag:
             widget.tag_add(MOVES_PLAYED_IN_GAME_FONT, start, end)
         for tag in (
             tokentag,
