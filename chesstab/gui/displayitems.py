@@ -286,9 +286,15 @@ class DisplayItems:
         return self.object_panel_count.get(key)
 
     def set_insert_or_delete_on_all_items(self):
-        """Call instance.set_insert_or_delete() for all items."""
+        """Convert edit display to insert display.
+
+        PGN scores displayed for editing from a database are not closed if the
+        database is closed.  They are converted to insert displays and can
+        be used to add new records to databases opened later.
+
+        """
         for item in self.stack:
-            item.set_insert_or_delete()
+            item.sourceobject = None
 
     def forget_payload(self, parent):
         """Do nothing: compatibility with instances of Display subclasses."""

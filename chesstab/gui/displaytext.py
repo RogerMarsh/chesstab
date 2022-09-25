@@ -74,16 +74,6 @@ class ShowText:
         """Return close item event description."""
         return ((EventSpec.display_dismiss, self.delete_item_view),)
 
-    def set_insert_or_delete(self):
-        """Convert edit display to insert display.
-
-        PGN scores displayed for editing from a database are not closed if the
-        database is closed.  They are converted to insert displays and can
-        be used to add new records to databases opened later.
-
-        """
-        self.sourceobject = None
-
     def set_and_tag_item_text(self, reset_undo=False):
         """Delegate to superclass method and set PGN score inactive."""
         # Superclass may set self._most_recent_bindings but test below must be
