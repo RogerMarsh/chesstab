@@ -135,9 +135,8 @@ class CQLGameListQuery:
         self.objects[key].set_background_normal(self.get_row_widgets(key))
         self.set_row_under_pointer_background(key)
 
-    def _configure_frame_and_initial_event_bindings(self, ui):
+    def _configure_frame_and_initial_event_bindings(self):
         self._configure_frame()
-        self.ui = ui
         self.set_event_bindings_frame(
             (
                 (EventSpec.tab_traverse_forward, self.traverse_forward),

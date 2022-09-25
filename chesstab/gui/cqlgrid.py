@@ -37,7 +37,8 @@ class CQLListGrid(
 
         """
         super().__init__(parent=parent)
-        self._configure_frame_and_initial_event_bindings(ui)
+        self.ui = ui
+        self._configure_frame_and_initial_event_bindings()
 
     def _display_selected_item(self, key, selected):
         """Create CQLDisplay for ChessQL statement."""

@@ -57,7 +57,8 @@ class GameListGrid(
 
         """
         super().__init__(parent=parent)
-        self._configure_frame_and_initial_event_bindings(ui)
+        self.ui = ui
+        self._configure_frame_and_initial_event_bindings()
 
     def _display_selected_item(self, key, selected):
         # Should the Frame containing board and score be created here and
