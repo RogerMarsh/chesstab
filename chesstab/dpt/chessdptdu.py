@@ -125,7 +125,6 @@ def chess_dptdu_chunks(
     newgamestring = '[Event "'
     records = file_records
     for pgnfile in pgnpaths:
-        cdb._text_file_size = os.path.getsize(pgnfile)
         with open(pgnfile, "r", encoding="iso-8859-1") as inp:
             line = inp.readline()
             reporter("Extracting games from " + pgnfile)
