@@ -173,11 +173,23 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # highlighting of analysis still represents future valid navigation.
         # Any navigation in game widget makes any highlighting in analysis
         # widget out of date.
-        self.game_position_analysis = False
+        # Defining properties, or direct access, leads to pylint messages
+        # attribute-defined-outside-init and access-member-before-definition
+        # in scorepgn.ScorePGN.analysis_current_item method.
+        # Explicit get and set methods are accepted without pylint messages.
+        self._game_position_analysis = False
 
         self.game_analysis_in_progress = False
         self.takefocus_widget = self.score
         self.analysis_data_source = None
+
+    def get_game_position_analysis(self):
+        """Return number of leading spaces."""
+        return self._game_position_analysis
+
+    def set_game_position_analysis(self, value):
+        """Set self._game_position_analysis to value."""
+        self._game_position_analysis = value
 
     def get_top_widget(self):
         """Return topmost widget for game display."""
@@ -255,7 +267,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # Assume setting new position implies analysis is out of date.
         # Caller should reset to True if sure analysis still refers to game
         # position. (Probably just F7 or F8 to the game widget.)
-        self.game_position_analysis = False
+        self._game_position_analysis = False
 
         if not super().set_game_board():
             return

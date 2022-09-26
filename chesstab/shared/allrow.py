@@ -17,6 +17,7 @@ class AllRow:
     Subclasses should override methods as needed.
 
     """
+
     # Defining a property current_row_background, in solentware_grid's
     # DataRow class, does not suppress the attribute-defined-outside-init
     # message from pylint, so a method is provided instead.

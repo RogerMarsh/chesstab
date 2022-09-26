@@ -95,6 +95,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
             command=self.score.yview,
         )
         self.score.configure(yscrollcommand=self.scrollbar.set)
+        self.takefocus_widget = None
 
         # Keyboard actions do nothing by default.
         self.set_keypress_binding(switch=False)
@@ -103,6 +104,12 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         # The popup menus used by all subclasses.
         self.inactive_popup = None
         self.primary_activity_popup = None
+
+    def _init_takefocus_widget(self, widget):
+        """Initialize inactive_popup to popup if currently None."""
+        # Allow callers to avoid the attribute-defined-outside-init message
+        # if setting directly causes message to be given.
+        self.takefocus_widget = widget
 
     def _init_inactive_popup(self, popup):
         """Initialize inactive_popup to popup if currently None."""
