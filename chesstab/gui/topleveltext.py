@@ -8,9 +8,6 @@ The records are games, repertoires, and rule lists.  The rules are selection
 rules, CQL statements, and run engine commands in Toplevels.
 
 """
-from solentware_grid.gui.datashow import DataShow
-from solentware_grid.gui.dataedit import DataEdit
-from solentware_grid.gui.datadelete import DataDelete
 
 
 class ToplevelText:
@@ -61,21 +58,18 @@ class _ToplevelText:
         self.ui_base_table.selection.clear()
 
 
-class ShowText(_ToplevelText, DataShow):
+class ShowText(_ToplevelText):
     """Show original text."""
 
     def dialog_ok(self):
         """Close the show record toplevel."""
         if self.ui.database is None:
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
+            self.destroy_dialog_on_ok_and_blockchange()
             return False
         return super().dialog_ok()
 
 
-class DeleteText(_ToplevelText, DataDelete):
+class DeleteText(_ToplevelText):
     """Show original text for record deletion."""
 
     def dialog_ok(self):
@@ -89,15 +83,12 @@ class DeleteText(_ToplevelText, DataDelete):
             self.status.configure(
                 text="Cannot delete because not connected to a database"
             )
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
+            self.destroy_dialog_on_ok_and_blockchange()
             return False
         return super().dialog_ok()
 
 
-class EditText(_ToplevelText, DataEdit):
+class EditText(_ToplevelText):
     """Show original and editable text versions for record editing."""
 
     def initialize(self):
@@ -122,10 +113,7 @@ class EditText(_ToplevelText, DataEdit):
             self.status.configure(
                 text="Cannot update because not connected to a database"
             )
-            if self.ok:
-                self.ok.destroy()
-                self.ok = None
-            self.blockchange = True
+            self.destroy_dialog_on_ok_and_blockchange()
             return False
         return super().dialog_ok()
 
