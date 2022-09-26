@@ -104,6 +104,15 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         self.inactive_popup = None
         self.primary_activity_popup = None
 
+    def _init_inactive_popup(self, popup):
+        """Initialize inactive_popup to popup if currently None."""
+        # Allow callers to avoid the attribute-defined-outside-init message;
+        # access-member-before-definition message is stopped too.
+        # The assert ensures some __init__ has set inactive_popup to None,
+        # although the real purpose is to insist it is not set already.
+        assert hasattr(self, "inactive_popup") and self.inactive_popup is None
+        self.inactive_popup = popup
+
     def set_event_bindings_score(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
