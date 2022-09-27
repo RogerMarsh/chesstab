@@ -495,7 +495,7 @@ class RayFilter:
 #    conversion.
 
 #    """
-#    ecs = piecedesignator.PieceDesignator._expand_composite_square
+#    ecs = piecedesignator.PieceDesignator.expand_composite_square
 #    indexset = set()
 #    for piece_square in designator_set:
 #        if len(piece_square) != 1:
@@ -526,7 +526,7 @@ def piece_square_to_index(designator_set, index_prefix):
     """
     file_names = constants.FILE_NAMES
     rank_names = constants.RANK_NAMES
-    ecs = piecedesignator.PieceDesignator._expand_composite_square
+    ecs = piecedesignator.PieceDesignator.expand_composite_square
     indexset = set()
     for piece_square in designator_set:
         if len(piece_square) != 1:
