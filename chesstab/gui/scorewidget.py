@@ -230,7 +230,7 @@ class ScoreWidget(BlankText):
         try:
             return {
                 square: piece
-                for piece, square in self.collected_game._initial_position[0]
+                for piece, square in self.collected_game.initial_position[0]
             }
         except TypeError as error:
             raise ScoreNoInitialPositionException(
@@ -239,7 +239,7 @@ class ScoreWidget(BlankText):
 
     def fen_tag_tuple_square_piece_map(self):
         """Return FEN tag as tuple with pieces in square to piece mapping."""
-        cgip = self.collected_game._initial_position
+        cgip = self.collected_game.initial_position
         return (
             self.fen_tag_square_piece_map(),
             cgip[1],
@@ -548,15 +548,15 @@ class ScoreWidget(BlankText):
         game = self.collected_game
         spm = self._game_scaffold.square_piece_map
         try:
-            for piece, square in game._initial_position[0]:
+            for piece, square in game.initial_position[0]:
                 spm[square] = piece
         except TypeError as error:
             raise ScoreMapToBoardException(
                 "Unable to map text to board"
             ) from error
-        assert len(game.pgn_text) == len(game._position_deltas)
+        assert len(game.pgn_text) == len(game.position_deltas)
         tags_displayed = self.map_tags_display_order()
-        for text, position in zip(game.pgn_text, game._position_deltas):
+        for text, position in zip(game.pgn_text, game.position_deltas):
             first_char = text[0]
             if first_char in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, position)

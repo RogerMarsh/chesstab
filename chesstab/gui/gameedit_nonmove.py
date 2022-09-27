@@ -489,12 +489,12 @@ class GameEdit(gameedit_misc.GameEdit):
                         bishopmove = True
                         mtc = amtc
             self.tagpositionmap[self.current] = (
-                mtc._piece_placement_data.copy(),
-                mtc._active_color,
-                mtc._castling_availability,
-                mtc._en_passant_target_square,
-                mtc._halfmove_clock,
-                mtc._fullmove_number,
+                mtc.piece_placement_data.copy(),
+                mtc.active_color,
+                mtc.castling_availability,
+                mtc.en_passant_target_square,
+                mtc.halfmove_clock,
+                mtc.fullmove_number,
             )
             del self.edit_move_context[self.current]
             # remove from MOVE_EDITED tag and place on EDIT_MOVE tag
@@ -528,12 +528,12 @@ class GameEdit(gameedit_misc.GameEdit):
         )
         if mtc.is_movetext_valid():
             self.tagpositionmap[self.current] = (
-                mtc._piece_placement_data.copy(),
-                mtc._active_color,
-                mtc._castling_availability,
-                mtc._en_passant_target_square,
-                mtc._halfmove_clock,
-                mtc._fullmove_number,
+                mtc.piece_placement_data.copy(),
+                mtc.active_color,
+                mtc.castling_availability,
+                mtc.en_passant_target_square,
+                mtc.halfmove_clock,
+                mtc.fullmove_number,
             )
             del self.edit_move_context[self.current]
             # remove from MOVE_EDITED tag and place on EDIT_MOVE tag

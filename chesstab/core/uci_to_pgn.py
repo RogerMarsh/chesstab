@@ -90,7 +90,7 @@ re_move = re.compile(
 def generate_pgn_for_uci_moves_in_position(moves, fen):
     """Return PGN-style movetext and update position for unambiguous moves."""
     game = GameMove()
-    piece_placement_data = game._piece_placement_data
+    piece_placement_data = game.piece_placement_data
     text = []
     moves = moves.split()
     if not moves:
@@ -138,7 +138,7 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
             )
             break
         piece = piece_placement_data[from_square].name
-        if piece not in _ACTIVE_PIECES[game._active_color]:
+        if piece not in _ACTIVE_PIECES[game.active_color]:
             text.append(
                 "".join(
                     (
@@ -156,7 +156,7 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
         # to_square must not contain a piece belonging to side with the move.
         if to_square in piece_placement_data:
             destination_piece = piece_placement_data[to_square].name
-            if destination_piece in _ACTIVE_PIECES[game._active_color]:
+            if destination_piece in _ACTIVE_PIECES[game.active_color]:
                 text.append(
                     "".join(
                         (

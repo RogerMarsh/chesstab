@@ -326,10 +326,10 @@ class PositionScore(ExceptionHandler):
 
         game = self.collected_game
         spm = self._game_scaffold.square_piece_map
-        for piece, square in game._initial_position[0]:
+        for piece, square in game.initial_position[0]:
             spm[square] = piece
-        assert len(game.pgn_text) == len(game._position_deltas)
-        for text, delta in zip(game.pgn_text, game._position_deltas):
+        assert len(game.pgn_text) == len(game.position_deltas)
+        for text, delta in zip(game.pgn_text, game.position_deltas):
             text0 = text[0]
             if text0 in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, delta)
