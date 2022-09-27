@@ -133,15 +133,17 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
     # Resolve pylint message arguments-differ deferred.
     # Depends on detail of planned naming of methods as private if possible.
     # mark...recalculated starts and commits a transaction unconditionally.
-    def put(self):
+    # No harm in using the same default as the 'super()' method.
+    def put(self, commit=True):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        super().put()
+        super().put(commit=commit)
 
     # Resolve pylint message arguments-differ deferred.
     # Depends on detail of planned naming of methods as private if possible.
     # mark...recalculated starts and commits a transaction unconditionally.
-    def edit(self):
+    # No harm in using the same default as the 'super()' method.
+    def edit(self, commit=True):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        super().edit()
+        super().edit(commit=commit)

@@ -250,7 +250,7 @@ class GameEdit(Game):
         if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super()._map_comment_to_eol(token),
+            super()._map_comment_to_eol(token, newline_prefix),
             self.get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_COMMENT_EOL,
@@ -276,7 +276,7 @@ class GameEdit(Game):
         if newline_prefix:
             self.insert_forced_newline_into_text()
         return self.tag_token_for_editing(
-            super()._map_escape_to_eol(token),
+            super()._map_escape_to_eol(token, newline_prefix),
             self.get_tag_and_mark_names,
             tag_start_to_end=(EDIT_ESCAPE_EOL, NAVIGATE_TOKEN),
         )

@@ -193,12 +193,10 @@ class GameEdit(gameedit_misc.GameEdit):
         # Set colouring of moves. This is either correct as stands (Alt-Left
         # for example) or base for modification (Alt-Right for example).
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
     def add_text_pgntag_or_pgnvalue(self, token, tagset=(), separator=" "):
         """Add PGN Tagname or Tagvalue to game. Return POSITION tagname."""
         start, end, sepend = super().add_text_pgntag_or_pgnvalue(
-            token, separator=separator
+            token, tagset=tagset, separator=separator
         )
         positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
         del tokentag

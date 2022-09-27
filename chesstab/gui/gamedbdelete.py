@@ -107,7 +107,9 @@ class GameDbDelete(ExceptionHandler, DeletePGN, DataDelete):
 
     # Resolve pylint message arguments-differ deferred.
     # Depends on detail of planned naming of methods as private if possible.
-    def delete(self):
+    # mark...recalculated starts and commits a transaction unconditionally.
+    # No harm in using the same default as the 'super()' method.
+    def delete(self, commit=True):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
-        super().delete()
+        super().delete(commit=commit)

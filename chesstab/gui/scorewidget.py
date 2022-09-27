@@ -274,15 +274,17 @@ class ScoreWidget(BlankText):
         widget.mark_set(START_SCORE_MARK, tkinter.INSERT)
         return ((name_suffix, name_tag), (value_suffix, value_tag))
 
-    def add_text_pgntag_or_pgnvalue(self, token, separator=" ", **k):
+    def add_text_pgntag_or_pgnvalue(self, token, tagset=(), separator=" "):
         """Insert token and separator text. Return start and end indicies.
 
         token is ' 'text or '"'text.  The trailing ' ' or '"' required in the
         PGN specification is provided as separator.  The markers surrounding
         text are not editable.
 
+        tagset is ignored but present for compatibility with subclasses.
+
         """
-        del k
+        del tagset
         return self.insert_token_into_text(token, separator)
 
     def build_nextmovetags(self):
@@ -787,8 +789,9 @@ class ScoreWidget(BlankText):
         return self.insert_token_into_text(token, SPACE_SEP)
 
     # force_newline is not set by gameedit.GameEdit.add_comment_to_eol().
-    def _map_comment_to_eol(self, token):
+    def _map_comment_to_eol(self, token, newline_prefix):
         """Add token to game text. position is ignored. Return token range."""
+        del newline_prefix
         widget = self.score
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])  # token)
@@ -804,8 +807,9 @@ class ScoreWidget(BlankText):
         return token_indicies
 
     # force_newline is not set by gameedit.GameEdit.add_escape_to_eol().
-    def _map_escape_to_eol(self, token):
+    def _map_escape_to_eol(self, token, newline_prefix):
         """Add token to game text. position is ignored. Return token range."""
+        del newline_prefix
         widget = self.score
         start = widget.index(tkinter.INSERT)
         widget.insert(tkinter.INSERT, token[:-1])

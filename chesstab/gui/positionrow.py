@@ -105,12 +105,20 @@ class ChessDBrowPosition(
             if "background" not in rowspec[WIDGET_CONFIGURE]:
                 widget[0].configure(background=background)
 
-    # Resolve pylint message arguments-differ deferred.
-    # Different arguments are correct.
-    def populate_widget(self, widget, cnf=None, text=None, context=None, **kw):
-        """Delegate for tkinter.Label widget, put text in a PositionScore."""
+    def populate_widget(self, widget, cnf=None, text=None, **kw):
+        """Delegate to __populate_widget."""
+        self.__populate_widget(widget, cnf=cnf, text=text, **kw)
+
+    def __populate_widget(
+        self, widget, cnf=None, text=None, context=None, **kw
+    ):
+        """Delegate for tkinter.Label widget, put text in a PositionScore.
+
+        The context argument is only relevant for the PositionScore.
+
+        """
         if isinstance(widget, tkinter.Label):
-            super().populate_widget(widget, text=text, **kw)
+            super().populate_widget(widget, cnf=cnf, text=text, **kw)
             return
         # This is the place to implement a pool of pre-processed PositionScore
         # instances which only need to call the colour_score() method rather

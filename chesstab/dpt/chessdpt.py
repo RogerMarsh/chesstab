@@ -71,9 +71,14 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
         self._broken_sizes = dict()
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def use_deferred_update_process(
+    def use_deferred_update_process(self, **kargs):
+        """Return path to deferred update module."""
+        chunk = self._use_deferred_update_process_chunk(**kargs)
+        if chunk is not None:
+            return chunk
+        return super().use_deferred_update_process(**kargs)
+
+    def _use_deferred_update_process_chunk(
         self, dptmultistepdu=False, dptchunksize=None, **kargs
     ):
         """Return module name or None.
@@ -111,7 +116,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 os.path.basename(os.path.dirname(__file__)),
                 "runchessdptduchunk.py",
             )
-        return super().use_deferred_update_process(**kargs)
+        return None
 
     def adjust_database_for_retry_import(self, files):
         """Increase file sizes taking file full into account."""
