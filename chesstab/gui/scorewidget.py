@@ -554,9 +554,9 @@ class ScoreWidget(BlankText):
             raise ScoreMapToBoardException(
                 "Unable to map text to board"
             ) from error
-        assert len(game._text) == len(game._position_deltas)
+        assert len(game.pgn_text) == len(game._position_deltas)
         tags_displayed = self.map_tags_display_order()
-        for text, position in zip(game._text, game._position_deltas):
+        for text, position in zip(game.pgn_text, game._position_deltas):
             first_char = text[0]
             if first_char in "abcdefghKQRBNkqrnO":
                 self.map_move_text(text, position)

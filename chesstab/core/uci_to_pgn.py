@@ -254,5 +254,5 @@ def generate_pgn_for_uci_moves_in_position(moves, fen):
                 )
             )
             break
-        text.append(game._text[-1])
+        text.append(game.pgn_text[-1])
     return " ".join(text)

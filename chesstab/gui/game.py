@@ -300,7 +300,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
                     )
                 ),
             )
-            self.score.insert(tkinter.END, self.collected_game._text)
+            self.score.insert(tkinter.END, self.collected_game.pgn_text)
 
             # Must be replaced because bind_for_primary_activity() sets the
             # board pointer bindings wrong for initial display of game.

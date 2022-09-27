@@ -413,7 +413,7 @@ class ChessDeferredUpdate(ExceptionHandler):
                     if gamecount + errorcount >= self.sample:
                         estimate = True
                         break
-                    if len(rcg._text):
+                    if len(rcg.pgn_text):
                         rawtokenlen = rcg.end_char - rcg.start_char
                     else:
                         rawtokenlen = 0

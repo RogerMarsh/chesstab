@@ -101,7 +101,7 @@ class ChessDBvaluePGN(PGN, Value):
 
     def pack_value(self):
         """Return PGN text for game."""
-        return repr("".join(self.collected_game._text))
+        return repr("".join(self.collected_game.pgn_text))
 
 
 class ChessDBvalueGame(ChessDBvaluePGN):
@@ -528,7 +528,7 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
     def is_error_comment_present(self):
         """Return True if an {Error: ...} comment is in the PGN text."""
         return START_COMMENT + ERROR_START_COMMENT in "".join(
-            self.collected_game._text
+            self.collected_game.pgn_text
         )
 
 
