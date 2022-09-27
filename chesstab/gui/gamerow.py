@@ -200,12 +200,12 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
             },
         ]
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def grid_row(self, **kargs):
-        """Return ChessDBrowGame() with selected Tags at game value.
+    def grid_row(self, textitems=(), **kargs):
+        """Set textitems to selected PGN tags, delegate, return response.
 
         Create textitems argument for ChessDBrowGame instance.
+
+        textitems arguments is ignored and is present for compatibility.
 
         """
         tags = self.value.collected_game.pgn_tags

@@ -102,20 +102,16 @@ class ChessDBrowQuery(AllRow, ChessDBrecordQuery, DataRow):
             newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
         )
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def grid_row(self, **kargs):
-        """Return ChessDBrowRepertoire() with row name set to query name.
+    def grid_row(self, textitems=(), **kargs):
+        """Set textitems to selection query name, delegate, return response.
 
         Create textitems argument for ChessDBrowQuery instance.
 
+        textitems arguments is ignored and is present for compatibility.
+
         """
         return super().grid_row(
-            textitems=(
-                self.value.get_name_text(),
-                # self.value.get_selection_rule_text(),
-            ),
-            **kargs
+            textitems=(self.value.get_name_text(),), **kargs
         )
 
 

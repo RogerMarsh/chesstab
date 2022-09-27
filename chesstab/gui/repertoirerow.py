@@ -128,12 +128,12 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
             newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
         )
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def grid_row(self, **kargs):
-        """Return ChessDBrowRepertoire() with opening and result set to '?'.
+    def grid_row(self, textitems=(), **kargs):
+        """Set textitems to repertoire name, delegate, return response.
 
         Create textitems argument for ChessDBrowRepertoire instance.
+
+        textitems arguments is ignored and is present for compatibility.
 
         """
         tags = self.value.collected_game.pgn_tags

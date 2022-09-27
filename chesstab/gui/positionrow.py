@@ -76,14 +76,23 @@ class ChessDBrowPosition(
             },
         ]
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def grid_row(self, position=None, context=(None, None, None), **kargs):
-        """Return ChessDBrowPosition() with row items set to query text.
+    def grid_row(self, textitems=(), **kargs):
+        """Delegate to __grid_row and reurn response."""
+        return self.__grid_row(textitems=textitems, **kargs)
+
+    def __grid_row(
+        self, textitems=(), position=None, context=(None, None, None), **kargs
+    ):
+        """Set textitems to record value, delegate, return response.
 
         Create textitems argument for ChessDBrowPosition instance.
 
+        The record value is expected to contain transposition details.
+
+        textitems arguments is ignored and is present for compatibility.
+
         """
+        del textitems
         del position
         self.row_specification[0][WIDGET_CONFIGURE]["context"] = context
         return super().grid_row(
