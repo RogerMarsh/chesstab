@@ -105,12 +105,12 @@ class _CQLDisplay(
     @property
     def ui_set_item_name(self):
         """Return function to set status bar text to name of active query."""
-        return self.ui._set_partial_name
+        return self.ui.set_partial_name
 
     @property
     def ui_set_find_item_games(self):
         """Return function to set status bar text."""
-        return self.ui._set_find_partial_name_games
+        return self.ui.set_find_partial_name_games
 
     def get_navigation_events(self):
         """Return event description tuple for navigation from query."""
@@ -437,7 +437,7 @@ class _CQLDisplay(
     def set_game_list(self):
         """Delegate to refresh_game_list via 'after(...) call."""
         self.panel.after(
-            0, func=self.try_command(self.ui._set_partial_name, self.panel)
+            0, func=self.try_command(self.ui.set_partial_name, self.panel)
         )
         self.panel.after(
             0, func=self.try_command(self.refresh_game_list, self.panel)

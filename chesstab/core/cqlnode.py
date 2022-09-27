@@ -173,7 +173,7 @@ class CQLNode(Node):
             squares = _normalize_rotated_squares(
                 "".join(
                     [
-                        FSNode._ROTATE_90_REFLECT_HORIZONTAL.get(s, s)
+                        FSNode.ROTATE_90_REFLECT_HORIZONTAL.get(s, s)
                         for s in data.get_squares()
                     ]
                 )
@@ -195,7 +195,7 @@ class CQLNode(Node):
             squares = _normalize_rotated_squares(
                 "".join(
                     [
-                        FSNode._ROTATE_90_REFLECT_VERTICAL.get(s, s)
+                        FSNode.ROTATE_90_REFLECT_VERTICAL.get(s, s)
                         for s in data.get_squares()
                     ]
                 )
@@ -281,12 +281,12 @@ class FSNode:
 
     # These rotate-reflect combinations are not defined by CQL but are used to
     # generate the diagonal reflections needed to complete the flip transform.
-    _ROTATE_90_REFLECT_HORIZONTAL = {}
-    _ROTATE_90_REFLECT_VERTICAL = {}
+    ROTATE_90_REFLECT_HORIZONTAL = {}
+    ROTATE_90_REFLECT_VERTICAL = {}
     for x in RANK_NAMES + FILE_NAMES:
         y = ROTATE_90[x]
-        _ROTATE_90_REFLECT_HORIZONTAL[x] = REFLECT_HORIZONTAL.get(y, y)
-        _ROTATE_90_REFLECT_VERTICAL[x] = REFLECT_VERTICAL.get(y, y)
+        ROTATE_90_REFLECT_HORIZONTAL[x] = REFLECT_HORIZONTAL.get(y, y)
+        ROTATE_90_REFLECT_VERTICAL[x] = REFLECT_VERTICAL.get(y, y)
     del x, y
 
     FLIP_COLOR_PIECE = dict(
@@ -703,13 +703,6 @@ class FSNode:
             transforms.append(copy.deepcopy(node))
             transforms[-1].node.flip_color()
         return transforms
-
-    def _trace(self, level=0):
-        if self.node.leaf:
-            print(level, self.node.leaf._token)
-        for node in self.children:
-            print(level, self.node.name, id(self.node))
-            node._trace(level=level + 1)
 
 
 def _normalize_rotated_squares(squares):

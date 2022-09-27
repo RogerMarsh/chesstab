@@ -578,7 +578,7 @@ class ChessUI(ExceptionHandler):
 
         if views.count_items_in_stack():
             if was_active:
-                self._set_find_partial_name_games(-1)
+                self.set_find_partial_name_games(-1)
                 widget = views.active_item.panel
                 widget.after(
                     1,
@@ -587,7 +587,7 @@ class ChessUI(ExceptionHandler):
                     ),
                 )
                 widget.after(
-                    2, func=self.try_command(self._set_partial_name, widget)
+                    2, func=self.try_command(self.set_partial_name, widget)
                 )
             if had_focus:
                 views.active_item.takefocus_widget.focus_set()
@@ -646,19 +646,19 @@ class ChessUI(ExceptionHandler):
             self.hide_selection_rules()
             # Show all games in base_games.
 
-    def _set_find_partial_name_games(self, index):
+    def set_find_partial_name_games(self, index):
         """Set status text to partial position name being searched."""
         self.statusbar.set_status_text(
             self.partial_items.get_stack_item(index).get_text_for_statusbar()
         )
 
-    def _set_partial_name(self):
+    def set_partial_name(self):
         """Set status text to active partial position name."""
         self.statusbar.set_status_text(
             self.partial_items.active_item.get_text_for_statusbar()
         )
 
-    def _set_selection_name(self):
+    def set_selection_name(self):
         """Set status text to active selection rule name."""
         self.statusbar.set_status_text(
             self.selection_items.active_item.get_text_for_statusbar()
@@ -1840,7 +1840,7 @@ class ChessUI(ExceptionHandler):
         self._show_base_selection_rules()
         self.base_selections.set_focus()
 
-    def _set_find_selection_name_games(self, index):
+    def set_find_selection_name_games(self, index):
         """Set status text to selection rule name being searched."""
         self.statusbar.set_status_text(
             self.selection_items.get_stack_item(index).get_text_for_statusbar()

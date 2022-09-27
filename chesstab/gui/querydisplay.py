@@ -100,12 +100,12 @@ class _QueryDisplay(
     @property
     def ui_set_item_name(self):
         """Return function to set status bar text to name of active query."""
-        return self.ui._set_selection_name
+        return self.ui.set_selection_name
 
     @property
     def ui_set_find_item_games(self):
         """Return function to set status bar text."""
-        return self.ui._set_find_selection_name_games
+        return self.ui.set_find_selection_name_games
 
     def get_navigation_events(self):
         """Return event description tuple for navigation from query."""
