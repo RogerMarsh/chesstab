@@ -220,7 +220,7 @@ class ShowPGN(ShowText, ScorePGN):
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         updater.key.recno = None
         editor.put()
-        tags = updater.value.collected_game._tags
+        tags = updater.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title=title,
@@ -308,7 +308,7 @@ class DisplayPGN(DisplayText):
         editor.set_data_source(datasource, editor.on_data_change)
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         editor.delete()
-        tags = original.value.collected_game._tags
+        tags = original.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title=title,
@@ -512,7 +512,7 @@ class EditPGN(EditText):
             newkey = self.ui_displayed_items.adjust_edited_item(updater)
             if newkey:
                 self.set_properties_on_grids(newkey)
-        tags = original.value.collected_game._tags
+        tags = original.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title=title,

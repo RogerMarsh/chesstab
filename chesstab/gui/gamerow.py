@@ -208,7 +208,7 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
         Create textitems argument for ChessDBrowGame instance.
 
         """
-        tags = self.value.collected_game._tags
+        tags = self.value.collected_game.pgn_tags
         return super().grid_row(
             textitems=(
                 tags.get(TAG_WHITE, DEFAULT_TAG_VALUE),
@@ -233,7 +233,7 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
         del pgn
         str_tags = []
         other_tags = []
-        tags = self.value.collected_game._tags
+        tags = self.value.collected_game.pgn_tags
         for tag in SEVEN_TAG_ROSTER:
             if tag not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
                 str_tags.append((tag, tags.get(tag, DEFAULT_TAG_VALUE)))

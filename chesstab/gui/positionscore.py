@@ -203,7 +203,7 @@ class PositionScore(ExceptionHandler):
         if last is None:
             return None
         tag_values = []
-        tags = self.collected_game._tags
+        tags = self.collected_game.pgn_tags
         for value in sorted(tags.items()):
             if value[0] not in last:
                 tag_values.append(value)
@@ -342,13 +342,13 @@ class PositionScore(ExceptionHandler):
             else:
                 self.map_non_move(text)
         self.insert_token_into_text(
-            game._tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
+            game.pgn_tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
         )
         self.insert_token_into_text(
-            game._tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
+            game.pgn_tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
         )
         self.insert_token_into_text(
-            game._tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
+            game.pgn_tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
         )
 
         tagrange = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
@@ -488,7 +488,7 @@ class PositionScore(ExceptionHandler):
 
     def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        if self.collected_game._tags.get(TAG_RESULT) != token:
+        if self.collected_game.pgn_tags.get(TAG_RESULT) != token:
             self.insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):

@@ -107,7 +107,7 @@ class RepertoireDbEdit(ExceptionHandler, EditPGN, DataEdit):
                 return "  ".join(
                     (
                         self.pgn_score_name.join(("Edit ", ":")),
-                        object_.value.collected_game._tags[TAG_OPENING],
+                        object_.value.collected_game.pgn_tags[TAG_OPENING],
                     )
                 )
             except TypeError:

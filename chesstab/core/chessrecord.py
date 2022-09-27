@@ -119,7 +119,7 @@ class ChessDBvalueGame(ChessDBvaluePGN):
         """Return PGN text and indexes for game."""
         value = super().pack()
         index = value[1]
-        tags = self.collected_game._tags
+        tags = self.collected_game.pgn_tags
         for field in tags:
             if field in PLAYER_NAME_TAGS:
 
@@ -185,7 +185,7 @@ class ChessDBrecordGame(Record):
 
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game._tags.
+        except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -196,9 +196,12 @@ class ChessDBrecordGame(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            if dbname in self.value.collected_game._tags:
+            if dbname in self.value.collected_game.pgn_tags:
                 return [
-                    (self.value.collected_game._tags[dbname], self.key.pack())
+                    (
+                        self.value.collected_game.pgn_tags[dbname],
+                        self.key.pack(),
+                    )
                 ]
             return []
         if partial is None:
@@ -303,7 +306,7 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
         Added to support Find and Where classes.
 
         """
-        return self.collected_game._tags.get(fieldname, None)
+        return self.collected_game.pgn_tags.get(fieldname, None)
 
     # def get_field_values(self, fieldname):
     #    """Return tuple of field values for fieldname.
@@ -469,7 +472,7 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
         index = value[1]
         game = self.collected_game
         if self.do_full_indexing():
-            tags = game._tags
+            tags = game.pgn_tags
             for field in SEVEN_TAG_ROSTER:
                 if field in PLAYER_NAME_TAGS:
 
@@ -563,7 +566,7 @@ class ChessDBrecordGameUpdate(Record):
 
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game._tags.
+        except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -574,9 +577,12 @@ class ChessDBrecordGameUpdate(Record):
         if dbname != POSITIONS_FIELD_DEF:
             if dbname == GAMES_FILE_DEF:
                 return [(self.key.recno, self.srvalue)]
-            if dbname in self.value.collected_game._tags:
+            if dbname in self.value.collected_game.pgn_tags:
                 return [
-                    (self.value.collected_game._tags[dbname], self.key.pack())
+                    (
+                        self.value.collected_game.pgn_tags[dbname],
+                        self.key.pack(),
+                    )
                 ]
             return []
         if partial is None:
@@ -757,7 +763,7 @@ class ChessDBvalueRepertoireUpdate(ChessDBvaluePGN):
         """Return PGN text and indexes for game."""
         value = super().pack()
         index = value[1]
-        tags = self.collected_game._tags
+        tags = self.collected_game.pgn_tags
         if self.collected_game.is_pgn_valid():
             index[TAG_OPENING] = [tags[TAG_OPENING]]
         elif tags[TAG_OPENING]:
@@ -817,7 +823,7 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
 
         The keys for the secondary databases in a ChessDatabase instance are
         embedded in, or derived from, the PGN string for the game.  All
-        except the positions are held in self.value.collected_game._tags.
+        except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a
         position are of interest.  The partial argument is used to select
         the relevant keys.  The position is in partial and the keys will
@@ -827,8 +833,10 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
         dbname = datasource.dbname
         if dbname == REPERTOIRE_FILE_DEF:
             return [(self.key.recno, self.srvalue)]
-        if dbname in self.value.collected_game._tags:
-            return [(self.value.collected_game._tags[dbname], self.key.pack())]
+        if dbname in self.value.collected_game.pgn_tags:
+            return [
+                (self.value.collected_game.pgn_tags[dbname], self.key.pack())
+            ]
         return []
 
 

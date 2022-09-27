@@ -77,7 +77,7 @@ class GameDbDelete(ExceptionHandler, DeletePGN, DataDelete):
         if object_ is None:
             object_ = self.object
         try:
-            tags = object_.value.collected_game._tags
+            tags = object_.value.collected_game.pgn_tags
             return "  ".join(
                 (
                     self.pgn_score_name.join(("Delete ", ":")),

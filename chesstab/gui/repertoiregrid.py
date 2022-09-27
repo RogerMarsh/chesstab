@@ -221,7 +221,7 @@ class RepertoireGrid(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].value.collected_game._tags
+                tags = self.objects[ss0].value.collected_game.pgn_tags
                 self.ui.statusbar.set_status_text(
                     "  ".join([tags.get(k, "") for k in REPERTOIRE_TAG_ORDER])
                 )
@@ -696,7 +696,7 @@ class RepertoirePositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].score.collected_game._tags
+                tags = self.objects[ss0].score.collected_game.pgn_tags
                 self.ui.statusbar.set_status_text(
                     "  ".join(
                         [

@@ -80,7 +80,7 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
             return "  ".join(
                 (
                     self.pgn_score_name.join(("Delete ", ":")),
-                    object_.value.collected_game._tags[TAG_OPENING],
+                    object_.value.collected_game.pgn_tags[TAG_OPENING],
                 )
             )
         except TypeError:

@@ -455,7 +455,7 @@ class ScoreWidget(BlankText):
         if last is None:
             return None
         tag_values = []
-        tags = self.collected_game._tags
+        tags = self.collected_game.pgn_tags
         for pgn_tag in sorted(tags.items()):
             if pgn_tag[0] not in last:
                 tag_values.append(pgn_tag)

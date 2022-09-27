@@ -136,7 +136,7 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         Create textitems argument for ChessDBrowRepertoire instance.
 
         """
-        tags = self.value.collected_game._tags
+        tags = self.value.collected_game.pgn_tags
         return super().grid_row(
             textitems=(
                 tags.get(TAG_OPENING, "?"),
@@ -149,7 +149,7 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         """Return Tags not given their own column in display order."""
         del pgn
         tag_values = []
-        tags = self.value.collected_game._tags
+        tags = self.value.collected_game.pgn_tags
         for item in sorted(tags.items()):
             if item[0] not in REPERTOIRE_GAME_TAGS:
                 tag_values.append(item)

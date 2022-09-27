@@ -99,7 +99,7 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         if object_ is None:
             object_ = self.oldobject
         if object_:
-            tags = object_.value.collected_game._tags
+            tags = object_.value.collected_game.pgn_tags
             try:
                 return "  ".join(
                     (

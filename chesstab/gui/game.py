@@ -707,7 +707,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
 
     def set_statusbar_text(self):
         """Set status bar to display player name PGN Tags."""
-        tags = self.collected_game._tags
+        tags = self.collected_game.pgn_tags
         self.ui.statusbar.set_status_text(
             "  ".join(
                 [tags.get(k, "") for k in STATUS_SEVEN_TAG_ROSTER_PLAYERS]

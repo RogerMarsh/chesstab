@@ -252,7 +252,7 @@ class PartialPositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].value.collected_game._tags
+                tags = self.objects[ss0].value.collected_game.pgn_tags
                 supiai = self.ui.partial_items.active_item  # For line length.
                 self.ui.statusbar.set_status_text(
                     "  ".join(
@@ -535,7 +535,7 @@ class GamePositionGames(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].score.collected_game._tags
+                tags = self.objects[ss0].score.collected_game.pgn_tags
                 self.ui.statusbar.set_status_text(
                     "  ".join(
                         [
@@ -810,7 +810,7 @@ class TagRosterGrid(GameListGrid):
         if self.selection:
             ss0 = self.selection[0]
             if ss0 in self.objects:
-                tags = self.objects[ss0].value.collected_game._tags
+                tags = self.objects[ss0].value.collected_game.pgn_tags
                 self.ui.statusbar.set_status_text(
                     "  ".join(
                         [
