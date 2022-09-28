@@ -84,10 +84,23 @@ class Database:
                     inp = file_in.read(1000000)
         return True
 
-    def delete_database(self, names):
+    @staticmethod
+    def _delete_database_names():
+        """Return tuple of filenames to delete from database directory.
+
+        Subclasses should override this method to delete the relevant files.
+
+        """
+        return ()
+
+    def delete_database(self):
         """Close and delete the open chess database."""
         listnames = set(n for n in os.listdir(self.home_directory))
-        homenames = set(n for n in names if os.path.basename(n) in listnames)
+        homenames = set(
+            n
+            for n in self._delete_database_names()
+            if os.path.basename(n) in listnames
+        )
         if ERROR_LOG in listnames:
             homenames.add(os.path.join(self.home_directory, ERROR_LOG))
         if len(listnames - set(os.path.basename(h) for h in homenames)):

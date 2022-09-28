@@ -56,8 +56,6 @@ class ChessDatabase(database.Database, gnu_database.Database):
                 raise
             raise ChessDatabaseError("dbm.gnu description invalid") from error
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def delete_database(self):
-        """Close and delete the open chess database."""
-        return super().delete_database((self.database_file,))
+    def _delete_database_names(self):
+        """Override and return tuple of filenames to delete."""
+        return (self.database_file,)

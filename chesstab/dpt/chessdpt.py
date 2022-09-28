@@ -167,14 +167,12 @@ class ChessDatabase(database.Database, dpt_database.Database):
         )
         self.close_database()
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
-    def delete_database(self):
-        """Close and delete the open chess database."""
+    def _delete_database_names(self):
+        """Override and return tuple of filenames to delete."""
         names = [self.sysfolder]
         for value in self.table.values():
             names.append(value.file)
-        return super().delete_database(names)
+        return tuple(names)
 
     def get_archive_names(self, files=()):
         """Return names and operating system files for archives and guards."""
