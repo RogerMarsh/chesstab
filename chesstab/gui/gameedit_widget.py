@@ -243,8 +243,6 @@ class GameEdit(Game):
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
     def _map_comment_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:
@@ -269,8 +267,6 @@ class GameEdit(Game):
         self.create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    # Resolve pylint message arguments-differ deferred.
-    # Depends on detail of planned naming of methods as private if possible.
     def _map_escape_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:

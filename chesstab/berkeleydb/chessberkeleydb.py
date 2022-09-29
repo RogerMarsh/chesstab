@@ -12,6 +12,9 @@ in the *nix environment.
 
 import os
 
+# pylint will give import-error message if berkeleydb is not installed.
+# It is reasonable to not install Python package 'berkeleydb'.
+# The importlib module is used to import chessberkeleydb if needed.
 from berkeleydb.db import (
     DB_CREATE,
     DB_RECOVER,

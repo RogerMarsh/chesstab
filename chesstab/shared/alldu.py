@@ -76,6 +76,8 @@ class Alldu:
     # suggests it gets close with OpenBSD.
 
     # pylint comparison-with-callable report is false positive.
+    # Perhaps because db_segment_size is a property and the last statement
+    # in segmentsize module is 'SegmentSize = SegmentSize()'.
     if SegmentSize.db_segment_size > 32768:
         for f, m in ((4, 700000000), (2, 1400000000)):
             try:

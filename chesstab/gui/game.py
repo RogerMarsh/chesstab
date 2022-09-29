@@ -664,8 +664,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
 
         """
         # pylint message no-value-for-parameter seems to be false positive.
-        # See apparently similar code in gameedit line 4364 which does not
-        # attract the message.
+        # See similar code in gameedit_misc.create_edit_move_context method
+        # which does not attract the message.
         if self.analysis_data_source:
             return self.analysis_data_source.get_position_analysis(
                 self.generate_fen_for_position(*a)

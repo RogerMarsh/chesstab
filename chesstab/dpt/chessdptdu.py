@@ -19,6 +19,11 @@ import multiprocessing  # Removed later by 'del multiprocessing'.
 import tkinter
 import tkinter.messagebox
 
+# pylint will always give import-error message on non-Microsoft Windows
+# systems.
+# Wine counts as a Microsft Windows system.
+# It is reasonable to not install 'dptdb.dptapi'.
+# The importlib module is used to import chessdptdu if needed.
 from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
 
 from solentware_base import dptdu_database

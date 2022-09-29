@@ -12,6 +12,9 @@ in the *nix environment.
 
 import os
 
+# pylint will give import-error message if bsddb3 is not installed.
+# It is reasonable to not install Python package 'bsddb3'.
+# The importlib module is used to import chessdb if needed.
 from bsddb3.db import (
     DB_CREATE,
     DB_RECOVER,

@@ -7,6 +7,11 @@
 import os
 import tkinter.messagebox
 
+# pylint will always give import-error message on non-Microsoft Windows
+# systems.
+# Wine counts as a Microsft Windows system.
+# It is reasonable to not install 'dptdb.dptapi'.
+# The importlib module is used to import chessdpt if needed.
 from dptdb.dptapi import (
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
@@ -78,8 +83,9 @@ class ChessDatabase(database.Database, dpt_database.Database):
             return chunk
         return super().use_deferred_update_process(**kargs)
 
+    @staticmethod
     def _use_deferred_update_process_chunk(
-        self, dptmultistepdu=False, dptchunksize=None, **kargs
+        dptmultistepdu=False, dptchunksize=None, **kargs
     ):
         """Return module name or None.
 
@@ -110,7 +116,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
         single-step.
 
         """
-        del dptmultistepdu
+        del dptmultistepdu, kargs
         if dptchunksize is not None:
             return os.path.join(
                 os.path.basename(os.path.dirname(__file__)),

@@ -788,7 +788,7 @@ class ScoreWidget(BlankText):
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return self.insert_token_into_text(token, SPACE_SEP)
 
-    # force_newline is not set by gameedit.GameEdit.add_comment_to_eol().
+    # newline_prefix argument avoids arguments-differ message from pylint.
     def _map_comment_to_eol(self, token, newline_prefix):
         """Add token to game text. position is ignored. Return token range."""
         del newline_prefix
@@ -802,11 +802,11 @@ class ScoreWidget(BlankText):
     def map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         self.insert_forced_newline_into_text()
-        token_indicies = self._map_comment_to_eol(token)
+        token_indicies = self._map_comment_to_eol(token, False)
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return token_indicies
 
-    # force_newline is not set by gameedit.GameEdit.add_escape_to_eol().
+    # newline_prefix argument avoids arguments-differ message from pylint.
     def _map_escape_to_eol(self, token, newline_prefix):
         """Add token to game text. position is ignored. Return token range."""
         del newline_prefix
@@ -828,7 +828,7 @@ class ScoreWidget(BlankText):
 
     def map_escape_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        token_indicies = self._map_comment_to_eol(token)
+        token_indicies = self._map_escape_to_eol(token, False)
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         return token_indicies
 

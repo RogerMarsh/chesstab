@@ -209,12 +209,10 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 tr_q = widget.tag_nextrange(tn_q, nextmove[1])
                 if tr_q:
                     point = tr_q[0]
-            # pylint message useless-else-on-loop not resolved lest a crash
-            # is introduced to replace presumed, but unnoticed, incorrect
-            # behaviour.
+                    # Assume it was a bug that break was missing here.
+                    # Detected by pylint message useless-else-on-loop.
+                    break
             else:
-                # Can keep going, but both raise exception and issue warning
-                # dialogue are better options here.
                 point = widget.index(nextmove[1] + "+1char")
         colourvariation = "".join((RAV_SEP, variation))
 
