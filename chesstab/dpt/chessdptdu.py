@@ -160,9 +160,7 @@ def chess_dptdu_chunks(
     for file in file_records:
         if (
             FISTAT_DEFERRED_UPDATES
-            != cdb.get_database_instance(file, None).get_file_parameters(
-                cdb.dbenv
-            )["FISTAT"][0]
+            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
         ):
             status = False
     cdb.close_database_contexts()
