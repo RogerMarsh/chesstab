@@ -35,7 +35,7 @@ from ..core.filespec import (
     POSITIONS_PER_GAME,
 )
 from ..core.chessrecord import ChessDBrecordGameImport
-from .archivedu import Archivedu
+from ..shared.archivedu import Archivedu
 
 # Current practical way to determine if running on Wine, taking advantage of
 # a problem found in ..core.uci which prevents UCI chess engines being used to
