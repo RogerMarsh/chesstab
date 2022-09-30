@@ -106,8 +106,8 @@ class GameListGrid(
         # Read make_edit_widget for GameDisplay and GameDisplayEdit.
         game = self.make_edit_widget(selected)
         self.ui.add_game_to_display(game)
-        self.ui.game_items.increment_object_count(selected.srvalue)
-        self.ui.game_items.set_itemmap(game, selected.srvalue)
+        self.ui.game_items.increment_object_count(key)
+        self.ui.game_items.set_itemmap(game, key)
         self.ui.set_properties_on_all_game_grids(key)
         return game
 
@@ -147,7 +147,7 @@ class GameListGrid(
             return row
         if key not in self.keys:
             return None
-        if self.ui.game_items.object_display_count(self.objects[key].srvalue):
+        if self.ui.game_items.object_display_count(key):
             return self.objects[key].grid_row_on_display(**kargs)
         if dodefaultaction:
             return self.objects[key].grid_row_normal(**kargs)
