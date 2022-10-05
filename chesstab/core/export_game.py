@@ -224,10 +224,13 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename):
                     break
                 collected_game = instance.value.collected_game
                 if collected_game.is_pgn_valid_export_format():
-                    strt = collected_game.get_seven_tag_roster_tags()
-                    nstrt = collected_game.get_non_seven_tag_roster_tags()
-                    archive_movetext = collected_game.get_archive_movetext()
-                    games_for_date.append((strt, archive_movetext, nstrt))
+                    games_for_date.append(
+                        (
+                            collected_game.get_seven_tag_roster_tags(),
+                            collected_game.get_archive_movetext(),
+                            collected_game.get_non_seven_tag_roster_tags(),
+                        )
+                    )
                     if all_games_output is None:
                         all_games_output = True
                         no_games_output = False
@@ -638,10 +641,13 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
             )
             collected_game = instance.value.collected_game
             if collected_game.is_pgn_valid_export_format():
-                strt = collected_game.get_seven_tag_roster_tags()
-                nstrt = collected_game.get_non_seven_tag_roster_tags()
-                archive_movetext = collected_game.get_archive_movetext()
-                games.append((strt, archive_movetext, nstrt))
+                games.append(
+                    (
+                        collected_game.get_seven_tag_roster_tags(),
+                        collected_game.get_archive_movetext(),
+                        collected_game.get_non_seven_tag_roster_tags(),
+                    )
+                )
             else:
                 all_games_output = False
     elif grid.partial:
@@ -665,10 +671,13 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
                 )
                 collected_game = instance.value.collected_game
                 if collected_game.is_pgn_valid_export_format():
-                    strt = collected_game.get_seven_tag_roster_tags()
-                    nstrt = collected_game.get_non_seven_tag_roster_tags()
-                    archive_movetext = collected_game.get_archive_movetext()
-                    games.append((strt, archive_movetext, nstrt))
+                    games.append(
+                        (
+                            collected_game.get_seven_tag_roster_tags(),
+                            collected_game.get_archive_movetext(),
+                            collected_game.get_non_seven_tag_roster_tags(),
+                        )
+                    )
                 else:
                     all_games_output = False
                 current_record = cursor.next()

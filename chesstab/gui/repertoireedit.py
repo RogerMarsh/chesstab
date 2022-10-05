@@ -49,22 +49,22 @@ class RepertoireEdit(GameEdit):
         """Extend with bindings to edit repertoire score."""
         super().__init__(gameclass=gameclass, **ka)
 
-    def insert_empty_pgn_seven_tag_roster(self):
+    def _insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""
-        self.set_insertion_point_before_next_pgn_tag()
+        self._set_insertion_point_before_next_pgn_tag()
         for tag in REPERTOIRE_TAG_ORDER:
             self.add_pgntag_to_map(tag, "")
 
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.
-    def get_all_export_events(self):
+    def _get_all_export_events(self):
         """Return event specifications for exporting repertoires."""
         return (
             (
                 EventSpec.pgn_export_format_no_comments,
-                self.export_pgn_no_comments,
+                self._export_pgn_no_comments,
             ),
-            (EventSpec.pgn_export_format, self.export_pgn),
+            (EventSpec.pgn_export_format, self._export_pgn),
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
-            (EventSpec.text_internal_format, self.export_text),
+            (EventSpec.text_internal_format, self._export_text),
         )

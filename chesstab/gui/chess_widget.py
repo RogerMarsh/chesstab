@@ -111,11 +111,11 @@ class Chess(ExceptionHandler):
             menus.append(menu1)
             menubar.add_cascade(label="Database", menu=menu1, underline=0)
             for accelerator, function in (
-                (EventSpec.menu_database_open, self.database_open),
-                (EventSpec.menu_database_new, self.database_new),
-                (EventSpec.menu_database_close, self.database_close),
-                (EventSpec.menu_database_delete, self.database_delete),
-                (EventSpec.menu_database_quit, self.database_quit),
+                (EventSpec.menu_database_open, self._database_open),
+                (EventSpec.menu_database_new, self._database_new),
+                (EventSpec.menu_database_close, self._database_close),
+                (EventSpec.menu_database_delete, self._database_delete),
+                (EventSpec.menu_database_quit, self._database_quit),
             ):
                 menu1.add_command(
                     label=accelerator[1],
@@ -140,9 +140,12 @@ class Chess(ExceptionHandler):
             for index in (6, 5, 3, 0):
                 menu1.insert_separator(index)
             for accelerator, function in (
-                (EventSpec.menu_database_games, self.database_import),
-                (EventSpec.menu_database_repertoires, self.import_repertoires),
-                (EventSpec.menu_database_positions, self.import_positions),
+                (EventSpec.menu_database_games, self._database_import),
+                (
+                    EventSpec.menu_database_repertoires,
+                    self._import_repertoires,
+                ),
+                (EventSpec.menu_database_positions, self._import_positions),
             ):
                 menu102.add_command(
                     label=accelerator[1],
@@ -209,7 +212,7 @@ class Chess(ExceptionHandler):
                     underline=accelerator[3],
                 )
             for accelerator, function in (
-                (EventSpec.menu_database_positions, self.export_positions),
+                (EventSpec.menu_database_positions, self._export_positions),
                 (
                     EventSpec.menu_database_export_all_text,
                     self.export_all_games_text,
@@ -225,16 +228,16 @@ class Chess(ExceptionHandler):
             menus.append(menu2)
             menubar.add_cascade(label="Select", menu=menu2, underline=0)
             for accelerator, function in (
-                (EventSpec.menu_select_rule, self.index_select),
-                (EventSpec.menu_show, self.index_show),
-                (EventSpec.menu_hide, self.index_hide),
+                (EventSpec.menu_select_rule, self._index_select),
+                (EventSpec.menu_show, self._index_show),
+                (EventSpec.menu_hide, self._index_hide),
                 (
                     EventSpec.menu_select_game,
-                    self.create_options_index_callback(GAMES_FILE_DEF),
+                    self._create_options_index_callback(GAMES_FILE_DEF),
                 ),
                 (
                     EventSpec.menu_select_error,
-                    self.create_options_index_callback(SOURCE_FIELD_DEF),
+                    self._create_options_index_callback(SOURCE_FIELD_DEF),
                 ),
             ):
                 menu2.add_command(
@@ -265,7 +268,7 @@ class Chess(ExceptionHandler):
                 menu201.add_command(
                     label=accelerator[1],
                     command=self.try_command(
-                        self.create_options_index_callback(field), menu201
+                        self._create_options_index_callback(field), menu201
                     ),
                     underline=accelerator[3],
                 )
@@ -275,7 +278,7 @@ class Chess(ExceptionHandler):
             menubar.add_cascade(label="Game", menu=menu3, underline=0)
             menu3.add_separator()
             for accelerator, function in (
-                (EventSpec.menu_game_new_game, self.game_new_game),
+                (EventSpec.menu_game_new_game, self._game_new_game),
             ):
                 menu3.add_command(
                     label=accelerator[1],
@@ -288,9 +291,9 @@ class Chess(ExceptionHandler):
             menus.append(menu4)
             menubar.add_cascade(label="Position", menu=menu4, underline=0)
             for accelerator, function in (
-                (EventSpec.menu_position_partial, self.position_partial),
-                (EventSpec.menu_show, self.position_show),
-                (EventSpec.menu_hide, self.position_hide),
+                (EventSpec.menu_position_partial, self._position_partial),
+                (EventSpec.menu_show, self._position_show),
+                (EventSpec.menu_hide, self._position_hide),
             ):
                 menu4.add_command(
                     label=accelerator[1],
@@ -305,9 +308,9 @@ class Chess(ExceptionHandler):
             menus.append(menu5)
             menubar.add_cascade(label="Repertoire", menu=menu5, underline=0)
             for accelerator, function in (
-                (EventSpec.menu_repertoire_opening, self.repertoire_game),
-                (EventSpec.menu_show, self.repertoire_show),
-                (EventSpec.menu_hide, self.repertoire_hide),
+                (EventSpec.menu_repertoire_opening, self._repertoire_game),
+                (EventSpec.menu_show, self._repertoire_show),
+                (EventSpec.menu_hide, self._repertoire_hide),
             ):
                 menu5.add_command(
                     label=accelerator[1],
@@ -322,11 +325,11 @@ class Chess(ExceptionHandler):
             menus.append(menu6)
             menubar.add_cascade(label="Tools", menu=menu6, underline=0)
             for accelerator, function in (
-                (EventSpec.menu_tools_board_style, self.select_board_style),
-                (EventSpec.menu_tools_board_fonts, self.select_board_fonts),
+                (EventSpec.menu_tools_board_style, self._select_board_style),
+                (EventSpec.menu_tools_board_fonts, self._select_board_fonts),
                 (
                     EventSpec.menu_tools_board_colours,
-                    self.select_board_colours,
+                    self._select_board_colours,
                 ),
                 (
                     EventSpec.menu_tools_hide_game_analysis,
@@ -354,7 +357,7 @@ class Chess(ExceptionHandler):
                 ),
                 (
                     EventSpec.menu_tools_toggle_single_view,
-                    self.toggle_single_view,
+                    self._toggle_single_view,
                 ),
             ):
                 menu6.add_command(
@@ -441,19 +444,19 @@ class Chess(ExceptionHandler):
             self.opendatabase.close_database()
             self.opendatabase = None
 
-    def database_open(self):
+    def _database_open(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def database_new(self):
+    def _database_new(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def database_close(self):
+    def _database_close(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def database_delete(self):
+    def _database_delete(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def database_quit(self):
+    def _database_quit(self):
         """Quit chess database."""
         if self.is_import_subprocess_active():
             quitmsg = "".join(
@@ -505,13 +508,13 @@ class Chess(ExceptionHandler):
         else:
             Chess.set_error_file_name(os.path.join(directory, ERROR_LOG))
 
-    def database_import(self):
+    def _database_import(self):
         """Do nothing.  Override in chess_import.Chess class."""
 
-    def import_repertoires(self):
+    def _import_repertoires(self):
         """Do nothing.  Override in chess_import.Chess class."""
 
-    def import_positions(self):
+    def _import_positions(self):
         """Do nothing.  Override in chess_import.Chess class."""
 
     def export_all_games_pgn_reduced_export_format(self):
@@ -544,26 +547,26 @@ class Chess(ExceptionHandler):
     def export_all_repertoires_text(self):
         """Do nothing.  Override in chess.Chess class."""
 
-    def export_positions(self):
+    def _export_positions(self):
         """Do nothing.  Override in chess.Chess class."""
 
-    def index_select(self):
+    def _index_select(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def index_show(self):
+    def _index_show(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def index_hide(self):
+    def _index_hide(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def create_options_index_callback(self, index):
+    def _create_options_index_callback(self, index):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def game_new_game(self):
+    def _game_new_game(self):
         """Enter a new game (callback for Menu option)."""
-        self.new_game()
+        self._new_game()
 
-    def new_game(self):
+    def _new_game(self):
         """Enter a new game."""
         game = GameDisplayInsert(
             master=self.ui.view_games_pw,
@@ -595,11 +598,11 @@ class Chess(ExceptionHandler):
         # Wrap to take account of self.ui.single_view
         self.ui.game_items.active_item.takefocus_widget.focus_set()
 
-    def position_partial(self):
+    def _position_partial(self):
         """Enter a new partial position (callback for Menu option)."""
-        self.new_partial_position()
+        self._new_partial_position()
 
-    def new_partial_position(self):
+    def _new_partial_position(self):
         """Enter a new partial position."""
         position = CQLDisplayInsert(
             master=self.ui.view_partials_pw,
@@ -621,17 +624,17 @@ class Chess(ExceptionHandler):
         # Wrap to take account of self.ui.single_view
         self.ui.partial_items.active_item.takefocus_widget.focus_set()
 
-    def position_show(self):
+    def _position_show(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def position_hide(self):
+    def _position_hide(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def repertoire_game(self):
+    def _repertoire_game(self):
         """Enter a new opening variation (callback for Menu option)."""
-        self.new_repertoire_game()
+        self._new_repertoire_game()
 
-    def new_repertoire_game(self):
+    def _new_repertoire_game(self):
         """Enter a new repertoire game (opening variation)."""
         game = RepertoireDisplayInsert(
             master=self.ui.view_repertoires_pw,
@@ -658,13 +661,13 @@ class Chess(ExceptionHandler):
         # Wrap to take account of self.ui.single_view
         self.ui.repertoire_items.active_item.takefocus_widget.focus_set()
 
-    def repertoire_show(self):
+    def _repertoire_show(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def repertoire_hide(self):
+    def _repertoire_hide(self):
         """Do nothing.  Override in chess_database.Chess class."""
 
-    def select_board_style(self):
+    def _select_board_style(self):
         """Choose and set colour scheme and font forchessboard."""
         decor = colourscheme.FontColourChooser(ui=self.ui)
         if decor.is_ok():
@@ -676,7 +679,7 @@ class Chess(ExceptionHandler):
             self.ui.set_board_fonts(decor)
             self.ui.set_board_colours(decor)
 
-    def select_board_fonts(self):
+    def _select_board_fonts(self):
         """Choose and set font for board."""
         decor = colourscheme.FontChooser(ui=self.ui)
         if decor.is_ok():
@@ -687,7 +690,7 @@ class Chess(ExceptionHandler):
             decor.apply_to_named_fonts()
             self.ui.set_board_fonts(decor)
 
-    def select_board_colours(self):
+    def _select_board_colours(self):
         """Choose and set colour scheme for board."""
         decor = colourscheme.ColourChooser(ui=self.ui)
         if decor.is_ok():
@@ -773,7 +776,7 @@ class Chess(ExceptionHandler):
         for game, games in exceptions:
             games.remove(game)
 
-    def toggle_single_view(self):
+    def _toggle_single_view(self):
         """Toggle display single pane or all panes with non-zero weight."""
         if self.ui.single_view:
             self.ui.show_all_panedwindows()
@@ -822,7 +825,7 @@ class Chess(ExceptionHandler):
 
     # See comment near end of class definition ChessDeferredUpdate in sibling
     # module chessdu for explanation of this change: which is addition and use
-    # of the __run_ui_task_from_queue and try_command_after_idle methods.
+    # of the __run_ui_task_from_queue and _try_command_after_idle methods.
 
     def __run_ui_task_from_queue(self, interval):
         """Do all queued tasks then wake-up after interval."""

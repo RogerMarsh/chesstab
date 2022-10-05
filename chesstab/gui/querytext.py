@@ -59,9 +59,9 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete("1.0", tkinter.END)
-        self.map_query_statement()
+        self._map_initial_query_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
+            self._bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -76,7 +76,7 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         text = self.score.get("1.0", tkinter.END).strip()
         return text
 
-    def map_query_statement(self):
+    def _map_initial_query_statement(self):
         """Convert tokens to text and show in query statement Text widget."""
         # No mapping of tokens to text in widget (yet).
         self.score.insert(

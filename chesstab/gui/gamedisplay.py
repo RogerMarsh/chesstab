@@ -103,7 +103,7 @@ class _GameDisplay(
         """Return the displayed games."""
         return self.ui.game_items
 
-    # Defined so cycle_item and give_focus_to_widget methods can be shared by
+    # Defined so _cycle_item and give_focus_to_widget methods can be shared by
     # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay
     # classes.
     @property
@@ -131,7 +131,7 @@ class _GameDisplay(
         """Mark ChessQL statements, in datasource, to be recalculated."""
         datasource.dbhome.mark_partial_positions_to_be_recalculated()
 
-    def get_navigation_events(self):
+    def _get_navigation_events(self):
         """Return event description tuple for navigation from game."""
         return (
             (
@@ -168,8 +168,8 @@ class _GameDisplay(
                 EventSpec.navigate_to_active_selection_rule,
                 self.set_focus_selectionpanel_item,
             ),
-            (EventSpec.gamedisplay_to_previous_game, self.prior_item),
-            (EventSpec.gamedisplay_to_next_game, self.next_item),
+            (EventSpec.gamedisplay_to_previous_game, self._prior_item),
+            (EventSpec.gamedisplay_to_next_game, self._next_item),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             # No traverse_round because Alt-F8 toggles game and analysis.
@@ -190,13 +190,13 @@ class _GameDisplay(
                 and self.datasource.dbset == self.sourceobject.dbset
             ):
                 self.blockchange = True
-            self.patch_pgn_score_to_fit_record_change_and_refresh_grid(
+            self._patch_pgn_score_to_fit_record_change_and_refresh_grid(
                 self.ui.game_games, instance
             )
 
     def generate_popup_navigation_maps(self):
         """Return tuple of widget navigation map and switch to analysis map."""
-        navigation_map = dict(self.get_navigation_events())
+        navigation_map = dict(self._get_navigation_events())
         local_map = {
             EventSpec.scoresheet_to_analysis: self.analysis_current_item,
         }
@@ -239,13 +239,13 @@ class GameDisplay(_GameDisplay, Game, DataNotify):
     def create_primary_activity_popup(self):
         """Delegate then add close item entry and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_select_move_popup(self):
         """Delegate then add close item entry and return popup menu."""
         popup = super().create_select_move_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
 
@@ -276,10 +276,10 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
         if original_value.is_error_comment_present():
             original_value.set_game_source("Editor")
 
-    # set_properties_on_grids defined so update_game_database method can be
+    # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and
     # gamedisplay.GameDisplayEdit classes.
     # See class attributes pgn_score_name and pgn_score_source_name too.
-    def set_properties_on_grids(self, newkey):
+    def _set_properties_on_grids(self, newkey):
         """Set properties of widgets for newkey on all grids."""
         self.ui.set_properties_on_all_game_grids(newkey)

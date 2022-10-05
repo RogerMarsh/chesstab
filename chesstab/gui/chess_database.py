@@ -70,7 +70,7 @@ class _Import:
 class Chess(chess_widget.Chess):
     """Connect a chess database with User Interface."""
 
-    def database_open(self):
+    def _database_open(self):
         """Open chess database."""
         if self.opendatabase is not None:
             tkinter.messagebox.showinfo(
@@ -209,7 +209,7 @@ class Chess(chess_widget.Chess):
             )
 
         try:
-            self._database_open(chessfolder)
+            self._open_database_directory(chessfolder)
         except Exception as exc:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
@@ -223,7 +223,7 @@ class Chess(chess_widget.Chess):
                 ),
                 title="Open",
             )
-            self._database_close()
+            self._close_database_and_hide_widgets()
             self.opendatabase = None
             # pylint message broad-except.
             # Can keep going for some exceptions.
@@ -231,7 +231,7 @@ class Chess(chess_widget.Chess):
                 " database in ".join(("Unable to open", APPLICATION_NAME))
             ) from exc
 
-    def database_new(self):
+    def _database_new(self):
         """Create and open a new chess database."""
         if self.opendatabase is not None:
             tkinter.messagebox.showinfo(
@@ -372,7 +372,7 @@ class Chess(chess_widget.Chess):
             )
 
         try:
-            self._database_open(chessfolder)
+            self._open_database_directory(chessfolder)
         except Exception as exc:
             tkinter.messagebox.showinfo(
                 parent=self.get_toplevel(),
@@ -386,7 +386,7 @@ class Chess(chess_widget.Chess):
                 ),
                 title="New",
             )
-            self._database_close()
+            self._close_database_and_hide_widgets()
             # self.database = None  # Should be 'self.opendatabase = None'?
             # pylint message broad-except.
             # Can keep going for some exceptions.
@@ -394,7 +394,7 @@ class Chess(chess_widget.Chess):
                 " database in ".join(("Unable to create", APPLICATION_NAME))
             ) from exc
 
-    def database_close(self):
+    def _database_close(self):
         """Close chess database."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -422,10 +422,10 @@ class Chess(chess_widget.Chess):
             )
             if dlg == tkinter.messagebox.YES:
                 if self.opendatabase:
-                    self._database_close()
+                    self._close_database_and_hide_widgets()
                     self.opendatabase = None
 
-    def database_delete(self):
+    def _database_delete(self):
         """Delete chess database."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -452,7 +452,8 @@ class Chess(chess_widget.Chess):
         )
         if dlg == tkinter.messagebox.YES:
 
-            # Replicate _database_close replacing close_database() call with
+            # Replicate _close_database_and_hide_widgets replacing
+            # close_database() call with
             # delete_database() call.  The close_database() call just before
             # setting opendatabase to None is removed.
             self._close_recordsets()
@@ -484,11 +485,11 @@ class Chess(chess_widget.Chess):
                 message="The chess database has not been deleted",
             )
 
-    def index_select(self):
+    def _index_select(self):
         """Enter a new index seletion (callback for Menu option)."""
-        self.new_index_selection()
+        self._new_index_selection()
 
-    def new_index_selection(self):
+    def _new_index_selection(self):
         """Enter a new index selection."""
         selection = QueryDisplayInsert(
             master=self.ui.view_selection_rules_pw,
@@ -510,7 +511,7 @@ class Chess(chess_widget.Chess):
         # Wrap to take account of self.ui.single_view
         self.ui.selection_items.active_item.takefocus_widget.focus_set()
 
-    def index_show(self):
+    def _index_show(self):
         """Show list of stored stored selection rules."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -527,7 +528,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.show_selection_rules_grid(self.opendatabase)
 
-    def index_hide(self):
+    def _index_hide(self):
         """Hide list of stored selection rules."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -544,7 +545,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.hide_selection_rules_grid()
 
-    def create_options_index_callback(self, index):
+    def _create_options_index_callback(self, index):
         """Return callback to bind to index selection menu buttons."""
 
         def index_changed():
@@ -578,7 +579,7 @@ class Chess(chess_widget.Chess):
 
         return index_changed
 
-    def position_show(self):
+    def _position_show(self):
         """Show list of stored partial positions."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -595,7 +596,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.show_partial_position_grid(self.opendatabase)
 
-    def position_hide(self):
+    def _position_hide(self):
         """Hide list of stored partial positions."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -612,7 +613,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.hide_partial_position_grid()
 
-    def repertoire_show(self):
+    def _repertoire_show(self):
         """Show list of stored repertoire games (opening variations)."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -629,7 +630,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.show_repertoire_grid(self.opendatabase)
 
-    def repertoire_hide(self):
+    def _repertoire_hide(self):
         """Hide list of stored repertoire games (opening variations)."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -646,7 +647,7 @@ class Chess(chess_widget.Chess):
         else:
             self.ui.hide_repertoire_grid()
 
-    def _database_open(self, chessfolder):
+    def _open_database_directory(self, chessfolder):
         """Open chess database after creating it if necessary."""
         self.opendatabase = self._database_class(
             chessfolder, **self._chessdbkargs
@@ -685,7 +686,7 @@ class Chess(chess_widget.Chess):
         self.ui.show_game_grid(self.opendatabase)
         # end code also used in _retry_import
 
-    def _database_close(self):
+    def _close_database_and_hide_widgets(self):
         """Close database and hide database display widgets."""
         self._close_recordsets()
         self.opendatabase.close_database()
@@ -694,7 +695,7 @@ class Chess(chess_widget.Chess):
         # Order matters after changes to solentware-base first implemented as
         # solentware-bitbases in March 2019.
         # Conjecture is timing may still lead to exception in calls, driven by
-        # timer, to find_engine_analysis().  None seen yet.
+        # timer, to _find_engine_analysis().  None seen yet.
         self.ui.set_open_database_and_engine_classes()
         self.ui.hide_game_grid()
 

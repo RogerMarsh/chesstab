@@ -46,7 +46,7 @@ class ScoreNoGameException(Exception):
 class ScoreShow(ScoreWidget):
     """Methods to adjust game display in response to events."""
 
-    def see_first_move(self):
+    def _see_first_move(self):
         """Make first move visible on navigation to initial position.
 
         Current move is always made visible but no current move defined
@@ -69,7 +69,7 @@ class ScoreShow(ScoreWidget):
                 self.board.set_board(self.fen_tag_square_piece_map())
             except ScoreNoGameException:
                 return False
-            self.see_first_move()
+            self._see_first_move()
         else:
             try:
                 self.board.set_board(self.tagpositionmap[self.current][0])
@@ -91,24 +91,24 @@ class ScoreShow(ScoreWidget):
         """Clear the colouring tag for moves played in variation."""
         self.score.tag_remove(VARIATION_TAG, "1.0", tkinter.END)
 
-    def clear_choice_colouring_tag(self):
+    def _clear_choice_colouring_tag(self):
         """Clear the colouring tag for variation choice."""
         self.score.tag_remove(ALTERNATIVE_MOVE_TAG, "1.0", tkinter.END)
 
-    def clear_variation_colouring_tag(self):
+    def _clear_variation_colouring_tag(self):
         """Clear the colouring tag for moves in variation."""
         self.score.tag_remove(LINE_TAG, "1.0", tkinter.END)
         self.score.tag_remove(LINE_END_TAG, "1.0", tkinter.END)
 
-    def get_position_for_current(self):
+    def _get_position_for_current(self):
         """Return position associated with the current range."""
         if self.current is None:
             return self.tagpositionmap[None]
-        return self.get_position_for_text_index(
+        return self._get_position_for_text_index(
             self.score.tag_ranges(self.current)[0]
         )
 
-    def get_position_for_text_index(self, index):
+    def _get_position_for_text_index(self, index):
         """Return position associated with index in game score text widget."""
         tagpositionmap = self.tagpositionmap
         for tag in self.score.tag_names(index):
@@ -116,13 +116,13 @@ class ScoreShow(ScoreWidget):
                 return tagpositionmap[tag]
         return None
 
-    def get_position_key(self):
+    def _get_position_key(self):
         """Return position key string for position associated with current."""
         try:
 
-            # Hack.  get_position_for_current returns None on next/prev token
+            # Hack.  _get_position_for_current returns None on next/prev token
             # navigation at end of imported game with errors when editing.
-            return get_position_string(*self.get_position_for_current())
+            return get_position_string(*self._get_position_for_current())
 
         except TypeError:
             return False
@@ -140,13 +140,13 @@ class ScoreShow(ScoreWidget):
         # Superclass set_current method may adjust bindings so do not call
         # context independent binding setup methods after this method for
         # an event.
-        tag_range = self.set_current_range()
+        tag_range = self._set_current_range()
         if tag_range:
-            self.set_move_tag(tag_range[0], tag_range[1])
+            self._set_move_tag(tag_range[0], tag_range[1])
             return tag_range
         return None
 
-    def set_current_range(self):
+    def _set_current_range(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.
 
         Subclasses may adjust the MOVE_TAG range if the required colouring
@@ -164,30 +164,30 @@ class ScoreShow(ScoreWidget):
             return None
         return tag_range
 
-    def set_move_tag(self, start, end):
+    def _set_move_tag(self, start, end):
         """Add range start to end to MOVE_TAG (which is expected to be empty).
 
-        Assumption is that set_current_range has been called and MOVE_TAG is
+        Assumption is that _set_current_range has been called and MOVE_TAG is
         still empty following that call.
 
         """
         self.score.tag_add(MOVE_TAG, start, end)
 
-    def show_new_current(self, new_current=None):
+    def _show_new_current(self, new_current=None):
         """Set current to new item and adjust display."""
         self.clear_moves_played_in_variation_colouring_tag()
-        self.clear_choice_colouring_tag()
-        self.clear_variation_colouring_tag()
+        self._clear_choice_colouring_tag()
+        self._clear_variation_colouring_tag()
         self.current = new_current
         self.set_current()
         self.set_game_board()
         return "break"
 
-    def show_item(self, new_item=None):
+    def _show_item(self, new_item=None):
         """Display new item if not None."""
         if not new_item:
             return "break"
-        return self.show_new_current(new_current=new_item)
+        return self._show_new_current(new_current=new_item)
 
     def set_game_list(self):
         """Display list of records in grid.
@@ -200,7 +200,7 @@ class ScoreShow(ScoreWidget):
         if grid is None:
             return
         if grid.get_database() is not None:
-            newpartialkey = self.get_position_key()
+            newpartialkey = self._get_position_key()
             if grid.partial != newpartialkey:
                 grid.partial = newpartialkey
                 grid.rows = 1
@@ -214,7 +214,7 @@ class ScoreShow(ScoreWidget):
         tag_range = widget.tag_nextrange(move, "1.0")
         widget.tag_add(VARIATION_TAG, tag_range[0], tag_range[1])
 
-    def is_index_in_main_line(self, index):
+    def _is_index_in_main_line(self, index):
         """Return True if index is in the main line tag."""
         return bool(
             self.score.tag_nextrange(
@@ -222,11 +222,11 @@ class ScoreShow(ScoreWidget):
             )
         )
 
-    def is_move_in_main_line(self, move):
+    def _is_move_in_main_line(self, move):
         """Return True if move is in the main line."""
-        return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
+        return self._is_index_in_main_line(self.score.tag_ranges(move)[0])
 
-    def add_variation_before_move_to_colouring_tag(self, move):
+    def _add_variation_before_move_to_colouring_tag(self, move):
         """Add variation before current move to moves played colouring tag."""
         widget = self.score
         index = widget.tag_nextrange(move, "1.0")[0]
@@ -238,7 +238,7 @@ class ScoreShow(ScoreWidget):
                     tag_range = widget.tag_nextrange(ctn, tag_range[1], index)
                 return
 
-    def select_first_move_in_line(self, move):
+    def _select_first_move_in_line(self, move):
         """Return tag name for first move in rav containing move."""
         widget = self.score
         tag_range = widget.tag_ranges(move)
@@ -257,17 +257,19 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def get_choice_tag_of_index(self, index):
+    def _get_choice_tag_of_index(self, index):
         """Return Tk tag name if index is in a choice tag."""
         for tag_name in self.score.tag_names(index):
             if tag_name.startswith(CHOICE):
                 return tag_name
         return None
 
-    def get_choice_tag_of_move(self, move):
+    def _get_choice_tag_of_move(self, move):
         """Return Tk tag name if move is first move of a variation choice."""
         if move:
-            return self.get_choice_tag_of_index(self.score.tag_ranges(move)[0])
+            return self._get_choice_tag_of_index(
+                self.score.tag_ranges(move)[0]
+            )
         return None
 
     @staticmethod
@@ -290,7 +292,7 @@ class ScoreShow(ScoreWidget):
             end = tag_range.pop(0)
             add(colortag, start, end)
 
-    def add_currentmove_variation_to_colouring_tag(self):
+    def _add_currentmove_variation_to_colouring_tag(self):
         """Add current move variation to selected variation colouring tag."""
         widget = self.score
         for tag_name in widget.tag_names(
@@ -323,20 +325,20 @@ class ScoreShow(ScoreWidget):
         if self.current is None:
             return
         move = self.current
-        if not self.is_move_in_main_line(move):
-            self.add_currentmove_variation_to_colouring_tag()
-        while not self.is_move_in_main_line(move):
+        if not self._is_move_in_main_line(move):
+            self._add_currentmove_variation_to_colouring_tag()
+        while not self._is_move_in_main_line(move):
             self.add_move_to_moves_played_colouring_tag(move)
-            self.add_variation_before_move_to_colouring_tag(move)
-            first_move_of_variation = self.select_first_move_in_line(move)
-            choice = self.get_choice_tag_of_move(first_move_of_variation)
+            self._add_variation_before_move_to_colouring_tag(move)
+            first_move_of_variation = self._select_first_move_in_line(move)
+            choice = self._get_choice_tag_of_move(first_move_of_variation)
             prior = self.score.tag_ranges(
                 self.get_prior_tag_for_choice(choice)
             )
             if not prior:
                 move = None
                 break
-            move = self.get_position_tag_of_index(prior[0])
+            move = self._get_position_tag_of_index(prior[0])
             selection = self.get_selection_tag_for_choice(choice)
             if selection:
                 self.score.tag_remove(selection, "1.0", tkinter.END)
@@ -367,11 +369,11 @@ class ScoreShow(ScoreWidget):
                 return None
             if widget.compare(move[1], "<", index):
                 return None
-        selected_move = self.get_position_tag_of_index(index)
+        selected_move = self._get_position_tag_of_index(index)
         if selected_move:
             self.clear_moves_played_in_variation_colouring_tag()
-            self.clear_choice_colouring_tag()
-            self.clear_variation_colouring_tag()
+            self._clear_choice_colouring_tag()
+            self._clear_variation_colouring_tag()
             self.current = selected_move
             self.set_current()
             self.apply_colouring_to_variation_back_to_main_line()
@@ -379,7 +381,7 @@ class ScoreShow(ScoreWidget):
             return True
         return None
 
-    def go_to_token(self, event=None):
+    def _go_to_token(self, event=None):
         """Highlight token at pointer in active item, and set position."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
@@ -388,11 +390,11 @@ class ScoreShow(ScoreWidget):
             self.score.index("".join(("@", str(event.x), ",", str(event.y))))
         )
 
-    def is_game_in_text_edit_mode(self):
+    def _is_game_in_text_edit_mode(self):
         """Return True if current state of score widget is 'normal'."""
         return self.score.cget("state") == tkinter.NORMAL
 
-    def cycle_selection_tag(self, choice, selection):
+    def _cycle_selection_tag(self, choice, selection):
         """Cycle selection one range round the choice ranges if coloured.
 
         The choice ranges are coloured if they are on ALTERNATIVE_MOVE_TAG.
@@ -417,14 +419,14 @@ class ScoreShow(ScoreWidget):
         else:
             widget.tag_add(selection, choice_tnr[0], choice_tnr[1])
 
-    def get_prior_to_variation_tag_of_index(self, index):
+    def _get_prior_to_variation_tag_of_index(self, index):
         """Return Tk tag name if index is in a prior to variation tag."""
         for tag_name in self.score.tag_names(index):
             if tag_name.startswith(PRIOR_MOVE):
                 return tag_name
         return None
 
-    def get_colouring_variation_tag_of_index(self, index):
+    def _get_colouring_variation_tag_of_index(self, index):
         """Return Tk tag name if index is in a varsep tag.
 
         RAV_SEP for colouring (RAV_MOVES for editing).
@@ -445,7 +447,7 @@ class ScoreShow(ScoreWidget):
         """Return Tk tag name for selection with same suffix as prior."""
         return "".join((SELECTION, prior[len(PRIOR_MOVE) :]))
 
-    def is_variation_entered(self):
+    def _is_variation_entered(self):
         """Return True if currentmove is, or about to be, in variation.
 
         Colour tag LINE_TAG will contain at least one range if a variation
@@ -459,7 +461,7 @@ class ScoreShow(ScoreWidget):
             return True
         return False
 
-    def get_position_tag_of_previous_move(self):
+    def _get_position_tag_of_previous_move(self):
         """Return name of tag of move played prior to current move in line.
 
         Assumes self.currentmove has been removed from VARIATION_TAG.
@@ -477,7 +479,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def set_next_variation_move_played_colouring_tag(self, move):
+    def _set_next_variation_move_played_colouring_tag(self, move):
         """Add range from selected variation for move to moves played tag.
 
         Used at start of game when no move has been played.
@@ -517,10 +519,10 @@ class ScoreShow(ScoreWidget):
             end = tag_range.pop(0)
             remove(colortag, start, end)
 
-    def select_move_for_start_of_analysis(self, movetag=MOVE_TAG):
+    def _select_move_for_start_of_analysis(self, movetag=MOVE_TAG):
         """Return name of tag for move to which analysis will be attached.
 
-        Differs from select_next_move_in_line() by returning None if at last
+        Differs from _select_next_move_in_line() by returning None if at last
         position in line or game, rather than self.current.
 
         """
@@ -543,7 +545,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def colour_variation(self, move):
+    def _colour_variation(self, move):
         """Colour variation and display its initial position.
 
         The current move is coloured to indicate it is a move played to reach
@@ -557,62 +559,62 @@ class ScoreShow(ScoreWidget):
 
             # No prior to variation tag exists: no move to attach it to.
             prior = None
-            choice = self.get_choice_tag_of_move(
+            choice = self._get_choice_tag_of_move(
                 self.select_first_move_of_game()
             )
             selection = self.get_selection_tag_for_choice(choice)
 
         else:
-            prior = self.get_prior_to_variation_tag_of_move(move)
+            prior = self._get_prior_to_variation_tag_of_move(move)
             choice = self.get_choice_tag_for_prior(prior)
             selection = self.get_selection_tag_for_prior(prior)
-        self.clear_variation_choice_colouring_tag(choice)
-        selected_first_move = self.select_first_move_of_selected_line(
+        self._clear_variation_choice_colouring_tag(choice)
+        selected_first_move = self._select_first_move_of_selected_line(
             selection
         )
-        if self.is_move_in_main_line(selected_first_move):
+        if self._is_move_in_main_line(selected_first_move):
             self.clear_moves_played_in_variation_colouring_tag()
-            self.clear_variation_colouring_tag()
+            self._clear_variation_colouring_tag()
         elif move is None:
-            self.set_next_variation_move_played_colouring_tag(selection)
+            self._set_next_variation_move_played_colouring_tag(selection)
         else:
             self.add_move_to_moves_played_colouring_tag(move)
         self.current = selected_first_move
         self.set_current()
         self.set_game_board()
 
-    def see_current_move(self):
+    def _see_current_move(self):
         """Make current move visible and default to first move."""
         if self.current:
             self.score.see(self.score.tag_ranges(self.current)[0])
         else:
-            self.see_first_move()
+            self._see_first_move()
 
-    def step_one_variation(self, move):
+    def _step_one_variation(self, move):
         """Highlight next variation in choices at current position."""
         if move is None:
 
             # No prior to variation tag exists: no move to attach it to.
             prior = None
-            choice = self.get_choice_tag_of_move(
+            choice = self._get_choice_tag_of_move(
                 self.select_first_move_of_game()
             )
             selection = self.get_selection_tag_for_choice(choice)
 
         else:
-            prior = self.get_prior_to_variation_tag_of_move(move)
+            prior = self._get_prior_to_variation_tag_of_move(move)
             choice = self.get_choice_tag_for_prior(prior)
             selection = self.get_selection_tag_for_prior(prior)
 
         # if choices are already on ALTERNATIVE_MOVE_TAG cycle selection one
         # place round choices before getting colouring variation tag.
-        self.cycle_selection_tag(choice, selection)
+        self._cycle_selection_tag(choice, selection)
 
-        variation = self.get_colouring_variation_tag_for_selection(selection)
-        self.set_variation_selection_tags(prior, choice, selection, variation)
+        variation = self._get_colouring_variation_tag_for_selection(selection)
+        self._set_variation_selection_tags(prior, choice, selection, variation)
         return variation
 
-    def clear_variation_choice_colouring_tag(self, first_moves_in_variations):
+    def _clear_variation_choice_colouring_tag(self, first_moves_in_variations):
         """Remove ranges in first_moves_in_variations from colour tag.
 
         The colour tag is ALTERNATIVE_MOVE_TAG which should contain just the
@@ -625,7 +627,7 @@ class ScoreShow(ScoreWidget):
             first_moves_in_variations, ALTERNATIVE_MOVE_TAG
         )
 
-    def get_range_next_move_in_variation(self):
+    def _get_range_next_move(self):
         """Return range of move after current move in variation."""
         if self.current is None:
             tnr = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
@@ -664,24 +666,24 @@ class ScoreShow(ScoreWidget):
                 nextpos = None
         return (prevpos, currpos, nextpos)
 
-    def get_prior_to_variation_tag_of_move(self, move):
+    def _get_prior_to_variation_tag_of_move(self, move):
         """Return Tk tag name if currentmove is prior to a variation."""
-        return self.get_prior_to_variation_tag_of_index(
+        return self._get_prior_to_variation_tag_of_index(
             self.score.tag_ranges(move)[0]
         )
 
-    def get_colouring_variation_tag_for_selection(self, selection):
+    def _get_colouring_variation_tag_for_selection(self, selection):
         """Return Tk tag name for variation associated with selection."""
-        return self.get_colouring_variation_tag_of_index(
+        return self._get_colouring_variation_tag_of_index(
             self.score.tag_ranges(selection)[0]
         )
 
-    def get_current_tag_and_mark_names(self):
+    def _get_current_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names."""
         suffix = str(self.position_number)
         return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
-    def get_tag_and_mark_names(self):
+    def _get_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names.
 
         The suffixes are arbitrary so increment then generate suffix would be
@@ -696,13 +698,13 @@ class ScoreShow(ScoreWidget):
         suffix = str(self.position_number)
         return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
-    def is_currentmove_in_main_line(self):
+    def _is_currentmove_in_main_line(self):
         """Return True if currentmove is in the main line tag."""
-        return self.is_index_in_main_line(
+        return self._is_index_in_main_line(
             self.score.tag_ranges(self.current)[0]
         )
 
-    def is_currentmove_start_of_variation(self):
+    def _is_currentmove_start_of_variation(self):
         """Return True if currentmove is at start of a variation tag."""
         widget = self.score
         index = widget.tag_ranges(self.current)[0]
@@ -713,7 +715,7 @@ class ScoreShow(ScoreWidget):
 
     def is_index_of_variation_next_move_in_choice(self):
         """Return True if index is in a choice of variations tag."""
-        tag_range = self.get_range_next_move_in_variation()
+        tag_range = self._get_range_next_move()
         if not tag_range:
             return False
         for tag_name in self.score.tag_names(tag_range[0]):
@@ -721,7 +723,7 @@ class ScoreShow(ScoreWidget):
                 return True
         return False
 
-    def remove_currentmove_from_moves_played_in_variation(self):
+    def _remove_currentmove_from_moves_played_in_variation(self):
         """Remove current move from moves played in variation colouring tag."""
         widget = self.score
         tag_range = widget.tag_nextrange(self.current, "1.0")
@@ -739,7 +741,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def select_first_move_of_selected_line(self, selection):
+    def _select_first_move_of_selected_line(self, selection):
         """Return name of tag associated with first move of line."""
         widget = self.score
         for tag_name in widget.tag_names(widget.tag_ranges(selection)[0]):
@@ -755,7 +757,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def select_last_move_played_in_game(self):
+    def _select_last_move_played_in_game(self):
         """Return name of tag associated with last move played in game."""
         widget = self.score
         try:
@@ -767,7 +769,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def select_last_move_in_line(self):
+    def _select_last_move_in_line(self):
         """Return name of tag associated with last move in line."""
         widget = self.score
         tag_range = widget.tag_ranges(MOVE_TAG)
@@ -786,7 +788,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def select_next_move_in_line(self, movetag=MOVE_TAG):
+    def _select_next_move_in_line(self, movetag=MOVE_TAG):
         """Return name of tag associated with next move in line."""
         widget = self.score
         tag_range = widget.tag_ranges(movetag)
@@ -807,7 +809,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def select_prev_move_in_line(self):
+    def _select_prev_move_in_line(self):
         """Return name of tag associated with previous move in line."""
         widget = self.score
         oldtr = widget.tag_ranges(MOVE_TAG)
@@ -828,7 +830,7 @@ class ScoreShow(ScoreWidget):
                 return tag_name
         return None
 
-    def set_variation_selection_tags(
+    def _set_variation_selection_tags(
         self,
         move_prior_to_choice,
         first_moves_in_variations,
@@ -870,7 +872,7 @@ class ScoreShow(ScoreWidget):
         else:
             index = widget.tag_ranges(move_prior_to_choice)[0]
 
-        # Remove current move from VARIATION_TAG (for show_prev_in_variation)
+        # Remove current move from VARIATION_TAG (for _show_prev_in_variation)
         if move_prior_to_choice:
             widget.tag_remove(VARIATION_TAG, index, tkinter.END)
 
@@ -901,7 +903,7 @@ class ScoreShow(ScoreWidget):
             ),
         )
 
-    def set_variation_tags_from_currentmove(self):
+    def _set_variation_tags_from_currentmove(self):
         """Replace existing color tags ranges with those current move.
 
         Assumes colour tags are already set correctly for moves prior to
@@ -914,7 +916,7 @@ class ScoreShow(ScoreWidget):
         widget.tag_remove(LINE_TAG, index, tkinter.END)
         widget.tag_remove(LINE_END_TAG, index, tkinter.END)
         self._add_tag_ranges_to_color_tag(
-            self.get_colouring_variation_tag_of_index(index), LINE_TAG
+            self._get_colouring_variation_tag_of_index(index), LINE_TAG
         )
         widget.tag_add(
             LINE_END_TAG,
@@ -942,7 +944,7 @@ class ScoreShow(ScoreWidget):
             return None
         return tag_range
 
-    def get_move_for_start_of_analysis(self):
+    def _get_move_for_start_of_analysis(self):
         """Return PGN text of move to which analysis will be RAVs.
 
         Default to first move played in game, or '' if no moves played, or ''
@@ -952,7 +954,7 @@ class ScoreShow(ScoreWidget):
         if self.current is None:
             tag = self.select_first_move_of_game()
         else:
-            tag = self.select_move_for_start_of_analysis()
+            tag = self._select_move_for_start_of_analysis()
         if tag is None:
             return ""
         tag_range = self.score.tag_ranges(tag)

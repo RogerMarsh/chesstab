@@ -23,7 +23,7 @@ from . import chess_database
 class Chess(chess_database.Chess):
     """Allow import to a chess database."""
 
-    def database_import(self):
+    def _database_import(self):
         """Import games to open database."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
@@ -86,10 +86,10 @@ class Chess(chess_database.Chess):
             # gives time for destruction of dialogue and widget refresh
             # does nothing for obscuring and revealing application later
             self.root.after_idle(
-                self.try_command(self._database_import, self.root), gamefile
+                self.try_command(self._import_pgnfiles, self.root), gamefile
             )
 
-    def import_repertoires(self):
+    def _import_repertoires(self):
         """Import repertoires from PGN-like file."""
         if self.is_import_subprocess_active():
             tkinter.messagebox.showinfo(
@@ -104,7 +104,7 @@ class Chess(chess_database.Chess):
             message="Not implemented",
         )
 
-    def import_positions(self):
+    def _import_positions(self):
         """Import positions from text file."""
         if self.is_import_subprocess_active():
             tkinter.messagebox.showinfo(
@@ -119,7 +119,7 @@ class Chess(chess_database.Chess):
             message="Not implemented",
         )
 
-    def _database_import(self, pgnfiles):
+    def _import_pgnfiles(self, pgnfiles):
         """Import games to open database."""
         self.ui.set_import_subprocess()  # raises exception if already active
         self._pgnfiles = pgnfiles
@@ -174,7 +174,7 @@ class Chess(chess_database.Chess):
             #     self.try_command(after_completion, self.root))
             self.reportqueue.put(
                 (
-                    self.try_command_after_idle,
+                    self._try_command_after_idle,
                     (after_completion, self.root),
                     dict(),
                 )
@@ -354,7 +354,7 @@ class Chess(chess_database.Chess):
             self.ui.partial_games.set_partial_key()
             self.ui.partial_items.active_item.refresh_game_list()
 
-    def try_command_after_idle(self, method, widget):
+    def _try_command_after_idle(self, method, widget):
         """Run command in main thread after idle."""
         self.root.after_idle(self.try_command(method, widget))
 
@@ -374,6 +374,6 @@ class Chess(chess_database.Chess):
                 text="Please wait while importing PGN file"
             )
             self.root.after_idle(
-                self.try_command(self._database_import, self.root),
+                self.try_command(self._import_pgnfiles, self.root),
                 self._pgnfiles,
             )

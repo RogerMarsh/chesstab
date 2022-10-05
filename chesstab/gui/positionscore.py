@@ -102,7 +102,7 @@ class PositionScore(ExceptionHandler):
         widget.tag_configure(MOVE_TAG, background=self.m_color)
         widget.tag_configure(ALTERNATIVE_MOVE_TAG, background=self.am_color)
         widget.tag_configure(VARIATION_TAG, background=self.v_color)
-        widget.bind("<Map>", self.try_event(self.on_map))
+        widget.bind("<Map>", self.try_event(self._on_map))
         # None implies initial position and is deliberately not a valid Tk tag.
         self.current = None  # Tk tag of current move
         self._clear_tag_maps()
@@ -112,7 +112,7 @@ class PositionScore(ExceptionHandler):
         self._game_scaffold = None
 
     # Nothing needed on <Unmap> event at present
-    def on_map(self, event):
+    def _on_map(self, event):
         """Scroll text of move into current position to left edge of widget.
 
         This is done correctly only if the widget is mapped.  So do it when
@@ -180,7 +180,7 @@ class PositionScore(ExceptionHandler):
         if tagrange:
             self.score.tag_remove(MOVE_TAG, tagrange[0], tagrange[1])
 
-    def get_tags_display_order(self):
+    def _get_tags_display_order(self):
         """Return tags in alphabetic order except any chosen to be last.
 
         last=None means do not display the tags: assume tags will be displayed
@@ -223,24 +223,24 @@ class PositionScore(ExceptionHandler):
         self.variation_number += 1
         return "".join((RAV_MOVES, str(self.variation_number)))
 
-    def get_next_positiontag_name(self):
+    def _get_next_positiontag_name(self):
         """Return suffixed POSITION tag name."""
         self.position_number += 1
         return "".join((POSITION, str(self.position_number)))
 
-    def get_position_tag_of_index(self, index):
+    def _get_position_tag_of_index(self, index):
         """Return Tk tag name if index is in a position tag."""
         for tagname in self.score.tag_names(index):
             if tagname.startswith(POSITION):
                 return tagname
         return None
 
-    def get_current_tag_and_mark_names(self):
+    def _get_current_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names."""
         suffix = str(self.position_number)
         return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
-    def get_tag_and_mark_names(self):
+    def _get_tag_and_mark_names(self):
         """Return suffixed POSITION and TOKEN tag and TOKEN_MARK mark names.
 
         The suffixes are arbitrary so increment then generate suffix would be
@@ -255,7 +255,7 @@ class PositionScore(ExceptionHandler):
         suffix = str(self.position_number)
         return ["".join((t, suffix)) for t in (POSITION, TOKEN, TOKEN_MARK)]
 
-    def insert_token_into_text(self, token, separator):
+    def _insert_token_into_text(self, token, separator):
         """Insert token and separator in widget.  Return boundary indicies.
 
         Indicies for start and end of token text are noted primarily to control
@@ -271,13 +271,13 @@ class PositionScore(ExceptionHandler):
         widget.insert(tkinter.INSERT, separator)
         return start, end, widget.index(tkinter.INSERT)
 
-    def is_currentmove_in_main_line(self):
+    def _is_currentmove_in_main_line(self):
         """Return True if currentmove is in the main line tag."""
-        return self.is_index_in_main_line(
+        return self._is_index_in_main_line(
             self.score.tag_ranges(self.current)[0]
         )
 
-    def is_index_in_main_line(self, index):
+    def _is_index_in_main_line(self, index):
         """Return True if index is in the main line tag."""
         return bool(
             self.score.tag_nextrange(
@@ -285,9 +285,9 @@ class PositionScore(ExceptionHandler):
             )
         )
 
-    def is_move_in_main_line(self, move):
+    def _is_move_in_main_line(self, move):
         """Return True if move is in the main line."""
-        return self.is_index_in_main_line(self.score.tag_ranges(move)[0])
+        return self._is_index_in_main_line(self.score.tag_ranges(move)[0])
 
     # At present both POSITION<suffix> and TOKEN<suffix> tags exist.
     # Now that setting MOVE_TAG has been moved to token-type specific code
@@ -332,7 +332,7 @@ class PositionScore(ExceptionHandler):
         for text, delta in zip(game.pgn_text, game.position_deltas):
             text0 = text[0]
             if text0 in "abcdefghKQRBNkqrnO":
-                self.map_move_text(text, delta)
+                self._map_move_text(text, delta)
             elif text0 == "(":
                 self.map_start_rav(text, delta)
             elif text0 == ")":
@@ -341,13 +341,13 @@ class PositionScore(ExceptionHandler):
                 self.map_termination(text)
             else:
                 self.map_non_move(text)
-        self.insert_token_into_text(
+        self._insert_token_into_text(
             game.pgn_tags.get(TAG_WHITE, DEFAULT_TAG_VALUE), SPACE_SEP
         )
-        self.insert_token_into_text(
+        self._insert_token_into_text(
             game.pgn_tags.get(TAG_RESULT, DEFAULT_TAG_RESULT_VALUE), SPACE_SEP
         )
-        self.insert_token_into_text(
+        self._insert_token_into_text(
             game.pgn_tags.get(TAG_BLACK, DEFAULT_TAG_VALUE), SPACE_SEP
         )
 
@@ -387,7 +387,7 @@ class PositionScore(ExceptionHandler):
                 return False
         return True
 
-    def map_move_text(self, token, delta):
+    def _map_move_text(self, token, delta):
         """Add token to game text and modify game position by delta."""
         prevcontext, currcontext, nextcontext = self._context
         scaffold = self._game_scaffold
@@ -423,18 +423,18 @@ class PositionScore(ExceptionHandler):
             return
         widget = self.score
         if delta[1][1] != FEN_WHITE_ACTIVE:
-            start, end, sepend = self.insert_token_into_text(
+            start, end, sepend = self._insert_token_into_text(
                 str(delta[1][5]) + ".", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         elif scaffold.force_movenumber:
-            start, end, sepend = self.insert_token_into_text(
+            start, end, sepend = self._insert_token_into_text(
                 str(delta[0][5]) + "...", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         scaffold.force_movenumber = False
-        positiontag = self.get_next_positiontag_name()
-        start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+        positiontag = self._get_next_positiontag_name()
+        start, end, sepend = self._insert_token_into_text(token, SPACE_SEP)
         for tag in positiontag, scaffold.vartag, NAVIGATE_MOVE:
             widget.tag_add(tag, start, end)
         if scaffold.vartag == self.gamevartag:
@@ -469,7 +469,7 @@ class PositionScore(ExceptionHandler):
         self._set_square_piece_map(position)
         self.varstack.append(scaffold.vartag)
         scaffold.vartag = self.get_variation_tag_name()
-        self.insert_token_into_text(token, SPACE_SEP)
+        self._insert_token_into_text(token, SPACE_SEP)
         scaffold.force_movenumber = True
 
     def map_end_rav(self, token, position):
@@ -482,18 +482,18 @@ class PositionScore(ExceptionHandler):
         """
         scaffold = self._game_scaffold
         self._set_square_piece_map(position)
-        self.insert_token_into_text(token, SPACE_SEP)
+        self._insert_token_into_text(token, SPACE_SEP)
         scaffold.vartag = self.varstack.pop()
         scaffold.force_movenumber = True
 
     def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
         if self.collected_game.pgn_tags.get(TAG_RESULT) != token:
-            self.insert_token_into_text(token, SPACE_SEP)
+            self._insert_token_into_text(token, SPACE_SEP)
 
     def map_non_move(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        # self.insert_token_into_text(token, SPACE_SEP)
+        # self._insert_token_into_text(token, SPACE_SEP)
 
     def set_current(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.
@@ -508,13 +508,13 @@ class PositionScore(ExceptionHandler):
         # Superclass set_current method may adjust bindings so do not call
         # context independent binding setup methods after this method for
         # an event.
-        tagrange = self.set_current_range()
+        tagrange = self._set_current_range()
         if tagrange:
-            self.set_move_tag(tagrange[0], tagrange[1])
+            self._set_move_tag(tagrange[0], tagrange[1])
             return tagrange
         return None
 
-    def set_current_range(self):
+    def _set_current_range(self):
         """Remove existing MOVE_TAG ranges and add self.currentmove ranges.
 
         Subclasses may adjust the MOVE_TAG range if the required colouring
@@ -532,10 +532,10 @@ class PositionScore(ExceptionHandler):
             return None
         return tagrange
 
-    def set_move_tag(self, start, end):
+    def _set_move_tag(self, start, end):
         """Add range start to end to MOVE_TAG (which is expected to be empty).
 
-        Assumption is that set_current_range has been called and MOVE_TAG is
+        Assumption is that _set_current_range has been called and MOVE_TAG is
         still empty following that call.
 
         """

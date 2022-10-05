@@ -90,7 +90,7 @@ _error_wrapper_re = re.compile(
 class GameEdit(gameedit_misc.GameEdit):
     """Display a game with editing allowed."""
 
-    def get_implied_current_move(self):
+    def _get_implied_current_move(self):
         """Return implied current if self.current is RAV start.
 
         RAV start is associated with the position in which the first move
@@ -138,7 +138,7 @@ class GameEdit(gameedit_misc.GameEdit):
         rooks or no rook can reach the c-file.
 
         """
-        return self.is_currentmove_in_edited_move()
+        return self._is_currentmove_in_edited_move()
 
     def is_currentmove_editable(self):
         """Return True if currentmove is one of the editable moves.
@@ -147,9 +147,9 @@ class GameEdit(gameedit_misc.GameEdit):
         being edited the move is also in the 'being edited' set.
 
         """
-        return self.is_currentmove_in_edit_move()
+        return self._is_currentmove_in_edit_move()
 
-    def is_game_or_rav_valid_without_move(self):
+    def _is_game_or_rav_valid_without_move(self):
         """Return True if current move can be removed leaving valid PGN text.
 
         It is assumed the move to be removed is the last in the rav or game.
@@ -168,8 +168,8 @@ class GameEdit(gameedit_misc.GameEdit):
         problem is picking the ) token to delete along with <move>.
 
         """
-        if not self.is_currentmove_in_main_line():
-            if self.is_currentmove_start_of_variation():
+        if not self._is_currentmove_in_main_line():
+            if self._is_currentmove_start_of_variation():
                 # Should any comments be ignored? (as done here)
                 return True
         current = self.score.tag_ranges(self.current)
@@ -180,14 +180,14 @@ class GameEdit(gameedit_misc.GameEdit):
                 return False
         return True
 
-    def set_nearest_move_to_token_as_currentmove(self):
+    def _set_nearest_move_to_token_as_currentmove(self):
         """Set current, if a non-move token, to prior move token in game."""
         if self.current:
             # Hack coping with Page Down, Shift + Right to end, Control + Left,
             # Page Down in an imported game with errors being edited if there
             # is a token after the termination symbol. First two actions are
             # setup and last two cause program failure.
-            self.current = self.get_nearest_move_to_token(self.current)
+            self.current = self._get_nearest_move_to_token(self.current)
         self.set_current()
         self.apply_colouring_to_variation_back_to_main_line()
         # Set colouring of moves. This is either correct as stands (Alt-Left
@@ -198,7 +198,7 @@ class GameEdit(gameedit_misc.GameEdit):
         start, end, sepend = super().add_text_pgntag_or_pgnvalue(
             token, tagset=tagset, separator=separator
         )
-        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        positiontag, tokentag, tokenmark = self._get_tag_and_mark_names()
         del tokentag
         widget = self.score
         for tag in tagset:
@@ -206,28 +206,28 @@ class GameEdit(gameedit_misc.GameEdit):
         widget.mark_set(tokenmark, end)
         for tag in (NAVIGATE_TOKEN,):
             widget.tag_add(tag, start, end)
-        self.add_position_tag_to_pgntag_tags(positiontag, start, end)
+        self._add_position_tag_to_pgntag_tags(positiontag, start, end)
         return start, end, sepend
 
-    def delete_empty_token(self):
+    def _delete_empty_token(self):
         """Delete empty non-move token from PGN movetext."""
         widget = self.score
         if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
             return
         tr_q = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if tr_q:
-            current = self.select_prev_token_in_game()
+            current = self._select_prev_token_in_game()
             if not current:
-                current = self.select_next_token_in_game()
+                current = self._select_next_token_in_game()
             widget.delete(*tr_q)
-            self.delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr_q)
+            self._delete_forced_newline_token_prefix(NAVIGATE_TOKEN, tr_q)
             del self.tagpositionmap[self.current]
             self.current = current
             self.set_current()
             self.set_game_board()
             return
 
-    def delete_char_next_to_insert_mark(self, first, last):
+    def _delete_char_next_to_insert_mark(self, first, last):
         """Delete char after INSERT mark if INSERT equals first, else before.
 
         (first, last) should be (START_EDIT_MARK, Tkinter.INSERT) or
@@ -275,19 +275,19 @@ class GameEdit(gameedit_misc.GameEdit):
         tagged characters but TOKEN<suffix> still tags at least one character.
 
         """
-        # Find the previous token then call get_nearest_move_to_token.
+        # Find the previous token then call _get_nearest_move_to_token.
         tr_q = self.score.tag_ranges(self.get_token_tag_for_position(position))
         if tr_q:
-            return self.get_nearest_move_to_token(
-                self.get_token_tag_of_index(
+            return self._get_nearest_move_to_token(
+                self._get_token_tag_of_index(
                     self.score.tag_prevrange(NAVIGATE_TOKEN, tr_q[0])[0]
                 )
             )
         return False
 
-    def insert_empty_comment(self):
+    def _insert_empty_comment(self):
         """Insert "{<null>) " sequence."""
-        self.set_insertion_point_before_next_token(
+        self._set_insertion_point_before_next_token(
             between_newlines=bool(
                 self.score.tag_nextrange(
                     NAVIGATE_TOKEN,
@@ -296,14 +296,14 @@ class GameEdit(gameedit_misc.GameEdit):
                 )
             )
         )
-        t_q = self.add_start_comment("{}", self.get_position_for_current())
+        t_q = self._add_start_comment("{}", self._get_position_for_current())
         if self.current is None:
-            self.set_start_score_mark_before_positiontag()
+            self._set_start_score_mark_before_positiontag()
         return t_q[0]
 
-    def insert_empty_comment_to_eol(self):
+    def _insert_empty_comment_to_eol(self):
         r"""Insert ";<null>\n " sequence."""
-        self.set_insertion_point_before_next_token(
+        self._set_insertion_point_before_next_token(
             between_newlines=bool(
                 self.score.tag_nextrange(
                     NAVIGATE_TOKEN,
@@ -312,12 +312,12 @@ class GameEdit(gameedit_misc.GameEdit):
                 )
             )
         )
-        t_q = self.add_comment_to_eol(";\n", self.get_position_for_current())
+        t_q = self._add_comment_to_eol(";\n", self._get_position_for_current())
         if self.current is None:
-            self.set_start_score_mark_before_positiontag()
+            self._set_start_score_mark_before_positiontag()
         return t_q[0]
 
-    def insert_empty_escape_to_eol(self):
+    def _insert_empty_escape_to_eol(self):
         r"""Insert "\n%<null>\n " sequence.
 
         Leading '\n' is the PGN rule.  Here this is done as a consequence
@@ -325,7 +325,7 @@ class GameEdit(gameedit_misc.GameEdit):
         identical to comment to EOL except '%' not ';' at beginning.
 
         """
-        self.set_insertion_point_before_next_token(
+        self._set_insertion_point_before_next_token(
             between_newlines=bool(
                 self.score.tag_nextrange(
                     NAVIGATE_TOKEN,
@@ -334,33 +334,33 @@ class GameEdit(gameedit_misc.GameEdit):
                 )
             )
         )
-        t_q = self.add_escape_to_eol("%\n", self.get_position_for_current())
+        t_q = self._add_escape_to_eol("%\n", self._get_position_for_current())
         if self.current is None:
-            self.set_start_score_mark_before_positiontag()
+            self._set_start_score_mark_before_positiontag()
         return t_q[0]
 
-    def insert_empty_glyph(self):
+    def _insert_empty_glyph(self):
         """Insert "$<null> " sequence."""
-        self.set_insertion_point_before_next_token(between_newlines=False)
-        t_q = self.add_glyph("$", self.get_position_for_current())
+        self._set_insertion_point_before_next_token(between_newlines=False)
+        t_q = self._add_glyph("$", self._get_position_for_current())
         if self.current is None:
-            self.set_start_score_mark_before_positiontag()
+            self._set_start_score_mark_before_positiontag()
         return t_q[0]
 
-    def insert_empty_pgn_tag(self):
+    def _insert_empty_pgn_tag(self):
         """Insert ' [ <null> "<null>" ] ' sequence."""
-        self.set_insertion_point_before_next_pgn_tag()
+        self._set_insertion_point_before_next_pgn_tag()
         self.add_pgntag_to_map("", "")
 
-    def insert_empty_pgn_seven_tag_roster(self):
+    def _insert_empty_pgn_seven_tag_roster(self):
         """Insert ' [ <fieldname> "<null>" ... ] ' seven tag roster tags."""
-        self.set_insertion_point_before_next_pgn_tag()
+        self._set_insertion_point_before_next_pgn_tag()
         for t_q in SEVEN_TAG_ROSTER:
             self.add_pgntag_to_map(t_q, "")
 
-    def insert_empty_reserved(self):
+    def _insert_empty_reserved(self):
         """Insert "<[null]>) " sequence."""
-        self.set_insertion_point_before_next_token(
+        self._set_insertion_point_before_next_token(
             between_newlines=bool(
                 self.score.tag_nextrange(
                     NAVIGATE_TOKEN,
@@ -369,9 +369,9 @@ class GameEdit(gameedit_misc.GameEdit):
                 )
             )
         )
-        t_q = self.add_start_reserved("<>", self.get_position_for_current())
+        t_q = self._add_start_reserved("<>", self._get_position_for_current())
         if self.current is None:
-            self.set_start_score_mark_before_positiontag()
+            self._set_start_score_mark_before_positiontag()
         return t_q[0]
 
     def is_move_last_of_variation(self, move):
@@ -383,7 +383,7 @@ class GameEdit(gameedit_misc.GameEdit):
                 return not bool(self.score.tag_nextrange(tn_q, index))
         return None
 
-    def is_move_start_of_variation(self, move, variation):
+    def _is_move_start_of_variation(self, move, variation):
         """Return True if move is at start of variation."""
         widget = self.score
         return widget.compare(
@@ -397,8 +397,8 @@ class GameEdit(gameedit_misc.GameEdit):
     # The docstring says what the method does.
     # PGN has two areas: tags and movetext.
     # The method is_pgn_tag_insertion_allowed is therefore removed and calls
-    # replaced by is_current_in_movetext calls.
-    def is_current_in_movetext(self):
+    # replaced by _is_current_in_movetext calls.
+    def _is_current_in_movetext(self):
         """Return True if current is not before start of movetext."""
         return bool(
             self.score.compare(
@@ -410,7 +410,7 @@ class GameEdit(gameedit_misc.GameEdit):
     # what the method does.
     # If current is last move in game or variation a new move is appended, but
     # a RAV is inserted elsewhere if allowed (not decided by this method).
-    def is_at_least_one_move_in_movetext(self):
+    def _is_at_least_one_move_in_movetext(self):
         """Return True if at least one move exists in game score."""
         # To be decided if at least one legal move exists.  Check EDIT_MOVE
         # instead?
@@ -436,7 +436,7 @@ class GameEdit(gameedit_misc.GameEdit):
                 return widget.tag_nextrange(n_q, START_SCORE_MARK)
         return None
 
-    def process_move(self):
+    def _process_move(self):
         """Splice a move being edited into the game score.
 
         In English PGN piece and file designators are case insensitive except
@@ -545,7 +545,7 @@ class GameEdit(gameedit_misc.GameEdit):
             self.set_current()
             self.set_game_board()
 
-    def select_item_at_index(self, index):
+    def _select_item_at_index(self, index):
         """Return the itemtype tag associated with index."""
         try:
             tns = set(self.score.tag_names(index))
@@ -577,23 +577,23 @@ class GameEdit(gameedit_misc.GameEdit):
         self._allowed_chars_in_token = ""
         return None
 
-    def select_first_comment_in_game(self):
+    def _select_first_comment_in_game(self):
         """Return POSITION tag associated with first comment in game."""
-        return self.select_first_item_in_game(NAVIGATE_COMMENT)
+        return self._select_first_item_in_game(NAVIGATE_COMMENT)
 
-    def select_last_comment_in_game(self):
+    def _select_last_comment_in_game(self):
         """Return POSITION tag associated with last comment in game."""
-        return self.select_last_item_in_game(NAVIGATE_COMMENT)
+        return self._select_last_item_in_game(NAVIGATE_COMMENT)
 
-    def select_next_comment_in_game(self):
+    def _select_next_comment_in_game(self):
         """Return POSITION tag for comment after current in game."""
-        return self.select_next_item_in_game(NAVIGATE_COMMENT)
+        return self._select_next_item_in_game(NAVIGATE_COMMENT)
 
-    def select_prev_comment_in_game(self):
+    def _select_prev_comment_in_game(self):
         """Return POSITION tag for comment before current in game."""
-        return self.select_prev_item_in_game(NAVIGATE_COMMENT)
+        return self._select_prev_item_in_game(NAVIGATE_COMMENT)
 
-    def select_next_pgn_tag_field_name(self):
+    def _select_next_pgn_tag_field_name(self):
         """Return POSITION tag for nearest following PGN Tag field."""
         widget = self.score
         try:
@@ -612,7 +612,7 @@ class GameEdit(gameedit_misc.GameEdit):
             return self.current
         return self.current
 
-    def select_prev_pgn_tag_field_name(self):
+    def _select_prev_pgn_tag_field_name(self):
         """Return POSITION tag for nearest preceding PGN Tag field."""
         widget = self.score
         try:
@@ -643,31 +643,31 @@ class GameEdit(gameedit_misc.GameEdit):
         # do nothing at first
         return self.current
 
-    def select_first_token_in_game(self):
+    def _select_first_token_in_game(self):
         """Return POSITION tag associated with first token in game."""
-        return self.select_first_item_in_game(NAVIGATE_TOKEN)
+        return self._select_first_item_in_game(NAVIGATE_TOKEN)
 
-    def select_last_token_in_game(self):
+    def _select_last_token_in_game(self):
         """Return POSITION tag associated with last token in game."""
-        return self.select_last_item_in_game(NAVIGATE_TOKEN)
+        return self._select_last_item_in_game(NAVIGATE_TOKEN)
 
-    def select_next_rav_start_in_game(self):
+    def _select_next_rav_start_in_game(self):
         """Return POSITION tag associated with RAV after current in game."""
-        return self.select_next_item_in_game(RAV_START_TAG)
+        return self._select_next_item_in_game(RAV_START_TAG)
 
-    def select_prev_rav_start_in_game(self):
+    def _select_prev_rav_start_in_game(self):
         """Return POSITION tag associated with RAV before current in game."""
-        return self.select_prev_item_in_game(RAV_START_TAG)
+        return self._select_prev_item_in_game(RAV_START_TAG)
 
-    def set_insert_mark_at_end_of_token(self):
+    def _set_insert_mark_at_end_of_token(self):
         """Move insert mark to end edit mark."""
         self.score.mark_set(tkinter.INSERT, END_EDIT_MARK)
 
-    def set_insert_mark_at_start_of_token(self):
+    def _set_insert_mark_at_start_of_token(self):
         """Move insert mark to start edit mark."""
         self.score.mark_set(tkinter.INSERT, START_EDIT_MARK)
 
-    def set_insert_mark_down_one_line(self):
+    def _set_insert_mark_down_one_line(self):
         """Move insert mark down one line limited by end edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, "<", END_EDIT_MARK):
@@ -677,19 +677,19 @@ class GameEdit(gameedit_misc.GameEdit):
             if widget.compare(tkinter.INSERT, ">", END_EDIT_MARK):
                 widget.mark_set(tkinter.INSERT, END_EDIT_MARK)
 
-    def set_insert_mark_left_one_char(self):
+    def _set_insert_mark_left_one_char(self):
         """Move insert mark left one character limited by start edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, ">", START_EDIT_MARK):
             widget.mark_set(tkinter.INSERT, tkinter.INSERT + " -1 chars")
 
-    def set_insert_mark_right_one_char(self):
+    def _set_insert_mark_right_one_char(self):
         """Move insert mark right one character limited by end edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, "<", END_EDIT_MARK):
             widget.mark_set(tkinter.INSERT, tkinter.INSERT + " +1 chars")
 
-    def set_insert_mark_up_one_line(self):
+    def _set_insert_mark_up_one_line(self):
         """Move insert mark up one line limited by start edit mark."""
         widget = self.score
         if widget.compare(tkinter.INSERT, ">", START_EDIT_MARK):
@@ -719,9 +719,9 @@ class GameEdit(gameedit_misc.GameEdit):
         self.score.mark_set(START_EDIT_MARK, start)
         self.score.mark_set(END_EDIT_MARK, end)
         self.score.mark_set(tkinter.INSERT, END_EDIT_MARK)
-        self.set_move_tag(START_EDIT_MARK, END_EDIT_MARK)
+        self._set_move_tag(START_EDIT_MARK, END_EDIT_MARK)
 
-    def _add_char_to_token(self, char):
+    def _insert_char_at_insert_point(self, char):
         """Insert char at insert point."""
         if not char:
             return None

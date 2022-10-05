@@ -78,63 +78,63 @@ class _ColourScheme(ExceptionHandler):
         self.chooser.wm_title(title)
         self.chooser.pack_propagate(False)
 
-    def apply_modified_font(self, modifiedfont, font):
+    def _apply_modified_font(self, modifiedfont, font):
         """Copy modifiedfont attributes to font."""
         if self.is_ok():
             fonts.copy_font_attributes(modifiedfont.actual(), font)
 
-    def apply_modified_board_font(self, modifiedfont, font):
+    def _apply_modified_board_font(self, modifiedfont, font):
         """Copy modifiedfont attributes to board font."""
         if self.is_ok():
             fonts.copy_board_font_attributes(modifiedfont.actual(), font)
 
     def apply_pieces_on_board_font_to_font(self, font):
         """Copy self.boardfont attributes to board font."""
-        self.apply_modified_board_font(self.boardfont, font)
+        self._apply_modified_board_font(self.boardfont, font)
 
     def apply_to_named_fonts(self):
         """Apply modified fonts to all displayed games."""
-        self.apply_to_named_font_moves_played_in_game()
-        self.apply_to_named_font_pieces_on_board()
-        self.apply_to_named_font_wildpieces_on_board()
-        self.apply_to_named_font_tags_variations_comments()
+        self._apply_to_named_font_moves_played_in_game()
+        self._apply_to_named_font_pieces_on_board()
+        self._apply_to_named_font_wildpieces_on_board()
+        self._apply_to_named_font_tags_variations_comments()
 
-    def apply_to_named_font_moves_played_in_game(self):
+    def _apply_to_named_font_moves_played_in_game(self):
         """Apply moves played font to all displayed games."""
-        self.apply_modified_font(
+        self._apply_modified_font(
             self.moves_played_in_game_font,
             tkinter.font.nametofont(constants.MOVES_PLAYED_IN_GAME_FONT),
         )
 
-    def apply_to_named_font_pieces_on_board(self):
+    def _apply_to_named_font_pieces_on_board(self):
         """Apply pieces font to all displayed games."""
-        self.apply_modified_board_font(
+        self._apply_modified_board_font(
             self.boardfont,
             tkinter.font.nametofont(constants.PIECES_ON_BOARD_FONT),
         )
 
-    def apply_to_named_font_tags_variations_comments(self):
+    def _apply_to_named_font_tags_variations_comments(self):
         """Apply variations and comments font to all displayed games."""
-        self.apply_modified_font(
+        self._apply_modified_font(
             self.tags_variations_comments_font,
             tkinter.font.nametofont(constants.TAGS_VARIATIONS_COMMENTS_FONT),
         )
 
-    def apply_to_named_font_wildpieces_on_board(self):
+    def _apply_to_named_font_wildpieces_on_board(self):
         """Apply wildpieces font to all displayed games."""
-        self.apply_modified_board_font(
+        self._apply_modified_board_font(
             self.wildpiecesfont,
             tkinter.font.nametofont(constants.WILDPIECES_ON_BOARD_FONT),
         )
 
-    def get_button_definitions(self):
+    def _get_button_definitions(self):
         """Return button definitions."""
         return (
-            ("OK", "OK button Tooltip.", True, -1, self.on_ok),
-            ("Cancel", "Cancel button Tooltip.", True, 2, self.on_cancel),
+            ("OK", "OK button Tooltip.", True, -1, self._on_ok),
+            ("Cancel", "Cancel button Tooltip.", True, 2, self._on_cancel),
         )
 
-    def create_buttons(self, buttons):
+    def _create_buttons(self, buttons):
         """Create buttons."""
         buttons_frame = tkinter.Frame(master=self.chooser)
         buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
@@ -157,7 +157,7 @@ class _ColourScheme(ExceptionHandler):
         else:
             buttons_frame.grid_rowconfigure(len(buttons * 2), weight=1)
 
-    def create_colour_frame(self):
+    def _create_colour_frame(self):
         """Create colour selector widgets."""
         colour_frame = tkinter.Frame(master=self.chooser)
         colour_frame.pack(fill=tkinter.X)
@@ -167,34 +167,39 @@ class _ColourScheme(ExceptionHandler):
                 0,
                 "Light squares",
                 gboard.litecolor,
-                self.set_lite_square_bgcolour,
+                self._set_lite_square_bgcolour,
             ),
             (
                 1,
                 "Dark squares",
                 gboard.darkcolor,
-                self.set_dark_square_bgcolour,
+                self._set_default_source_for_object,
             ),
             (
                 2,
                 "White pieces",
                 gboard.whitecolor,
-                self.set_white_piece_fgcolour,
+                self._set_white_piece_fgcolour,
             ),
             (
                 3,
                 "Black pieces",
                 gboard.blackcolor,
-                self.set_black_piece_fgcolour,
+                self._set_black_piece_fgcolour,
             ),
-            (4, "Rest of line", self.game.l_color, self.set_tag_rest_of_line),
-            (5, "Move", self.game.m_color, self.set_tag_move),
-            (6, "Alternatives", self.game.am_color, self.set_tag_alternatives),
+            (4, "Rest of line", self.game.l_color, self._set_tag_rest_of_line),
+            (5, "Move", self.game.m_color, self._set_tag_move),
+            (
+                6,
+                "Alternatives",
+                self.game.am_color,
+                self._set_tag_alternatives,
+            ),
             (
                 7,
                 "Start of line",
                 self.game.v_color,
-                self.set_tag_start_of_line,
+                self._set_tag_start_of_line,
             ),
         ):
             ChessColourSlider(
@@ -205,7 +210,7 @@ class _ColourScheme(ExceptionHandler):
                 tag_onfigure_bachground_colour=setter,
             )
 
-    def create_font_frame(self):
+    def _create_font_frame(self):
         """Create font selection widget."""
 
         def focus(widget):
@@ -247,7 +252,7 @@ class _ColourScheme(ExceptionHandler):
             master=wssf,
             text="Bold",
             variable=self.b_weight,
-            command=self.try_command(self.set_board_font_weight, wssf),
+            command=self.try_command(self._set_board_font_weight, wssf),
             indicatoron=tkinter.FALSE,
         )
         checkbutton.grid_configure(column=0, row=3, sticky=tkinter.EW)
@@ -260,7 +265,7 @@ class _ColourScheme(ExceptionHandler):
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=0, sticky=tkinter.NS)
         self.b_families.bind(
-            "<<ListboxSelect>>", self.try_event(self.set_board_font_family)
+            "<<ListboxSelect>>", self.try_event(self._set_board_font_family)
         )
         # font chooser for score
         font_frame.columnconfigure(1, weight=2, uniform="fontpanels")
@@ -291,14 +296,14 @@ class _ColourScheme(ExceptionHandler):
         )
         self.s_weight = tkinter.IntVar()
         self._make_font_selector(
-            wssf, "Bold:", self.s_weight, 3, self.set_score_font_weight
+            wssf, "Bold:", self.s_weight, 3, self._set_score_font_weight
         )
-        self.s_weight.set(self.get_combination("weight", tkinter.font.BOLD))
+        self.s_weight.set(self._get_combination("weight", tkinter.font.BOLD))
         self.s_slant = tkinter.IntVar()
         self._make_font_selector(
-            wssf, "Italic:", self.s_slant, 6, self.set_score_font_slant
+            wssf, "Italic:", self.s_slant, 6, self._set_score_font_slant
         )
-        self.s_slant.set(self.get_combination("slant", tkinter.font.ITALIC))
+        self.s_slant.set(self._get_combination("slant", tkinter.font.ITALIC))
         wssf.grid_rowconfigure(0, minsize=5)
         wssf.grid_rowconfigure(2, minsize=5)
         wssf.grid_rowconfigure(5, minsize=5)
@@ -325,7 +330,7 @@ class _ColourScheme(ExceptionHandler):
                 variable=self.s_size,
                 value=item,
                 indicatoron=tkinter.FALSE,
-                command=self.try_command(self.set_score_font_size, sizeframe),
+                command=self.try_command(self._set_score_font_size, sizeframe),
             )
             if item == abs(fsize):
                 self.s_size.set(item)
@@ -335,10 +340,10 @@ class _ColourScheme(ExceptionHandler):
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=1)
         self.s_families.bind(
-            "<<ListboxSelect>>", self.try_event(self.set_score_font_family)
+            "<<ListboxSelect>>", self.try_event(self._set_score_font_family)
         )
 
-    def create_game_frame(self):
+    def _create_game_frame(self):
         """Create sample game for demostrating fonts and colours."""
         self.game = game.Game(
             self.chooser,
@@ -450,7 +455,7 @@ class _ColourScheme(ExceptionHandler):
         )
         return olddefaults, newdefaults
 
-    def get_combination(self, option, value):
+    def _get_combination(self, option, value):
         """Return numeric code for move and non-move font combination."""
         tvc = self.tags_variations_comments_font[option] == value
         movesplayed = self.moves_played_in_game_font[option] == value
@@ -466,21 +471,21 @@ class _ColourScheme(ExceptionHandler):
         """Return True if dialogue closed using Ok button."""
         return self._ok
 
-    def on_cancel(self, event=None):
+    def _on_cancel(self, event=None):
         """Process Cancel button event."""
         del event
         self._ok = False
         self.restore_focus.focus_set()
         self.chooser.destroy()
 
-    def on_ok(self, event=None):
+    def _on_ok(self, event=None):
         """Process Ok button event."""
         del event
         self._ok = True
         self.restore_focus.focus_set()
         self.chooser.destroy()
 
-    def modal_dialogue(self):
+    def _modal_dialogue(self):
         """Display widget as a modal dialogue.
 
         Activate game navigation so fonts and colours can be seen in game
@@ -492,7 +497,7 @@ class _ColourScheme(ExceptionHandler):
         self.chooser.grab_set()
         self.chooser.wait_window()
 
-    def set_board_font_family(self, event=None):
+    def _set_board_font_family(self, event=None):
         """Set sample game board family."""
         del event
         family = self.b_families
@@ -500,54 +505,54 @@ class _ColourScheme(ExceptionHandler):
         self.game.board.font["family"] = family.get(family.curselection()[0])
         self.b_family["text"] = family.get(family.curselection()[0])
 
-    def set_board_font_weight(self):
+    def _set_board_font_weight(self):
         """Set sample game board pieces font."""
         weights = {0: "normal", 1: "bold"}
         bfweight = weights[self.b_weight.get()]
         self.boardfont["weight"] = bfweight
         self.game.board.font["weight"] = bfweight
 
-    def set_lite_square_bgcolour(self, colour):
+    def _set_lite_square_bgcolour(self, colour):
         """Set light squares to colour."""
         self.game.board.litecolor = colour
         self.game.board.set_color_scheme()
 
-    def set_dark_square_bgcolour(self, colour):
+    def _set_default_source_for_object(self, colour):
         """Set dark squares to colour."""
         self.game.board.darkcolor = colour
         self.game.board.set_color_scheme()
 
-    def set_white_piece_fgcolour(self, colour):
+    def _set_white_piece_fgcolour(self, colour):
         """Set white pieces to colour."""
         self.game.board.whitecolor = colour
         self.game.board.draw_board()
 
-    def set_black_piece_fgcolour(self, colour):
+    def _set_black_piece_fgcolour(self, colour):
         """Set black pieces to colour."""
         self.game.board.blackcolor = colour
         self.game.board.draw_board()
 
-    def set_tag_rest_of_line(self, colour):
+    def _set_tag_rest_of_line(self, colour):
         """Set moves following current move in line to colour."""
         self.game.l_color = colour
         self.game.score.tag_configure("l_color", background=colour)
 
-    def set_tag_move(self, colour):
+    def _set_tag_move(self, colour):
         """Set current move to colour."""
         self.game.m_color = colour
         self.game.score.tag_configure("m_color", background=colour)
 
-    def set_tag_alternatives(self, colour):
+    def _set_tag_alternatives(self, colour):
         """Set alternatives to selected next move to colour."""
         self.game.am_color = colour
         self.game.score.tag_configure("am_color", background=colour)
 
-    def set_tag_start_of_line(self, colour):
+    def _set_tag_start_of_line(self, colour):
         """Set moves preceeding current move in line to colour."""
         self.game.v_color = colour
         self.game.score.tag_configure("v_color", background=colour)
 
-    def set_score_font_family(self, event=None):
+    def _set_score_font_family(self, event=None):
         """Set game score and variation font family."""
         del event
         family = self.s_families
@@ -560,12 +565,12 @@ class _ColourScheme(ExceptionHandler):
         self.wildpiecesfont["family"] = family.get(family.curselection()[0])
         self.s_family["text"] = family.get(family.curselection()[0])
 
-    def set_score_font_size(self):
+    def _set_score_font_size(self):
         """Set game score and variation font size to selected size."""
         self.tags_variations_comments_font["size"] = -self.s_size.get()
         self.moves_played_in_game_font["size"] = -self.s_size.get()
 
-    def set_score_font_slant(self):
+    def _set_score_font_slant(self):
         """Set game score and variation font slants to selected slants."""
         slant = {
             4: ("italic", "roman"),
@@ -577,7 +582,7 @@ class _ColourScheme(ExceptionHandler):
         self.tags_variations_comments_font["slant"] = tvcfslant
         self.moves_played_in_game_font["slant"] = mfslant
 
-    def set_score_font_weight(self):
+    def _set_score_font_weight(self):
         """Set game score and variation font weights to selected weights."""
         weights = {
             4: ("bold", "normal"),
@@ -655,10 +660,10 @@ class ColourChooser(_ColourScheme):
 
         """
         super().__init__(height=660, title="Chessboard colour chooser", **ka)
-        self.create_game_frame()
-        self.create_colour_frame()
-        self.create_buttons(self.get_button_definitions())
-        self.modal_dialogue()
+        self._create_game_frame()
+        self._create_colour_frame()
+        self._create_buttons(self._get_button_definitions())
+        self._modal_dialogue()
 
 
 class FontChooser(_ColourScheme):
@@ -677,10 +682,10 @@ class FontChooser(_ColourScheme):
 
         """
         super().__init__(height=680, title="Chessboard font chooser", **ka)
-        self.create_font_frame()
-        self.create_game_frame()
-        self.create_buttons(self.get_button_definitions())
-        self.modal_dialogue()
+        self._create_font_frame()
+        self._create_game_frame()
+        self._create_buttons(self._get_button_definitions())
+        self._modal_dialogue()
 
 
 class FontColourChooser(_ColourScheme):
@@ -699,11 +704,11 @@ class FontColourChooser(_ColourScheme):
 
         """
         super().__init__(height=950, title="Chessboard style chooser", **ka)
-        self.create_font_frame()
-        self.create_game_frame()
-        self.create_colour_frame()
-        self.create_buttons(self.get_button_definitions())
-        self.modal_dialogue()
+        self._create_font_frame()
+        self._create_game_frame()
+        self._create_colour_frame()
+        self._create_buttons(self._get_button_definitions())
+        self._modal_dialogue()
 
 
 class ChessColourSlider(ColourSlider):

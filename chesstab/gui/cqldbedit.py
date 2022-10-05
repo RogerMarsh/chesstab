@@ -33,7 +33,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
     Attribute text_name provides the name used in widget titles and message
     text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -57,9 +57,9 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
             if showinitial
             else showinitial,
         )
-        self.initialize()
+        self._initialize()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a ChessQL statement object_.
 
         Default value of object_ is oldobject attribute from DataEdit class.
@@ -92,7 +92,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
         return self.newview.ui
 
     @staticmethod
-    def set_item(view, object_):
+    def _set_item(view, object_):
         """Populate view with the CQL query extracted from object_."""
         view.cql_statement.process_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)
@@ -107,7 +107,7 @@ class CQLDbEdit(ExceptionHandler, EditText, DataEdit):
         self.newobject.value.load(
             repr(self.newview.get_name_cql_statement_text())
         )
-        title = self.get_title_for_object()
+        title = self._get_title_for_object()
         if not self.newobject.value.get_name_text():
             if not self.newobject.value.cql_error:
                 tkinter.messagebox.showerror(

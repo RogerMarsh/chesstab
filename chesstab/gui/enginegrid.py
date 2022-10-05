@@ -170,7 +170,7 @@ class EngineGrid(EngineListGrid):
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        self.set_event_bindings_frame(((EventSpec.engine_grid_run, ""),))
+        self._set_event_bindings_frame(((EventSpec.engine_grid_run, ""),))
 
     def bind_on(self):
         """Enable all bindings."""
@@ -179,7 +179,7 @@ class EngineGrid(EngineListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             ((EventSpec.engine_grid_run, self.run_engine),)
         )
 
@@ -226,10 +226,10 @@ class EngineGrid(EngineListGrid):
     def run_engine(self, event=None):
         """Run chess engine."""
         del event
-        self.launch_chess_engine(self.pointer_popup_selection)
+        self._launch_chess_engine(self.pointer_popup_selection)
         # self.move_selection_to_popup_selection()
 
-    def launch_chess_engine(self, key, modal=True):
+    def _launch_chess_engine(self, key, modal=True):
         """Launch a chess engine."""
         del modal
         oldobject = ChessDBrecordEngine()

@@ -22,7 +22,7 @@ class ToplevelText:
     # The Engine* classes do not have this problem, perhaps because of the
     # 'Run Engine' option or the absence of the 'main display' options.
     # The Game* and Repertoire* classes have reason for a popup here.
-    def create_widget_navigation_submenu_for_popup(self, popup):
+    def _create_widget_navigation_submenu_for_popup(self, popup):
         """Do nothing.
 
         Most ToplevelText subclasses require a handler for right-click,
@@ -39,15 +39,15 @@ class _ToplevelText:
     The subclasses are DeleteText, EditText, and ShowText.
     """
 
-    def initialize(self):
+    def _initialize(self):
         """Initialize the widgets and event bindings in Toplevel widget."""
         oldview = self.oldview
         self.ui_items_in_toplevels.add(oldview)
-        self.parent.wm_title(self.get_title_for_object(self.object))
-        self.initialize_item_bindings(oldview)
-        self.set_item(oldview, self.object)
+        self.parent.wm_title(self._get_title_for_object(self.object))
+        self._initialize_item_bindings(oldview)
+        self._set_item(oldview, self.object)
 
-    def initialize_item_bindings(self, item):
+    def _initialize_item_bindings(self, item):
         """Initialize keypress and buttonpress bindings for item."""
         self.bind_buttons_to_widget(item.score)
         # item.set_score_pointer_to_score_bindings(False)
@@ -91,16 +91,16 @@ class DeleteText(_ToplevelText):
 class EditText(_ToplevelText):
     """Show original and editable text versions for record editing."""
 
-    def initialize(self):
+    def _initialize(self):
         """Create widgets for the original and editable versions of text."""
         if self.oldview:
             self.ui_items_in_toplevels.add(self.oldview)
-            self.set_item(self.oldview, self.oldobject)
+            self._set_item(self.oldview, self.oldobject)
         newview = self.newview
         self.ui_items_in_toplevels.add(newview)
-        self.set_item(newview, self.newobject)
-        self.parent.wm_title(self.get_title_for_object(self.newobject))
-        self.initialize_item_bindings(newview)
+        self._set_item(newview, self.newobject)
+        self.parent.wm_title(self._get_title_for_object(self.newobject))
+        self._initialize_item_bindings(newview)
 
     def dialog_ok(self):
         """Update record and return update action response (True for updated).

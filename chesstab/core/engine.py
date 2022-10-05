@@ -77,7 +77,7 @@ class Engine:
         """Return command line to run engine."""
         return self._run_engine_string
 
-    def is_run_engine_command(self):
+    def _is_run_engine_command(self):
         """Return True if run engine command line starts with existing file."""
         if not self._run_engine_string:
             return False
@@ -105,7 +105,7 @@ class Engine:
                 )
             )
         if not (url.port or url.hostname):
-            if not self.is_run_engine_command():
+            if not self._is_run_engine_command():
                 return "".join(
                     (
                         "The engine definition command to run a chess engine ",

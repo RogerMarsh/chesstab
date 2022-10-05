@@ -38,7 +38,7 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
     Attribute pgn_score_source provides the error key value to index a PGN
     game score with errors.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -64,7 +64,7 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
             if showinitial
             else showinitial,
         )
-        self.initialize()
+        self._initialize()
 
     @property
     def ui_base_table(self):
@@ -81,16 +81,16 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         """Return the User Interface object from 'editable' view."""
         return self.newview.ui
 
-    def set_item(self, view, object_):
+    def _set_item(self, view, object_):
         """Populate view with the game extracted from object_."""
-        self.set_default_source_for_object(object_)
+        self._set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
             PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
         )
         view.set_and_tag_item_text()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a Game object_.
 
         Default value of object_ is oldobject attribute from DataEdit class.
@@ -118,7 +118,7 @@ class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
         else:
             return "".join(("Insert ", self.pgn_score_name))
 
-    def set_default_source_for_object(self, object_=None):
+    def _set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Game object_.
 
         Default value of object_ is oldobject attribute from DataEdit class.

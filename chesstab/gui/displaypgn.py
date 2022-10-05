@@ -82,11 +82,11 @@ class ShowPGN(ShowText, ScorePGN):
     def bind_for_widget_navigation(self):
         """Set bindings to give focus to this PGN score on pointer click."""
         super().bind_for_widget_navigation()
-        self.set_board_pointer_widget_navigation_bindings(True)
+        self._set_board_pointer_widget_navigation_bindings(True)
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
 
-    # Probably becomes set_item(), but stays here rather than moved to each
+    # Probably becomes _set_item(), but stays here rather than moved to each
     # subclass: see displaytext.ShowText version.
     def set_and_tag_item_text(self, reset_undo=False):
         """Delegate to superclass method and set PGN score inactive."""
@@ -99,7 +99,7 @@ class ShowPGN(ShowText, ScorePGN):
         except ScoreNoGameException:
             return
         if mrb != NonTagBind.NO_EDITABLE_TAGS:
-            for event_spec in (self.get_inactive_button_events(),):
+            for event_spec in (self._get_inactive_button_events(),):
                 self.set_event_bindings_score(event_spec, switch=True)
 
     def set_select_variation_bindings(self, switch=True):
@@ -111,24 +111,24 @@ class ShowPGN(ShowText, ScorePGN):
     # self.ui.game_items or self.ui.repertoire_items replaced by property
     # self.ui_displayed_items.
 
-    def next_item(self, event=None):
+    def _next_item(self, event=None):
         """Select next PGN score on display."""
         if self.ui_displayed_items.count_items_in_stack() > 1:
-            self.cycle_item(prior=False)
+            self._cycle_item(prior=False)
 
-    def prior_item(self, event=None):
+    def _prior_item(self, event=None):
         """Select previous PGN score on display."""
         if self.ui_displayed_items.count_items_in_stack() > 1:
-            self.cycle_item(prior=True)
+            self._cycle_item(prior=True)
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
-        self.set_board_pointer_widget_navigation_bindings(True)
+        self._set_board_pointer_widget_navigation_bindings(True)
         return super().traverse_backward(event=event)
 
     def traverse_forward(self, event=None):
         """Give focus to next widget type in traversal order."""
-        self.set_board_pointer_widget_navigation_bindings(True)
+        self._set_board_pointer_widget_navigation_bindings(True)
         return super().traverse_forward(event=event)
 
     def give_focus_to_widget(self, event=None):
@@ -149,9 +149,9 @@ class ShowPGN(ShowText, ScorePGN):
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
 
-    # Probably becomes insert_item_database(), but stays here rather than moved
-    # to each subclass: see displaytext.ShowText version.
-    def insert_item_database(self, event=None):
+    # Probably becomes _insert_item_database(), but stays here rather than
+    # moved to each subclass: see displaytext.ShowText version.
+    def _insert_item_database(self, event=None):
         """Add PGN score to database on request from item display."""
         del event
         title = " ".join(("Insert", self.pgn_score_name.title()))
@@ -193,7 +193,7 @@ class ShowPGN(ShowText, ScorePGN):
                 message=psn.join(("Add ", " to database abandonned.")),
             )
             return None
-        updater = self.game_updater(repr(self.score.get("1.0", tkinter.END)))
+        updater = self._game_updater(repr(self.score.get("1.0", tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.ui.get_toplevel(),
@@ -239,7 +239,7 @@ class ShowPGN(ShowText, ScorePGN):
 class DisplayPGN(DisplayText):
     """Provide method to delete an item from database."""
 
-    def delete_item_database(self, event=None):
+    def _delete_item_database(self, event=None):
         """Remove PGN score from database on request from item display."""
         del event
         title = " ".join(("Delete", self.pgn_score_name.title()))
@@ -335,70 +335,70 @@ class InsertPGN(InsertText):
     def create_primary_activity_popup(self):
         """Delegate then set bindings for navigation and insert PGN."""
         popup = super().create_primary_activity_popup()
-        self.add_pgn_navigation_to_submenu_of_popup(
+        self._add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label
         )
-        self.add_pgn_insert_to_submenu_of_popup(
+        self._add_pgn_insert_to_submenu_of_popup(
             popup,
             include_ooo=True,
             include_move_rav=True,
             index=self.analyse_popup_label,
         )
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_select_move_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_select_move_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_pgn_tag_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_pgn_tag_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_comment_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_comment_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_nag_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_nag_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_start_rav_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_start_rav_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_end_rav_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_end_rav_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_comment_to_end_of_line_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_comment_to_end_of_line_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_escape_whole_line_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_escape_whole_line_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_reserved_popup(self):
         """Delegate then set bindings for close item."""
         popup = super().create_reserved_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def set_edit_symbol_mode_bindings(self, switch=True, **ka):
@@ -410,7 +410,7 @@ class InsertPGN(InsertText):
 class EditPGN(EditText):
     """Provide methods to generate popup menus for editing PGN scores."""
 
-    def update_item_database(self, event=None):
+    def _update_item_database(self, event=None):
         """Modify existing PGN score record."""
         del event
         title = " ".join(("Edit", self.pgn_score_name.title()))
@@ -480,7 +480,7 @@ class EditPGN(EditText):
         # Then original would not be used. Instead DataSource.new_row
         # gets record keyed by sourceobject and update is used to edit this.
         text = self.get_score_error_escapes_removed()
-        updater = self.game_updater(repr(text))
+        updater = self._game_updater(repr(text))
         editor = RecordEdit(updater, original)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
@@ -511,7 +511,7 @@ class EditPGN(EditText):
         if self is self.ui_displayed_items.active_item:
             newkey = self.ui_displayed_items.adjust_edited_item(updater)
             if newkey:
-                self.set_properties_on_grids(newkey)
+                self._set_properties_on_grids(newkey)
         tags = original.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),

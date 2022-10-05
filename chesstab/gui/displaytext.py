@@ -70,7 +70,7 @@ class ShowText:
         """Set pointer bindings to give focus to this text statement."""
         self.set_score_pointer_widget_navigation_bindings(True)
 
-    def get_close_item_events(self):
+    def _get_close_item_events(self):
         """Return close item event description."""
         return ((EventSpec.display_dismiss, self.delete_item_view),)
 
@@ -82,13 +82,13 @@ class ShowText:
 
         super().set_and_tag_item_text(reset_undo=reset_undo)
         if mrb != NonTagBind.NO_EDITABLE_TAGS:
-            for event_spec in (self.get_inactive_button_events(),):
+            for event_spec in (self._get_inactive_button_events(),):
                 self.set_event_bindings_score(event_spec, switch=True)
 
-    def create_database_submenu(self, menu):
+    def _create_database_submenu(self, menu):
         """Create and return popup submenu for database events."""
         submenu = tkinter.Menu(master=menu, tearoff=False)
-        self.set_popup_bindings(submenu, self.get_database_events())
+        self._set_popup_bindings(submenu, self._get_database_events())
         return submenu
 
     # The only active bindings compared with displaypgn.ShowPGN.
@@ -110,31 +110,31 @@ class ShowText:
     # self.ui.game_items or self.ui.repertoire_items replaced by property
     # self.ui_displayed_items.
 
-    def next_item(self, event=None):
+    def _next_item(self, event=None):
         """Select next item on display.
 
-        Call _next_item after 1 millisecond to allow message display.
+        Call _cycle_item after 1 millisecond to allow message display.
 
         """
         del event
         if self.ui_displayed_items.count_items_in_stack() > 1:
             self.ui_set_find_item_games(0)
-            self.score.after(1, self.try_command(self.cycle_item, self.score))
+            self.score.after(1, self.try_command(self._cycle_item, self.score))
 
-    def prior_item(self, event=None):
+    def _prior_item(self, event=None):
         """Select previous item on display.
 
-        Call _prior_item after 1 millisecond to allow message display.
+        Call _cycle_item after 1 millisecond to allow message display.
 
         """
         del event
         if self.ui_displayed_items.count_items_in_stack() > 1:
             self.ui_set_find_item_games(-2)
             self.score.after(
-                1, self.try_command(self.cycle_item, self.score), True
+                1, self.try_command(self._cycle_item, self.score), True
             )
 
-    # What about current_pgn_score call?
+    # What about _current_pgn_score call?
     def current_item(self, event=None):
         """Select current PGN score on display."""
         # cuiai should be referencing self given use of current_item() method,
@@ -145,7 +145,7 @@ class ShowText:
         items = self.ui_displayed_items
         if items.count_items_in_stack():
             cuiai = items.active_item
-            self.current_pgn_score(cuiai)
+            self._current_pgn_score(cuiai)
             cuiai.set_statusbar_text()
 
     def traverse_backward(self, event=None):
@@ -166,7 +166,7 @@ class ShowText:
     # self.ui.configure_game_grid or self.ui.configure_repertoire_grid
     # replaced by property self.ui_configure_item_list_grid.
 
-    def cycle_item(self, prior=False):
+    def _cycle_item(self, prior=False):
         """Select next PGN score on display."""
         items = self.ui_displayed_items
         losefocus = items.active_item
@@ -203,13 +203,13 @@ class ShowText:
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
 
-    # Probably becomes insert_item_database() in each subclass like in
+    # Probably becomes _insert_item_database() in each subclass like in
     # cqldbshow and all other *db* calls like it.
 
     # This was not going to be moved to displaypgn except insert_game_database,
     # which uses the class attribute pgn_score_updater, was moved.
-    # Both game_updater and pgn_score_updater need more generic names.
-    def game_updater(self, text):
+    # Both _game_updater and pgn_score_updater need more generic names.
+    def _game_updater(self, text):
         """Make and return a chess record containing a single PGN score."""
         updater = self.pgn_score_updater()
         updater.value.load(text)
@@ -219,7 +219,7 @@ class ShowText:
     # _RepertoireDisplay.
     # Replace _pgn_score_ with _item_ to fit with displaypgn.ShowPGN perhaps,
     # but this one will be moved to subclasses.
-    def patch_pgn_score_to_fit_record_change_and_refresh_grid(
+    def _patch_pgn_score_to_fit_record_change_and_refresh_grid(
         self, grid, instance
     ):
         """Adjust list of games same position if instance is for active game.
@@ -244,18 +244,18 @@ class ShowText:
                     key = grid_key
                     break
             grid.close_client_cursor()
-            grid.datasource.get_full_position_games(self.get_position_key())
+            grid.datasource.get_full_position_games(self._get_position_key())
             grid.fill_view(currentkey=key, exclude=False)
 
 
 class DisplayText:
     """Provide method to set database insert and delete event descriptions."""
 
-    def get_database_events(self):
+    def _get_database_events(self):
         """Return event description tuple for PGN score database actions."""
         return (
-            (EventSpec.display_insert, self.insert_item_database),
-            (EventSpec.display_delete, self.delete_item_database),
+            (EventSpec.display_insert, self._insert_item_database),
+            (EventSpec.display_delete, self._delete_item_database),
         )
 
 
@@ -268,9 +268,9 @@ class InsertText:
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
 
-    def get_database_events(self):
+    def _get_database_events(self):
         """Return event description tuple for PGN score database actions."""
-        return ((EventSpec.display_insert, self.insert_item_database),)
+        return ((EventSpec.display_insert, self._insert_item_database),)
 
 
 # Introduced to remove create_primary_activity_popup method from InsertText
@@ -291,7 +291,7 @@ class ListGamesText:
     def create_primary_activity_popup(self):
         """Delegate then add list games to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.add_list_games_entry_to_popup(popup)
+        self._add_list_games_entry_to_popup(popup)
         return popup
 
 
@@ -304,12 +304,12 @@ class EditText:
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
 
-    def get_database_events(self):
+    def _get_database_events(self):
         """Return event description tuple for PGN score database actions."""
         return (
-            (EventSpec.display_insert, self.insert_item_database),
-            (EventSpec.display_update, self.update_item_database),
+            (EventSpec.display_insert, self._insert_item_database),
+            (EventSpec.display_update, self._update_item_database),
         )
 
-    # update_game_database becomes update_item_database in cqldispaly and
+    # update_game_database becomes _update_item_database in cqldisplay and
     # querydisplay.

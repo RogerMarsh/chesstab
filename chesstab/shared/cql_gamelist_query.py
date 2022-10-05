@@ -16,7 +16,7 @@ from ..gui.eventspec import EventSpec
 class CQLGameListQuery:
     """Provide methods shared by CQLListGrid, GameListGrid, and QueryGrid."""
 
-    def set_popup_bindings(self, popup, bindings=()):
+    def _set_popup_bindings(self, popup, bindings=()):
         """Set popup menu bindings for game list grid."""
         for accelerator, function in bindings:
             popup.add_command(
@@ -25,7 +25,7 @@ class CQLGameListQuery:
                 accelerator=accelerator[2],
             )
 
-    def add_cascade_menu_to_popup(self, index, popup, bindings=None):
+    def _add_cascade_menu_to_popup(self, index, popup, bindings=None):
         """Add cascade_menu, and bindings, to popup if not already present.
 
         The index is used as the label on the popup menu when visible.
@@ -41,7 +41,7 @@ class CQLGameListQuery:
             popup.add_cascade(label=index, menu=cascade_menu)
             if bindings is None:
                 return
-            self.set_popup_bindings(cascade_menu, bindings)
+            self._set_popup_bindings(cascade_menu, bindings)
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""
@@ -105,11 +105,11 @@ class CQLGameListQuery:
             )
         return key
 
-    def display_selected_item(self, key):
+    def _display_selected_item(self, key):
         """Create display item for selected record."""
         selected = self.get_visible_record(key)
         if selected is not None:
-            self._display_selected_item(key, selected)
+            self._display_selected_item_kind(key, selected)
 
     def select_down(self):
         """Extend to show selection summary in status bar."""
@@ -137,7 +137,7 @@ class CQLGameListQuery:
 
     def _configure_frame_and_initial_event_bindings(self):
         self._configure_frame()
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (EventSpec.tab_traverse_forward, self.traverse_forward),
                 (EventSpec.tab_traverse_backward, self.traverse_backward),

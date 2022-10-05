@@ -27,7 +27,7 @@ class ScorePGN:
     def analysis_current_item(self, event=None):
         """Select current PGN score analysis."""
         del event
-        if self.get_game_position_analysis():
+        if self._get_game_position_analysis():
             self.analysis.apply_colouring_to_variation_back_to_main_line()
         else:
             self.analysis.clear_current_range()
@@ -43,10 +43,10 @@ class ScorePGN:
         self.set_analysis_score_pointer_to_analysis_score_bindings(False)
         self.set_toggle_game_analysis_bindings(True)
         self.analysis.score.focus_set()
-        self.set_game_position_analysis(True)
+        self._set_game_position_analysis(True)
         self._init_takefocus_widget(self.analysis.score)
 
-    def current_pgn_score(self, cuiai):
+    def _current_pgn_score(self, cuiai):
         """Select current PGN score on display.
 
         Argument name follows history of separate functionally identical

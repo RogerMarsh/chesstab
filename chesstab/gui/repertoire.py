@@ -58,14 +58,14 @@ class Repertoire(Game):
 
     # There is no point to a repertoire without RAVs so the options suppressing
     # RAVs are absent.
-    def get_all_export_events(self):
+    def _get_all_export_events(self):
         """Return event specifications for Repertoire widget."""
         return (
             (
                 EventSpec.pgn_export_format_no_comments,
-                self.export_pgn_no_comments,
+                self._export_pgn_no_comments,
             ),
-            (EventSpec.pgn_export_format, self.export_pgn),
+            (EventSpec.pgn_export_format, self._export_pgn),
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
-            (EventSpec.text_internal_format, self.export_text),
+            (EventSpec.text_internal_format, self._export_text),
         )

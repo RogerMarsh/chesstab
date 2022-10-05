@@ -72,7 +72,7 @@ class CQLStatement(Statement):
         self._description_string = ""
 
         # Not sure this is needed or wanted.
-        # See datasource argument to get_games_matching_filters().
+        # See datasource argument to _get_games_matching_filters().
         # dbset not used until a QueryStatement instance evaluates query.
         # self._dbset = None
 

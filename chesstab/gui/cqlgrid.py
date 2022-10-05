@@ -40,7 +40,7 @@ class CQLListGrid(
         self.ui = ui
         self._configure_frame_and_initial_event_bindings()
 
-    def _display_selected_item(self, key, selected):
+    def _display_selected_item_kind(self, key, selected):
         """Create CQLDisplay for ChessQL statement."""
         # Should the Frame containing board and position be created here and
         # passed to CQLDisplay. (Needs 'import Tkinter' above.)
@@ -66,7 +66,7 @@ class CQLListGrid(
         selection.cql_statement.process_statement(sourceobject.get_srvalue())
         return selection
 
-    def edit_selected_item(self, key):
+    def _edit_selected_item(self, key):
         """Create a CQLDisplayEdit for ChessQL statement."""
         selected = self.get_visible_record(key)
         if selected is None:
@@ -182,7 +182,7 @@ class CQLListGrid(
             self.objects[key], oldobject, modal, title="Show ChessQL Statement"
         )
 
-    def export_partial(self, event=None):
+    def _export_partial(self, event=None):
         """Export selected partial position definitions."""
         del event
         export_chessql.export_selected_positions(
@@ -202,18 +202,18 @@ class CQLGrid(CQLListGrid):
         super().__init__(ui.partials_pw, ui)
         self.make_header(ChessDBrowCQL.header_specification)
         self.__bind_on()
-        self.set_popup_bindings(
+        self._set_popup_bindings(
             self.menupopup,
             (
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_cql_statement_from_popup,
+                    self._display_cql_statement_from_popup,
                 ),
                 (
                     EventSpec.edit_record_from_grid,
-                    self.edit_cql_statement_from_popup,
+                    self._edit_cql_statement_from_popup,
                 ),
-                (EventSpec.export_from_partial_grid, self.export_partial),
+                (EventSpec.export_from_partial_grid, self._export_partial),
             ),
         )
         bindings = (
@@ -223,7 +223,7 @@ class CQLGrid(CQLListGrid):
             ),
             (
                 EventSpec.navigate_to_active_game,
-                self.set_focus_gamepanel_item_command,
+                self._set_focus_gamepanel_item_command,
             ),
             (EventSpec.navigate_to_game_grid, self.set_focus_game_grid),
             (
@@ -232,7 +232,7 @@ class CQLGrid(CQLListGrid):
             ),
             (
                 EventSpec.navigate_to_active_repertoire,
-                self.set_focus_repertoirepanel_item_command,
+                self._set_focus_repertoirepanel_item_command,
             ),
             (
                 EventSpec.navigate_to_repertoire_game_grid,
@@ -240,7 +240,7 @@ class CQLGrid(CQLListGrid):
             ),
             (
                 EventSpec.navigate_to_active_partial,
-                self.set_focus_partialpanel_item_command,
+                self._set_focus_partialpanel_item_command,
             ),
             (
                 EventSpec.navigate_to_partial_game_grid,
@@ -252,20 +252,20 @@ class CQLGrid(CQLListGrid):
             ),
             (
                 EventSpec.navigate_to_active_selection_rule,
-                self.set_focus_selectionpanel_item_command,
+                self._set_focus_selectionpanel_item_command,
             ),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self.add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
+        self._add_cascade_menu_to_popup(
             "Navigation", self.menupopupnorow, bindings
         )
 
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_active_partial, ""),
                 (EventSpec.navigate_to_partial_game_grid, ""),
@@ -293,7 +293,7 @@ class CQLGrid(CQLListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (
                     EventSpec.navigate_to_active_partial,
@@ -334,17 +334,18 @@ class CQLGrid(CQLListGrid):
                 ),
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_cql_statement,
+                    self._display_cql_statement,
                 ),
-                (EventSpec.edit_record_from_grid, self.edit_cql_statement),
-                (EventSpec.export_from_partial_grid, self.export_partial),
+                (EventSpec.edit_record_from_grid, self._edit_cql_statement),
+                (EventSpec.export_from_partial_grid, self._export_partial),
             )
         )
 
-    def display_cql_statement(self, event=None):
+    def _display_cql_statement(self, event=None):
         """Display ChessQL statement and cancel selection.
 
-        Call _display_cql_statement after idle tasks to allow message display.
+        Call _display_cql_statement_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
@@ -352,44 +353,48 @@ class CQLGrid(CQLListGrid):
             return
         self._set_find_cql_statement_name_games(self.selection[0])
         self.frame.after_idle(
-            self.try_command(self._display_cql_statement, self.frame)
+            self.try_command(
+                self._display_cql_statement_after_idle, self.frame
+            )
         )
 
-    def display_cql_statement_from_popup(self, event=None):
+    def _display_cql_statement_from_popup(self, event=None):
         """Display ChessQL statement selected by pointer.
 
-        Call _display_cql_statement after idle tasks to allow message display.
+        Call _display_cql_statement_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(
-                self._display_cql_statement_from_popup, self.frame
+                self._display_cql_statement_from_popup_after_idle, self.frame
             )
         )
 
-    def _display_cql_statement(self):
+    def _display_cql_statement_after_idle(self):
         """Display ChessQL statement and cancel selection.
 
-        Call from display_cql_statement only.
+        Call from _display_cql_statement only.
 
         """
-        self.display_selected_item(self.get_visible_selected_key())
+        self._display_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def _display_cql_statement_from_popup(self):
+    def _display_cql_statement_from_popup_after_idle(self):
         """Display ChessQL statement selected by pointer.
 
-        Call from display_cql_statement_from_popup only.
+        Call from _display_cql_statement_from_popup only.
 
         """
-        self.display_selected_item(self.pointer_popup_selection)
+        self._display_selected_item(self.pointer_popup_selection)
 
-    def edit_cql_statement(self, event=None):
+    def _edit_cql_statement(self, event=None):
         """Display ChessQL statement allow editing and cancel selection.
 
-        Call _edit_cql_statement after idle tasks to allow message display.
+        Call _edit_cql_statement_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
@@ -397,37 +402,40 @@ class CQLGrid(CQLListGrid):
             return
         self._set_find_cql_statement_name_games(self.selection[0])
         self.frame.after_idle(
-            self.try_command(self._edit_cql_statement, self.frame)
+            self.try_command(self._edit_cql_statement_after_idle, self.frame)
         )
 
-    def edit_cql_statement_from_popup(self, event=None):
+    def _edit_cql_statement_from_popup(self, event=None):
         """Display ChessQL statement with editing allowed selected by pointer.
 
-        Call _edit_cql_statement after idle tasks to allow message display.
+        Call _edit_cql_statement_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
         self._set_find_cql_statement_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
-            self.try_command(self._edit_cql_statement_from_popup, self.frame)
+            self.try_command(
+                self._edit_cql_statement_from_popup_after_idle, self.frame
+            )
         )
 
-    def _edit_cql_statement(self):
+    def _edit_cql_statement_after_idle(self):
         """Display ChessQL statement allow editing and cancel selection.
 
-        Call from edit_cql_statement only.
+        Call from _edit_cql_statement only.
 
         """
-        self.edit_selected_item(self.get_visible_selected_key())
+        self._edit_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def _edit_cql_statement_from_popup(self):
+    def _edit_cql_statement_from_popup_after_idle(self):
         """Display ChessQL statement with editing allowed selected by pointer.
 
-        Call from edit_cql_statement_from_popup only.
+        Call from _edit_cql_statement_from_popup only.
 
         """
-        self.edit_selected_item(self.pointer_popup_selection)
+        self._edit_selected_item(self.pointer_popup_selection)
 
     def _set_find_cql_statement_name_games(self, key):
         """Set status text to active ChessQL statement name."""

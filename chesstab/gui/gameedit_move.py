@@ -57,7 +57,7 @@ from .constants import (
 class GameEdit(gameedit_nonmove.GameEdit):
     """Display a game with editing allowed."""
 
-    def insert_empty_move_after_currentmove(self, event_char):
+    def _insert_empty_move_after_currentmove(self, event_char):
         """Insert empty NAVIGATE_MOVE range after current move.
 
         The empty NAVIGATE_MOVE range becomes the current move but because
@@ -66,7 +66,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
 
         """
         widget = self.score
-        if not self.is_currentmove_in_edit_move():
+        if not self._is_currentmove_in_edit_move():
             # Likely will not happen as insert RAV is allowed in this case.
             return
         # Methods used to get variation and start designed for other, more
@@ -83,25 +83,25 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 if widget.tag_prevrange(
                     NAVIGATE_TOKEN, p_q[0], widget.index(START_SCORE_MARK)
                 ):
-                    self.insert_forced_newline_into_text()
+                    self._insert_forced_newline_into_text()
             else:
                 widget.mark_set(tkinter.INSERT, tkinter.END)
             vartag = self.get_variation_tag_name()
             self.gamevartag = vartag
         else:
             start_current, end_current = widget.tag_ranges(self.current)
-            insert_point = self.get_insertion_point_at_end_of_rav(end_current)
+            insert_point = self._get_insertion_point_at_end_of_rav(end_current)
             if not insert_point:
                 return
-            vartag = self.get_variation_tag_of_index(start_current)
+            vartag = self._get_variation_tag_of_index(start_current)
             widget.mark_set(tkinter.INSERT, insert_point)
 
-        self.get_next_positiontag_name()
+        self._get_next_positiontag_name()
         (
             positiontag,
             tokentag,
             tokenmark,
-        ) = self.get_current_tag_and_mark_names()
+        ) = self._get_current_tag_and_mark_names()
         tpm = self.tagpositionmap
         tpm[positiontag] = tpm[self.current]
         self.edit_move_context[positiontag] = self.create_edit_move_context(
@@ -121,13 +121,15 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 if widget.compare(ti_q, ">", tpr):
                     tri += 1
             if tri >= FORCE_NEWLINE_AFTER_FULLMOVES * 4:
-                self.insert_forced_newline_into_text()
-            start, end, sepend = self.insert_token_into_text(
+                self._insert_forced_newline_into_text()
+            start, end, sepend = self._insert_token_into_text(
                 str(tpmpt[5]) + ".", SPACE_SEP
             )
             widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
             widget.tag_add(FORCED_INDENT_TAG, start, end)
-        start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+        start, end, sepend = self._insert_token_into_text(
+            event_char, SPACE_SEP
+        )
 
         # event_char and separator will have been tagged for elide by enclosure
         # if it is a black move.  The indentation tag too, but that is needed.
@@ -160,7 +162,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         self.previousmovetags[positiontag] = (current, vartag, vartag)
         self.nextmovetags[current] = [positiontag, []]
 
-    def insert_empty_rav_after_next_move(self, event_char):
+    def _insert_empty_rav_after_next_move(self, event_char):
         """Insert "(<event_char>)" after move after current move.
 
         Both the current move and the move after may already have RAVs which
@@ -179,20 +181,20 @@ class GameEdit(gameedit_nonmove.GameEdit):
         if self.current is None:
             # Insert RAV after first move of game
             prior = None
-            choice, range_ = self.get_choice_tag_and_range_of_first_move()
+            choice, range_ = self._get_choice_tag_and_range_of_first_move()
             if not choice:
-                choice = self.get_choice_tag_name()
-            variation = self.get_variation_tag_of_index(range_[0])
+                choice = self._get_choice_tag_name()
+            variation = self._get_variation_tag_of_index(range_[0])
             nextmove = widget.tag_nextrange(variation, range_[0])
         else:
             # Insert RAV after move after current move
-            prior, range_ = self.get_prior_tag_and_range_of_move(self.current)
+            prior, range_ = self._get_prior_tag_and_range_of_move(self.current)
             if prior:
                 choice = self.get_choice_tag_for_prior(prior)
             else:
-                choice = self.get_choice_tag_name()
+                choice = self._get_choice_tag_name()
                 prior = self.get_prior_tag_for_choice(choice)
-            variation = self.get_variation_tag_of_index(range_[0])
+            variation = self._get_variation_tag_of_index(range_[0])
             nextmove = widget.tag_nextrange(variation, range_[-1])
 
         # Figure point where the new empty RAV should be inserted.
@@ -200,7 +202,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         if ctr:
             point = widget.tag_ranges(
                 self.get_rav_tag_for_rav_moves(
-                    self.get_rav_moves_of_index(ctr[2])
+                    self._get_rav_moves_of_index(ctr[2])
                 )
             )[0]
         else:
@@ -238,13 +240,13 @@ class GameEdit(gameedit_nonmove.GameEdit):
         widget.mark_set(tkinter.INSERT, point)
         # Existence of choice implies the prior forced newline is in place.
         if not ctr:
-            self.insert_forced_newline_into_text()
-        start, end, sepend = self.insert_token_into_text("(", SPACE_SEP)
+            self._insert_forced_newline_into_text()
+        start, end, sepend = self._insert_token_into_text("(", SPACE_SEP)
 
         tpm = self.tagpositionmap
-        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        positiontag, tokentag, tokenmark = self._get_tag_and_mark_names()
         vartag = self.get_variation_tag_name()
-        ravtag = self.get_rav_tag_name()
+        ravtag = self._get_rav_tag_name()
         if prior:
             tpm[positiontag] = tpm[self.current]
         else:
@@ -272,31 +274,33 @@ class GameEdit(gameedit_nonmove.GameEdit):
         except KeyError:
             self.previousmovetags[positiontag] = (None, variation, variation)
 
-        newmovetag = self.get_next_positiontag_name()
+        newmovetag = self._get_next_positiontag_name()
         (
             positiontag,
             tokentag,
             tokenmark,
-        ) = self.get_current_tag_and_mark_names()
+        ) = self._get_current_tag_and_mark_names()
         tpm[positiontag] = tpm[self.current]
         self.edit_move_context[positiontag] = self.create_edit_move_context(
             positiontag
         )
         tpmpt = tpm[positiontag]
-        start, end, sepend = self.insert_token_into_text(
+        start, end, sepend = self._insert_token_into_text(
             str(tpmpt[5]) + ("." if tpmpt[1] == FEN_WHITE_ACTIVE else "..."),
             SPACE_SEP,
         )
         widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         widget.tag_add(FORCED_INDENT_TAG, start, end)
-        start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+        start, end, sepend = self._insert_token_into_text(
+            event_char, SPACE_SEP
+        )
 
         # event_char and separator will have been tagged for elide by enclosure
         # if it is a black move.  The indentation tag too, but that is needed.
         widget.tag_remove(MOVETEXT_MOVENUMBER_TAG, start, sepend)
 
         # FORCED_INDENT_TAG is not needed, compared with
-        # insert_empty_move_after_currentmove(), because this token can only
+        # _insert_empty_move_after_currentmove(), because this token can only
         # be first on a line due to word wrap.
         for tag in (
             positiontag,
@@ -322,8 +326,8 @@ class GameEdit(gameedit_nonmove.GameEdit):
         self.previousmovetags[positiontag] = (current, vartag, variation)
         self.nextmovetags[current][1].append(positiontag)
 
-        start, end, sepend = self.insert_token_into_text(")", SPACE_SEP)
-        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        start, end, sepend = self._insert_token_into_text(")", SPACE_SEP)
+        positiontag, tokentag, tokenmark = self._get_tag_and_mark_names()
         tpm[positiontag] = tpm[self.nextmovetags[current][0]]
         for tag in (
             ravtag,
@@ -338,11 +342,11 @@ class GameEdit(gameedit_nonmove.GameEdit):
         self.previousmovetags[positiontag] = (current, variation, variation)
         nttnr = widget.tag_nextrange(NAVIGATE_TOKEN, end)
         if nttnr and NAVIGATE_MOVE in widget.tag_names(nttnr[0]):
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
 
         return newmovetag
 
-    def insert_empty_rav_after_rav_start(self, event_char):
+    def _insert_empty_rav_after_rav_start(self, event_char):
         """Insert "(<event_char>)" before first move or "(..)" in current "(".
 
         The new NAVIGATE_MOVE range becomes the current move, but because
@@ -358,14 +362,14 @@ class GameEdit(gameedit_nonmove.GameEdit):
             if n_q.startswith(TOKEN):
                 insert_point = widget.tag_ranges(n_q)[-1]
                 break
-        return self.insert_rav_at_insert_point(
+        return self._insert_rav_at_insert_point(
             event_char,
             insert_point,
-            *self.find_choice_prior_move_variation_main_move(tn_q),
+            *self._find_choice_prior_move_variation_main_move(tn_q),
             newline_before_rav=False
         )
 
-    def insert_empty_rav_after_rav_start_move_or_rav(self, event_char):
+    def _insert_empty_rav_after_rav_start_move_or_rav(self, event_char):
         """Insert "(<event_char>)" after first move or "(..)" in current "(".
 
         The new NAVIGATE_MOVE range becomes the current move, but because
@@ -400,14 +404,14 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 if n_q.startswith(RAV_END_TAG):
                     insert_after = False
                     break
-        return self.insert_rav_at_insert_point(
+        return self._insert_rav_at_insert_point(
             event_char,
             insert_point,
-            *self.find_choice_prior_move_variation_main_move(tn_q),
+            *self._find_choice_prior_move_variation_main_move(tn_q),
             newline_after_rav=bool(insert_after)
         )
 
-    def insert_empty_rav_after_rav_end(self, event_char):
+    def _insert_empty_rav_after_rav_end(self, event_char):
         """Insert "(<event_char>)" after ")" for current "(".
 
         The new NAVIGATE_MOVE range becomes the current move, but because
@@ -426,14 +430,14 @@ class GameEdit(gameedit_nonmove.GameEdit):
                         insert_point = widget.tag_ranges(en_q)[-1]
                         break
                 break
-        return self.insert_rav_at_insert_point(
+        return self._insert_rav_at_insert_point(
             event_char,
             insert_point,
-            *self.find_choice_prior_move_variation_main_move(tn_q),
+            *self._find_choice_prior_move_variation_main_move(tn_q),
             newline_after_rav=False
         )
 
-    def delete_empty_move(self):
+    def _delete_empty_move(self):
         """Delete empty move from PGN movetext and RAV if it is empty too."""
         widget = self.score
         if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
@@ -441,14 +445,14 @@ class GameEdit(gameedit_nonmove.GameEdit):
         tr_q = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if not tr_q:
             return
-        if self.is_currentmove_in_main_line():
-            current = self.select_prev_move_in_line()
+        if self._is_currentmove_in_main_line():
+            current = self._select_prev_move_in_line()
             delete_rav = False
-        elif self.is_currentmove_start_of_variation():
-            choice = self.get_choice_tag_of_index(tr_q[0])
+        elif self._is_currentmove_start_of_variation():
+            choice = self._get_choice_tag_of_index(tr_q[0])
             prior = self.get_prior_tag_for_choice(choice)
             try:
-                current = self.get_position_tag_of_index(
+                current = self._get_position_tag_of_index(
                     widget.tag_ranges(prior)[0]
                 )
             except IndexError:
@@ -461,7 +465,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
             # is deleted, because there is a move to make current before the
             # move choices.
             if current or len(widget.tag_ranges(choice)) > 4:
-                self.step_one_variation_select(current)
+                self._step_one_variation_select(current)
                 selection = self.get_selection_tag_for_prior(prior)
                 sr_q = widget.tag_nextrange(
                     choice, widget.tag_ranges(selection)[1]
@@ -474,7 +478,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                     )
             delete_rav = True
         else:
-            current = self.select_prev_move_in_line()
+            current = self._select_prev_move_in_line()
             delete_rav = False
         move_number_indicator = widget.tag_prevrange(
             MOVETEXT_MOVENUMBER_TAG,
@@ -483,14 +487,14 @@ class GameEdit(gameedit_nonmove.GameEdit):
         )
         if delete_rav:
             ravtag = self.get_rav_tag_for_rav_moves(
-                self.get_variation_tag_of_index(tr_q[0])
+                self._get_variation_tag_of_index(tr_q[0])
             )
             # Tkinter.Text.delete does not support multiple ranges at
             # Python 2.7.1 so call delete for each range from highest to
             # lowest.  Perhaps put a hack in workarounds?
             widget.delete(
                 *widget.tag_ranges(
-                    self.get_token_tag_of_index(
+                    self._get_token_tag_of_index(
                         widget.tag_nextrange(
                             RAV_END_TAG,
                             widget.tag_prevrange(ravtag, tkinter.END)[0],
@@ -503,7 +507,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 widget.delete(*move_number_indicator)
             widget.delete(
                 *widget.tag_ranges(
-                    self.get_token_tag_of_index(
+                    self._get_token_tag_of_index(
                         widget.tag_nextrange(ravtag, "1.0")[0]
                     )
                 )
@@ -511,13 +515,13 @@ class GameEdit(gameedit_nonmove.GameEdit):
 
             # This should be a method for newlines before and after RAV,
             # perhaps called before the two preceding deletes.
-            self.delete_forced_newlines_adjacent_to_rav(tr_q)
+            self._delete_forced_newlines_adjacent_to_rav(tr_q)
 
         else:
             widget.delete(tr_q[0], tr_q[1])
             if move_number_indicator:
                 widget.delete(*move_number_indicator)
-            self.delete_forced_newline_token_prefix(NAVIGATE_MOVE, tr_q)
+            self._delete_forced_newline_token_prefix(NAVIGATE_MOVE, tr_q)
         del self.edit_move_context[self.current]
         del self.tagpositionmap[self.current]
         self.current = current
@@ -532,7 +536,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 widget.tag_delete(
                     choice, prior, self.get_selection_tag_for_prior(prior)
                 )
-            self.clear_choice_colouring_tag()
+            self._clear_choice_colouring_tag()
             self.set_current()
             if self.current is not None and widget.tag_ranges(self.current):
                 self.apply_colouring_to_variation_back_to_main_line()
@@ -558,7 +562,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
             self.set_current()
         self.set_game_board()
 
-    def insert_rav_at_insert_point(
+    def _insert_rav_at_insert_point(
         self,
         event_char,
         insert_point,
@@ -591,7 +595,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
 
         It is assumed the choice, prior_move, variation_containing_choice,
         and main_line_move, arguments have been calculated by
-        find_choice_prior_move_variation_main_move().
+        _find_choice_prior_move_variation_main_move().
 
         """
         # If choice is not a tag name there is something wrong: do nothing.
@@ -604,7 +608,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         # before nearest of next move and RAV marker tokens.
         nttpr = widget.tag_prevrange(
             NAVIGATE_TOKEN,
-            self.get_nearest_in_tags_between_point_and_end(
+            self._get_nearest_in_tags_between_point_and_end(
                 insert_point,
                 (
                     NAVIGATE_MOVE,
@@ -626,52 +630,54 @@ class GameEdit(gameedit_nonmove.GameEdit):
 
         widget.mark_set(tkinter.INSERT, insert_point)
         if newline_before_rav:
-            self.insert_forced_newline_into_text()
-        start, end, sepend = self.insert_token_into_text("(", SPACE_SEP)
+            self._insert_forced_newline_into_text()
+        start, end, sepend = self._insert_token_into_text("(", SPACE_SEP)
         tpm = self.tagpositionmap
-        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        positiontag, tokentag, tokenmark = self._get_tag_and_mark_names()
         vartag = self.get_variation_tag_name()
-        ravtag = self.get_rav_tag_name()
+        ravtag = self._get_rav_tag_name()
         tpm[positiontag] = tpm[main_line_move if prior_move else None]
         widget.tag_add(tokentag, start, sepend)
         for tag in (ravtag, positiontag, NAVIGATE_TOKEN, RAV_START_TAG):
             widget.tag_add(tag, start, end)
         if prior_move:
             widget.tag_add(prior_move, start, end)
-        # Is colourvariation wrong in insert_empty_rav_after_next_move()?
+        # Is colourvariation wrong in _insert_empty_rav_after_next_move()?
         # There is no 'rsrmN' tag so colourvariation is not propogated.
         # The colourvariation stuff is missing compared with
-        # insert_empty_rav_after_next_move().
+        # _insert_empty_rav_after_next_move().
         self.previousmovetags[positiontag] = (
             self.previousmovetags[main_line_move][0] if prior_move else None,
             variation_containing_choice,
             variation_containing_choice,
         )
-        newmovetag = self.get_next_positiontag_name()
+        newmovetag = self._get_next_positiontag_name()
         (
             positiontag,
             tokentag,
             tokenmark,
-        ) = self.get_current_tag_and_mark_names()
+        ) = self._get_current_tag_and_mark_names()
         tpm[positiontag] = tpm[main_line_move if prior_move else None]
         self.edit_move_context[positiontag] = self.create_edit_move_context(
             positiontag
         )
         tpmpt = tpm[positiontag]
-        start, end, sepend = self.insert_token_into_text(
+        start, end, sepend = self._insert_token_into_text(
             str(tpmpt[5]) + ("." if tpmpt[1] == FEN_WHITE_ACTIVE else "..."),
             SPACE_SEP,
         )
         widget.tag_add(MOVETEXT_MOVENUMBER_TAG, start, sepend)
         widget.tag_add(FORCED_INDENT_TAG, start, end)
-        start, end, sepend = self.insert_token_into_text(event_char, SPACE_SEP)
+        start, end, sepend = self._insert_token_into_text(
+            event_char, SPACE_SEP
+        )
 
         # event_char and separator will have been tagged for elide by enclosure
         # if it is a black move.  The indentation tag too, but that is needed.
         widget.tag_remove(MOVETEXT_MOVENUMBER_TAG, start, sepend)
 
         # FORCED_INDENT_TAG is not needed, compared with
-        # insert_empty_move_after_currentmove(), because this token can only
+        # _insert_empty_move_after_currentmove(), because this token can only
         # be first on a line due to word wrap.
         for tag in (
             positiontag,
@@ -700,8 +706,8 @@ class GameEdit(gameedit_nonmove.GameEdit):
             variation_containing_choice,
         )
         self.nextmovetags[main_line_move][1].append(positiontag)
-        start, end, sepend = self.insert_token_into_text(")", SPACE_SEP)
-        positiontag, tokentag, tokenmark = self.get_tag_and_mark_names()
+        start, end, sepend = self._insert_token_into_text(")", SPACE_SEP)
+        positiontag, tokentag, tokenmark = self._get_tag_and_mark_names()
         tpm[positiontag] = tpm[self.nextmovetags[main_line_move][0]]
         for tag in (
             ravtag,
@@ -720,11 +726,11 @@ class GameEdit(gameedit_nonmove.GameEdit):
             variation_containing_choice,
         )
         if newline_after_rav:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
 
         return newmovetag
 
-    def get_insertion_point_at_end_of_rav(self, insert_point_limit):
+    def _get_insertion_point_at_end_of_rav(self, insert_point_limit):
         """Return insertion point for new move at end of RAV.
 
         insert_point_limit is the earliest point in the score at which the
@@ -758,7 +764,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 tkinter.INSERT, widget.index(point[0]) + "-1 lines lineend"
             )
             if NAVIGATE_MOVE not in widget.tag_names(nttpr[0]):
-                self.insert_forced_newline_into_text()
+                self._insert_forced_newline_into_text()
             return widget.index(tkinter.INSERT)
         if not next_move:
             return end_rav[0]
@@ -774,7 +780,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
         # range relative to self.current should exist.
         # Bug 2013-06-19 note.
         # This method had some code which attempted to solve RAV insertion
-        # problem until insert_empty_rav_after_next_move() method was
+        # problem until _insert_empty_rav_after_next_move() method was
         # amended with correct code on 2015-09-05.
         depth = 0
         nr_q = widget.tag_ranges(self.current)
@@ -784,7 +790,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 if widget.get(*end_rav) == END_RAV:
                     return widget.index(end_rav[1] + "+1char")
                 widget.mark_set(tkinter.INSERT, widget.index(end_rav[1]))
-                self.insert_forced_newline_into_text()
+                self._insert_forced_newline_into_text()
                 return widget.index(tkinter.INSERT)
             end_rav = nr_q
             token = widget.get(*nr_q)
@@ -795,7 +801,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
                 if depth < 0:
                     return widget.index(end_rav[1] + "-1char")
 
-    def delete_forced_newlines_adjacent_to_rav(self, range_):
+    def _delete_forced_newlines_adjacent_to_rav(self, range_):
         """Delete newlines adjacent to RAV markers to fit layout rules.
 
         There will be at least one move token before the RAV being deleted,
@@ -873,7 +879,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
             else:
                 if widget.tag_nextrange(NAVIGATE_TOKEN, nttppr[-1]):
                     return
-                self.delete_forced_newlines_adjacent_to_rav_and_termination(
+                self._delete_forced_newlines_adjacent_to_rav_and_termination(
                     nttppr[0]
                 )
                 return
@@ -889,7 +895,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
             else:
                 if widget.tag_nextrange(NAVIGATE_TOKEN, nttnnr[-1]):
                     return
-                self.delete_forced_newlines_adjacent_to_rav_and_termination(
+                self._delete_forced_newlines_adjacent_to_rav_and_termination(
                     widget.tag_prevrange(FORCED_NEWLINE_TAG, nttnnr[0])[0]
                 )
                 return
@@ -939,10 +945,10 @@ class GameEdit(gameedit_nonmove.GameEdit):
             if dfnl:
                 widget.delete(*dfnl)
 
-    def delete_forced_newlines_adjacent_to_rav_and_termination(self, index):
+    def _delete_forced_newlines_adjacent_to_rav_and_termination(self, index):
         """Delete newlines adjacent to RAV markers to fit layout rules.
 
-        This method is called by delete_forced_newlines_adjacent_to_rav which
+        This method is called by _delete_forced_newlines_adjacent_to_rav which
         is assumed to have set range_ to the final RAV end marker, ')', in a
         RAV which contained RAVs before deletion started.
 

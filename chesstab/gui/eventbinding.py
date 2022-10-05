@@ -35,13 +35,13 @@ class EventBinding:
     def set_database_navigation_close_item_bindings(self, switch=True):
         """Unset navigation bindings when query is closed."""
         self.set_event_bindings_score(
-            self.get_database_events(), switch=switch
+            self._get_database_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
+            self._get_navigation_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_close_item_events(), switch=switch
+            self._get_close_item_events(), switch=switch
         )
 
 
@@ -71,17 +71,17 @@ class AnalysisEventBinding:
             switch=switch,
         )
 
-    def set_analysis_event_bindings_score(self, switch=True):
+    def _set_analysis_event_bindings_score(self, switch=True):
         """Enable or disable bindings for navigation and database selection."""
         self.analysis.set_event_bindings_score(
-            self.get_navigation_events(), switch=switch
+            self._get_navigation_events(), switch=switch
         )
 
 
 class BlankTextEventBinding:
     """The event binding methods which refer to classes without __init__."""
 
-    def get_button_events(self, buttonpress1=None, buttonpress3=None):
+    def _get_button_events(self, buttonpress1=None, buttonpress3=None):
         """Return tuple of buttonpress event bindings.
 
         buttonpress1 and buttonpress3 default to self.press_none().
@@ -91,14 +91,14 @@ class BlankTextEventBinding:
             buttonpress1 = self.press_none
         if buttonpress3 is None:
             buttonpress3 = self.press_none
-        return self.get_modifier_buttonpress_suppression_events() + (
+        return self._get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_1, buttonpress1),
             (EventSpec.buttonpress_3, buttonpress3),
         )
 
     def _set_popup_bindings_get_primary_activity_events(self, popup):
         """Call get_primary_activity_events in isolation."""
-        self.set_popup_bindings(popup, self.get_primary_activity_events())
+        self._set_popup_bindings(popup, self.get_primary_activity_events())
 
     def _bind_for_set_primary_activity_bindings(self, switch):
         """Call set_primary_activity_bindings in isolation."""

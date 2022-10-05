@@ -108,7 +108,7 @@ class Board(ExceptionHandler):
             self.font = self.boardfont.copy()
         self.container = tkinter.Frame(master, width=0, height=0)
         self.container.bind(
-            "<Configure>", self.try_event(self.on_configure_container)
+            "<Configure>", self.try_event(self._on_configure_container)
         )
         self.board = tkinter.Frame(
             self.container, borderwidth=boardborder, relief=tkinter.SUNKEN
@@ -136,16 +136,16 @@ class Board(ExceptionHandler):
                     column=file_index, row=index, sticky=tkinter.NSEW
                 )
 
-    def configure_font(self, side):
+    def _configure_font_size(self, side):
         """Adjust font size after container widget has been resized."""
         self.font.configure(size=-(side * 3) // 32)
 
-    def on_configure_container(self, event=None):
+    def _on_configure_container(self, event=None):
         """Reconfigure board after container widget has been resized."""
         del event
         side = min(self.container.winfo_width(), self.container.winfo_height())
         self.board.configure(width=side, height=side)
-        self.configure_font(side)
+        self._configure_font_size(side)
         self.draw_board()
 
     def draw_board(self):

@@ -55,7 +55,7 @@ class _QueryDisplay(
     Attribute binding_labels specifies the order navigation bindings appear
     in popup menus.
 
-    Method insert_item_database allows records to be inserted into a database
+    Method _insert_item_database allows records to be inserted into a database
     from any CQL widget.
 
     """
@@ -107,7 +107,7 @@ class _QueryDisplay(
         """Return function to set status bar text."""
         return self.ui.set_find_selection_name_games
 
-    def get_navigation_events(self):
+    def _get_navigation_events(self):
         """Return event description tuple for navigation from query."""
         return (
             (
@@ -139,9 +139,9 @@ class _QueryDisplay(
             ),
             (
                 EventSpec.selectiondisplay_to_previous_selection,
-                self.prior_item,
+                self._prior_item,
             ),
-            (EventSpec.selectiondisplay_to_next_selection, self.next_item),
+            (EventSpec.selectiondisplay_to_next_selection, self._next_item),
             (
                 EventSpec.navigate_to_partial_game_grid,
                 self.set_focus_partial_game_grid,
@@ -156,7 +156,7 @@ class _QueryDisplay(
         del event
         self.ui.delete_selection_rule_view(self)
 
-    def insert_item_database(self, event=None):
+    def _insert_item_database(self, event=None):
         """Add game selection rule to database."""
         del event
         if self.ui.selection_items.active_item is None:
@@ -299,34 +299,37 @@ class _QueryDisplay(
         if self.sourceobject is not None:
             pass
 
-    def get_list_games_events(self):
+    def _get_list_games_events(self):
         """Return tuple of event bindings to list games for selection rule."""
         return (
-            (EventSpec.display_list, self.process_and_set_selection_rule_list),
+            (
+                EventSpec.display_list,
+                self._process_and_set_selection_rule_list,
+            ),
         )
 
     def set_database_navigation_close_item_bindings(self, switch=True):
         super().set_database_navigation_close_item_bindings(switch=switch)
         self.set_event_bindings_score(
-            self.get_list_games_events(), switch=switch
+            self._get_list_games_events(), switch=switch
         )
 
-    def add_list_games_entry_to_popup(self, popup, index=tkinter.END):
+    def _add_list_games_entry_to_popup(self, popup, index=tkinter.END):
         """Add option to list games for selection rule to popup."""
-        self.set_popup_bindings(
-            popup, self.get_list_games_events(), index=index
+        self._set_popup_bindings(
+            popup, self._get_list_games_events(), index=index
         )
 
     def generate_popup_navigation_maps(self):
         """Return genenal and current widget navigation binding maps."""
-        navigation_map = dict(self.get_navigation_events())
+        navigation_map = dict(self._get_navigation_events())
         local_map = {}
         return navigation_map, local_map
 
     def create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def on_selection_change(self, instance):
@@ -378,7 +381,7 @@ class _QueryDisplay(
         """
         self.refresh_game_list()
 
-    def process_and_set_selection_rule_list(self, event=None):
+    def _process_and_set_selection_rule_list(self, event=None):
         """Display games matching edited game selection rule."""
         del event
         if self.ui.base_games.datasource:
@@ -405,7 +408,7 @@ class _QueryDisplay(
 class QueryDisplay(_QueryDisplay, Query, DataNotify):
     """Display game selection rule from database and allow delete and insert.
 
-    Method delete_item_database allows records to be deleted from a database.
+    Method _delete_item_database allows records to be deleted from a database.
 
     """
 
@@ -415,10 +418,10 @@ class QueryDisplay(_QueryDisplay, Query, DataNotify):
     def create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.add_list_games_entry_to_popup(popup, index="Close Item")
+        self._add_list_games_entry_to_popup(popup, index="Close Item")
         return popup
 
-    def delete_item_database(self, event=None):
+    def _delete_item_database(self, event=None):
         """Remove game selection rule from database."""
         del event
         if self.ui.database is None:
@@ -540,11 +543,11 @@ class QueryDisplayInsert(
 class QueryDisplayEdit(EditText, QueryDisplayInsert):
     """Display game selection rule from database allowing edit and insert.
 
-    Method update_item_database allows records on the database to be amended.
+    Method _update_item_database allows records on the database to be amended.
 
     """
 
-    def update_item_database(self, event=None):
+    def _update_item_database(self, event=None):
         """Modify existing game selection rule record."""
         del event
         if self.ui.database is None:

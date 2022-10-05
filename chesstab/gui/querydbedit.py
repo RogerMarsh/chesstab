@@ -29,7 +29,7 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
     Attribute text_name provides the name used in widget titles and message
     text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -61,9 +61,9 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
                 oqs = self.oldview.query_statement
                 oqs.set_database(ui.base_games.datasource.dbhome)
                 oqs.dbset = ui.base_games.datasource.dbset
-        self.initialize()
+        self._initialize()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a selection rule object_.
 
         Default value of object_ is object attribute from DataShow class.
@@ -96,7 +96,7 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
         return self.newview.ui
 
     @staticmethod
-    def set_item(view, object_):
+    def _set_item(view, object_):
         """Populate view with the query extracted from object_."""
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text(reset_undo=True)
@@ -108,7 +108,7 @@ class QueryDbEdit(ExceptionHandler, EditText, DataEdit):
         or confirmation has been given for an invalid statement.
 
         """
-        title = self.get_title_for_object()
+        title = self._get_title_for_object()
         self.newobject.value.load(
             repr(self.newview.get_name_query_statement_text())
         )

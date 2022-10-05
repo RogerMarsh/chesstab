@@ -132,11 +132,11 @@ class GameEdit(Game):
         self.score.mark_set(tkinter.INSERT, START_SCORE_MARK)
 
     # Unwanted tags can be inherited from surrounding characters.
-    def map_move_text(self, token, position):
+    def _map_move_text(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self.tag_token_for_editing(
-            super().map_move_text(token, position),
-            self.get_current_tag_and_mark_names,
+        positiontag, token_indicies = self._tag_token_for_editing(
+            super()._map_move_text(token, position),
+            self._get_current_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, INSERT_RAV),
             tag_position=False,  # already tagged by superclass method
         )
@@ -154,26 +154,26 @@ class GameEdit(Game):
         """
         scaffold = self._game_scaffold
         token_indicies = super().map_start_rav(token, position)
-        ravtag = self.get_rav_tag_name()
+        ravtag = self._get_rav_tag_name()
         self.ravstack.append(ravtag)
         prior = self.get_prior_tag_for_choice(scaffold.choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
             scaffold.token_position = self.tagpositionmap[
-                self.get_position_tag_of_index(prior_range[0])
+                self._get_position_tag_of_index(prior_range[0])
             ]
             tags = (ravtag, NAVIGATE_TOKEN, RAV_START_TAG, prior)
         else:
             scaffold.token_position = self.tagpositionmap[None]
             tags = (ravtag, NAVIGATE_TOKEN, RAV_START_TAG)
-        positiontag, token_indicies = self.tag_token_for_editing(
+        positiontag, token_indicies = self._tag_token_for_editing(
             token_indicies,
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             tag_start_to_end=tags,
             mark_for_edit=False,
         )
         self.tagpositionmap[positiontag] = scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_end_rav(self, token, position):
@@ -185,71 +185,71 @@ class GameEdit(Game):
         """
         # last move in rav is editable
         scaffold = self._game_scaffold
-        self.add_move_to_editable_moves(scaffold.vartag)
+        self._add_move_to_editable_moves(scaffold.vartag)
         token_indicies = super().map_end_rav(token, position)
         ravtag = self.ravstack.pop()
         prior = self.get_prior_tag_for_choice(scaffold.choicetag)
         prior_range = self.score.tag_ranges(prior)
         if prior_range:
             scaffold.token_position = self.tagpositionmap[
-                self.get_position_tag_of_index(
-                    self.get_range_of_main_move_for_rav(prior_range[0])[0]
+                self._get_position_tag_of_index(
+                    self._get_range_of_main_move_for_rav(prior_range[0])[0]
                 )
             ]
             tags = (ravtag, NAVIGATE_TOKEN, RAV_END_TAG, prior)
         else:
             scaffold.token_position = self.tagpositionmap[None]
             tags = (ravtag, NAVIGATE_TOKEN, RAV_END_TAG)
-        positiontag, token_indicies = self.tag_token_for_editing(
+        positiontag, token_indicies = self._tag_token_for_editing(
             token_indicies,
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             tag_start_to_end=tags,
             mark_for_edit=False,
         )
         self.tagpositionmap[positiontag] = scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_termination(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         # last move in game is editable
-        self.add_move_to_editable_moves(self._game_scaffold.vartag)
-        positiontag, token_indicies = self.tag_token_for_editing(
+        self._add_move_to_editable_moves(self._game_scaffold.vartag)
+        positiontag, token_indicies = self._tag_token_for_editing(
             super().map_termination(token),
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             # tag_start_to_end=(EDIT_RESULT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
             tag_start_to_end=(EDIT_RESULT,),
         )
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
         return token_indicies
 
-    def _map_start_comment(self, token, newline_prefix):
+    def _map_initial_start_comment(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:
-            self.insert_forced_newline_into_text()
-        return self.tag_token_for_editing(
-            self.insert_token_into_text(token, SPACE_SEP),
-            self.get_tag_and_mark_names,
+            self._insert_forced_newline_into_text()
+        return self._tag_token_for_editing(
+            self._insert_token_into_text(token, SPACE_SEP),
+            self._get_tag_and_mark_names,
             tag_start_to_end=(EDIT_COMMENT, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
         )
 
-    def map_start_comment(self, token):
+    def _map_start_comment(self, token):
         """Override to tag token for single-step navigation and editing."""
-        positiontag, token_indicies = self._map_start_comment(
-            token, self.tokens_exist_between_movetext_start_and_insert_point()
+        positiontag, token_indicies = self._map_initial_start_comment(
+            token, self._tokens_exist_between_movetext_start_and_insert_point()
         )
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_comment_to_eol(self, token, newline_prefix):
+    def _map_initial_comment_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:
-            self.insert_forced_newline_into_text()
-        return self.tag_token_for_editing(
-            super()._map_comment_to_eol(token, newline_prefix),
-            self.get_tag_and_mark_names,
+            self._insert_forced_newline_into_text()
+        return self._tag_token_for_editing(
+            super()._map_initial_comment_to_eol(token, newline_prefix),
+            self._get_tag_and_mark_names,
             tag_start_to_end=(
                 EDIT_COMMENT_EOL,
                 NAVIGATE_TOKEN,
@@ -257,67 +257,67 @@ class GameEdit(Game):
             ),
         )
 
-    def map_comment_to_eol(self, token):
+    def _map_comment_to_eol(self, token):
         """Override to tag token for single-step navigation and editing."""
-        positiontag, token_indicies = self._map_comment_to_eol(
-            token, self.tokens_exist_between_movetext_start_and_insert_point()
+        positiontag, token_indicies = self._map_initial_comment_to_eol(
+            token, self._tokens_exist_between_movetext_start_and_insert_point()
         )
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
-    def _map_escape_to_eol(self, token, newline_prefix):
+    def _map_initial_escape_to_eol(self, token, newline_prefix):
         """Extend to tag token for single-step navigation and game editing."""
         if newline_prefix:
-            self.insert_forced_newline_into_text()
-        return self.tag_token_for_editing(
-            super()._map_escape_to_eol(token, newline_prefix),
-            self.get_tag_and_mark_names,
+            self._insert_forced_newline_into_text()
+        return self._tag_token_for_editing(
+            super()._map_initial_escape_to_eol(token, newline_prefix),
+            self._get_tag_and_mark_names,
             tag_start_to_end=(EDIT_ESCAPE_EOL, NAVIGATE_TOKEN),
         )
 
     # The EDIT_ESCAPE_EOL entry in _TOKEN_LEAD_TRAIL has been changed from
-    # (2, 0) to (1, 0) to fit the add_escape_to_eol() case.  Not sure yet
-    # if this breaks the map_escape_to_eol() case, which currently cannot
+    # (2, 0) to (1, 0) to fit the _add_escape_to_eol() case.  Not sure yet
+    # if this breaks the _map_escape_to_eol() case, which currently cannot
     # happen because '\n%\n' tokens are not put on database even if present
     # in the PGN movetext.
-    def map_escape_to_eol(self, token):
+    def _map_escape_to_eol(self, token):
         """Override to tag token for single-step navigation and editing."""
-        positiontag, token_indicies = self._map_escape_to_eol(
-            token, self.tokens_exist_between_movetext_start_and_insert_point()
+        positiontag, token_indicies = self._map_initial_escape_to_eol(
+            token, self._tokens_exist_between_movetext_start_and_insert_point()
         )
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_integer(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self.tag_token_for_editing(
+        positiontag, token_indicies = self._tag_token_for_editing(
             super().map_integer(token, position),
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN,),
             mark_for_edit=False,
         )
         self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_glyph(self, token, newline_prefix):
+    def _map_initial_glyph(self, token, newline_prefix):
         """Tag token for single-step navigation and game editing."""
         if newline_prefix:
-            self.insert_forced_newline_into_text()
-        return self.tag_token_for_editing(
-            self.insert_token_into_text(token, SPACE_SEP),
-            self.get_tag_and_mark_names,
+            self._insert_forced_newline_into_text()
+        return self._tag_token_for_editing(
+            self._insert_token_into_text(token, SPACE_SEP),
+            self._get_tag_and_mark_names,
             tag_start_to_end=(EDIT_GLYPH, NAVIGATE_TOKEN, NAVIGATE_COMMENT),
         )
 
-    def map_glyph(self, token):
+    def _map_glyph(self, token):
         """Override to tag token for single-step navigation and editing."""
         # At present NAGs are not put on a line of their own when following
         # a move.  They would be if the NAG translations were shown too.
-        # before = self.tokens_exist_between_movetext_start_and_insert_point()
+        # before = self._tokens_exist_between_movetext_start_and_insert_point()
         before = self.score.tag_prevrange(
             NAVIGATE_TOKEN, tkinter.INSERT, START_SCORE_MARK
         )
@@ -326,54 +326,54 @@ class GameEdit(Game):
         else:
             before = False
 
-        positiontag, token_indicies = self._map_glyph(token, before)
+        positiontag, token_indicies = self._map_initial_glyph(token, before)
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_period(self, token, position):
         """Extend to tag token for single-step navigation and game editing."""
-        positiontag, token_indicies = self.tag_token_for_editing(
+        positiontag, token_indicies = self._tag_token_for_editing(
             super().map_period(token, position),
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN,),
             mark_for_edit=False,
         )
         self.tagpositionmap[positiontag] = self.tagpositionmap[None]
         return token_indicies
 
-    def _map_start_reserved(self, token, newline_prefix):
+    def _map_empty_start_reserved(self, token, newline_prefix):
         """Tag token for single-step navigation and game editing."""
         if newline_prefix:
-            self.insert_forced_newline_into_text()
-        return self.tag_token_for_editing(
-            self.insert_token_into_text(token, SPACE_SEP),
-            self.get_tag_and_mark_names,
+            self._insert_forced_newline_into_text()
+        return self._tag_token_for_editing(
+            self._insert_token_into_text(token, SPACE_SEP),
+            self._get_tag_and_mark_names,
             tag_start_to_end=(EDIT_RESERVED, NAVIGATE_TOKEN),
         )
 
-    def map_start_reserved(self, token):
+    def _map_start_reserved(self, token):
         """Override to tag token for single-step navigation and editing."""
-        positiontag, token_indicies = self._map_start_reserved(
-            token, self.tokens_exist_between_movetext_start_and_insert_point()
+        positiontag, token_indicies = self._map_empty_start_reserved(
+            token, self._tokens_exist_between_movetext_start_and_insert_point()
         )
         self._game_scaffold.force_newline = FORCE_NEWLINE_AFTER_FULLMOVES + 1
         self.tagpositionmap[positiontag] = self._game_scaffold.token_position
-        self.create_previousmovetag(positiontag, token_indicies[0])
+        self._create_previousmovetag(positiontag, token_indicies[0])
         return token_indicies
 
     def map_non_move(self, token):
         """Extend to tag token for single-step navigation and game editing."""
         # mark_for_edit is True while no EDIT_... tag is done?
-        positiontag, token_indicies = self.tag_token_for_editing(
+        positiontag, token_indicies = self._tag_token_for_editing(
             super().map_non_move(token),
-            self.get_tag_and_mark_names,
+            self._get_tag_and_mark_names,
             tag_start_to_end=(NAVIGATE_TOKEN, NAVIGATE_COMMENT),
         )
         self.tagpositionmap[positiontag] = None
         return token_indicies
 
-    def tag_token_for_editing(
+    def _tag_token_for_editing(
         self,
         token_indicies,
         tag_and_mark_names,
@@ -415,7 +415,7 @@ class GameEdit(Game):
             tag_add(positiontag, start, end)
         return positiontag, token_indicies
 
-    def get_range_of_main_move_for_rav(self, start):
+    def _get_range_of_main_move_for_rav(self, start):
         """Return range of move for which start index ends a RAV."""
         widget = self.score
         for n_q in widget.tag_names(start):
@@ -427,7 +427,7 @@ class GameEdit(Game):
 
     # This method may be removed because it is used in only two places, and
     # one of those needs the 'tr_q' value too.
-    def add_move_to_editable_moves(self, variation):
+    def _add_move_to_editable_moves(self, variation):
         """Mark last move in variation for editing rather than insert RAV.
 
         This method should be called when it is known there are no more moves
@@ -444,7 +444,7 @@ class GameEdit(Game):
         widget.tag_add(EDIT_MOVE, *tr_q)
         widget.tag_remove(INSERT_RAV, *tr_q)
 
-    def tokens_exist_between_movetext_start_and_insert_point(self):
+    def _tokens_exist_between_movetext_start_and_insert_point(self):
         """Return True if tokens exist from movetext start to insert point."""
         return bool(
             self.score.tag_prevrange(
@@ -452,7 +452,7 @@ class GameEdit(Game):
             )
         )
 
-    def get_rav_tag_name(self):
+    def _get_rav_tag_name(self):
         """Return suffixed RAV_TAG tag name.
 
         The Score.get_variation_tag_name() is assumed to have been called

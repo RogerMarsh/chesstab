@@ -160,9 +160,9 @@ class ChessQLGames:
             initial_recordlist = self.dbhome.recordlist_nil(self.dbset)
             initial_recordlist |= initial_recordset
         query = sourceobject.value
-        games = self.get_games_matching_filters(
+        games = self._get_games_matching_filters(
             query,
-            self.get_games_matching_parameters(query, initial_recordlist),
+            self._get_games_matching_parameters(query, initial_recordlist),
         )
 
         # File the list of games under the query key.
@@ -254,9 +254,9 @@ class ChessQLGames:
         else:
             initial_recordlist = self.dbhome.recordlist_nil(self.dbset)
             initial_recordlist |= initial_recordset
-        games = self.get_games_matching_filters(
+        games = self._get_games_matching_filters(
             query,
-            self.get_games_matching_parameters(query, initial_recordlist),
+            self._get_games_matching_parameters(query, initial_recordlist),
         )
 
         # Hand the list of games over to the user interface.
@@ -283,7 +283,7 @@ class ChessQLGames:
                     if not pieces:
                         return pieces
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
                 pieces.intersection_update(
                     self.pieces_matching_filter(node, pieces)
@@ -294,7 +294,7 @@ class ChessQLGames:
         if filter_.tokendef in _OR_FILTERS:
             pieces = set(ALL_PIECES)
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
 
                 # This cannot be correct given pieces initialisation, or
@@ -311,7 +311,8 @@ class ChessQLGames:
     # Introduced at revision 3755 as part of 'on' filter implementation which
     # has been, at least temporarely, removed.
     # Called _squares_matching_filter then.
-    def squares_matching_filter(self, filter_, initialsquares):
+    # And back to _squares_matching_filter again! (revision 5067)
+    def _squares_matching_filter(self, filter_, initialsquares):
         """Return squares matching filters in CQL statement.
 
         It is assumed FSNode.designator_set contains the expanded piece
@@ -328,10 +329,10 @@ class ChessQLGames:
                     if not squares:
                         return squares
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
                 squares.intersection_update(
-                    self.squares_matching_filter(node, squares)
+                    self._squares_matching_filter(node, squares)
                 )
                 if not squares:
                     return squares
@@ -339,14 +340,14 @@ class ChessQLGames:
         if filter_.tokendef in _OR_FILTERS:
             squares = set(Squares.squares)
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
 
                 # This cannot be correct given squares initialisation, or
                 # more likely squares initialisation is not correct too.
-                # However squares_matching_filter is not called anywhere!
+                # However _squares_matching_filter is not called anywhere!
                 squares.union(
-                    self.squares_matching_filter(node, initialsquares)
+                    self._squares_matching_filter(node, initialsquares)
                 )
 
             return squares
@@ -403,7 +404,7 @@ class ChessQLGames:
                 squares.add(pdesignator[1:])
         return squares
 
-    def is_filter_not_implemented(self, filter_):
+    def _is_filter_not_implemented(self, filter_):
         """Return True if filter is not implemented, and False otherwise.
 
         Filters which are not implemented are added to a list reported before
@@ -456,7 +457,7 @@ class ChessQLGames:
                     if not games.count_records():
                         return games
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
                 games &= self._games_matching_filter(
                     node, games, movenumber, variation
@@ -467,7 +468,7 @@ class ChessQLGames:
         if filter_.tokendef in _OR_FILTERS:
             games = self.dbhome.recordlist_nil(self.dbset)
             for node in filter_.children:
-                if self.is_filter_not_implemented(node):
+                if self._is_filter_not_implemented(node):
                     continue
                 games |= self._games_matching_filter(
                     node, initialgames, movenumber, variation
@@ -535,7 +536,7 @@ class ChessQLGames:
         wqs.evaluate(self.cqlfinder)
         return wqs.get_node_result_answer()
 
-    def get_games_matching_filters(self, query, games):
+    def _get_games_matching_filters(self, query, games):
         """Select the games which meet the ChessQL cql() ... filters.
 
         Walk node tree for every movenumber and combine evaluated game sets.
@@ -555,8 +556,8 @@ class ChessQLGames:
             )
         return found
 
-    # Version of get_games_matching_filters() to process CQL parameters.
-    def get_games_matching_parameters(self, query, games):
+    # Version of _get_games_matching_filters() to process CQL parameters.
+    def _get_games_matching_parameters(self, query, games):
         """Select the games which meet the ChessQL cql(...) parameters.
 
         Walk node tree for cql parameters and combine evaluated game sets.

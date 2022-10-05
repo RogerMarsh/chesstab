@@ -25,7 +25,7 @@ class QueryDbShow(ExceptionHandler, ShowText, DataShow):
     Attribute text_name provides the name used in widget titles and message
     text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -35,7 +35,7 @@ class QueryDbShow(ExceptionHandler, ShowText, DataShow):
 
     def __init__(self, parent, oldobject, ui=None):
         """Extend and create toplevel widget to display game selection rule."""
-        # Toplevel title set '' in __init__ and to proper value in initialize.
+        # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
             oldobject, parent, QueryToplevel(master=parent, ui=ui), ""
         )
@@ -44,9 +44,9 @@ class QueryDbShow(ExceptionHandler, ShowText, DataShow):
                 ui.base_games.datasource.dbhome
             )
             self.oldview.query_statement.dbset = ui.base_games.datasource.dbset
-        self.initialize()
+        self._initialize()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a selection rule object_.
 
         Default value of object_ is object attribute from DataShow class.
@@ -77,7 +77,7 @@ class QueryDbShow(ExceptionHandler, ShowText, DataShow):
         return self.oldview.ui
 
     @staticmethod
-    def set_item(view, object_):
+    def _set_item(view, object_):
         """Populate view with the query extracted from object_."""
         view.query_statement.process_query_statement(object_.get_srvalue())
         view.set_and_tag_item_text()

@@ -69,9 +69,9 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete("1.0", tkinter.END)
-        self.map_cql_statement()
+        self._map_cql_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
+            self._bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -86,14 +86,14 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         text = self.score.get("1.0", tkinter.END).strip()
         return text
 
-    def map_cql_statement(self):
+    def _map_cql_statement(self):
         """Convert tokens to text and show in CQL statement Text widget."""
         # No mapping of tokens to text in widget (yet).
         self.score.insert(
             tkinter.INSERT, self.cql_statement.get_name_statement_text()
         )
 
-    def get_partial_key_cql_statement(self):
+    def _get_partial_key_cql_statement(self):
         """Return ChessQL statement for use as partial key."""
         if self.cql_statement.is_statement():
 
@@ -163,7 +163,7 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                 raise CQLTextListGamesError(
                     "Unable to refresh list of games for statement"
                 ) from exc
-        grid.partial = self.get_partial_key_cql_statement()
+        grid.partial = self._get_partial_key_cql_statement()
         # grid.rows = 1
         grid.load_new_index()
 

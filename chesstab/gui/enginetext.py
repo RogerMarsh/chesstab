@@ -61,12 +61,12 @@ class EngineText(SharedTextEngineText, BlankText):
         )
         self.set_event_bindings_score(
             self.get_f10_popup_events(
-                self.post_active_menu_at_top_left, self.post_active_menu
+                self._post_active_menu_at_top_left, self._post_active_menu
             ),
             switch=switch,
         )
         self.set_event_bindings_score(
-            self.get_button_events(buttonpress3=self.post_active_menu),
+            self._get_button_events(buttonpress3=self._post_active_menu),
             switch=switch,
         )
 
@@ -81,9 +81,9 @@ class EngineText(SharedTextEngineText, BlankText):
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
         self.score.delete("1.0", tkinter.END)
-        self.map_engine_definition()
+        self._map_engine_definition()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
+            self._bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -102,7 +102,7 @@ class EngineText(SharedTextEngineText, BlankText):
             return engine.__dict__
         return {}
 
-    def map_engine_definition(self):
+    def _map_engine_definition(self):
         """Insert chess engine definition in Text widget.
 
         Method name arises from development history: the source class tags

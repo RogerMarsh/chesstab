@@ -267,7 +267,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         ]
         return (names, exists)
 
-    def get_pages_for_record_counts(self, counts=(0, 0)):
+    def _get_pages_for_record_counts(self, counts=(0, 0)):
         """Return Table B and Table D pages needed for record counts."""
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         return (
@@ -275,7 +275,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             (counts[1] * self.table[GAMES_FILE_DEF].btod_factor) // brecppg,
         )
 
-    def get_database_table_sizes(self, files=None):
+    def _get_database_table_sizes(self, files=None):
         """Return Table B and D size and usage in pages for files."""
         if files is None:
             files = dict()
@@ -333,7 +333,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         ).items():
             bsize = value["BSIZE"]
             bused = max(0, value["BHIGHPG"])
-            bneeded = self.get_pages_for_record_counts(
+            bneeded = self._get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[0]
             bincrease = min(bneeded * 2, bsize - bused)
@@ -396,7 +396,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         ).items():
             dsize = value["DSIZE"]
             dused = value["DPGSUSED"]
-            dneeded = self.get_pages_for_record_counts(
+            dneeded = self._get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[1]
             dincrease = min(dneeded * 2, dsize - dused)
@@ -502,7 +502,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         }
         append_text("Current file size and free space:")
         free = dict()
-        sizes, increases = self.get_database_table_sizes(
+        sizes, increases = self._get_database_table_sizes(
             files=self._notional_record_counts
         )
         for filename, bdsize in sizes.items():
@@ -530,7 +530,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         append_text("File space needed for import:")
         for filename, nr_count in self._notional_record_counts.items():
             append_text_only(filename)
-            b_pages, d_pages = self.get_pages_for_record_counts(nr_count)
+            b_pages, d_pages = self._get_pages_for_record_counts(nr_count)
             append_text_only(
                 " ".join(("Estimated", str(b_pages), "pages needed for data"))
             )

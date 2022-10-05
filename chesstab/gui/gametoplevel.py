@@ -23,10 +23,10 @@ class GameToplevelEdit(ToplevelPGN, GameEdit):
     def create_primary_activity_popup(self):
         """Create popup menu for a game widget."""
         popup = super().create_primary_activity_popup()
-        self.add_pgn_navigation_to_submenu_of_popup(
+        self._add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label
         )
-        self.add_pgn_insert_to_submenu_of_popup(
+        self._add_pgn_insert_to_submenu_of_popup(
             popup,
             include_ooo=True,
             include_move_rav=True,

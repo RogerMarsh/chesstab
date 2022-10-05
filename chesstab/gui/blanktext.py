@@ -98,8 +98,8 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         self.takefocus_widget = None
 
         # Keyboard actions do nothing by default.
-        self.set_keypress_binding(switch=False)
-        self.set_event_bindings_score(self.get_menubar_events())
+        self._set_keypress_binding(switch=False)
+        self.set_event_bindings_score(self._get_menubar_events())
 
         # The popup menus used by all subclasses.
         self.inactive_popup = None
@@ -128,7 +128,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
                 sequence[0], ste(function) if switch and function else ""
             )
 
-    def set_keypress_binding(self, function=None, bindings=(), switch=True):
+    def _set_keypress_binding(self, function=None, bindings=(), switch=True):
         """Set bindings to function if switch is True or disable keypress."""
         if switch and function:
             stef = self.try_event(function)
@@ -139,7 +139,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
             for sequence in bindings:
                 self.score.bind(sequence[0], stekb)
 
-    def get_menubar_events(self):
+    def _get_menubar_events(self):
         """Return tuple of event binding definitions passed for menubar."""
         return ((EventSpec.score_enable_F10_menubar, self.press_none),)
 
@@ -156,8 +156,8 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
 
     # This method arose when seeking clarity in the way popup menus were set,
     # and replaces lots of 'add_command' calls scattered all over.
-    # Long term, either this method or add_cascade_menu_to_popup will do all.
-    def set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
+    # Long term, either this method or _add_cascade_menu_to_popup will do all.
+    def _set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
         """Insert bindings in popup before index in popup."""
         # Default index is tkinter.END which seems to mean insert at end of
         # popup, not before last entry in popup as might be expected from the
@@ -195,7 +195,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
 
     # Subclasses with database interfaces may override method.
     @staticmethod
-    def create_database_submenu(menu):
+    def _create_database_submenu(menu):
         """Do nothing.
 
         Subclasses should override this method as needed.
@@ -208,7 +208,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         # return none
         del menu
 
-    def post_menu(self, menu, create_menu, allowed=True, event=None):
+    def _post_menu(self, menu, create_menu, allowed=True, event=None):
         """Post the popup menu at current pointer location in widget.
 
         create_menu creates a popup menu if menu is None.
@@ -244,14 +244,14 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         # So 'Shift-F10' does not fire 'F10' (menubar) binding too.
         return "break"
 
-    def is_active_item_mapped(self):
+    def _is_active_item_mapped(self):
         """Return True if this widget is visible and is the active item."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item:
                 return False
         return True
 
-    def bind_for_primary_activity(self, switch=True):
+    def _bind_for_primary_activity(self, switch=True):
         """Set (switch True) or clear bindings for main actions when active.
 
         If bool(switch) is true, clear the most recently set bindings first.
@@ -277,7 +277,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
     token_bind_method = {
-        NonTagBind.NO_EDITABLE_TAGS: bind_for_primary_activity,
+        NonTagBind.NO_EDITABLE_TAGS: _bind_for_primary_activity,
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
     }
 
@@ -299,7 +299,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         self._set_popup_bindings_get_primary_activity_events(popup)
         # pylint message assignment-from-none is false positive.
         # However it is sensible to do an isinstance test.
-        database_submenu = self.create_database_submenu(popup)
+        database_submenu = self._create_database_submenu(popup)
         if isinstance(database_submenu, tkinter.Menu):
             popup.add_cascade(label="Database", menu=database_submenu)
         self.primary_activity_popup = popup

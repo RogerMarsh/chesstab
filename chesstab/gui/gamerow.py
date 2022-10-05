@@ -219,7 +219,7 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
                 "  ".join(
                     [
                         "".join((tag, ' "', value, '"'))
-                        for tag, value in self.get_tags_display_order(
+                        for tag, value in self._get_tags_display_order(
                             self.value
                         )
                     ]
@@ -228,7 +228,7 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
             **kargs
         )
 
-    def get_tags_display_order(self, pgn):
+    def _get_tags_display_order(self, pgn):
         """Return Tags not given their own column in display order."""
         del pgn
         str_tags = []

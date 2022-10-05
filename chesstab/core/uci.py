@@ -202,9 +202,9 @@ class UCI:
                 item = self.uci_drivers_reply.get_nowait()
             except Empty:
                 break
-            self.process_commands_from_engines(item)
+            self._process_commands_from_engines(item)
 
-    def process_commands_from_engines(self, response):
+    def _process_commands_from_engines(self, response):
         """Process responses from UCI chess engines.
 
         Calls of this method are scheduled by tkinter.after().
@@ -325,7 +325,7 @@ class UCI:
             while len(engq):
                 if len(epp[engq[-1]]):
                     position_data = epp[engq[-1]].pop()
-                    if self.process_analysis_request(
+                    if self._process_analysis_request(
                         engine_interface, position_data
                     ):
                         uci_drivers_fen[key] = position_data.position
@@ -338,7 +338,7 @@ class UCI:
         """Note queue for return of UCI engine analysis to user interface."""
         self.ui_analysis_queue = queue
 
-    def process_analysis_request(self, engine_interface, position_data):
+    def _process_analysis_request(self, engine_interface, position_data):
         """Return True if deeper or wider analysis requested from engine."""
         engine_name = engine_interface.parser.name
 
@@ -448,7 +448,7 @@ class UCI:
         be pruned if required: after the extraction.
 
         """
-        self.extract_variations_from_engine_bestmove(ui_name)
+        self._extract_variations_from_engine_bestmove(ui_name)
         self.uci_drivers_fen[ui_name] = None
         if self.use_ucinewgame:
             engine_interface = self.uci_drivers[ui_name]
@@ -529,7 +529,7 @@ class UCI:
                 return True
         return False
 
-    def extract_variations_from_engine_bestmove(self, ui_name):
+    def _extract_variations_from_engine_bestmove(self, ui_name):
         """Extract and save on database new wider or deeper analysis."""
         engine_parser = self.uci_drivers[ui_name].parser
         engine_name = engine_parser.name

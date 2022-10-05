@@ -200,12 +200,12 @@ class GameEdit(gameedit_widget.GameEdit):
     # self.viewmode_comment_popup and self.viewmode_pgntag_popup can just drop
     # viewmode_ from their names.  The only references outside gameedit are in
     # gamedisplay and repertoiredisplay, four in all.  Ok to do now.
-    # Event handler to post pgn_tag_popup menu is renamed post_pgn_tag_menu.
+    # Event handler to post pgn_tag_popup menu is renamed _post_pgn_tag_menu.
     # Two new ones, start_rav_popup and end_rav_popup, are needed.  It may be
     # best to have one each for all the editable tokens, in particular escaped
     # line and comment to end of line, to cope with the slight variation in
     # editing rules.
-    # The bind_for_primary_activity() call must be replaced because it may,
+    # The _bind_for_primary_activity() call must be replaced because it may,
     # probably will, occur when not in select variation state.
     def set_current(self):
         """Override to set edit and navigation bindings for current token.
@@ -224,7 +224,7 @@ class GameEdit(gameedit_widget.GameEdit):
         # independent binding setup methods after this method for an event.
         # May add RAV markers to _EDIT_TAGS eventually.
         # Editing token possible only if no moves in game score.
-        tagranges = self.set_current_range()
+        tagranges = self._set_current_range()
         if tagranges:
             tagnames = self.score.tag_names(tagranges[0])
             if tagnames:
@@ -238,12 +238,12 @@ class GameEdit(gameedit_widget.GameEdit):
                     if EDIT_PGN_TAG_VALUE in tn_q:
                         tnn = EDIT_PGN_TAG_VALUE
 
-                    # Could replace 'not self.is_current_in_movetext()' with
-                    # 'PGN_TAG in tns', but a 'self.is_current_in_movetext()'
+                    # Could replace 'not self._is_current_in_movetext()' with
+                    # 'PGN_TAG in tns', but a 'self._is_current_in_movetext()'
                     # just before the 'else' clause becomes wise.
                     # Maybe explicit tests for all the EDIT_* tags (Tk sense)
                     # is best.
-                    self.set_token_context(tagnames, tagranges, tnn)
+                    self._set_token_context(tagnames, tagranges, tnn)
 
                 # The '(' and ')' around a RAV are the only things that matched
                 # for original 'else' clause.  The 'else' is retained for
@@ -257,12 +257,12 @@ class GameEdit(gameedit_widget.GameEdit):
                     if self._most_recent_bindings != RAV_END_TAG:
                         self.token_bind_method[RAV_END_TAG](self)
                     self.score.mark_set(tkinter.INSERT, tagranges[1])
-                    self.set_move_tag(*tagranges)
+                    self._set_move_tag(*tagranges)
                 elif RAV_START_TAG in tns:
                     if self._most_recent_bindings != RAV_START_TAG:
                         self.token_bind_method[RAV_START_TAG](self)
                     self.score.mark_set(tkinter.INSERT, tagranges[1])
-                    self.set_move_tag(*tagranges)
+                    self._set_move_tag(*tagranges)
                 else:
                     if (
                         self._most_recent_bindings
@@ -272,7 +272,7 @@ class GameEdit(gameedit_widget.GameEdit):
                             self
                         )
                     self.score.mark_set(tkinter.INSERT, tagranges[1])
-                    self.set_move_tag(*tagranges)
+                    self._set_move_tag(*tagranges)
 
                 return
         elif self.current is None:
@@ -280,7 +280,7 @@ class GameEdit(gameedit_widget.GameEdit):
                 self.token_bind_method[NonTagBind.NO_EDITABLE_TAGS](self)
             self.score.mark_set(tkinter.INSERT, START_SCORE_MARK)
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-                self.bind_for_primary_activity()
+                self._bind_for_primary_activity()
             return
 
         # Disable editing.  (This was wrapped in a method used here only.)
@@ -315,7 +315,7 @@ class GameEdit(gameedit_widget.GameEdit):
             widget.tag_add(TERMINATION_TAG, *tag_symbols[-1][-1])
         return tag_symbols
 
-    def add_position_tag_to_pgntag_tags(self, tag, start, end):
+    def _add_position_tag_to_pgntag_tags(self, tag, start, end):
         """Add position tag to to PGN Tag tokens for position display.
 
         Navigation to non-move tokens is allowed in edit mode and the initial
@@ -325,7 +325,7 @@ class GameEdit(gameedit_widget.GameEdit):
         self.score.tag_add(tag, start, end)
         self.tagpositionmap[tag] = self.fen_tag_tuple_square_piece_map()
 
-    def delete_forced_newline_token_prefix(self, tag, range_):
+    def _delete_forced_newline_token_prefix(self, tag, range_):
         """Delete nearest newline in tag before range_ keeping lines short.
 
         Newline is not deleted if a sequence of fullmoves longer than
@@ -395,28 +395,28 @@ class GameEdit(gameedit_widget.GameEdit):
         if tri <= FORCE_NEWLINE_AFTER_FULLMOVES * 4:
             widget.delete(*forced_newline)
 
-    def get_choice_tag_and_range_of_first_move(self):
+    def _get_choice_tag_and_range_of_first_move(self):
         """Return choice tag name and range of first char for first move."""
         tr_q = self.score.tag_nextrange(NAVIGATE_MOVE, "1.0")
         if tr_q:
-            return self.get_choice_tag_of_index(tr_q[0]), tr_q
+            return self._get_choice_tag_of_index(tr_q[0]), tr_q
         return None
 
-    def get_prior_tag_and_range_of_move(self, move):
+    def _get_prior_tag_and_range_of_move(self, move):
         """Return prior move tag name and move range for move tag."""
         tr_q = self.score.tag_ranges(move)
         if tr_q:
-            return self.get_prior_tag_of_index(tr_q[0]), tr_q
+            return self._get_prior_tag_of_index(tr_q[0]), tr_q
         return None
 
-    def get_prior_tag_of_index(self, index):
+    def _get_prior_tag_of_index(self, index):
         """Return Tk tag name if index is in a choice tag."""
         for tn_q in self.score.tag_names(index):
             if tn_q.startswith(PRIOR_MOVE):
                 return tn_q
         return None
 
-    def get_rav_moves_of_index(self, index):
+    def _get_rav_moves_of_index(self, index):
         """Return Tk tag name if index is in a rav_moves tag."""
         for tn_q in self.score.tag_names(index):
             if tn_q.startswith(RAV_MOVES):
@@ -433,21 +433,21 @@ class GameEdit(gameedit_widget.GameEdit):
         """Return Tk tag name for token with same suffix as position."""
         return "".join((TOKEN, position[len(POSITION) :]))
 
-    def get_token_tag_of_index(self, index):
+    def _get_token_tag_of_index(self, index):
         """Return Tk tag name if index is in TOKEN tag."""
         for tn_q in self.score.tag_names(index):
             if tn_q.startswith(TOKEN):
                 return tn_q
         return None
 
-    def get_variation_tag_of_index(self, index):
+    def _get_variation_tag_of_index(self, index):
         """Return Tk tag name for variation of currentmove."""
         for tn_q in self.score.tag_names(index):
             if tn_q.startswith(RAV_MOVES):
                 return tn_q
         return None
 
-    def get_nearest_move_to_token(self, token):
+    def _get_nearest_move_to_token(self, token):
         """Return tag for nearest move to token.
 
         The nearest move to a move is itself.
@@ -462,24 +462,24 @@ class GameEdit(gameedit_widget.GameEdit):
         r_q = widget.tag_ranges(token)
         while r_q:
             if r_q == widget.tag_nextrange(NAVIGATE_MOVE, *r_q):
-                return self.get_position_tag_of_index(r_q[0])
-            prior = self.get_prior_tag_of_index(r_q[0])
+                return self._get_position_tag_of_index(r_q[0])
+            prior = self._get_prior_tag_of_index(r_q[0])
             if prior:
                 if widget.tag_nextrange(RAV_END_TAG, *r_q):
-                    return self.select_next_move_in_line(
-                        movetag=self.get_position_tag_of_index(
+                    return self._select_next_move_in_line(
+                        movetag=self._get_position_tag_of_index(
                             widget.tag_ranges(prior)[0]
                         )
                     )
-                return self.get_position_tag_of_index(
+                return self._get_position_tag_of_index(
                     widget.tag_ranges(prior)[0]
                 )
             r_q = widget.tag_prevrange(
                 NAVIGATE_TOKEN, r_q[0], START_SCORE_MARK
             )
 
-    def find_choice_prior_move_variation_main_move(self, tag_names):
-        """Return arguments for insert_rav derived from RAV tag in tag_names.
+    def _find_choice_prior_move_variation_main_move(self, tag_names):
+        """Return arguments for _insert_rav derived from RAV tag in tag_names.
 
         The choice tag will be the one which tags the characters tagged by
         the variation identifier tag with the same numeric suffix as the RAV
@@ -532,7 +532,7 @@ class GameEdit(gameedit_widget.GameEdit):
                     break
         return choice, prior_move, variation_containing_choice, main_line_move
 
-    def get_nearest_in_tags_between_point_and_end(self, point, tags):
+    def _get_nearest_in_tags_between_point_and_end(self, point, tags):
         """Return nearest index of a tag in tags after point.
 
         tkinter.END is returned if no ranges are found after point in any of
@@ -547,7 +547,7 @@ class GameEdit(gameedit_widget.GameEdit):
                 nearest = nr_q[0]
         return nearest
 
-    def is_currentmove_in_edit_move(self):
+    def _is_currentmove_in_edit_move(self):
         """Return True if current move is editable.
 
         If there are no moves in the game current move is defined as editable.
@@ -559,7 +559,7 @@ class GameEdit(gameedit_widget.GameEdit):
         start, end = self.score.tag_ranges(self.current)
         return bool(self.score.tag_nextrange(EDIT_MOVE, start, end))
 
-    def is_currentmove_in_edited_move(self):
+    def _is_currentmove_in_edited_move(self):
         """Return True if current move is being edited.
 
         If there are no moves in the game current move is not being edited.
@@ -571,11 +571,11 @@ class GameEdit(gameedit_widget.GameEdit):
         return bool(self.score.tag_nextrange(MOVE_EDITED, start, end))
 
     # Do the add_* methods need position even though the map_* methods do not?
-    def link_inserts_to_moves(self, positiontag, position):
+    def _link_inserts_to_moves(self, positiontag, position):
         """Link inserted comments to moves for matching position display."""
         self.tagpositionmap[positiontag] = position
         if self.current:
-            variation = self.get_variation_tag_of_index(
+            variation = self._get_variation_tag_of_index(
                 self.score.tag_ranges(self.current)[0]
             )
             try:
@@ -589,50 +589,56 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             self.previousmovetags[positiontag] = (None, None, None)
 
-    def add_start_comment(self, token, position):
+    def _add_start_comment(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        before = self.tokens_exist_between_movetext_start_and_insert_point()
-        after = self.tokens_exist_between_insert_point_and_game_terminator()
-        positiontag, token_indicies = self._map_start_comment(token, before)
+        before = self._tokens_exist_between_movetext_start_and_insert_point()
+        after = self._tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_initial_start_comment(
+            token, before
+        )
         if not before and after:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1]
         )
-        self.link_inserts_to_moves(positiontag, position)
+        self._link_inserts_to_moves(positiontag, position)
         return positiontag, token_indicies
 
-    def add_comment_to_eol(self, token, position):
+    def _add_comment_to_eol(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        before = self.tokens_exist_between_movetext_start_and_insert_point()
-        after = self.tokens_exist_between_insert_point_and_game_terminator()
-        positiontag, token_indicies = self._map_comment_to_eol(token, before)
+        before = self._tokens_exist_between_movetext_start_and_insert_point()
+        after = self._tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_initial_comment_to_eol(
+            token, before
+        )
         if not before and after:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1]
         )
-        self.link_inserts_to_moves(positiontag, position)
+        self._link_inserts_to_moves(positiontag, position)
         return positiontag, token_indicies
 
-    def add_escape_to_eol(self, token, position):
+    def _add_escape_to_eol(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        before = self.tokens_exist_between_movetext_start_and_insert_point()
-        after = self.tokens_exist_between_insert_point_and_game_terminator()
-        positiontag, token_indicies = self._map_escape_to_eol(token, before)
+        before = self._tokens_exist_between_movetext_start_and_insert_point()
+        after = self._tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_initial_escape_to_eol(
+            token, before
+        )
         if not before and after:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1]
         )
-        self.link_inserts_to_moves(positiontag, position)
+        self._link_inserts_to_moves(positiontag, position)
         return positiontag, token_indicies
 
-    def add_glyph(self, token, position):
+    def _add_glyph(self, token, position):
         """Tag token for single-step navigation and game editing."""
         # At present NAGs are not put on a line of their own when following
         # a move.  They would be if the NAG translations were shown too.
-        # before = self.tokens_exist_between_movetext_start_and_insert_point()
+        # before = self._tokens_exist_between_movetext_start_and_insert_point()
         before = self.score.tag_prevrange(
             NAVIGATE_TOKEN, tkinter.INSERT, START_SCORE_MARK
         )
@@ -641,34 +647,36 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             before = False
 
-        after = self.tokens_exist_between_insert_point_and_game_terminator()
-        positiontag, token_indicies = self._map_glyph(token, before)
+        after = self._tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_initial_glyph(token, before)
         if not before and after:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1]
         )
-        self.link_inserts_to_moves(positiontag, position)
+        self._link_inserts_to_moves(positiontag, position)
         return positiontag, token_indicies
 
-    def add_start_reserved(self, token, position):
+    def _add_start_reserved(self, token, position):
         """Tag token for single-step navigation and game editing."""
-        before = self.tokens_exist_between_movetext_start_and_insert_point()
-        after = self.tokens_exist_between_insert_point_and_game_terminator()
-        positiontag, token_indicies = self._map_start_reserved(token, before)
+        before = self._tokens_exist_between_movetext_start_and_insert_point()
+        after = self._tokens_exist_between_insert_point_and_game_terminator()
+        positiontag, token_indicies = self._map_empty_start_reserved(
+            token, before
+        )
         if not before and after:
-            self.insert_forced_newline_into_text()
+            self._insert_forced_newline_into_text()
         self.score.tag_remove(
             FORCED_NEWLINE_TAG, token_indicies[0], token_indicies[-1]
         )
-        self.link_inserts_to_moves(positiontag, position)
+        self._link_inserts_to_moves(positiontag, position)
         return positiontag, token_indicies
 
-    def tokens_exist_between_insert_point_and_game_terminator(self):
+    def _tokens_exist_between_insert_point_and_game_terminator(self):
         """Return True if tokens exist from insert point_to_game_terminator."""
         return bool(self.score.tag_nextrange(NAVIGATE_TOKEN, tkinter.INSERT))
 
-    def select_first_item_in_game(self, item):
+    def _select_first_item_in_game(self, item):
         """Return POSITION tag associated with first item in game."""
         widget = self.score
         tr_q = widget.tag_nextrange(item, "1.0")
@@ -679,7 +687,7 @@ class GameEdit(gameedit_widget.GameEdit):
                 return tn_q
         return None
 
-    def select_last_item_in_game(self, item):
+    def _select_last_item_in_game(self, item):
         """Return POSITION tag associated with last item in game."""
         widget = self.score
         tr_q = widget.tag_prevrange(item, tkinter.END)
@@ -690,7 +698,7 @@ class GameEdit(gameedit_widget.GameEdit):
                 return tn_q
         return None
 
-    def select_next_item_in_game(self, item):
+    def _select_next_item_in_game(self, item):
         """Return POSITION tag associated with item after current in game."""
         widget = self.score
         oldtr = widget.tag_ranges(MOVE_TAG)
@@ -699,13 +707,13 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             tr_q = widget.tag_nextrange(item, tkinter.INSERT)
         if not tr_q:
-            return self.select_first_item_in_game(item)
+            return self._select_first_item_in_game(item)
         for tn_q in widget.tag_names(tr_q[0]):
             if tn_q.startswith(POSITION):
                 return tn_q
-        return self.select_first_item_in_game(item)
+        return self._select_first_item_in_game(item)
 
-    def select_prev_item_in_game(self, item):
+    def _select_prev_item_in_game(self, item):
         """Return POSITION tag associated with item before current in game."""
         widget = self.score
         if self.current:
@@ -717,22 +725,22 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             tr_q = widget.tag_prevrange(item, tkinter.END)
         if not tr_q:
-            return self.select_last_item_in_game(item)
+            return self._select_last_item_in_game(item)
         for tn_q in widget.tag_names(tr_q[0]):
             if tn_q.startswith(POSITION):
                 return tn_q
-        return self.select_last_item_in_game(item)
+        return self._select_last_item_in_game(item)
 
-    def select_next_token_in_game(self):
+    def _select_next_token_in_game(self):
         """Return POSITION tag associated with token after current in game."""
-        return self.select_next_item_in_game(NAVIGATE_TOKEN)
+        return self._select_next_item_in_game(NAVIGATE_TOKEN)
 
-    def select_prev_token_in_game(self):
+    def _select_prev_token_in_game(self):
         """Return POSITION tag associated with token before current in game."""
-        return self.select_prev_item_in_game(NAVIGATE_TOKEN)
+        return self._select_prev_item_in_game(NAVIGATE_TOKEN)
 
     # Adding between_newlines argument seemed a good idea at first, but when
-    # the insert_empty_comment() method turned out to need a conditional to
+    # the _insert_empty_comment() method turned out to need a conditional to
     # set the argument the whole thing began to look far too complicated.
     # See the other insert_empty_*() methods, except moves, too.
     # Solution may involve a new mark with right gravity, END_SCORE_MARK,
@@ -740,7 +748,7 @@ class GameEdit(gameedit_widget.GameEdit):
     # blank line between the PGN Tags and the Game Termination Marker in the
     # new game template should be removed, if this is not forced.
     # The escaped line may continue to be a problem.
-    def set_insertion_point_before_next_token(self, between_newlines=True):
+    def _set_insertion_point_before_next_token(self, between_newlines=True):
         """Set the insert point at start of token after current token.
 
         INSERT is set before next token and it's move number if any, and
@@ -785,10 +793,10 @@ class GameEdit(gameedit_widget.GameEdit):
         widget.mark_set(tkinter.INSERT, tr_q[0])
         if between_newlines:
             if not trfnl:
-                self.insert_forced_newline_into_text()
+                self._insert_forced_newline_into_text()
                 widget.mark_set(tkinter.INSERT, tkinter.INSERT + " -1 char")
 
-    def set_insertion_point_before_next_pgn_tag(self):
+    def _set_insertion_point_before_next_pgn_tag(self):
         """Set INSERT at point for insertion of empty PGN Tag or Tags.
 
         Assumed to be called only when inserting a PGN Tag since this item is
@@ -805,7 +813,7 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             widget.mark_set(tkinter.INSERT, START_SCORE_MARK)
 
-    def set_token_context(self, tagnames, tagranges, tokenprefix):
+    def _set_token_context(self, tagnames, tagranges, tokenprefix):
         """Set token editing and navigation context for tokenprefix.
 
         tagnames is passed to get_token_insert to derive the end of token
@@ -839,7 +847,7 @@ class GameEdit(gameedit_widget.GameEdit):
         else:
             eem = end
         offset = (
-            self.get_token_text_length(start, end) - lead_trail.header_length
+            self._get_token_text_length(start, end) - lead_trail.header_length
         )
         if offset:
             if lead_trail.lead:
@@ -860,7 +868,7 @@ class GameEdit(gameedit_widget.GameEdit):
         self.score.mark_gravity(START_EDIT_MARK, "left")
         self.score.mark_set(END_EDIT_MARK, eem)
         self.score.mark_set(tkinter.INSERT, insert)
-        self.set_move_tag(start, end)
+        self._set_move_tag(start, end)
 
     @staticmethod
     def get_token_insert(tagnames):
@@ -870,11 +878,11 @@ class GameEdit(gameedit_widget.GameEdit):
                 return "".join((TOKEN_MARK, tn_q[len(TOKEN) :]))
         return None
 
-    def get_token_text_length(self, start, end):
+    def _get_token_text_length(self, start, end):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         return self.score.count(start, end)[0]
 
-    def set_start_score_mark_before_positiontag(self):
+    def _set_start_score_mark_before_positiontag(self):
         """Set start score mark at start self.position_number position tag."""
         self.score.mark_set(
             START_SCORE_MARK,
@@ -883,25 +891,25 @@ class GameEdit(gameedit_widget.GameEdit):
             )[0],
         )
 
-    def step_one_variation_select(self, move):
+    def _step_one_variation_select(self, move):
         """Select next variation in choices at current position."""
-        # Hack of step_one_variation with setting code removed
+        # Hack of _step_one_variation with setting code removed
         if move is None:
             # No prior to variation tag exists: no move to attach it to.
             pt_q = None
-            ct_q = self.get_choice_tag_of_move(
+            ct_q = self._get_choice_tag_of_move(
                 self.select_first_move_of_game()
             )
             st_q = self.get_selection_tag_for_choice(ct_q)
         else:
-            pt_q = self.get_prior_to_variation_tag_of_move(move)
+            pt_q = self._get_prior_to_variation_tag_of_move(move)
             ct_q = self.get_choice_tag_for_prior(pt_q)
             st_q = self.get_selection_tag_for_prior(pt_q)
         # if choices are already on ALTERNATIVE_MOVE_TAG cycle selection one
         # place round choices before getting colouring variation tag.
-        self.cycle_selection_tag(ct_q, st_q)
-        vt_q = self.get_colouring_variation_tag_for_selection(st_q)
-        self.set_variation_selection_tags(pt_q, ct_q, st_q, vt_q)
+        self._cycle_selection_tag(ct_q, st_q)
+        vt_q = self._get_colouring_variation_tag_for_selection(st_q)
+        self._set_variation_selection_tags(pt_q, ct_q, st_q, vt_q)
         return vt_q
 
     def create_edit_move_context(self, tag):

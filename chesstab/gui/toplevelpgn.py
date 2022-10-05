@@ -73,7 +73,7 @@ class ToplevelPGN(ScorePGN):
     def current_item(self, event=None):
         """Select current PGN score on display."""
         del event
-        self.current_pgn_score(self)
+        self._current_pgn_score(self)
 
 
 class _ToplevelPGN:
@@ -82,7 +82,7 @@ class _ToplevelPGN:
     The subclasses are DeletePGN, EditPGN, and ShowPGN.
     """
 
-    def initialize_item_bindings(self, item):
+    def _initialize_item_bindings(self, item):
         """Initialize keypress and buttonpress bindings for item."""
         self.bind_buttons_to_widget(item.score)
         self.bind_buttons_to_widget(item.analysis.score)

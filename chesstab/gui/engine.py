@@ -61,7 +61,7 @@ class Engine(EngineText):
         self.score.grid(column=0, row=0, rowspan=1, sticky=tkinter.NSEW)
         if not ui.visible_scrollbars:
             panel.after_idle(self.hide_scrollbars)
-        self.configure_selection_widget()
+        self._configure_selection_widget()
 
         # For compatibility with Game when testing if item has focus.
         self.takefocus_widget = self.score
@@ -80,9 +80,9 @@ class Engine(EngineText):
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
         del event
-        self.configure_selection_widget()
+        self._configure_selection_widget()
 
-    def configure_selection_widget(self):
+    def _configure_selection_widget(self):
         """Configure widgets for a chess engine definition display."""
         self.panel.grid_rowconfigure(0, weight=1)
         self.panel.grid_columnconfigure(0, weight=1)
@@ -92,13 +92,13 @@ class Engine(EngineText):
         """Hide the scrollbars in chess engine definition display widgets."""
         self.scrollbar.grid_remove()
         self.score.grid_configure(columnspan=2)
-        self.configure_selection_widget()
+        self._configure_selection_widget()
 
     def show_scrollbars(self):
         """Show the scrollbars in chess engine definition display widgets."""
         self.score.grid_configure(columnspan=1)
         self.scrollbar.grid_configure()
-        self.configure_selection_widget()
+        self._configure_selection_widget()
 
     def takefocus(self, take=True):
         """Configure game widget takefocus option."""

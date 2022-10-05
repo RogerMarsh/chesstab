@@ -5107,7 +5107,7 @@ class Main:
             )
             replacements = []
             for f, b in zip(fens, board):
-                engineanalysis.find_position_analysis(f)
+                engineanalysis._find_position_analysis(f)
                 ar = ac.nearest(f)
                 while True:
                     if ar is None:

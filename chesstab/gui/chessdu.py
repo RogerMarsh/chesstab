@@ -108,7 +108,7 @@ class ChessDeferredUpdate(ExceptionHandler):
             underline=0,
             command=self.try_command(
                 # self.quit_before_import_started, self.buttonframe))
-                self.quit_import,
+                self._quit_import,
                 self.buttonframe,
             ),
         )
@@ -118,7 +118,7 @@ class ChessDeferredUpdate(ExceptionHandler):
             text="Import with Backups",
             underline=12,
             command=self.try_command(
-                self.do_import_with_backup, self.buttonframe
+                self._do_import_with_backup, self.buttonframe
             ),
         )
         backup.pack(side=tkinter.RIGHT, padx=12)
@@ -127,7 +127,7 @@ class ChessDeferredUpdate(ExceptionHandler):
             text="Import",
             underline=0,
             command=self.try_command(
-                self.do_import_without_backup, self.buttonframe
+                self._do_import_without_backup, self.buttonframe
             ),
         )
         import_.pack(side=tkinter.RIGHT, padx=12)
@@ -150,11 +150,13 @@ class ChessDeferredUpdate(ExceptionHandler):
             cnf=_get_default_font_actual(tkinter.Text),
         )
         self.report.focus_set()
-        self.report.bind("<Alt-b>", self.try_event(self.do_import_with_backup))
         self.report.bind(
-            "<Alt-i>", self.try_event(self.do_import_without_backup)
+            "<Alt-b>", self.try_event(self._do_import_with_backup)
         )
-        self.report.bind("<Alt-q>", self.try_event(self.quit_import))
+        self.report.bind(
+            "<Alt-i>", self.try_event(self._do_import_without_backup)
+        )
+        self.report.bind("<Alt-q>", self.try_event(self._quit_import))
         self.database.add_import_buttons(
             self.buttonframe, self.try_command, self.try_event, self.report
         )
@@ -183,13 +185,13 @@ class ChessDeferredUpdate(ExceptionHandler):
         self.root.update()
         self.root.deiconify()
         self.__run_ui_task_from_queue(1000)
-        self.root.after(100, self.try_command(self.run_allow, self.root))
+        self.root.after(100, self.try_command(self._run_allow, self.root))
         self.root.mainloop()
 
-    def allow_import(self):
+    def _allow_import(self):
         """Do checks for database engine and return True if import allowed."""
         # The close_database() in finally clause used to be the first statement
-        # after runjob() definition in run_import() method.  An exception was
+        # after runjob() definition in _run_import() method.  An exception was
         # raised using the sqlite3 module because run_input() is run in a
         # different thread from allow_input().  Earlier versions of chessdu did
         # not attempt to close the connection, hiding the problem.
@@ -197,13 +199,13 @@ class ChessDeferredUpdate(ExceptionHandler):
         # an interface to Berkeley DB or DPT.
         self.database.open_database()
         try:
-            if not self.estimate_games_in_import():
+            if not self._estimate_games_in_import():
                 self.report.append_text("There are no games to import.")
                 self.report.append_text_only("")
                 return None
-            if self.allow_time():
+            if self._allow_time():
                 self.database.report_plans_for_estimate(
-                    self.get_pgn_file_estimates(), self.report
+                    self._get_pgn_file_estimates(), self.report
                 )
                 return True
             self.report.append_text("Unable to estimate time to do import.")
@@ -212,7 +214,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         finally:
             self.database.close_database()
 
-    def allow_time(self):
+    def _allow_time(self):
         """Ask is deferred update to proceed if game count is estimated.
 
         The time taken will vary significantly depending on environment.
@@ -276,7 +278,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         self.report.append_text_only("")
         return True
 
-    def do_import_with_backup(self, event=None):
+    def _do_import_with_backup(self, event=None):
         """Run import thread if allowed and not already run.
 
         event is ignored and is present for compatibility between button click
@@ -332,9 +334,9 @@ class ChessDeferredUpdate(ExceptionHandler):
             timestamp=False,
         )
         self.report.append_text_only("")
-        self.run_import(backup=True, names=names)
+        self._run_import(backup=True, names=names)
 
-    def do_import_without_backup(self, event=None):
+    def _do_import_without_backup(self, event=None):
         """Run import thread if allowed and not already run.
 
         event is ignored and is present for compatibility between button click
@@ -387,9 +389,9 @@ class ChessDeferredUpdate(ExceptionHandler):
             # )
             # self.report.append_text_only("")
             return
-        self.run_import(backup=False, names=names)
+        self._run_import(backup=False, names=names)
 
-    def estimate_games_in_import(self):
+    def _estimate_games_in_import(self):
         """Estimate import size from the first sample games in import files."""
         self.estimate_data = False
         text_file_size = sum([os.path.getsize(pp) for pp in sys.argv[2:]])
@@ -577,7 +579,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         """Return the exception report file name."""
         return os.path.join(sys.argv[1], ERROR_LOG)
 
-    def get_pgn_file_estimates(self):
+    def _get_pgn_file_estimates(self):
         """Return the estimates of object counts for a PGN file."""
         return self.estimate_data
 
@@ -598,7 +600,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         ):
             self.root.destroy()
 
-    def quit_import(self, event=None):
+    def _quit_import(self, event=None):
         """Quit process.
 
         event is ignored and is present for compatibility between button click
@@ -611,14 +613,14 @@ class ChessDeferredUpdate(ExceptionHandler):
         ):
             self.root.destroy()
 
-    def run_allow(self):
+    def _run_allow(self):
         """Run import thread if allowed and not already run."""
         if self._allow_job:
             return
         self._allow_job = True
-        self.queue.put_method(self.try_thread(self.allow_import, self.root))
+        self.queue.put_method(self.try_thread(self._allow_import, self.root))
 
-    def run_import(self, backup=None, names=None):
+    def _run_import(self, backup=None, names=None):
         """Invoke method to do the deferred update and display job status.
 
         backup - the answer given to the 'take backups' prompt

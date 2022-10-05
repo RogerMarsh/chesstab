@@ -58,9 +58,9 @@ class UCI(ExceptionHandler):
         for accelerator, function in (
             (
                 EventSpec.menu_engines_position_queues,
-                self.position_queue_status,
+                self._position_queue_status,
             ),
-            (EventSpec.menu_engines_show_engines, self.show_engines),
+            (EventSpec.menu_engines_show_engines, self._show_engines),
             (EventSpec.menu_engines_start_engine, self.start_engine),
             (EventSpec.menu_engines_quit_all_engines, self.quit_all_engines),
         ):
@@ -74,9 +74,9 @@ class UCI(ExceptionHandler):
 
         menu_commands.add_separator()
         for accelerator, function in (
-            (EventSpec.menu_commands_multipv, self.set_multipv),
-            (EventSpec.menu_commands_depth, self.set_depth),
-            (EventSpec.menu_commands_hash, self.set_hash),
+            (EventSpec.menu_commands_multipv, self._set_multipv),
+            (EventSpec.menu_commands_depth, self._set_depth),
+            (EventSpec.menu_commands_hash, self._set_hash),
         ):
             menu_commands.add_command(
                 label=accelerator[1],
@@ -91,12 +91,12 @@ class UCI(ExceptionHandler):
         # menu_commands.add_command(
         #    label='Ucinewgame off',
         #    underline=0,
-        #    command=self.try_command(self.set_ucinewgame_off, menu_commands))
+        #    command=self.try_command(self._set_ucinewgame_off, menu_commands))
         # menu_commands.add_command(
         #    label='Clear Hash off',
         #    underline=0,
         #    command=self.try_command(
-        #        self.set_clear_hash_off, menu_commands))
+        #        self._set_clear_hash_off, menu_commands))
         # menu_commands.add_separator()
 
         # Not implemented at present.
@@ -104,11 +104,11 @@ class UCI(ExceptionHandler):
         # menu_commands.add_command(
         #    label='Go infinite',
         #    underline=3,
-        #    command=self.try_command(self.go_infinite, menu_commands))
+        #    command=self.try_command(self._go_infinite, menu_commands))
         # menu_commands.add_command(
         #    label='Stop',
         #    underline=0,
-        #    command=self.try_command(self.stop, menu_commands))
+        #    command=self.try_command(self._stop, menu_commands))
         # menu_commands.add_separator()
         # menu_commands.add_command(
         #    label='Isready',
@@ -223,7 +223,7 @@ class UCI(ExceptionHandler):
                     self.run_engine(filename, args=command.strip())
             self._cancel()
 
-        self.do_command(
+        self._do_command(
             filename,
             get,
             hint="".join(
@@ -240,7 +240,7 @@ class UCI(ExceptionHandler):
         self._do_toplevel = None
         del self._contents
 
-    def do_command(self, initial_value, callback, hint=None, wraplength=None):
+    def _do_command(self, initial_value, callback, hint=None, wraplength=None):
         """Start dialogue to send command to chess engines."""
         if self._do_toplevel is not None:
             tkinter.messagebox.showinfo(
@@ -290,10 +290,10 @@ class UCI(ExceptionHandler):
         self.menu_engines.insert_command(
             self.menu_engines.index("end"),
             label=self.uci.uci_drivers_index[self.uci.engine_counter],
-            command=self.make_quit_engine_command(self.uci.engine_counter),
+            command=self._make_quit_engine_command(self.uci.engine_counter),
         )
 
-    def make_quit_engine_command(self, counter):
+    def _make_quit_engine_command(self, counter):
         """Build and return a function to stop engine numbered 'counter'."""
 
         def quit_engine_command():
@@ -394,7 +394,7 @@ class UCI(ExceptionHandler):
         self._do_toplevel.destroy()
         self._do_toplevel = None
 
-    def set_hash(self):
+    def _set_hash(self):
         """Set value of Hash option to use on UCI compliant Chess Engine."""
 
         def get(event):
@@ -405,7 +405,7 @@ class UCI(ExceptionHandler):
             self._do_toplevel = None
             del self._spinbox
 
-        self.do_spinbox(
+        self._do_spinbox(
             self.uci.hash_size,
             0,
             1000,
@@ -420,7 +420,7 @@ class UCI(ExceptionHandler):
             ),
         )
 
-    def set_multipv(self):
+    def _set_multipv(self):
         """Set value of MultiPV option to use on UCI compliant Chess Engine."""
 
         def get(event):
@@ -430,7 +430,7 @@ class UCI(ExceptionHandler):
             self._do_toplevel = None
             del self._spinbox
 
-        self.do_spinbox(
+        self._do_spinbox(
             self.uci.multipv,
             0,
             100,
@@ -445,7 +445,7 @@ class UCI(ExceptionHandler):
             ),
         )
 
-    def set_depth(self):
+    def _set_depth(self):
         """Set depth to use in go commands to UCI compliant Chess Engine."""
 
         def get(event):
@@ -455,7 +455,7 @@ class UCI(ExceptionHandler):
             self._do_toplevel = None
             del self._spinbox
 
-        self.do_spinbox(
+        self._do_spinbox(
             self.uci.go_depth,
             0,
             200,
@@ -479,7 +479,7 @@ class UCI(ExceptionHandler):
                         command=self.try_command(command, self.menu_commands),
                     )
 
-    def set_ucinewgame_off(self):
+    def _set_ucinewgame_off(self):
         """Set to not use ucinewgame command when navigating games."""
         if (
             tkinter.messagebox.askquestion(
@@ -502,10 +502,10 @@ class UCI(ExceptionHandler):
         ):
             self.uci.use_ucinewgame = False
             self._modify_command_menu_item(
-                "Ucinewgame off", "Ucinewgame on", self.set_ucinewgame_on
+                "Ucinewgame off", "Ucinewgame on", self._set_ucinewgame_on
             )
 
-    def set_ucinewgame_on(self):
+    def _set_ucinewgame_on(self):
         """Set to use ucinewgame command when navigating games."""
         if (
             tkinter.messagebox.askquestion(
@@ -528,10 +528,10 @@ class UCI(ExceptionHandler):
         ):
             self.uci.use_ucinewgame = True
             self._modify_command_menu_item(
-                "Ucinewgame on", "Ucinewgame off", self.set_ucinewgame_off
+                "Ucinewgame on", "Ucinewgame off", self._set_ucinewgame_off
             )
 
-    def stop(self):
+    def _stop(self):
         """Send stop command to UCI compliant Chess Engines."""
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
@@ -539,7 +539,7 @@ class UCI(ExceptionHandler):
             message="Stop not implemented.",
         )
 
-    def go_infinite(self):
+    def _go_infinite(self):
         """Send go infinite command to UCI compliant Chess Engines."""
         tkinter.messagebox.showinfo(
             parent=self.menu_commands,
@@ -559,12 +559,12 @@ class UCI(ExceptionHandler):
     # Name was 'to' to fit tkinter.Spinbox argument name: change to 'to_' to
     # resolve pylint message.  ('from' is Python syntax so that got changed
     # too, right at start of module's life.)
-    def do_spinbox(
+    def _do_spinbox(
         self, initial_value, from_, to_, callback, hint=None, wraplength=None
     ):
         """Show spinbox to get value in range from_:to with initial value."""
-        # Comapare with show_engines() method.
-        # The after() technique used in show_engines does not help here to
+        # Comapare with _show_engines() method.
+        # The after() technique used in _show_engines does not help here to
         # guarantee display of the new Toplevel on second and subsequent use.
         # But the problem is seen only when the X server is on a different box
         # than the ChessTab process.
@@ -622,7 +622,7 @@ class UCI(ExceptionHandler):
         entrythingy.bind("<Key-Return>", callback)
         entrythingy.focus_set()
 
-    def show_engines(self):
+    def _show_engines(self):
         """Show Chess Engine Descriptions on database."""
         if self._show_engines_toplevel is not None:
             tkinter.messagebox.showinfo(
@@ -731,7 +731,7 @@ class UCI(ExceptionHandler):
         for item, items in exceptions:
             items.remove(item)
 
-    def position_queue_status(self):
+    def _position_queue_status(self):
         """Display counts of position queued for analysis by engines."""
         pending_counts = []
         for engine, pending in self.uci.positions_pending.items():
@@ -760,7 +760,7 @@ class UCI(ExceptionHandler):
             ),
         )
 
-    def set_clear_hash_off(self):
+    def _set_clear_hash_off(self):
         """Set to not clear hash tables before position go command sequence."""
         if (
             tkinter.messagebox.askquestion(
@@ -778,10 +778,10 @@ class UCI(ExceptionHandler):
         ):
             self.uci.clear_hash = False
             self._modify_command_menu_item(
-                "Clear Hash off", "Clear Hash on", self.set_clear_hash_on
+                "Clear Hash off", "Clear Hash on", self._set_clear_hash_on
             )
 
-    def set_clear_hash_on(self):
+    def _set_clear_hash_on(self):
         """Set to clear hash tables before position go command sequence."""
         if (
             tkinter.messagebox.askquestion(
@@ -799,5 +799,5 @@ class UCI(ExceptionHandler):
         ):
             self.uci.clear_hash = True
             self._modify_command_menu_item(
-                "Clear Hash on", "Clear Hash off", self.set_clear_hash_off
+                "Clear Hash on", "Clear Hash off", self._set_clear_hash_off
             )

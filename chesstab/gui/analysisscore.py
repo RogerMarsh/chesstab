@@ -101,7 +101,7 @@ class AnalysisScore(Score):
         self.previousmovetags = dict()
         self.nextmovetags = dict()
 
-    def go_to_token(self, event=None):
+    def _go_to_token(self, event=None):
         """Set position and highlighting for token under pointer in analysis.
 
         Do nothing if self.analysis is not the active item.
@@ -114,7 +114,7 @@ class AnalysisScore(Score):
             self.score.index("".join(("@", str(event.x), ",", str(event.y))))
         )
 
-    def is_active_item_mapped(self):
+    def _is_active_item_mapped(self):
         """Return True if self.analysis is the active item, or False if not."""
         if self.items.is_mapped_panel(self.panel):
             if self is not self.items.active_item.analysis:
@@ -158,7 +158,7 @@ class AnalysisScore(Score):
             self.score.insert(tkinter.END, analysis_text)
 
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
+            self._bind_for_primary_activity()
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
         if reset_undo:
@@ -183,7 +183,7 @@ class AnalysisScore(Score):
             except TypeError:
                 return False
 
-            self.see_first_move()
+            self._see_first_move()
         else:
             try:
                 self.board.set_board(self.tagpositionmap[self.current][0])
@@ -194,7 +194,7 @@ class AnalysisScore(Score):
             self.score.see(self.score.tag_ranges(self.current)[0])
         return False
 
-    def map_move_text(self, token, position):
+    def _map_move_text(self, token, position):
         """Add token to game text. Set navigation tags. Return token range.
 
         self._start_latest_move and self._end_latest_move are set to range
@@ -205,15 +205,15 @@ class AnalysisScore(Score):
         self._modify_square_piece_map(position)
         widget = self.score
         scaffold = self._game_scaffold
-        positiontag = self.get_next_positiontag_name()
+        positiontag = self._get_next_positiontag_name()
         self.tagpositionmap[positiontag] = (
             scaffold.square_piece_map.copy(),
         ) + position[1][1:]
 
         # The only way found to get the move number at start of analysis.
-        # Direct use of self.score.insert(...), as in insert_token_into_text,
-        # or a separate call to insert_token_into_text(...), does not work:
-        # interaction with refresh_analysis_widget_from_database() in
+        # Direct use of self.score.insert(...), as in _insert_token_into_text,
+        # or a separate call to _insert_token_into_text(...), does not work:
+        # interaction with _refresh_analysis_widget_from_database() in
         # game.Game when building the text is assumed to be the cause.
         if len(self.varstack) == 0:
             active_side = position[0][1]
@@ -222,11 +222,11 @@ class AnalysisScore(Score):
                 fullmove_number = str(fullmove_number) + PGN_DOT
             else:
                 fullmove_number = str(fullmove_number) + PGN_DOT * 3
-            start, end, sepend = self.insert_token_into_text(
+            start, end, sepend = self._insert_token_into_text(
                 "".join((fullmove_number, SPACE_SEP, token)), SPACE_SEP
             )
         else:
-            start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+            start, end, sepend = self._insert_token_into_text(token, SPACE_SEP)
 
         for tag in positiontag, scaffold.vartag, NAVIGATE_MOVE, BUILD_TAG:
             widget.tag_add(tag, start, end)
@@ -247,7 +247,7 @@ class AnalysisScore(Score):
 
         scaffold.start_latest_move = start
         scaffold.end_latest_move = end
-        self.create_previousmovetag(positiontag, start)
+        self._create_previousmovetag(positiontag, start)
         return start, end, sepend
 
     def map_start_rav(self, token, position):
@@ -274,13 +274,13 @@ class AnalysisScore(Score):
             # the game.  Thus the move before start_latest_move using
             # tag_prevrange() can be tagged as the move creating the
             # position in which the choice of moves occurs.
-            scaffold.choicetag = self.get_choice_tag_name()
+            scaffold.choicetag = self._get_choice_tag_name()
             widget.tag_add(
                 "".join((SELECTION, str(self.choice_number))),
                 scaffold.start_latest_move,
                 scaffold.end_latest_move,
             )
-            prior = self.get_range_for_prior_move_before_insert()
+            prior = self._get_range_for_prior_move_before_insert()
             if prior:
                 widget.tag_add(
                     "".join((PRIOR_MOVE, str(self.choice_number))), *prior
@@ -297,7 +297,7 @@ class AnalysisScore(Score):
         self.varstack.append((scaffold.vartag, scaffold.token_position))
         self.choicestack.append(scaffold.choicetag)
         scaffold.vartag = self.get_variation_tag_name()
-        start, end, sepend = self.insert_token_into_text(token, SPACE_SEP)
+        start, end, sepend = self._insert_token_into_text(token, SPACE_SEP)
         widget.tag_add(BUILD_TAG, start, end)
         scaffold.next_move_is_choice = True
         return start, end, sepend
@@ -323,17 +323,17 @@ class AnalysisScore(Score):
                 tkinter.END,
                 tkinter.END,
             )
-        start, end, sepend = self.insert_token_into_text(token, NEWLINE_SEP)
+        start, end, sepend = self._insert_token_into_text(token, NEWLINE_SEP)
         self.score.tag_add(BUILD_TAG, start, end)
         scaffold.vartag, scaffold.token_position = self.varstack.pop()
         scaffold.choicetag = self.choicestack.pop()
         return start, end, sepend
 
-    def map_start_comment(self, token):
+    def _map_start_comment(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        return self.insert_token_into_text(token, SPACE_SEP)
+        return self._insert_token_into_text(token, SPACE_SEP)
 
-    def map_comment_to_eol(self, token):
+    def _map_comment_to_eol(self, token):
         """Add token to game text. position is ignored. Return token range."""
         widget = self.score
         start = widget.index(tkinter.INSERT)
@@ -344,37 +344,37 @@ class AnalysisScore(Score):
 
     def map_termination(self, token):
         """Add token to game text. position is ignored. Return token range."""
-        return self.insert_token_into_text(token, NEWLINE_SEP)
+        return self._insert_token_into_text(token, NEWLINE_SEP)
 
     # Analysis does not follow PGN export format, so those options are absent.
-    def get_all_export_events(self):
+    def _get_all_export_events(self):
         """Return tuple of keypress events and callbacks for PGN export."""
         return (
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
-            (EventSpec.text_internal_format, self.export_text),
+            (EventSpec.text_internal_format, self._export_text),
         )
 
     # Analysis widget uses the associated Game method to make active or dismiss
     # item.  Some searching through the self.board.ui object is likely.
-    def create_inactive_popup(self):
+    def _create_inactive_popup(self):
         """Return popup menu of keypress event bindings for inactive item."""
         game = self.owned_by_game
         assert self.inactive_popup is None and game is not None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_inactive_events())
+        self._set_popup_bindings(popup, self._get_inactive_events())
         self.inactive_popup = popup
         return popup
 
-    def get_inactive_button_events(self):
+    def _get_inactive_button_events(self):
         """Return tuple of button events and callbacks for inactive item."""
         game = self.owned_by_game
         assert game is not None and self is game.analysis
-        return self.get_modifier_buttonpress_suppression_events() + (
+        return self._get_modifier_buttonpress_suppression_events() + (
             (EventSpec.buttonpress_1, game.give_focus_to_widget),
             (EventSpec.buttonpress_3, game.post_inactive_menu),
         )
 
-    def get_inactive_events(self):
+    def _get_inactive_events(self):
         """Return tuple of keypress events and callbacks for inactive item."""
         game = self.owned_by_game
         assert game is not None and self is game.analysis
@@ -385,7 +385,7 @@ class AnalysisScore(Score):
 
     # Subclasses which need widget navigation in their popup menus should
     # call this method.
-    def create_widget_navigation_submenu_for_popup(self, popup):
+    def _create_widget_navigation_submenu_for_popup(self, popup):
         """Create and populate a submenu of popup for widget navigation.
 
         The commands in the submenu should switch focus to another widget.
@@ -403,7 +403,7 @@ class AnalysisScore(Score):
             EventSpec.analysis_to_scoresheet
         ] = self.owned_by_game.current_item
         local_map.update(navigation_map)
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup(
             "Navigation",
             popup,
             bindings=local_map,
@@ -413,13 +413,13 @@ class AnalysisScore(Score):
     def create_primary_activity_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.create_widget_navigation_submenu_for_popup(popup)
+        self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
     def create_select_move_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_select_move_popup()
-        self.create_widget_navigation_submenu_for_popup(popup)
+        self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
     def set_select_variation_bindings(self, switch=True):
@@ -439,12 +439,12 @@ class AnalysisScore(Score):
         if self.score is event.widget:
             return super().variation_cancel(event=event)
         current = self.current
-        self.show_prev_in_line()
+        self._show_prev_in_line()
         if current != self.current:
             return "break"
         if current is None:
             return "break"
-        return self.show_prev_in_variation()
-        # self.show_prev_in_variation()
+        return self._show_prev_in_variation()
+        # self._show_prev_in_variation()
         # if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-        #    self.bind_for_primary_activity()
+        #    self._bind_for_primary_activity()

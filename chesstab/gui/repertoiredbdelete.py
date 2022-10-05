@@ -28,7 +28,7 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
     Attribute pgn_score_name provides the name used in widget titles and
     message text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -38,11 +38,11 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
 
     def __init__(self, parent, oldobject, ui=None):
         """Extend and create toplevel widget for deleting chess game."""
-        # Toplevel title set '' in __init__ and to proper value in initialize.
+        # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
             oldobject, parent, RepertoireToplevel(master=parent, ui=ui), ""
         )
-        self.initialize()
+        self._initialize()
 
     @property
     def ui_base_table(self):
@@ -59,16 +59,16 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
         """Return the User Interface object from 'read-only' view."""
         return self.oldview.ui
 
-    def set_item(self, view, object_):
+    def _set_item(self, view, object_):
         """Populate view with the repertoire extracted from object_."""
-        self.set_default_source_for_object(object_)
+        self._set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
             PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
         )
         view.set_and_tag_item_text()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a Repertoire object_.
 
         Default value of object_ is object attribute from DataDelete class.
@@ -92,7 +92,7 @@ class RepertoireDbDelete(ExceptionHandler, DeletePGN, DataDelete):
                 ("Delete ", " - name unknown or invalid")
             )
 
-    def set_default_source_for_object(self, object_=None):
+    def _set_default_source_for_object(self, object_=None):
         """Set default source for Toplevel containing a Repertoire object_.
 
         Default value of object_ is object attribute from DataDelete class.

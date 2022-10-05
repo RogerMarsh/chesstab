@@ -46,10 +46,10 @@ class EngineEdit(engine.Engine):
         """Return tuple of game navigation keypresses and callbacks."""
         return (
             (EventSpec.databaseenginedisplay_run, self.run_engine),
-            (EventSpec.databaseengineedit_browse, self.browse_engine),
+            (EventSpec.databaseengineedit_browse, self._browse_engine),
         )
 
-    def browse_engine(self, event=None):
+    def _browse_engine(self, event=None):
         """Dialogue to replace chess engine definition in editor."""
         del event
         if _win32_platform:

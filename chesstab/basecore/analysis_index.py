@@ -27,7 +27,7 @@ class AnalysisIndex:
         self.engine = None
         self.fen = None
 
-    def find_position_analysis(self, fen):
+    def _find_position_analysis(self, fen):
         """Find analysis records matching fen position."""
         self.engine = None
         self.fen = None
@@ -44,7 +44,7 @@ class AnalysisIndex:
         self.set_recordset(recordset)
         self.fen = fen
 
-    def find_engine_analysis(self, engine):
+    def _find_engine_analysis(self, engine):
         """Find analysis records matching chess engine."""
         self.engine = None
         self.fen = None
@@ -69,10 +69,10 @@ class AnalysisIndex:
             if not fen:
                 self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
             else:
-                self.find_position_analysis(fen)
+                self._find_position_analysis(fen)
             return
         if not fen:
-            self.find_engine_analysis(engine)
+            self._find_engine_analysis(engine)
             return
 
         engine = self.dbhome.encode_record_selector(engine)
@@ -95,7 +95,7 @@ class AnalysisIndex:
         It is assumed merging data from all records matching fen makes sense.
 
         """
-        self.find_position_analysis(fen)
+        self._find_position_analysis(fen)
         analysis = self.newrow().value
         row = self.newrow()
         arv = row.value
@@ -114,7 +114,7 @@ class AnalysisIndex:
 
     def get_position_analysis_records(self, fen):
         """Return list of analysis records matching fen position."""
-        self.find_position_analysis(fen)
+        self._find_position_analysis(fen)
         records = []
         rsc = self.get_cursor()
         try:

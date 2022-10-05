@@ -25,7 +25,7 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
     Attribute text_name provides the name used in widget titles and message
     text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -39,13 +39,13 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
         ui should be a UCI instance.
 
         """
-        # Toplevel title set '' in __init__ and to proper value in initialize.
+        # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
             oldobject, parent, EngineToplevel(master=parent, ui=ui), ""
         )
-        self.initialize()
+        self._initialize()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a chess engine definition.
 
         Default value of object_ is object attribute from DataShow class.
@@ -76,7 +76,7 @@ class EngineDbShow(ExceptionHandler, ShowText, DataShow):
         return self.oldview.ui
 
     @staticmethod
-    def set_item(view, object_):
+    def _set_item(view, object_):
         """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)

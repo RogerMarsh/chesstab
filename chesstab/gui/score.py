@@ -43,7 +43,7 @@ class Score(ScoreShow, SharedTextScore):
     BlankText.
     """
 
-    def set_event_bindings_board(self, bindings=(), switch=True):
+    def _set_event_bindings_board(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
         sbbv = self.board.boardsquares.values
@@ -82,15 +82,15 @@ class Score(ScoreShow, SharedTextScore):
         )
         self.set_event_bindings_score(
             self.get_f10_popup_events(
-                self.post_move_menu_at_top_left, self.post_move_menu
+                self._post_move_menu_at_top_left, self._post_move_menu
             ),
             switch=switch,
         )
         self.set_event_bindings_score(
-            self.get_all_export_events(), switch=switch
+            self._get_all_export_events(), switch=switch
         )
         self.set_event_bindings_score(
-            self.get_primary_activity_button_events(), switch=switch
+            self._get_primary_activity_button_events(), switch=switch
         )
 
     # Renamed from '_bind_select_variation' when 'bind_for_*' methods tied
@@ -98,19 +98,19 @@ class Score(ScoreShow, SharedTextScore):
     def set_select_variation_bindings(self, switch=True):
         """Switch bindings for selecting a variation on or off."""
         self.set_event_bindings_score(
-            self.get_select_move_events(), switch=switch
+            self._get_select_move_events(), switch=switch
         )
         self.set_event_bindings_score(
             self.get_f10_popup_events(
-                self.post_select_move_menu_at_top_left,
-                self.post_select_move_menu,
+                self._post_select_move_menu_at_top_left,
+                self._post_select_move_menu,
             ),
             switch=switch,
         )
         self.set_event_bindings_score(
-            self.get_button_events(
+            self._get_button_events(
                 buttonpress1=self.variation_cancel,
-                buttonpress3=self.post_select_move_menu,
+                buttonpress3=self._post_select_move_menu,
             ),
             switch=switch,
         )
@@ -122,25 +122,25 @@ class Score(ScoreShow, SharedTextScore):
     def set_score_pointer_item_navigation_bindings(self, switch):
         """Set or unset pointer bindings for game navigation."""
         self.set_event_bindings_score(
-            self.get_primary_activity_button_events(), switch=switch
+            self._get_primary_activity_button_events(), switch=switch
         )
 
     # Not yet used.
     # Recently added to game.py but moved here because it makes more sense to
     # do the work in the (game).score or (game.analysis).score object than
     # choose which is wanted in the (game) object.
-    # set_board_pointer_widget_navigation_bindings is likely to follow.
+    # _set_board_pointer_widget_navigation_bindings is likely to follow.
     # There is no equivalent of set_select_variation_bindings to contain this.
     def set_board_pointer_select_variation_bindings(self, switch):
         """Enable or disable bindings for variation selection."""
-        self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        self._set_event_bindings_board(
+            self._get_modifier_buttonpress_suppression_events(), switch=switch
         )
-        self.set_event_bindings_board(
+        self._set_event_bindings_board(
             (
                 (EventSpec.buttonpress_1, self.variation_cancel),
-                (EventSpec.buttonpress_3, self.show_next_in_variation),
-                (EventSpec.shift_buttonpress_3, self.show_variation),
+                (EventSpec.buttonpress_3, self._show_next_in_variation),
+                (EventSpec.shift_buttonpress_3, self._show_variation),
             ),
             switch=switch,
         )
@@ -148,14 +148,14 @@ class Score(ScoreShow, SharedTextScore):
     # There is no equivalent of set_primary_activity_bindings to contain this.
     def set_board_pointer_move_bindings(self, switch):
         """Enable or disable bindings for game navigation."""
-        self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        self._set_event_bindings_board(
+            self._get_modifier_buttonpress_suppression_events(), switch=switch
         )
-        self.set_event_bindings_board(
+        self._set_event_bindings_board(
             (
-                (EventSpec.buttonpress_1, self.show_prev_in_line),
-                (EventSpec.shift_buttonpress_1, self.show_prev_in_variation),
-                (EventSpec.buttonpress_3, self.show_next_in_variation),
+                (EventSpec.buttonpress_1, self._show_prev_in_line),
+                (EventSpec.shift_buttonpress_1, self._show_prev_in_variation),
+                (EventSpec.buttonpress_3, self._show_next_in_variation),
             ),
             switch=switch,
         )
@@ -173,7 +173,7 @@ class Score(ScoreShow, SharedTextScore):
     # because it is always associated with settings for ButtonPress-1 and
     # ButtonPress-3.  Especially if events other than Control-ButtonPress-1
     # get handlers.
-    def get_modifier_buttonpress_suppression_events(self):
+    def _get_modifier_buttonpress_suppression_events(self):
         """Return tuple of bindings to ignore button presses with modifiers.
 
         Button_1 and button_3 events with Control, Shift, or Alt, are ignored.
@@ -194,47 +194,47 @@ class Score(ScoreShow, SharedTextScore):
     # pointer, and the other one's pointer bindings are disabled.
     # The control_buttonpress_1 event is intended to give focus to the other's
     # Text widget, but is not set yet.
-    def get_primary_activity_button_events(self):
+    def _get_primary_activity_button_events(self):
         """Return tuple of button presses and callbacks for game navigation."""
-        return self.get_button_events(
-            buttonpress1=self.go_to_token, buttonpress3=self.post_move_menu
+        return self._get_button_events(
+            buttonpress1=self._go_to_token, buttonpress3=self._post_move_menu
         )
 
     # These get_xxx_events methods are used by event bind and popup creation
     # methods.
 
-    def get_select_move_events(self):
+    def _get_select_move_events(self):
         """Return tuple of variation selection keypresses and callbacks."""
         return (
             (
                 EventSpec.score_cycle_selection_to_next_variation,
-                self.variation_cycle,
+                self._variation_cycle,
             ),
-            (EventSpec.score_show_selected_variation, self.show_variation),
+            (EventSpec.score_show_selected_variation, self._show_variation),
             (
                 EventSpec.score_cancel_selection_of_variation,
                 self.variation_cancel,
             ),
         )
 
-    def get_all_export_events(self):
+    def _get_all_export_events(self):
         """Return tuple of PGN export keypresses and callbacks."""
         return (
             (
                 EventSpec.pgn_reduced_export_format,
-                self.export_pgn_reduced_export_format,
+                self._export_pgn_reduced_export_format,
             ),
             (
                 EventSpec.pgn_export_format_no_comments_no_ravs,
-                self.export_pgn_no_comments_no_ravs,
+                self._export_pgn_no_comments_no_ravs,
             ),
             (
                 EventSpec.pgn_export_format_no_comments,
-                self.export_pgn_no_comments,
+                self._export_pgn_no_comments,
             ),
-            (EventSpec.pgn_export_format, self.export_pgn),
+            (EventSpec.pgn_export_format, self._export_pgn),
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
-            (EventSpec.text_internal_format, self.export_text),
+            (EventSpec.text_internal_format, self._export_text),
         )
 
     # These are the event bindings to traverse moves in PGN movetext.
@@ -244,33 +244,33 @@ class Score(ScoreShow, SharedTextScore):
     def get_primary_activity_events(self):
         """Return tuple of game navigation keypresses and callbacks."""
         return (
-            (EventSpec.score_show_next_in_line, self.show_next_in_line),
+            (EventSpec.score_show_next_in_line, self._show_next_in_line),
             (
                 EventSpec.score_show_next_in_variation,
-                self.show_next_in_variation,
+                self._show_next_in_variation,
             ),
-            (EventSpec.score_show_previous_in_line, self.show_prev_in_line),
+            (EventSpec.score_show_previous_in_line, self._show_prev_in_line),
             (
                 EventSpec.score_show_previous_in_variation,
-                self.show_prev_in_variation,
+                self._show_prev_in_variation,
             ),
-            (EventSpec.score_show_first_in_game, self.show_first_in_game),
-            (EventSpec.score_show_last_in_game, self.show_last_in_game),
-            (EventSpec.score_show_first_in_line, self.show_first_in_line),
-            (EventSpec.score_show_last_in_line, self.show_last_in_line),
+            (EventSpec.score_show_first_in_game, self._show_first_in_game),
+            (EventSpec.score_show_last_in_game, self._show_last_in_game),
+            (EventSpec.score_show_first_in_line, self._show_first_in_line),
+            (EventSpec.score_show_last_in_line, self._show_last_in_line),
         )
 
     # Analysis subclasses override method to exclude the first four items.
     # Repertoire subclasses override method to exclude the first two items.
-    def populate_export_submenu(self, submenu):
+    def _populate_export_submenu(self, submenu):
         """Populate export submenu with export event bindings."""
-        self.set_popup_bindings(submenu, self.get_all_export_events())
+        self._set_popup_bindings(submenu, self._get_all_export_events())
 
     def create_primary_activity_popup(self):
         """Delegate then add export submenu and return popup menu."""
         popup = super().create_primary_activity_popup()
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
-        self.populate_export_submenu(export_submenu)
+        self._populate_export_submenu(export_submenu)
         index = "Database"
         try:
             popup.index(index)
@@ -285,181 +285,181 @@ class Score(ScoreShow, SharedTextScore):
         """Create and return select move popup menu."""
         assert self.select_move_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self.set_popup_bindings(popup, self.get_select_move_events())
+        self._set_popup_bindings(popup, self._get_select_move_events())
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
-        self.populate_export_submenu(export_submenu)
+        self._populate_export_submenu(export_submenu)
         popup.add_cascade(label="Export", menu=export_submenu)
         # pylint message assignment-from-none is false positive.
         # However it is sensible to do an isinstance test.
-        database_submenu = self.create_database_submenu(popup)
+        database_submenu = self._create_database_submenu(popup)
         if isinstance(database_submenu, tkinter.Menu):
             popup.add_cascade(label="Database", menu=database_submenu)
         self.select_move_popup = popup
         return popup
 
-    def post_move_menu(self, event=None):
+    def _post_move_menu(self, event=None):
         """Show the popup menu for game score navigation."""
-        return self.post_menu(
+        return self._post_menu(
             self.primary_activity_popup,
             self.create_primary_activity_popup,
-            allowed=self.is_active_item_mapped(),
+            allowed=self._is_active_item_mapped(),
             event=event,
         )
 
-    def post_move_menu_at_top_left(self, event=None):
+    def _post_move_menu_at_top_left(self, event=None):
         """Show the popup menu for game score navigation."""
         return self.post_menu_at_top_left(
             self.primary_activity_popup,
             self.create_primary_activity_popup,
-            allowed=self.is_active_item_mapped(),
+            allowed=self._is_active_item_mapped(),
             event=event,
         )
 
-    def post_select_move_menu(self, event=None):
+    def _post_select_move_menu(self, event=None):
         """Show the popup menu for variation selection in game score."""
-        return self.post_menu(
+        return self._post_menu(
             self.select_move_popup,
             self.create_select_move_popup,
-            allowed=self.is_active_item_mapped(),
+            allowed=self._is_active_item_mapped(),
             event=event,
         )
 
-    def post_select_move_menu_at_top_left(self, event=None):
+    def _post_select_move_menu_at_top_left(self, event=None):
         """Show the popup menu for variation selection in game score."""
         return self.post_menu_at_top_left(
             self.select_move_popup,
             self.create_select_move_popup,
-            allowed=self.is_active_item_mapped(),
+            allowed=self._is_active_item_mapped(),
             event=event,
         )
 
-    def show_first_in_game(self, event=None):
+    def _show_first_in_game(self, event=None):
         """Display initial position of game score (usually start of game)."""
         del event
-        return self.show_new_current(new_current=None)
+        return self._show_new_current(new_current=None)
 
-    def show_first_in_line(self, event=None):
+    def _show_first_in_line(self, event=None):
         """Display initial position of line containing current move."""
         del event
         if self.current is None:
             return "break"
-        if self.is_currentmove_in_main_line():
-            return self.show_first_in_game()
-        selected_first_move = self.select_first_move_in_line(self.current)
+        if self._is_currentmove_in_main_line():
+            return self._show_first_in_game()
+        selected_first_move = self._select_first_move_in_line(self.current)
         self.current = selected_first_move
         self.set_current()
-        self.set_variation_tags_from_currentmove()
+        self._set_variation_tags_from_currentmove()
         self.set_game_board()
         return "break"
 
-    def show_variation(self, event=None):
+    def _show_variation(self, event=None):
         """Enter selected variation and display its initial position."""
         del event
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
-        self.colour_variation(self.current)
+            self._bind_for_primary_activity()
+        self._colour_variation(self.current)
         return "break"
 
-    def show_last_in_game(self, event=None):
+    def _show_last_in_game(self, event=None):
         """Display final position of game score."""
         del event
-        return self.show_new_current(
-            new_current=self.select_last_move_played_in_game()
+        return self._show_new_current(
+            new_current=self._select_last_move_played_in_game()
         )
 
-    def show_last_in_line(self, event=None):
+    def _show_last_in_line(self, event=None):
         """Display final position of line containing current move."""
         del event
         if self.current is None:
-            return self.show_last_in_game()
-        if self.is_currentmove_in_main_line():
-            return self.show_last_in_game()
-        self.current = self.select_last_move_in_line()
-        self.add_variation_before_move_to_colouring_tag(self.current)
+            return self._show_last_in_game()
+        if self._is_currentmove_in_main_line():
+            return self._show_last_in_game()
+        self.current = self._select_last_move_in_line()
+        self._add_variation_before_move_to_colouring_tag(self.current)
         self.set_current()
         self.set_game_board()
         return "break"
 
-    def show_next_in_line(self, event=None):
+    def _show_next_in_line(self, event=None):
         """Display next position of selected line."""
         del event
         if self.current is None:
             self.current = self.select_first_move_of_game()
         else:
-            if self.is_variation_entered():
+            if self._is_variation_entered():
                 self.add_move_to_moves_played_colouring_tag(self.current)
-            self.current = self.select_next_move_in_line()
+            self.current = self._select_next_move_in_line()
         self.set_current()
         self.set_game_board()
         return "break"
 
-    def show_next_in_variation(self, event=None):
+    def _show_next_in_variation(self, event=None):
         """Display choices if these exist or next position of selected line."""
         del event
         if self.current is None:
 
             # No prior to variation tag exists: no move to attach it to.
             prior = None
-            choice = self.get_choice_tag_of_move(
+            choice = self._get_choice_tag_of_move(
                 self.select_first_move_of_game()
             )
             if choice is None:
-                return self.show_next_in_line()
+                return self._show_next_in_line()
             selection = self.get_selection_tag_for_choice(choice)
 
         else:
-            prior = self.get_prior_to_variation_tag_of_move(self.current)
+            prior = self._get_prior_to_variation_tag_of_move(self.current)
             if prior is None:
-                return self.show_next_in_line()
+                return self._show_next_in_line()
             choice = self.get_choice_tag_for_prior(prior)
             selection = self.get_selection_tag_for_prior(prior)
 
         # if choices are already on ALTERNATIVE_MOVE_TAG cycle selection one
         # place round choices before getting colouring variation tag.
-        self.cycle_selection_tag(choice, selection)
+        self._cycle_selection_tag(choice, selection)
 
-        variation = self.get_colouring_variation_tag_for_selection(selection)
-        self.set_variation_selection_tags(prior, choice, selection, variation)
+        variation = self._get_colouring_variation_tag_for_selection(selection)
+        self._set_variation_selection_tags(prior, choice, selection, variation)
         if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
             self.bind_for_select_variation()
         return "break"
 
-    def show_prev_in_line(self, event=None):
+    def _show_prev_in_line(self, event=None):
         """Display previous position of selected line."""
         del event
         if self.current is None:
             return "break"
-        if not self.is_currentmove_in_main_line():
-            self.remove_currentmove_from_moves_played_in_variation()
-        self.current = self.select_prev_move_in_line()
+        if not self._is_currentmove_in_main_line():
+            self._remove_currentmove_from_moves_played_in_variation()
+        self.current = self._select_prev_move_in_line()
         self.set_current()
         self.set_game_board()
         return "break"
 
-    def show_prev_in_variation(self, event=None):
+    def _show_prev_in_variation(self, event=None):
         """Display choices in previous position of selected line."""
         del event
         if self.current is None:
             return "break"
-        if not self.is_currentmove_in_main_line():
-            self.remove_currentmove_from_moves_played_in_variation()
-            if self.is_currentmove_start_of_variation():
-                self.clear_variation_colouring_tag()
-                self.current = self.get_position_tag_of_previous_move()
+        if not self._is_currentmove_in_main_line():
+            self._remove_currentmove_from_moves_played_in_variation()
+            if self._is_currentmove_start_of_variation():
+                self._clear_variation_colouring_tag()
+                self.current = self._get_position_tag_of_previous_move()
                 self.set_current()
                 self.set_game_board()
                 if self.current is None:
                     self.clear_moves_played_in_variation_colouring_tag()
                 elif (
-                    self.get_prior_to_variation_tag_of_move(self.current)
+                    self._get_prior_to_variation_tag_of_move(self.current)
                     is None
                 ):
                     return "break"
                 if self._most_recent_bindings != NonTagBind.SELECT_VARIATION:
                     self.bind_for_select_variation()
-                self.variation_cycle()
+                self._variation_cycle()
                 return "break"
-        self.current = self.select_prev_move_in_line()
+        self.current = self._select_prev_move_in_line()
         self.set_current()
         self.set_game_board()
         return "break"
@@ -471,31 +471,31 @@ class Score(ScoreShow, SharedTextScore):
 
             # No prior to variation tag exists: no move to attach it to.
             prior = None
-            choice = self.get_choice_tag_of_move(
+            choice = self._get_choice_tag_of_move(
                 self.select_first_move_of_game()
             )
 
         else:
-            prior = self.get_prior_to_variation_tag_of_move(self.current)
+            prior = self._get_prior_to_variation_tag_of_move(self.current)
             choice = self.get_choice_tag_for_prior(prior)
-        self.clear_variation_choice_colouring_tag(choice)
-        self.clear_variation_colouring_tag()
+        self._clear_variation_choice_colouring_tag(choice)
+        self._clear_variation_colouring_tag()
         if self.current is not None:
-            if not self.is_currentmove_in_main_line():
-                self.add_currentmove_variation_to_colouring_tag()
+            if not self._is_currentmove_in_main_line():
+                self._add_currentmove_variation_to_colouring_tag()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
+            self._bind_for_primary_activity()
         return "break"
 
-    def variation_cycle(self, event=None):
+    def _variation_cycle(self, event=None):
         """Highlight next variation in choices at current position."""
         del event
-        self.step_one_variation(self.current)
+        self._step_one_variation(self.current)
         return "break"
 
     # Methods which export *.pgn files.
 
-    def export_pgn_reduced_export_format(self, event=None):
+    def _export_pgn_reduced_export_format(self, event=None):
         """Export PGN tags and movetext in reduced export format."""
         del event
         type_name, game_class = self.pgn_export_type
@@ -519,7 +519,7 @@ class Score(ScoreShow, SharedTextScore):
             ),
         )
 
-    def export_pgn(self, event=None):
+    def _export_pgn(self, event=None):
         """Export PGN tags and movetext in export format."""
         del event
         type_name, game_class = self.pgn_export_type
@@ -543,7 +543,7 @@ class Score(ScoreShow, SharedTextScore):
             ),
         )
 
-    def export_pgn_no_comments_no_ravs(self, event=None):
+    def _export_pgn_no_comments_no_ravs(self, event=None):
         """Export PGN tags and moves in export format.
 
         Comments and RAVs are not included.
@@ -571,7 +571,7 @@ class Score(ScoreShow, SharedTextScore):
             ),
         )
 
-    def export_pgn_no_comments(self, event=None):
+    def _export_pgn_no_comments(self, event=None):
         """Export PGN tags and movetext in export format without comments."""
         del event
         type_name, game_class = self.pgn_export_type
@@ -626,7 +626,7 @@ class Score(ScoreShow, SharedTextScore):
             ),
         )
 
-    def export_text(self, event=None):
+    def _export_text(self, event=None):
         """Export PGN tags and movetext as text.
 
         Optional whitespace, move number indicators, and check indicators

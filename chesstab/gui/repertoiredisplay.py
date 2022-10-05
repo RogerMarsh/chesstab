@@ -103,7 +103,7 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
         """Return manager of widgets displaying a repertoire record."""
         return self.ui.repertoire_items
 
-    # Defined so cycle_item and give_focus_to_widget methods can be shared by
+    # Defined so _cycle_item and give_focus_to_widget methods can be shared by
     # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay
     # classes.
     @property
@@ -129,7 +129,7 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
     def mark_partial_positions_to_be_recalculated(self, datasource=None):
         """Do nothing.  Exists for compatibility with game display."""
 
-    def get_navigation_events(self):
+    def _get_navigation_events(self):
         """Return event description tuple for navigation from repertoire."""
         return (
             (
@@ -165,9 +165,9 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
             ),
             (
                 EventSpec.repertoiredisplay_to_previous_repertoire,
-                self.prior_item,
+                self._prior_item,
             ),
-            (EventSpec.repertoiredisplay_to_next_repertoire, self.next_item),
+            (EventSpec.repertoiredisplay_to_next_repertoire, self._next_item),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             # No traverse_round because Alt-F8 toggles repertoire and analysis.
@@ -182,7 +182,7 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
     def on_game_change(self, instance):
         """Prevent update from self if instance refers to same record."""
         if self.sourceobject is not None:
-            self.patch_pgn_score_to_fit_record_change_and_refresh_grid(
+            self._patch_pgn_score_to_fit_record_change_and_refresh_grid(
                 self.ui.repertoire_games, instance
             )
 
@@ -198,7 +198,7 @@ class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
 
     def generate_popup_navigation_maps(self):
         """Return genenal and current widget navigation binding maps."""
-        navigation_map = dict(self.get_navigation_events())
+        navigation_map = dict(self._get_navigation_events())
         local_map = {
             EventSpec.scoresheet_to_analysis: self.analysis_current_item,
         }
@@ -227,13 +227,13 @@ class RepertoireDisplay(
     def create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
     def create_select_move_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super().create_select_move_popup()
-        self.add_close_item_entry_to_popup(popup)
+        self._add_close_item_entry_to_popup(popup)
         return popup
 
 
@@ -265,7 +265,7 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
         # original.value.set_game_source(self.sourceobject.value.gamesource)
         original_value.set_game_source("No opening name")
 
-    # set_properties_on_grids defined so update_game_database method can be
+    # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and
     # gamedisplay.GameDisplayEdit classes.
     # See class attributes pgn_score_name and pgn_score_source_name too.

@@ -66,7 +66,7 @@ class CQL(CQLText, EventBinding):
         self.score.grid(column=0, row=0, rowspan=1, sticky=tkinter.NSEW)
         if not ui.visible_scrollbars:
             panel.after_idle(self.hide_scrollbars)
-        self.configure_cql_statement_widget()
+        self._configure_cql_statement_widget()
 
         # The popup menus specific to CQL (placed same as Game equivalent)
 
@@ -90,9 +90,9 @@ class CQL(CQLText, EventBinding):
     def on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
         del event
-        self.configure_cql_statement_widget()
+        self._configure_cql_statement_widget()
 
-    def configure_cql_statement_widget(self):
+    def _configure_cql_statement_widget(self):
         """Configure widgets for a ChessQL statement display."""
         self.panel.grid_rowconfigure(0, weight=1)
         self.panel.grid_columnconfigure(0, weight=1)
@@ -102,13 +102,13 @@ class CQL(CQLText, EventBinding):
         """Hide the scrollbars in the ChessQL statement display widgets."""
         self.scrollbar.grid_remove()
         self.score.grid_configure(columnspan=2)
-        self.configure_cql_statement_widget()
+        self._configure_cql_statement_widget()
 
     def show_scrollbars(self):
         """Show the scrollbars in the ChessQL statement display widgets."""
         self.score.grid_configure(columnspan=1)
         self.scrollbar.grid_configure()
-        self.configure_cql_statement_widget()
+        self._configure_cql_statement_widget()
 
     def takefocus(self, take=True):
         """Configure game widget takefocus option."""
@@ -143,10 +143,10 @@ class CQL(CQLText, EventBinding):
     def create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.create_widget_navigation_submenu_for_popup(popup)
+        self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
-    def export_partial(self, event=None):
+    def _export_partial(self, event=None):
         """Export displayed partial position definition."""
         del event
         export_chessql.export_single_position(

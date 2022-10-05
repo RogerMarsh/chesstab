@@ -167,7 +167,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             panel.after_idle(self.hide_game_analysis)
         if not ui.visible_scrollbars:
             panel.after_idle(self.hide_scrollbars)
-        self.configure_game_widget()
+        self._configure_game_widget()
 
         # True means analysis widget refers to same position as game widget; so
         # highlighting of analysis still represents future valid navigation.
@@ -183,11 +183,11 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.takefocus_widget = self.score
         self.analysis_data_source = None
 
-    def get_game_position_analysis(self):
+    def _get_game_position_analysis(self):
         """Return number of leading spaces."""
         return self._game_position_analysis
 
-    def set_game_position_analysis(self, value):
+    def _set_game_position_analysis(self, value):
         """Set self._game_position_analysis to value."""
         self._game_position_analysis = value
 
@@ -232,12 +232,12 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     def on_configure(self, event=None):
         """Reconfigure board and score after container has been resized."""
         del event
-        self.configure_game_widget()
-        self.see_current_move()
+        self._configure_game_widget()
+        self._see_current_move()
 
     def _analyse_position(self, *position):
         analysis = self.get_analysis(*position)
-        self.refresh_analysis_widget_from_database(analysis)
+        self._refresh_analysis_widget_from_database(analysis)
         if self.game_analysis_in_progress:
             if not self.ui.uci.uci.is_positions_pending_empty():
                 return
@@ -302,11 +302,11 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             )
             self.score.insert(tkinter.END, self.collected_game.pgn_text)
 
-            # Must be replaced because bind_for_primary_activity() sets the
+            # Must be replaced because _bind_for_primary_activity() sets the
             # board pointer bindings wrong for initial display of game.
             if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-                self.bind_for_primary_activity()
-                self.set_board_pointer_widget_navigation_bindings(True)
+                self._bind_for_primary_activity()
+                self._set_board_pointer_widget_navigation_bindings(True)
 
             if not self._is_text_editable:
                 self.score.configure(state=tkinter.DISABLED)
@@ -314,11 +314,11 @@ class Game(Score, EventBinding, AnalysisEventBinding):
                 self.score.edit_reset()
             return
 
-        # Must be replaced because bind_for_primary_activity() sets the
+        # Must be replaced because _bind_for_primary_activity() sets the
         # board pointer bindings wrong for initial display of game.
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
-            self.bind_for_primary_activity()
-            self.set_board_pointer_widget_navigation_bindings(True)
+            self._bind_for_primary_activity()
+            self._set_board_pointer_widget_navigation_bindings(True)
 
         if not self._is_text_editable:
             self.score.configure(state=tkinter.DISABLED)
@@ -365,8 +365,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.score.grid_configure(rowspan=2)
         if self.score.grid_info()["columnspan"] == 1:
             self.scrollbar.grid_configure(rowspan=2)
-        self.configure_game_widget()
-        self.see_current_move()
+        self._configure_game_widget()
+        self._see_current_move()
 
     def show_game_analysis(self):
         """Show the widgets which show analysis from chess engines."""
@@ -377,8 +377,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             self.analysis.scrollbar.grid_configure()
         else:
             self.analysis.score.grid_configure(columnspan=3)
-        self.configure_game_widget()
-        self.see_current_move()
+        self._configure_game_widget()
+        self._see_current_move()
 
     def hide_scrollbars(self):
         """Hide the scrollbars in the game display widgets."""
@@ -387,8 +387,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.score.grid_configure(columnspan=2)
         if self.score.grid_info()["rowspan"] == 1:
             self.analysis.score.grid_configure(columnspan=3)
-        self.configure_game_widget()
-        self.see_current_move()
+        self._configure_game_widget()
+        self._see_current_move()
 
     def show_scrollbars(self):
         """Show the scrollbars in the game display widgets."""
@@ -399,8 +399,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             self.analysis.scrollbar.grid_configure()
         else:
             self.scrollbar.grid_configure(rowspan=2)
-        self.configure_game_widget()
-        self.see_current_move()
+        self._configure_game_widget()
+        self._see_current_move()
 
     def toggle_analysis_fen(self):
         """Toggle display of FEN in analysis widgets."""
@@ -409,7 +409,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             widget.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.FALSE)
         else:
             widget.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.TRUE)
-        self.see_current_move()
+        self._see_current_move()
 
     def toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
@@ -418,12 +418,12 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.FALSE)
         else:
             widget.tag_configure(MOVETEXT_MOVENUMBER_TAG, elide=tkinter.TRUE)
-        self.see_current_move()
+        self._see_current_move()
 
-    def refresh_analysis_widget_from_engine(self, analysis):
+    def _refresh_analysis_widget_from_engine(self, analysis):
         """Refresh game widget with updated chess engine analysis."""
         uci = self.ui.uci.uci
-        move_played = self.get_move_for_start_of_analysis()
+        move_played = self._get_move_for_start_of_analysis()
         if analysis.position in uci.position_analysis:
             new_text = uci.position_analysis[
                 analysis.position
@@ -478,20 +478,20 @@ class Game(Score, EventBinding, AnalysisEventBinding):
                 ANALYSIS_PGN_TAGS_TAG, "1.0", widget.tag_ranges(fmog)[0]
             )
 
-    def refresh_analysis_widget_from_database(self, analysis):
+    def _refresh_analysis_widget_from_database(self, analysis):
         """Refresh game widget with updated chess engine analysis."""
         # When a database is open the analysis is refreshed from the database
         # while checking if that analysis is up-to-date compared with the depth
         # and multiPV parameters held in self.uci.uci UCI object.
         if self.ui.database is None:
-            self.refresh_analysis_widget_from_engine(analysis)
+            self._refresh_analysis_widget_from_engine(analysis)
             return
 
         # Assume TypeError exception happens because analysis is being shown
         # for a position which is checkmate or stalemate.
         try:
             new_text = analysis.translate_analysis_to_pgn(
-                self.get_move_for_start_of_analysis()
+                self._get_move_for_start_of_analysis()
             )
         except TypeError:
             return
@@ -528,9 +528,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # This method called at regular intervals to cope with fresh analysis
         # of displayed positions due to changes in engine parameters (depth
         # and multiPV). Need a set of new analysis since last call.
-        self.refresh_analysis_widget_from_database(analysis)
+        self._refresh_analysis_widget_from_database(analysis)
 
-    def configure_game_widget(self):
+    def _configure_game_widget(self):
         """Configure board and score widgets for a game display."""
         width = self.panel.winfo_width()
         height = self.panel.winfo_height()
@@ -582,14 +582,14 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     def set_database_navigation_close_item_bindings(self, switch=True):
         """Enable or disable bindings for navigation and database selection."""
         super().set_database_navigation_close_item_bindings(switch=switch)
-        self.set_analysis_event_bindings_score(switch=switch)
+        self._set_analysis_event_bindings_score(switch=switch)
 
-    def set_board_pointer_widget_navigation_bindings(self, switch):
+    def _set_board_pointer_widget_navigation_bindings(self, switch):
         """Enable or disable bindings for widget selection."""
-        self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        self._set_event_bindings_board(
+            self._get_modifier_buttonpress_suppression_events(), switch=switch
         )
-        self.set_event_bindings_board(
+        self._set_event_bindings_board(
             (
                 (EventSpec.buttonpress_1, self.give_focus_to_widget),
                 (EventSpec.buttonpress_3, self.post_inactive_menu),
@@ -599,8 +599,8 @@ class Game(Score, EventBinding, AnalysisEventBinding):
 
     def set_score_pointer_widget_navigation_bindings(self, switch):
         """Set or unset pointer bindings for widget navigation."""
-        self.set_event_bindings_board(
-            self.get_modifier_buttonpress_suppression_events(), switch=switch
+        self._set_event_bindings_board(
+            self._get_modifier_buttonpress_suppression_events(), switch=switch
         )
         if not switch:
             bindings = (
@@ -691,18 +691,18 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     def create_primary_activity_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_primary_activity_popup()
-        self.set_popup_bindings(
+        self._set_popup_bindings(
             popup,
             ((EventSpec.analyse_game, self.analyse_game),),
             index=self.export_popup_label,
         )
-        self.create_widget_navigation_submenu_for_popup(popup)
+        self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
     def create_select_move_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
         popup = super().create_select_move_popup()
-        self.create_widget_navigation_submenu_for_popup(popup)
+        self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
     def set_statusbar_text(self):

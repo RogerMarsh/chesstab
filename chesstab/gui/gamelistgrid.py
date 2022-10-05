@@ -60,12 +60,12 @@ class GameListGrid(
         self.ui = ui
         self._configure_frame_and_initial_event_bindings()
 
-    def _display_selected_item(self, key, selected):
+    def _display_selected_item_kind(self, key, selected):
         # Should the Frame containing board and score be created here and
         # passed to GameDisplay. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # GameDisplay is to be put.
-        # Yes because GameDisplayEdit (see edit_selected_item) includes
+        # Yes because GameDisplayEdit (see _edit_selected_item) includes
         # extra widgets. Want to say game.widget.destroy() eventually.
         # Read make_display_widget for GameDisplay and GameDisplayEdit.
         game = self.make_display_widget(selected)
@@ -92,7 +92,7 @@ class GameListGrid(
         )
         return game
 
-    def edit_selected_item(self, key):
+    def _edit_selected_item(self, key):
         """Create display and return a GameDisplayEdit for selected game."""
         selected = self.get_visible_record(key)
         if selected is None:
@@ -101,7 +101,7 @@ class GameListGrid(
         # passed to GameDisplay. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # GameDisplayEdit is to be put.
-        # Yes because GameDisplay (see display_selected_item) includes
+        # Yes because GameDisplay (see _display_selected_item) includes
         # less widgets. Want to say game.widget.destroy() eventually.
         # Read make_edit_widget for GameDisplay and GameDisplayEdit.
         game = self.make_edit_widget(selected)
@@ -232,7 +232,7 @@ class GameListGrid(
         super().bookmark_up()
         self._set_selection_text_bookmark()
 
-    def export_text(self, event=None):
+    def _export_text(self, event=None):
         """Export selected games as text."""
         del event
         self.ui.export_report(
@@ -256,7 +256,7 @@ class GameListGrid(
             "Games (import format)",
         )
 
-    def export_pgn(self, event=None):
+    def _export_pgn(self, event=None):
         """Export selected games in PGN export format."""
         del event
         self.ui.export_report(
@@ -266,7 +266,7 @@ class GameListGrid(
             "Games",
         )
 
-    def export_pgn_reduced_export_format(self, event=None):
+    def _export_pgn_reduced_export_format(self, event=None):
         """Export selected games in PGN Reduced Export Format."""
         del event
         self.ui.export_report(
@@ -279,7 +279,7 @@ class GameListGrid(
             "Games (reduced export format)",
         )
 
-    def export_pgn_no_comments_no_ravs(self, event=None):
+    def _export_pgn_no_comments_no_ravs(self, event=None):
         """Export selected games as PGN excluding all comments and RAVs."""
         del event
         self.ui.export_report(
@@ -292,7 +292,7 @@ class GameListGrid(
             "Games (no comments no ravs)",
         )
 
-    def export_pgn_no_comments(self, event=None):
+    def _export_pgn_no_comments(self, event=None):
         """Export selected games as PGN excluding all commentary tokens."""
         del event
         self.ui.export_report(

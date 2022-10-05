@@ -40,7 +40,7 @@ class QueryListGrid(
         self.ui = ui
         self._configure_frame_and_initial_event_bindings()
 
-    def _display_selected_item(self, key, selected):
+    def _display_selected_item_kind(self, key, selected):
         # Should the Frame containing board and position be created here and
         # passed to QueryDisplay. (Needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
@@ -70,7 +70,7 @@ class QueryListGrid(
         )
         return selection
 
-    def edit_selected_item(self, key):
+    def _edit_selected_item(self, key):
         """Create a QueryDisplayEdit for game selection rule."""
         selected = self.get_visible_record(key)
         if selected is None:
@@ -216,16 +216,16 @@ class QueryGrid(QueryListGrid):
         super().__init__(ui.selection_rules_pw, ui)
         self.make_header(ChessDBrowQuery.header_specification)
         self.__bind_on()
-        self.set_popup_bindings(
+        self._set_popup_bindings(
             self.menupopup,
             (
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_selection_rule_from_popup,
+                    self._display_selection_rule_from_popup,
                 ),
                 (
                     EventSpec.edit_record_from_grid,
-                    self.edit_selection_rule_from_popup,
+                    self._edit_selection_rule_from_popup,
                 ),
             ),
         )
@@ -236,7 +236,7 @@ class QueryGrid(QueryListGrid):
             ),
             (
                 EventSpec.navigate_to_active_game,
-                self.set_focus_gamepanel_item_command,
+                self._set_focus_gamepanel_item_command,
             ),
             (EventSpec.navigate_to_game_grid, self.set_focus_game_grid),
             (
@@ -245,7 +245,7 @@ class QueryGrid(QueryListGrid):
             ),
             (
                 EventSpec.navigate_to_active_repertoire,
-                self.set_focus_repertoirepanel_item_command,
+                self._set_focus_repertoirepanel_item_command,
             ),
             (
                 EventSpec.navigate_to_repertoire_game_grid,
@@ -253,7 +253,7 @@ class QueryGrid(QueryListGrid):
             ),
             (
                 EventSpec.navigate_to_active_partial,
-                self.set_focus_partialpanel_item_command,
+                self._set_focus_partialpanel_item_command,
             ),
             (
                 EventSpec.navigate_to_partial_game_grid,
@@ -262,20 +262,20 @@ class QueryGrid(QueryListGrid):
             (EventSpec.navigate_to_partial_grid, self.set_focus_partial_grid),
             (
                 EventSpec.navigate_to_active_selection_rule,
-                self.set_focus_selectionpanel_item_command,
+                self._set_focus_selectionpanel_item_command,
             ),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self.add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
+        self._add_cascade_menu_to_popup(
             "Navigation", self.menupopupnorow, bindings
         )
 
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_active_partial, ""),
                 (EventSpec.navigate_to_partial_game_grid, ""),
@@ -302,7 +302,7 @@ class QueryGrid(QueryListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (
                     EventSpec.navigate_to_active_partial,
@@ -343,16 +343,17 @@ class QueryGrid(QueryListGrid):
                 ),
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_selection_rule,
+                    self._display_selection_rule,
                 ),
-                (EventSpec.edit_record_from_grid, self.edit_selection_rule),
+                (EventSpec.edit_record_from_grid, self._edit_selection_rule),
             )
         )
 
-    def display_selection_rule(self, event=None):
+    def _display_selection_rule(self, event=None):
         """Display selection rule and cancel selection.
 
-        Call _display_selection_rule after idle tasks to allow message display.
+        Call _display_selection_rule_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
@@ -360,44 +361,48 @@ class QueryGrid(QueryListGrid):
             return
         self._set_find_selection_rule_name_games(self.selection[0])
         self.frame.after_idle(
-            self.try_command(self._display_selection_rule, self.frame)
+            self.try_command(
+                self._display_selection_rule_after_idle, self.frame
+            )
         )
 
-    def display_selection_rule_from_popup(self, event=None):
+    def _display_selection_rule_from_popup(self, event=None):
         """Display selection rule selected by pointer.
 
-        Call _display_selection_rule after idle tasks to allow message display.
+        Call _display_selection_rule_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
         self._set_find_selection_rule_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
             self.try_command(
-                self._display_selection_rule_from_popup, self.frame
+                self._display_selection_rule_from_popup_after_idle, self.frame
             )
         )
 
-    def _display_selection_rule(self):
+    def _display_selection_rule_after_idle(self):
         """Display selection rule and cancel selection.
 
-        Call from display_selection_rule only.
+        Call from _display_selection_rule only.
 
         """
-        self.display_selected_item(self.get_visible_selected_key())
+        self._display_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def _display_selection_rule_from_popup(self):
+    def _display_selection_rule_from_popup_after_idle(self):
         """Display selection rule selected by pointer.
 
-        Call from display_selection_rule_from_popup only.
+        Call from _display_selection_rule_from_popup only.
 
         """
-        self.display_selected_item(self.pointer_popup_selection)
+        self._display_selected_item(self.pointer_popup_selection)
 
-    def edit_selection_rule(self, event=None):
+    def _edit_selection_rule(self, event=None):
         """Display selection rule allow editing and cancel selection.
 
-        Call _edit_selection_rule after idle tasks to allow message display.
+        Call _edit_selection_rule_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
@@ -405,37 +410,40 @@ class QueryGrid(QueryListGrid):
             return
         self._set_find_selection_rule_name_games(self.selection[0])
         self.frame.after_idle(
-            self.try_command(self._edit_selection_rule, self.frame)
+            self.try_command(self._edit_selection_rule_after_idle, self.frame)
         )
 
-    def edit_selection_rule_from_popup(self, event=None):
+    def _edit_selection_rule_from_popup(self, event=None):
         """Display selection rule with editing allowed selected by pointer.
 
-        Call _edit_selection_rule after idle tasks to allow message display.
+        Call _edit_selection_rule_after_idle after idle tasks to allow
+        message display.
 
         """
         del event
         self._set_find_selection_rule_name_games(self.pointer_popup_selection)
         self.frame.after_idle(
-            self.try_command(self._edit_selection_rule_from_popup, self.frame)
+            self.try_command(
+                self._edit_selection_rule_from_popup_after_idle, self.frame
+            )
         )
 
-    def _edit_selection_rule(self):
+    def _edit_selection_rule_after_idle(self):
         """Display selection rule allow editing and cancel selection.
 
-        Call from edit_selection_rule only.
+        Call from _edit_selection_rule only.
 
         """
-        self.edit_selected_item(self.get_visible_selected_key())
+        self._edit_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def _edit_selection_rule_from_popup(self):
+    def _edit_selection_rule_from_popup_after_idle(self):
         """Display selection rule with editing allowed selected by pointer.
 
-        Call from edit_selection_rule_from_popup only.
+        Call from _edit_selection_rule_from_popup only.
 
         """
-        self.edit_selected_item(self.pointer_popup_selection)
+        self._edit_selected_item(self.pointer_popup_selection)
 
     def _set_find_selection_rule_name_games(self, key):
         """Set status text to active selection rule name."""

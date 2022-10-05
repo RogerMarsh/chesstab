@@ -29,7 +29,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
     Attribute text_name provides the name used in widget titles and message
     text.
 
-    Methods get_title_for_object and set_item, and properties ui_base_table;
+    Methods _get_title_for_object and _set_item, and properties ui_base_table;
     ui_items_in_toplevels; and ui, allow similar methods in various classes
     to be expressed identically and defined once.
 
@@ -57,9 +57,9 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
             if showinitial
             else showinitial,
         )
-        self.initialize()
+        self._initialize()
 
-    def get_title_for_object(self, object_=None):
+    def _get_title_for_object(self, object_=None):
         """Return title for Toplevel containing a chess engine definition.
 
         Default value of object_ is oldobject attribute from DataEdit class.
@@ -92,7 +92,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
         return self.newview.ui
 
     @staticmethod
-    def set_item(view, object_):
+    def _set_item(view, object_):
         """Populate view with the engine definition extracted from object_."""
         view.definition.extract_engine_definition(object_.get_srvalue())
         view.set_engine_definition(object_.value)
@@ -105,7 +105,7 @@ class EngineDbEdit(ExceptionHandler, EditText, DataEdit):
 
         """
         nedd = self.newview.get_name_engine_definition_dict()
-        title = (self.get_title_for_object(),)
+        title = (self._get_title_for_object(),)
         if not nedd:
             tkinter.messagebox.showerror(
                 parent=self.parent,

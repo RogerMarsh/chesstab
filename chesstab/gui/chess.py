@@ -113,7 +113,7 @@ class Chess(chess_import.Chess):
             ),
         )
 
-    def export_positions(self):
+    def _export_positions(self):
         """Export all positions as a text file."""
         export_chessql.export_all_positions(
             self.opendatabase,

@@ -79,7 +79,7 @@ class Display:
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partialpanel_item(event=event)
 
-    def set_focus_partialpanel_item_command(self):
+    def _set_focus_partialpanel_item_command(self):
         """Give partial position at top of stack the focus."""
         item = self.ui.partial_items.active_item
         if item is None:
@@ -96,7 +96,7 @@ class Display:
         self.bind_for_widget_navigation()
         return self.ui.set_focus_gamepanel_item(event=event)
 
-    def set_focus_gamepanel_item_command(self):
+    def _set_focus_gamepanel_item_command(self):
         """Give repertoire game at top of stack the focus."""
         items = self.ui.game_items
         if items.active_item is None:
@@ -135,7 +135,7 @@ class Display:
         self.bind_for_widget_navigation()
         return self.ui.set_focus_repertoirepanel_item(event=event)
 
-    def set_focus_repertoirepanel_item_command(self):
+    def _set_focus_repertoirepanel_item_command(self):
         """Give repertoire game at top of stack the focus."""
         item = self.ui.repertoire_items.active_item
         if item is None:
@@ -202,7 +202,7 @@ class Display:
         self.bind_for_widget_navigation()
         return self.ui.set_focus_selectionpanel_item(event=event)
 
-    def set_focus_selectionpanel_item_command(self):
+    def _set_focus_selectionpanel_item_command(self):
         """Give selection rule at top of stack the focus."""
         item = self.ui.selection_items.active_item
         if item is None:

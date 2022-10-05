@@ -145,7 +145,7 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
             **kargs
         )
 
-    def get_tags_display_order(self, pgn):
+    def _get_tags_display_order(self, pgn):
         """Return Tags not given their own column in display order."""
         del pgn
         tag_values = []

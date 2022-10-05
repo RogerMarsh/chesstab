@@ -36,27 +36,27 @@ class RepertoireGrid(GameListGrid):
         super().__init__(ui.repertoires_pw, ui)
         self.make_header(ChessDBrowRepertoire.header_specification)
         self.__bind_on()
-        self.set_popup_bindings(
+        self._set_popup_bindings(
             self.menupopup,
             (
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_game_from_popup,
+                    self._display_game_from_popup,
                 ),
-                (EventSpec.edit_record_from_grid, self.edit_game_from_popup),
+                (EventSpec.edit_record_from_grid, self._edit_game_from_popup),
             ),
         )
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
             (
                 (
                     EventSpec.pgn_export_format_no_comments,
-                    self.export_pgn_no_comments,
+                    self._export_pgn_no_comments,
                 ),
-                (EventSpec.pgn_export_format, self.export_pgn),
+                (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
-                (EventSpec.text_internal_format, self.export_text),
+                (EventSpec.text_internal_format, self._export_text),
             ),
         )
         bindings = (
@@ -66,12 +66,12 @@ class RepertoireGrid(GameListGrid):
             ),
             (
                 EventSpec.navigate_to_active_game,
-                self.set_focus_gamepanel_item_command,
+                self._set_focus_gamepanel_item_command,
             ),
             (EventSpec.navigate_to_game_grid, self.set_focus_game_grid),
             (
                 EventSpec.navigate_to_active_repertoire,
-                self.set_focus_repertoirepanel_item_command,
+                self._set_focus_repertoirepanel_item_command,
             ),
             (
                 EventSpec.navigate_to_repertoire_game_grid,
@@ -80,7 +80,7 @@ class RepertoireGrid(GameListGrid):
             (EventSpec.navigate_to_partial_grid, self.set_focus_partial_grid),
             (
                 EventSpec.navigate_to_active_partial,
-                self.set_focus_partialpanel_item_command,
+                self._set_focus_partialpanel_item_command,
             ),
             (
                 EventSpec.navigate_to_partial_game_grid,
@@ -92,20 +92,20 @@ class RepertoireGrid(GameListGrid):
             ),
             (
                 EventSpec.navigate_to_active_selection_rule,
-                self.set_focus_selectionpanel_item_command,
+                self._set_focus_selectionpanel_item_command,
             ),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self.add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
+        self._add_cascade_menu_to_popup(
             "Navigation", self.menupopupnorow, bindings
         )
 
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_active_repertoire, ""),
                 (EventSpec.navigate_to_repertoire_game_grid, ""),
@@ -136,7 +136,7 @@ class RepertoireGrid(GameListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (
                     EventSpec.navigate_to_active_repertoire,
@@ -175,39 +175,39 @@ class RepertoireGrid(GameListGrid):
                     EventSpec.navigate_to_active_selection_rule,
                     self.set_focus_selectionpanel_item,
                 ),
-                (EventSpec.display_record_from_grid, self.display_game),
-                (EventSpec.edit_record_from_grid, self.edit_game),
+                (EventSpec.display_record_from_grid, self._display_game),
+                (EventSpec.edit_record_from_grid, self._edit_game),
                 (
                     EventSpec.pgn_export_format_no_comments,
-                    self.export_pgn_no_comments,
+                    self._export_pgn_no_comments,
                 ),
-                (EventSpec.pgn_export_format, self.export_pgn),
+                (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
-                (EventSpec.text_internal_format, self.export_text),
+                (EventSpec.text_internal_format, self._export_text),
             )
         )
 
-    def display_game(self, event=None):
+    def _display_game(self, event=None):
         """Display selected repertoire and cancel selection."""
         del event
-        self.display_selected_item(self.get_visible_selected_key())
+        self._display_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def display_game_from_popup(self, event=None):
+    def _display_game_from_popup(self, event=None):
         """Display repertoire selected by pointer."""
         del event
-        self.display_selected_item(self.pointer_popup_selection)
+        self._display_selected_item(self.pointer_popup_selection)
 
-    def edit_game(self, event=None):
+    def _edit_game(self, event=None):
         """Display selected repertoire for editing and cancel selection."""
         del event
-        self.edit_selected_item(self.get_visible_selected_key())
+        self._edit_selected_item(self.get_visible_selected_key())
         self.cancel_selection()
 
-    def edit_game_from_popup(self, event=None):
+    def _edit_game_from_popup(self, event=None):
         """Display repertoire with editing allowed selected by pointer."""
         del event
-        self.edit_selected_item(self.pointer_popup_selection)
+        self._edit_selected_item(self.pointer_popup_selection)
 
     def on_game_change(self, instance):
         """Delegate to superclass if data source exists."""
@@ -315,7 +315,7 @@ class RepertoireGrid(GameListGrid):
         game.set_and_tag_item_text(reset_undo=True)
         return game
 
-    def display_selected_item(self, key):
+    def _display_selected_item(self, key):
         """Display and return a RepertoireDisplay for selected game."""
         selected = self.get_visible_record(key)
         if selected is None:
@@ -324,7 +324,7 @@ class RepertoireGrid(GameListGrid):
         # passed to GameDisplay. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # GameDisplay is to be put.
-        # Yes because GameDisplayEdit (see edit_selected_item) includes
+        # Yes because GameDisplayEdit (see _edit_selected_item) includes
         # extra widgets. Want to say game.widget.destroy() eventually.
         # Read make_display_widget for GameDisplay and GameDisplayEdit.
         game = self.make_display_widget(selected)
@@ -334,7 +334,7 @@ class RepertoireGrid(GameListGrid):
         self.set_properties(key)
         return game
 
-    def edit_selected_item(self, key):
+    def _edit_selected_item(self, key):
         """Display and return a RepertoireDisplayEdit for selected game."""
         selected = self.get_visible_record(key)
         if selected is None:
@@ -343,7 +343,7 @@ class RepertoireGrid(GameListGrid):
         # passed to GameDisplay. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # GameDisplayEdit is to be put.
-        # Yes because GameDisplay (see display_selected_item) includes
+        # Yes because GameDisplay (see _display_selected_item) includes
         # less widgets. Want to say game.widget.destroy() eventually.
         # Read make_edit_widget for GameDisplay and GameDisplayEdit.
         game = self.make_edit_widget(selected)
@@ -353,7 +353,7 @@ class RepertoireGrid(GameListGrid):
         self.set_properties(key)
         return game
 
-    def export_pgn(self, event=None):
+    def _export_pgn(self, event=None):
         """Export selected repertoires in PGN export format."""
         self.ui.export_report(
             export_repertoire.export_selected_repertoires_pgn(
@@ -362,7 +362,7 @@ class RepertoireGrid(GameListGrid):
             "Repertoires",
         )
 
-    def export_pgn_no_comments(self, event=None):
+    def _export_pgn_no_comments(self, event=None):
         """Export selected repertoires in PGN export format no comments."""
         self.ui.export_report(
             export_repertoire.export_selected_repertoires_pgn_no_comments(
@@ -374,7 +374,7 @@ class RepertoireGrid(GameListGrid):
             "Repertoires (no comments)",
         )
 
-    def export_text(self, event=None):
+    def _export_text(self, event=None):
         """Export selected repertoires as text."""
         self.ui.export_report(
             export_repertoire.export_selected_repertoires_text(
@@ -483,31 +483,31 @@ class RepertoirePositionGames(GameListGrid):
         super().__init__(ui.position_repertoires_pw, ui)
         self.make_header(ChessDBrowPosition.header_specification)
         self.__bind_on()
-        self.set_popup_bindings(
+        self._set_popup_bindings(
             self.menupopup,
             (
                 (
                     EventSpec.display_record_from_grid,
-                    self.display_game_from_popup,
+                    self._display_game_from_popup,
                 ),
-                (EventSpec.edit_record_from_grid, self.edit_game_from_popup),
+                (EventSpec.edit_record_from_grid, self._edit_game_from_popup),
             ),
         )
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
             (
                 (
                     EventSpec.pgn_reduced_export_format,
-                    self.export_pgn_reduced_export_format,
+                    self._export_pgn_reduced_export_format,
                 ),
                 (
                     EventSpec.pgn_export_format_no_comments,
-                    self.export_pgn_no_comments,
+                    self._export_pgn_no_comments,
                 ),
-                (EventSpec.pgn_export_format, self.export_pgn),
+                (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
-                (EventSpec.text_internal_format, self.export_text),
+                (EventSpec.text_internal_format, self._export_text),
             ),
         )
         bindings = (
@@ -517,7 +517,7 @@ class RepertoirePositionGames(GameListGrid):
             ),
             (
                 EventSpec.navigate_to_active_game,
-                self.set_focus_gamepanel_item_command,
+                self._set_focus_gamepanel_item_command,
             ),
             (EventSpec.navigate_to_game_grid, self.set_focus_game_grid),
             (
@@ -526,12 +526,12 @@ class RepertoirePositionGames(GameListGrid):
             ),
             (
                 EventSpec.navigate_to_active_repertoire,
-                self.set_focus_repertoirepanel_item_command,
+                self._set_focus_repertoirepanel_item_command,
             ),
             (EventSpec.navigate_to_partial_grid, self.set_focus_partial_grid),
             (
                 EventSpec.navigate_to_active_partial,
-                self.set_focus_partialpanel_item_command,
+                self._set_focus_partialpanel_item_command,
             ),
             (
                 EventSpec.navigate_to_partial_game_grid,
@@ -543,20 +543,20 @@ class RepertoirePositionGames(GameListGrid):
             ),
             (
                 EventSpec.navigate_to_active_selection_rule,
-                self.set_focus_selectionpanel_item_command,
+                self._set_focus_selectionpanel_item_command,
             ),
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self.add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
-        self.add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
+        self._add_cascade_menu_to_popup(
             "Navigation", self.menupopupnorow, bindings
         )
 
     def bind_off(self):
         """Disable all bindings."""
         super().bind_off()
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (EventSpec.navigate_to_repertoire_grid, ""),
                 (EventSpec.navigate_to_active_repertoire, ""),
@@ -586,7 +586,7 @@ class RepertoirePositionGames(GameListGrid):
 
     def __bind_on(self):
         """Enable all bindings."""
-        self.set_event_bindings_frame(
+        self._set_event_bindings_frame(
             (
                 (
                     EventSpec.navigate_to_repertoire_grid,
@@ -625,50 +625,50 @@ class RepertoirePositionGames(GameListGrid):
                     EventSpec.navigate_to_active_selection_rule,
                     self.set_focus_selectionpanel_item,
                 ),
-                (EventSpec.display_record_from_grid, self.display_game),
-                (EventSpec.edit_record_from_grid, self.edit_game),
+                (EventSpec.display_record_from_grid, self._display_game),
+                (EventSpec.edit_record_from_grid, self._edit_game),
                 (
                     EventSpec.pgn_reduced_export_format,
-                    self.export_pgn_reduced_export_format,
+                    self._export_pgn_reduced_export_format,
                 ),
                 (
                     EventSpec.pgn_export_format_no_comments,
-                    self.export_pgn_no_comments,
+                    self._export_pgn_no_comments,
                 ),
-                (EventSpec.pgn_export_format, self.export_pgn),
+                (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
-                (EventSpec.text_internal_format, self.export_text),
+                (EventSpec.text_internal_format, self._export_text),
             )
         )
 
-    def display_game(self, event=None):
+    def _display_game(self, event=None):
         """Display selected game and cancel selection."""
         del event
         self.set_move_highlight(
-            self.display_selected_item(self.get_visible_selected_key())
+            self._display_selected_item(self.get_visible_selected_key())
         )
         self.cancel_selection()
 
-    def display_game_from_popup(self, event=None):
+    def _display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
         del event
         self.set_move_highlight(
-            self.display_selected_item(self.pointer_popup_selection)
+            self._display_selected_item(self.pointer_popup_selection)
         )
 
-    def edit_game(self, event=None):
+    def _edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
         del event
         self.set_move_highlight(
-            self.edit_selected_item(self.get_visible_selected_key())
+            self._edit_selected_item(self.get_visible_selected_key())
         )
         self.cancel_selection()
 
-    def edit_game_from_popup(self, event=None):
+    def _edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
         del event
         self.set_move_highlight(
-            self.edit_selected_item(self.pointer_popup_selection)
+            self._edit_selected_item(self.pointer_popup_selection)
         )
 
     def set_row(self, key, dodefaultaction=True, **kargs):
