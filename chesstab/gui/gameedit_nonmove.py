@@ -19,6 +19,8 @@ import tkinter
 import tkinter.messagebox
 import re
 
+from solentware_misc.workarounds.workarounds import text_count
+
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     FEN_BLACK_BISHOP,
@@ -212,7 +214,7 @@ class GameEdit(gameedit_misc.GameEdit):
     def _delete_empty_token(self):
         """Delete empty non-move token from PGN movetext."""
         widget = self.score
-        if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
         tr_q = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if tr_q:
@@ -240,12 +242,12 @@ class GameEdit(gameedit_misc.GameEdit):
 
         """
         widget = self.score
-        if widget.count(first, last)[0]:
+        if text_count(widget, first, last):
             if widget.compare(first, "==", tkinter.INSERT):
                 widget.delete(tkinter.INSERT)
             else:
                 widget.delete(tkinter.INSERT + "-1 chars")
-            if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] == 0:
+            if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) == 0:
                 if (
                     self._lead_trail.lead
                 ):  # self.current will have a range. Or test range.
@@ -709,7 +711,7 @@ class GameEdit(gameedit_misc.GameEdit):
     def set_marks_for_editing_comment_eol(self, tagnames, tagranges):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
         start, end = tagranges
-        if self.score.count(start, end)[0] < 2:
+        if text_count(self.score, start, end) < 2:
             for tn_q in tagnames:
                 if tn_q.startswith(TOKEN):
                     start = self.score.tag_nextrange(tn_q, "1.0")[0]
@@ -731,7 +733,7 @@ class GameEdit(gameedit_misc.GameEdit):
         widget = self.score
         start, end = widget.tag_ranges(self.current)
         non_empty = (
-            widget.count(start, end)[0] - self._lead_trail.header_length
+            text_count(widget, start, end) - self._lead_trail.header_length
         )
         insert = str(widget.index(tkinter.INSERT))
         copy_from_insert = widget.compare(start, "==", insert)

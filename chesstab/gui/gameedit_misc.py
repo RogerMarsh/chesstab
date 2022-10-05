@@ -18,6 +18,8 @@ widget.
 import tkinter
 import tkinter.messagebox
 
+from solentware_misc.workarounds.workarounds import text_count
+
 from pgn_read.core.constants import (
     TAG_RESULT,
     TAG_FEN,
@@ -880,7 +882,7 @@ class GameEdit(gameedit_widget.GameEdit):
 
     def _get_token_text_length(self, start, end):
         """Set token editing bound marks from TOKEN<suffix> in tagnames."""
-        return self.score.count(start, end)[0]
+        return text_count(self.score, start, end)
 
     def _set_start_score_mark_before_positiontag(self):
         """Set start score mark at start self.position_number position tag."""

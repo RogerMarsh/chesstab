@@ -18,6 +18,8 @@ widget.
 import tkinter
 import tkinter.messagebox
 
+from solentware_misc.workarounds.workarounds import text_count
+
 from pgn_read.core.constants import (
     TAG_RESULT,
 )
@@ -91,7 +93,7 @@ class GameEdit(gameedit_move.GameEdit):
     def _delete_move_char_right(self, event):
         """Handle <Shift-Del> event for move token."""
         del event
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self._delete_char_next_to_insert_mark(
                 tkinter.INSERT, END_EDIT_MARK
             )
@@ -103,7 +105,7 @@ class GameEdit(gameedit_move.GameEdit):
     def _delete_move_char_left(self, event):
         """Handle <Shift-BackSpace> event for move token."""
         del event
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self._delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
             )
@@ -115,7 +117,7 @@ class GameEdit(gameedit_move.GameEdit):
     def _delete_token_char_right(self, event):
         """Handle <Shift-Del> event for non-move token."""
         del event
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self._delete_char_next_to_insert_mark(
                 tkinter.INSERT, END_EDIT_MARK
             )
@@ -126,7 +128,7 @@ class GameEdit(gameedit_move.GameEdit):
     def _delete_token_char_left(self, event):
         """Handle <Shift-BackSpace> event for non-move token."""
         del event
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self._delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
             )

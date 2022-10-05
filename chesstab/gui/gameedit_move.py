@@ -18,6 +18,8 @@ widget.
 import tkinter
 import tkinter.messagebox
 
+from solentware_misc.workarounds.workarounds import text_count
+
 from pgn_read.core.constants import (
     FEN_WHITE_ACTIVE,
 )
@@ -440,7 +442,7 @@ class GameEdit(gameedit_nonmove.GameEdit):
     def _delete_empty_move(self):
         """Delete empty move from PGN movetext and RAV if it is empty too."""
         widget = self.score
-        if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
         tr_q = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if not tr_q:
