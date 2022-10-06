@@ -140,7 +140,7 @@ class GameEdit(gameedit_handlers.GameEdit):
         )
         # Allowed characters defined in _set_token_context() call
 
-    def _set_edit_symbol_mode_bindings(self, switch=True):
+    def _bind_for_edit_glyph(self, switch=True):
         """Set bindings for EDIT_GLYPH state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
@@ -426,7 +426,7 @@ class GameEdit(gameedit_handlers.GameEdit):
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
     token_bind_method = {
-        constants.EDIT_GLYPH: _set_edit_symbol_mode_bindings,
+        constants.EDIT_GLYPH: _bind_for_edit_glyph,
         constants.EDIT_RESULT: _bind_for_edit_game_termination,
         constants.EDIT_PGN_TAG_NAME: _bind_for_edit_pgn_tag_name,
         constants.EDIT_PGN_TAG_VALUE: _bind_for_edit_pgn_tag_value,
