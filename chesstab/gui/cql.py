@@ -57,7 +57,7 @@ class CQL(CQLText, EventBinding):
         """Create Frame and delegate to superclass, then set grid geometry."""
         del boardfont
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
-        panel.bind("<Configure>", self.try_event(self.on_configure))
+        panel.bind("<Configure>", self.try_event(self._on_configure))
         panel.grid_propagate(False)
         super().__init__(
             panel, ui=ui, items_manager=items_manager, itemgrid=itemgrid, **ka
@@ -87,7 +87,7 @@ class CQL(CQLText, EventBinding):
         """
         return self.panel
 
-    def on_configure(self, event=None):
+    def _on_configure(self, event=None):
         """Reconfigure widget after container has been resized."""
         del event
         self._configure_cql_statement_widget()
@@ -140,9 +140,9 @@ class CQL(CQLText, EventBinding):
 
         """
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 

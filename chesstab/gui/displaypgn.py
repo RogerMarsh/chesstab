@@ -102,10 +102,10 @@ class ShowPGN(ShowText, ScorePGN):
             for event_spec in (self._get_inactive_button_events(),):
                 self.set_event_bindings_score(event_spec, switch=True)
 
-    def set_select_variation_bindings(self, switch=True):
+    def _set_select_variation_bindings(self, switch=True):
         """Delegate then set navigation and close item bindings."""
-        super().set_select_variation_bindings(switch=switch)
-        self.set_database_navigation_close_item_bindings(switch=switch)
+        super()._set_select_variation_bindings(switch=switch)
+        self._set_database_navigation_close_item_bindings(switch=switch)
 
     # The methods identical except for docstrings, and references to
     # self.ui.game_items or self.ui.repertoire_items replaced by property
@@ -332,9 +332,9 @@ class InsertPGN(InsertText):
     # sometimes the method name should be compatible with the 'CQL' and
     # 'Select' classes.
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then set bindings for navigation and insert PGN."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_pgn_navigation_to_submenu_of_popup(
             popup, index=self.analyse_popup_label
         )
@@ -347,64 +347,64 @@ class InsertPGN(InsertText):
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_select_move_popup(self):
+    def _create_select_move_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_select_move_popup()
+        popup = super()._create_select_move_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_pgn_tag_popup(self):
+    def _create_pgn_tag_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_pgn_tag_popup()
+        popup = super()._create_pgn_tag_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_comment_popup(self):
+    def _create_comment_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_comment_popup()
+        popup = super()._create_comment_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_nag_popup(self):
+    def _create_nag_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_nag_popup()
+        popup = super()._create_nag_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_start_rav_popup(self):
+    def _create_start_rav_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_start_rav_popup()
+        popup = super()._create_start_rav_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_end_rav_popup(self):
+    def _create_end_rav_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_end_rav_popup()
+        popup = super()._create_end_rav_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_comment_to_end_of_line_popup(self):
+    def _create_comment_to_end_of_line_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_comment_to_end_of_line_popup()
+        popup = super()._create_comment_to_end_of_line_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_escape_whole_line_popup(self):
+    def _create_escape_whole_line_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_escape_whole_line_popup()
+        popup = super()._create_escape_whole_line_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_reserved_popup(self):
+    def _create_reserved_popup(self):
         """Delegate then set bindings for close item."""
-        popup = super().create_reserved_popup()
+        popup = super()._create_reserved_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def set_edit_symbol_mode_bindings(self, switch=True, **ka):
+    def _set_edit_symbol_mode_bindings(self, switch=True, **ka):
         """Delegate then set bindings for navigation and close item."""
-        super().set_edit_symbol_mode_bindings(switch=switch, **ka)
-        self.set_database_navigation_close_item_bindings(switch=switch)
+        super()._set_edit_symbol_mode_bindings(switch=switch, **ka)
+        self._set_database_navigation_close_item_bindings(switch=switch)
 
 
 class EditPGN(EditText):

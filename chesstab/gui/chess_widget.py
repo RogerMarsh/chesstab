@@ -333,27 +333,27 @@ class Chess(ExceptionHandler):
                 ),
                 (
                     EventSpec.menu_tools_hide_game_analysis,
-                    self.hide_game_analysis,
+                    self._hide_game_analysis,
                 ),
                 (
                     EventSpec.menu_tools_show_game_analysis,
-                    self.show_game_analysis,
+                    self._show_game_analysis,
                 ),
                 (
                     EventSpec.menu_tools_hide_game_scrollbars,
-                    self.hide_scrollbars,
+                    self._hide_scrollbars,
                 ),
                 (
                     EventSpec.menu_tools_show_game_scrollbars,
-                    self.show_scrollbars,
+                    self._show_scrollbars,
                 ),
                 (
                     EventSpec.menu_tools_toggle_game_move_numbers,
-                    self.toggle_game_move_numbers,
+                    self._toggle_game_move_numbers,
                 ),
                 (
                     EventSpec.menu_tools_toggle__analysis_fen,
-                    self.toggle_analysis_fen,
+                    self._toggle_analysis_fen,
                 ),
                 (
                     EventSpec.menu_tools_toggle_single_view,
@@ -382,11 +382,11 @@ class Chess(ExceptionHandler):
             menubar.add_cascade(label="Help", menu=menuhelp, underline=0)
             menuhelp.add_separator()
             for accelerator, function in (
-                (EventSpec.menu_help_guide, self.help_guide),
-                (EventSpec.menu_help_selection_rules, self.help_selection),
-                (EventSpec.menu_help_file_size, self.help_file_size),
-                (EventSpec.menu_help_notes, self.help_notes),
-                (EventSpec.menu_help_about, self.help_about),
+                (EventSpec.menu_help_guide, self._help_guide),
+                (EventSpec.menu_help_selection_rules, self._help_selection),
+                (EventSpec.menu_help_file_size, self._help_file_size),
+                (EventSpec.menu_help_notes, self._help_notes),
+                (EventSpec.menu_help_about, self._help_about),
             ):
                 menuhelp.add_command(
                     label=accelerator[1],
@@ -458,7 +458,7 @@ class Chess(ExceptionHandler):
 
     def _database_quit(self):
         """Quit chess database."""
-        if self.is_import_subprocess_active():
+        if self._is_import_subprocess_active():
             quitmsg = "".join(
                 (
                     "An import of PGN data is in progress.\n\n",
@@ -473,7 +473,7 @@ class Chess(ExceptionHandler):
         else:
             quitmsg = "Confirm Quit"
         dlg = tkinter.messagebox.askquestion(
-            parent=self.get_toplevel(), title="Quit", message=quitmsg
+            parent=self._get_toplevel(), title="Quit", message=quitmsg
         )
         if dlg == tkinter.messagebox.YES:
             if self.ui.uci:
@@ -485,11 +485,11 @@ class Chess(ExceptionHandler):
                 self._set_error_file_name(directory=None)
             self.root.destroy()
 
-    def is_import_subprocess_active(self):
+    def _is_import_subprocess_active(self):
         """Return the exception report file object."""
         return self.ui.is_import_subprocess_active()
 
-    def get_toplevel(self):
+    def _get_toplevel(self):
         """Return the toplevel widget."""
         return self.root
 
@@ -700,7 +700,7 @@ class Chess(ExceptionHandler):
                 )
             self.ui.set_board_colours(decor)
 
-    def hide_game_analysis(self):
+    def _hide_game_analysis(self):
         """Hide the widgets which show analysis from chess engines."""
         self.ui.show_analysis = False
         exceptions = []
@@ -717,7 +717,7 @@ class Chess(ExceptionHandler):
         for game, games in exceptions:
             games.remove(game)
 
-    def show_game_analysis(self):
+    def _show_game_analysis(self):
         """Show the widgets which show analysis from chess engines."""
         self.ui.show_analysis = True
         exceptions = []
@@ -734,17 +734,17 @@ class Chess(ExceptionHandler):
         for game, games in exceptions:
             games.remove(game)
 
-    def hide_scrollbars(self):
+    def _hide_scrollbars(self):
         """Hide the scrollbars in the game display widgets."""
         self.ui.hide_scrollbars()
         self.ui.uci.hide_scrollbars()
 
-    def show_scrollbars(self):
+    def _show_scrollbars(self):
         """Show the scrollbars in the game display widgets."""
         self.ui.show_scrollbars()
         self.ui.uci.show_scrollbars()
 
-    def toggle_game_move_numbers(self):
+    def _toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
         exceptions = []
         for games in (
@@ -760,7 +760,7 @@ class Chess(ExceptionHandler):
         for game, games in exceptions:
             games.remove(game)
 
-    def toggle_analysis_fen(self):
+    def _toggle_analysis_fen(self):
         """Toggle display of PGN tags in analysis widgets."""
         exceptions = []
         for games in (
@@ -785,23 +785,23 @@ class Chess(ExceptionHandler):
                 self.ui.top_pw.focus_displayof()
             )
 
-    def help_guide(self):
+    def _help_guide(self):
         """Display brief User Guide for Chess application."""
         help_.help_guide(self.root)
 
-    def help_selection(self):
+    def _help_selection(self):
         """Display description of selection rules for Chess application."""
         help_.help_selection(self.root)
 
-    def help_file_size(self):
+    def _help_file_size(self):
         """Display brief instructions for file size dialogue."""
         help_.help_file_size(self.root)
 
-    def help_notes(self):
+    def _help_notes(self):
         """Display technical notes about Chess application."""
         help_.help_notes(self.root)
 
-    def help_about(self):
+    def _help_about(self):
         """Display information about Chess application."""
         help_.help_about(self.root)
 

@@ -917,7 +917,7 @@ class GameEdit(gameedit_widget.GameEdit):
     def create_edit_move_context(self, tag):
         """Return tuple of FEN (position) and * (unknown result) for tag."""
         return (
-            self.generate_fen_for_position(*self.tagpositionmap[tag]).join(
+            self._generate_fen_for_position(*self.tagpositionmap[tag]).join(
                 _EDIT_MOVE_CONTEXT
             ),
             UNKNOWN_RESULT,

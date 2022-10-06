@@ -54,7 +54,7 @@ class EngineText(SharedTextEngineText, BlankText):
         """Return tuple of game navigation keypresses and callbacks."""
         return ((EventSpec.databaseenginedisplay_run, self.run_engine),)
 
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Switch bindings for editing chess engine definition on or off."""
         self.set_event_bindings_score(
             self.get_primary_activity_events(), switch=switch

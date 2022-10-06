@@ -281,7 +281,7 @@ class BlankText(BlankTextEventBinding, ExceptionHandler):
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
     }
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Create and return popup menu with primary and database commands.
 
         The primary commands are set by subclasses and should be related

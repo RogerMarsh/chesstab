@@ -21,6 +21,6 @@ class QueryToplevel(ToplevelText, Query):
 class QueryToplevelEdit(ToplevelText, QueryEdit):
     """Customize QueryEdit to be the single instance in a Toplevel widget."""
 
-    # A method like GameToplevelEdit.create_primary_activity_popup is not
+    # A method like GameToplevelEdit._create_primary_activity_popup is not
     # needed because the standard edit operations of Text widget are
     # sufficient.

@@ -27,14 +27,14 @@ class Chess(chess_database.Chess):
         """Import games to open database."""
         if self.opendatabase is None:
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import",
                 message="No chess database open to receive import",
             )
             return
         if self._database_class is None:
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import",
                 message="Database interface not defined",
             )
@@ -51,7 +51,7 @@ class Chess(chess_database.Chess):
             ]
         ):
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import",
                 message="".join(
                     (
@@ -74,7 +74,7 @@ class Chess(chess_database.Chess):
         # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
         # the dialogue supports selection of a single file only.
         gamefile = tkinter.filedialog.askopenfilenames(
-            parent=self.get_toplevel(),
+            parent=self._get_toplevel(),
             title="Select file containing games to import",
             initialdir="~",
             filetypes=[("Portable Game Notation (chess)", ".pgn")],
@@ -91,30 +91,30 @@ class Chess(chess_database.Chess):
 
     def _import_repertoires(self):
         """Import repertoires from PGN-like file."""
-        if self.is_import_subprocess_active():
+        if self._is_import_subprocess_active():
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import Repertoires",
                 message="An import of PGN data is in progress",
             )
             return
         tkinter.messagebox.showinfo(
-            parent=self.get_toplevel(),
+            parent=self._get_toplevel(),
             title="Import Repertoires",
             message="Not implemented",
         )
 
     def _import_positions(self):
         """Import positions from text file."""
-        if self.is_import_subprocess_active():
+        if self._is_import_subprocess_active():
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import Positions",
                 message="An import of PGN data is in progress",
             )
             return
         tkinter.messagebox.showinfo(
-            parent=self.get_toplevel(),
+            parent=self._get_toplevel(),
             title="Import Positions",
             message="Not implemented",
         )
@@ -129,7 +129,7 @@ class Chess(chess_database.Chess):
         )
         if usedu is None:
             tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
+                parent=self._get_toplevel(),
                 title="Import",
                 message="".join(
                     (
@@ -192,7 +192,7 @@ class Chess(chess_database.Chess):
                 else:
                     msg = "failed "
                 tkinter.messagebox.showinfo(
-                    parent=self.get_toplevel(),
+                    parent=self._get_toplevel(),
                     title="Import",
                     message="".join(
                         (
@@ -211,7 +211,7 @@ class Chess(chess_database.Chess):
                 if returncode != 0:
                     # Failed with no backups
                     tkinter.messagebox.showinfo(
-                        parent=self.get_toplevel(),
+                        parent=self._get_toplevel(),
                         title="Import",
                         message="".join(
                             (

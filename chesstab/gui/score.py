@@ -66,7 +66,7 @@ class Score(ScoreShow, SharedTextScore):
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.SELECT_VARIATION
-        self.set_select_variation_bindings(switch=True)
+        self._set_select_variation_bindings(switch=True)
 
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
@@ -75,7 +75,7 @@ class Score(ScoreShow, SharedTextScore):
 
     # Renamed from '_bind_viewmode' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing moves on or off."""
         self.set_event_bindings_score(
             self.get_primary_activity_events(), switch=switch
@@ -95,7 +95,7 @@ class Score(ScoreShow, SharedTextScore):
 
     # Renamed from '_bind_select_variation' when 'bind_for_*' methods tied
     # to Tk Text widget tag names were introduced.
-    def set_select_variation_bindings(self, switch=True):
+    def _set_select_variation_bindings(self, switch=True):
         """Switch bindings for selecting a variation on or off."""
         self.set_event_bindings_score(
             self._get_select_move_events(), switch=switch
@@ -115,7 +115,7 @@ class Score(ScoreShow, SharedTextScore):
             switch=switch,
         )
 
-    # This method may have independence from set_primary_activity_bindings
+    # This method may have independence from _set_primary_activity_bindings
     # when the control_buttonpress_1 event is fired.
     # (So there should be a 'select_variation' version too?)
     # Renamed from bind_score_pointer_for_board_navigation to fit current use.
@@ -130,7 +130,7 @@ class Score(ScoreShow, SharedTextScore):
     # do the work in the (game).score or (game.analysis).score object than
     # choose which is wanted in the (game) object.
     # _set_board_pointer_widget_navigation_bindings is likely to follow.
-    # There is no equivalent of set_select_variation_bindings to contain this.
+    # There is no equivalent of _set_select_variation_bindings to contain this.
     def set_board_pointer_select_variation_bindings(self, switch):
         """Enable or disable bindings for variation selection."""
         self._set_event_bindings_board(
@@ -145,7 +145,7 @@ class Score(ScoreShow, SharedTextScore):
             switch=switch,
         )
 
-    # There is no equivalent of set_primary_activity_bindings to contain this.
+    # There is no equivalent of _set_primary_activity_bindings to contain this.
     def set_board_pointer_move_bindings(self, switch):
         """Enable or disable bindings for game navigation."""
         self._set_event_bindings_board(
@@ -266,9 +266,9 @@ class Score(ScoreShow, SharedTextScore):
         """Populate export submenu with export event bindings."""
         self._set_popup_bindings(submenu, self._get_all_export_events())
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add export submenu and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self._populate_export_submenu(export_submenu)
         index = "Database"
@@ -281,7 +281,7 @@ class Score(ScoreShow, SharedTextScore):
         popup.insert_cascade(label="Export", menu=export_submenu, index=index)
         return popup
 
-    def create_select_move_popup(self):
+    def _create_select_move_popup(self):
         """Create and return select move popup menu."""
         assert self.select_move_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
@@ -301,7 +301,7 @@ class Score(ScoreShow, SharedTextScore):
         """Show the popup menu for game score navigation."""
         return self._post_menu(
             self.primary_activity_popup,
-            self.create_primary_activity_popup,
+            self._create_primary_activity_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )
@@ -310,7 +310,7 @@ class Score(ScoreShow, SharedTextScore):
         """Show the popup menu for game score navigation."""
         return self.post_menu_at_top_left(
             self.primary_activity_popup,
-            self.create_primary_activity_popup,
+            self._create_primary_activity_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )
@@ -319,7 +319,7 @@ class Score(ScoreShow, SharedTextScore):
         """Show the popup menu for variation selection in game score."""
         return self._post_menu(
             self.select_move_popup,
-            self.create_select_move_popup,
+            self._create_select_move_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )
@@ -328,7 +328,7 @@ class Score(ScoreShow, SharedTextScore):
         """Show the popup menu for variation selection in game score."""
         return self.post_menu_at_top_left(
             self.select_move_popup,
-            self.create_select_move_popup,
+            self._create_select_move_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )

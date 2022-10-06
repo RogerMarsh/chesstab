@@ -20,7 +20,7 @@ class SharedText:
 
     """
 
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Switch bindings for traversing query statement on or off."""
         self.set_event_bindings_score(
             self.get_f10_popup_events(
@@ -66,7 +66,7 @@ class SharedTextEngineText:
         """Show the popup menu for chess engine definition navigation."""
         return self._post_menu(
             self.primary_activity_popup,
-            self.create_primary_activity_popup,
+            self._create_primary_activity_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )
@@ -75,7 +75,7 @@ class SharedTextEngineText:
         """Show the popup menu for chess engine definition navigation."""
         return self.post_menu_at_top_left(
             self.primary_activity_popup,
-            self.create_primary_activity_popup,
+            self._create_primary_activity_popup,
             allowed=self._is_active_item_mapped(),
             event=event,
         )

@@ -308,8 +308,8 @@ class _QueryDisplay(
             ),
         )
 
-    def set_database_navigation_close_item_bindings(self, switch=True):
-        super().set_database_navigation_close_item_bindings(switch=switch)
+    def _set_database_navigation_close_item_bindings(self, switch=True):
+        super()._set_database_navigation_close_item_bindings(switch=switch)
         self.set_event_bindings_score(
             self._get_list_games_events(), switch=switch
         )
@@ -326,9 +326,9 @@ class _QueryDisplay(
         local_map = {}
         return navigation_map, local_map
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
@@ -415,9 +415,9 @@ class QueryDisplay(_QueryDisplay, Query, DataNotify):
     # QueryDisplay has this method, but CQLDisplay does not, because the game
     # list area is shared with the main game list and the index lists.
     # Generating the game list on demand may be necessary at any time.
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_list_games_entry_to_popup(popup, index="Close Item")
         return popup
 

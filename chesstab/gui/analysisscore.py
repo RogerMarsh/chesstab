@@ -410,21 +410,21 @@ class AnalysisScore(Score):
             order=self.owned_by_game.binding_labels,
         )
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
-    def create_select_move_popup(self):
+    def _create_select_move_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
-        popup = super().create_select_move_popup()
+        popup = super()._create_select_move_popup()
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
-    def set_select_variation_bindings(self, switch=True):
+    def _set_select_variation_bindings(self, switch=True):
         """Delegate then set board pointer bindings for select variation."""
-        super().set_select_variation_bindings(switch=switch)
+        super()._set_select_variation_bindings(switch=switch)
         self.set_board_pointer_select_variation_bindings(switch=switch)
 
     # A way of getting pointer clicks on board to behave like pointer clicks

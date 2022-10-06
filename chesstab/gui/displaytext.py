@@ -92,19 +92,19 @@ class ShowText:
         return submenu
 
     # The only active bindings compared with displaypgn.ShowPGN.
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Delegate then set navigation and item close bindings."""
-        super().set_primary_activity_bindings(switch=switch)
-        self.set_database_navigation_close_item_bindings(switch=switch)
+        super()._set_primary_activity_bindings(switch=switch)
+        self._set_database_navigation_close_item_bindings(switch=switch)
 
     # Not relevant away from displaypgn.ShowPGN.
-    # def set_select_variation_bindings(self, switch=True):
+    # def _set_select_variation_bindings(self, switch=True):
     #    """Delegate to toggle other relevant bindings and toggle bindings for
     #    database actions, navigation to other widgets, and close widget.
 
     #    """
-    #    super().set_select_variation_bindings(switch=switch)
-    #    self.set_database_navigation_close_item_bindings(switch=switch)
+    #    super()._set_select_variation_bindings(switch=switch)
+    #    self._set_database_navigation_close_item_bindings(switch=switch)
 
     # The methods identical except for docstrings, and references to
     # self.ui.game_items or self.ui.repertoire_items replaced by property
@@ -273,13 +273,13 @@ class InsertText:
         return ((EventSpec.display_insert, self._insert_item_database),)
 
 
-# Introduced to remove create_primary_activity_popup method from InsertText
+# Introduced to remove _create_primary_activity_popup method from InsertText
 # class: it's presence prevented displaypgn.InsertPGN being a subclass of
 # InsertText.
 # In the PGN classes the displayed list of games depends on which token is
 # current, but in the non-PGN Text classes the displayed list of games is
 # determined by evaluation of a query on demand.
-# When inserting or editing a record the create_primary_activity_popup method
+# When inserting or editing a record the _create_primary_activity_popup method
 # of this class makes an option to demand evaluation available in a popup menu.
 # When showing a record the demand is implicit in making the 'show' widget
 # active.
@@ -288,9 +288,9 @@ class InsertText:
 class ListGamesText:
     """Provide method which creates primary activity popup menu."""
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add list games to popup and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_list_games_entry_to_popup(popup)
         return popup
 

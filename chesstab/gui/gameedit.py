@@ -28,7 +28,7 @@ from . import constants
 class GameEdit(gameedit_handlers.GameEdit):
     """Display a game with editing allowed."""
 
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Delegate then set bindings for primary activity.
 
         The primary activity is inserting moves and traversing all tokens.
@@ -37,7 +37,7 @@ class GameEdit(gameedit_handlers.GameEdit):
         marker is present.
 
         """
-        super().set_primary_activity_bindings(switch=switch)
+        super()._set_primary_activity_bindings(switch=switch)
         if self.score.tag_ranges(constants.EDIT_RESULT):
             self._set_keypress_binding(
                 function=self._insert_rav,
@@ -56,9 +56,9 @@ class GameEdit(gameedit_handlers.GameEdit):
             self._get_navigate_score_events(), switch=switch
         )
 
-    def set_select_variation_bindings(self, switch=True):
+    def _set_select_variation_bindings(self, switch=True):
         """Switch bindings for selecting a variation on or off."""
-        super().set_select_variation_bindings(switch=switch)
+        super()._set_select_variation_bindings(switch=switch)
         self.set_event_bindings_score(
             self._get_insert_pgn_in_movetext_events(), switch=False
         )
@@ -66,7 +66,7 @@ class GameEdit(gameedit_handlers.GameEdit):
             self._get_navigate_score_events(), switch=False
         )
 
-    def set_edit_symbol_mode_bindings(
+    def _set_edit_symbol_mode_bindings(
         self,
         switch=True,
         include_ooo=False,
@@ -140,35 +140,35 @@ class GameEdit(gameedit_handlers.GameEdit):
         )
         # Allowed characters defined in _set_token_context() call
 
-    def bind_for_edit_glyph(self, switch=True):
+    def _set_edit_symbol_mode_bindings(self, switch=True):
         """Set bindings for EDIT_GLYPH state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_GLYPH
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_nag_menu_at_top_left,
             popup_pointer=self._post_nag_menu,
         )
 
-    def bind_for_edit_game_termination(self, switch=True):
+    def _bind_for_edit_game_termination(self, switch=True):
         """Set bindings for EDIT_RESULT state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_RESULT
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             include_movetext=False,
             popup_top_left=self._post_game_termination_menu_at_top_left,
             popup_pointer=self._post_game_termination_menu,
         )
 
-    def bind_for_edit_pgn_tag_name(self, switch=True):
+    def _bind_for_edit_pgn_tag_name(self, switch=True):
         """Set bindings for EDIT_PGN_TAG_NAME state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_PGN_TAG_NAME
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             include_tags=True,
             include_movetext=False,
@@ -176,12 +176,12 @@ class GameEdit(gameedit_handlers.GameEdit):
             popup_pointer=self._post_pgn_tag_menu,
         )
 
-    def bind_for_edit_pgn_tag_value(self, switch=True):
+    def _bind_for_edit_pgn_tag_value(self, switch=True):
         """Set bindings for EDIT_PGN_TAG_VALUE state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_PGN_TAG_VALUE
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             include_tags=True,
             include_movetext=False,
@@ -189,63 +189,63 @@ class GameEdit(gameedit_handlers.GameEdit):
             popup_pointer=self._post_pgn_tag_menu,
         )
 
-    def bind_for_edit_comment(self, switch=True):
+    def _bind_for_edit_comment(self, switch=True):
         """Set bindings for EDIT_COMMENT state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_COMMENT
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_comment_menu_at_top_left,
             popup_pointer=self._post_comment_menu,
         )
 
-    def bind_for_edit_reserved(self, switch=True):
+    def _bind_for_edit_reserved(self, switch=True):
         """Set bindings for EDIT_RESERVED state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_RESERVED
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_reserved_menu_at_top_left,
             popup_pointer=self._post_reserved_menu,
         )
 
-    def bind_for_edit_comment_eol(self, switch=True):
+    def _bind_for_edit_comment_eol(self, switch=True):
         """Set bindings for EDIT_COMMENT_EOL state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_COMMENT_EOL
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_comment_to_end_of_line_menu_at_top_left,
             popup_pointer=self._post_comment_to_end_of_line_menu,
         )
 
-    def bind_for_edit_escape_eol(self, switch=True):
+    def _bind_for_edit_escape_eol(self, switch=True):
         """Set bindings for EDIT_ESCAPE_EOL state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_ESCAPE_EOL
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_escape_whole_line_menu_at_top_left,
             popup_pointer=self._post_escape_whole_line_menu,
         )
 
-    def bind_for_edit_move_error(self, switch=True):
+    def _bind_for_edit_move_error(self, switch=True):
         """Set bindings for EDIT_MOVE_ERROR state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_MOVE_ERROR
-        self.set_edit_symbol_mode_bindings(switch=switch)
+        self._set_edit_symbol_mode_bindings(switch=switch)
 
-    def bind_for_edit_move(self, switch=True):
+    def _bind_for_edit_move(self, switch=True):
         """Set bindings for EDIT_MOVE state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.EDIT_MOVE
-        super().set_primary_activity_bindings(switch=switch)
+        super()._set_primary_activity_bindings(switch=switch)
         self.set_event_bindings_score(
             self._get_insert_pgn_in_movetext_events(), switch=switch
         )
@@ -262,19 +262,19 @@ class GameEdit(gameedit_handlers.GameEdit):
             switch=switch,
         )
 
-    def bind_for_insert_rav(self, switch=True):
+    def _bind_for_insert_rav(self, switch=True):
         """Set bindings for INSERT_RAV state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.INSERT_RAV
-        self.set_primary_activity_bindings(switch=switch)
+        self._set_primary_activity_bindings(switch=switch)
 
-    def bind_for_move_edited(self, switch=True):
+    def _bind_for_move_edited(self, switch=True):
         """Set bindings for MOVE_EDITED state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.MOVE_EDITED
-        super().set_primary_activity_bindings(switch=switch)
+        super()._set_primary_activity_bindings(switch=switch)
         self.set_event_bindings_score(
             self._get_insert_pgn_in_movetext_events(), switch=switch
         )
@@ -297,13 +297,13 @@ class GameEdit(gameedit_handlers.GameEdit):
             switch=switch,
         )
 
-    # Should self.set_edit_symbol_mode_bindings() be used?
-    def bind_for_rav_start(self, switch=True):
+    # Should self._set_edit_symbol_mode_bindings() be used?
+    def _bind_for_rav_start(self, switch=True):
         """Set bindings for RAV_START_TAG state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.RAV_START_TAG
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_start_rav_menu_at_top_left,
             popup_pointer=self._post_start_rav_menu,
@@ -336,13 +336,13 @@ class GameEdit(gameedit_handlers.GameEdit):
             self._get_navigate_score_events(), switch=switch
         )
 
-    # Should self.set_edit_symbol_mode_bindings() be used?
-    def bind_for_rav_end(self, switch=True):
+    # Should self._set_edit_symbol_mode_bindings() be used?
+    def _bind_for_rav_end(self, switch=True):
         """Set bindings for RAV_END_TAG state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = constants.RAV_END_TAG
-        self.set_edit_symbol_mode_bindings(
+        self._set_edit_symbol_mode_bindings(
             switch=switch,
             popup_top_left=self._post_end_rav_menu_at_top_left,
             popup_pointer=self._post_end_rav_menu,
@@ -358,7 +358,7 @@ class GameEdit(gameedit_handlers.GameEdit):
             self._get_navigate_score_events(), switch=switch
         )
 
-    def bind_for_no_current_token(self, switch=True):
+    def _bind_for_no_current_token(self, switch=True):
         """Set bindings for NO_CURRENT_TOKEN state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
@@ -371,7 +371,7 @@ class GameEdit(gameedit_handlers.GameEdit):
             switch=switch,
         )
 
-    def bind_for_unrecognised_edit_token(self, switch=True):
+    def _bind_for_unrecognised_edit_token(self, switch=True):
         """Set bindings for DEFAULT_BINDINGS state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
@@ -401,13 +401,13 @@ class GameEdit(gameedit_handlers.GameEdit):
             self.token_bind_method[self._most_recent_bindings](self, False)
             self._most_recent_bindings = NonTagBind.INITIAL_BINDINGS
 
-    def bind_for_no_editable_tags(self, switch=True):
+    def _bind_for_no_editable_tags(self, switch=True):
         """Do nothing.
 
         Set bindings for NO_EDITABLE_TAGS state.
         """
 
-    def bind_for_current_without_tags(self, switch=True):
+    def _bind_for_current_without_tags(self, switch=True):
         """Set bindings for CURRENT_NO_TAGS state."""
         if switch:
             self.token_bind_method[self._most_recent_bindings](self, False)
@@ -426,34 +426,34 @@ class GameEdit(gameedit_handlers.GameEdit):
     # Dispatch dictionary for token binding selection.
     # Keys are the possible values of self._most_recent_bindings.
     token_bind_method = {
-        constants.EDIT_GLYPH: bind_for_edit_glyph,
-        constants.EDIT_RESULT: bind_for_edit_game_termination,
-        constants.EDIT_PGN_TAG_NAME: bind_for_edit_pgn_tag_name,
-        constants.EDIT_PGN_TAG_VALUE: bind_for_edit_pgn_tag_value,
-        constants.EDIT_COMMENT: bind_for_edit_comment,
-        constants.EDIT_RESERVED: bind_for_edit_reserved,
-        constants.EDIT_COMMENT_EOL: bind_for_edit_comment_eol,
-        constants.EDIT_ESCAPE_EOL: bind_for_edit_escape_eol,
-        constants.EDIT_MOVE_ERROR: bind_for_edit_move_error,
-        constants.EDIT_MOVE: bind_for_edit_move,
-        constants.INSERT_RAV: bind_for_insert_rav,
-        constants.MOVE_EDITED: bind_for_move_edited,
-        constants.RAV_END_TAG: bind_for_rav_end,
-        constants.RAV_START_TAG: bind_for_rav_start,
-        NonTagBind.NO_CURRENT_TOKEN: bind_for_no_current_token,
-        NonTagBind.DEFAULT_BINDINGS: bind_for_unrecognised_edit_token,
+        constants.EDIT_GLYPH: _set_edit_symbol_mode_bindings,
+        constants.EDIT_RESULT: _bind_for_edit_game_termination,
+        constants.EDIT_PGN_TAG_NAME: _bind_for_edit_pgn_tag_name,
+        constants.EDIT_PGN_TAG_VALUE: _bind_for_edit_pgn_tag_value,
+        constants.EDIT_COMMENT: _bind_for_edit_comment,
+        constants.EDIT_RESERVED: _bind_for_edit_reserved,
+        constants.EDIT_COMMENT_EOL: _bind_for_edit_comment_eol,
+        constants.EDIT_ESCAPE_EOL: _bind_for_edit_escape_eol,
+        constants.EDIT_MOVE_ERROR: _bind_for_edit_move_error,
+        constants.EDIT_MOVE: _bind_for_edit_move,
+        constants.INSERT_RAV: _bind_for_insert_rav,
+        constants.MOVE_EDITED: _bind_for_move_edited,
+        constants.RAV_END_TAG: _bind_for_rav_end,
+        constants.RAV_START_TAG: _bind_for_rav_start,
+        NonTagBind.NO_CURRENT_TOKEN: _bind_for_no_current_token,
+        NonTagBind.DEFAULT_BINDINGS: _bind_for_unrecognised_edit_token,
         NonTagBind.INITIAL_BINDINGS: bind_for_initial_state,
-        NonTagBind.NO_EDITABLE_TAGS: bind_for_no_editable_tags,
-        NonTagBind.CURRENT_NO_TAGS: bind_for_current_without_tags,
+        NonTagBind.NO_EDITABLE_TAGS: _bind_for_no_editable_tags,
+        NonTagBind.CURRENT_NO_TAGS: _bind_for_current_without_tags,
         NonTagBind.SELECT_VARIATION: Game.bind_for_select_variation,
     }
 
-    def set_edit_bindings_and_to_prev_pgn_tag(self, event=None):
+    def _set_edit_bindings_and_to_prev_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at previous PGN tag."""
         del event
         return self._to_prev_pgn_tag()
 
-    def set_edit_bindings_and_to_next_pgn_tag(self, event=None):
+    def _set_edit_bindings_and_to_next_pgn_tag(self, event=None):
         """Remove bindings for editing and put cursor at next PGN tag."""
         del event
         return self._to_prev_pgn_tag()  # to start of PGN tag if in one.
@@ -500,7 +500,7 @@ class GameEdit(gameedit_handlers.GameEdit):
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
-    def create_pgn_tag_popup(self):
+    def _create_pgn_tag_popup(self):
         """Create and return popup menu for PGN Tag token."""
         popup = self._create_popup(
             self.pgn_tag_popup,
@@ -522,13 +522,13 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_pgn_tag_menu(self, event=None):
         """Post popup menu when a PGN tag is current token."""
         return self._post_menu(
-            self.pgn_tag_popup, self.create_pgn_tag_popup, event=event
+            self.pgn_tag_popup, self._create_pgn_tag_popup, event=event
         )
 
     def _post_pgn_tag_menu_at_top_left(self, event=None):
         """Post popup menu when a PGN tag is current token."""
         return self.post_menu_at_top_left(
-            self.pgn_tag_popup, self.create_pgn_tag_popup, event=event
+            self.pgn_tag_popup, self._create_pgn_tag_popup, event=event
         )
 
     def _create_game_termination_popup(self):
@@ -560,7 +560,7 @@ class GameEdit(gameedit_handlers.GameEdit):
             event=event,
         )
 
-    def create_comment_popup(self):
+    def _create_comment_popup(self):
         """Create and return popup menu for PGN comment, {...}, token."""
         popup = self._create_non_move_popup(self.comment_popup)
         self.comment_popup = popup
@@ -569,16 +569,16 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_comment_menu(self, event=None):
         """Post popup menu when a comment is current token."""
         return self._post_menu(
-            self.comment_popup, self.create_comment_popup, event=event
+            self.comment_popup, self._create_comment_popup, event=event
         )
 
     def _post_comment_menu_at_top_left(self, event=None):
         """Post popup menu when a comment is current token."""
         return self.post_menu_at_top_left(
-            self.comment_popup, self.create_comment_popup, event=event
+            self.comment_popup, self._create_comment_popup, event=event
         )
 
-    def create_nag_popup(self):
+    def _create_nag_popup(self):
         """Create and return popup menu for PGN numeric annotation glyph."""
         popup = self._create_non_move_popup(self.nag_popup)
         self.nag_popup = popup
@@ -587,16 +587,16 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_nag_menu(self, event=None):
         """Post popup menu when a NAG is current token."""
         return self._post_menu(
-            self.nag_popup, self.create_nag_popup, event=event
+            self.nag_popup, self._create_nag_popup, event=event
         )
 
     def _post_nag_menu_at_top_left(self, event=None):
         """Post popup menu when a NAG is current token."""
         return self.post_menu_at_top_left(
-            self.nag_popup, self.create_nag_popup, event=event
+            self.nag_popup, self._create_nag_popup, event=event
         )
 
-    def create_start_rav_popup(self):
+    def _create_start_rav_popup(self):
         """Create and return popup menu for PGN start RAV token."""
         popup = self._create_popup(
             self.start_rav_popup,
@@ -615,16 +615,16 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_start_rav_menu(self, event=None):
         """Post popup menu when a '(', start RAV, is current token."""
         return self._post_menu(
-            self.start_rav_popup, self.create_start_rav_popup, event=event
+            self.start_rav_popup, self._create_start_rav_popup, event=event
         )
 
     def _post_start_rav_menu_at_top_left(self, event=None):
         """Post popup menu when a '(', start RAV, is current token."""
         return self.post_menu_at_top_left(
-            self.start_rav_popup, self.create_start_rav_popup, event=event
+            self.start_rav_popup, self._create_start_rav_popup, event=event
         )
 
-    def create_end_rav_popup(self):
+    def _create_end_rav_popup(self):
         """Create and return popup menu for PGN end RAV token."""
         popup = self._create_non_move_popup(self.end_rav_popup)
         self.end_rav_popup = popup
@@ -633,16 +633,16 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_end_rav_menu(self, event=None):
         """Post popup menu when a ')', end RAV, is current token."""
         return self._post_menu(
-            self.end_rav_popup, self.create_end_rav_popup, event=event
+            self.end_rav_popup, self._create_end_rav_popup, event=event
         )
 
     def _post_end_rav_menu_at_top_left(self, event=None):
         """Post popup menu when a ')', end RAV, is current token."""
         return self.post_menu_at_top_left(
-            self.end_rav_popup, self.create_end_rav_popup, event=event
+            self.end_rav_popup, self._create_end_rav_popup, event=event
         )
 
-    def create_comment_to_end_of_line_popup(self):
+    def _create_comment_to_end_of_line_popup(self):
         """Create and return popup menu for PGN comment to end line token."""
         popup = self._create_non_move_popup(self.comment_to_end_of_line_popup)
         self.comment_to_end_of_line_popup = popup
@@ -652,7 +652,7 @@ class GameEdit(gameedit_handlers.GameEdit):
         r"""Post popup menu when a ';...\n' comment is current token."""
         return self._post_menu(
             self.comment_to_end_of_line_popup,
-            self.create_comment_to_end_of_line_popup,
+            self._create_comment_to_end_of_line_popup,
             event=event,
         )
 
@@ -660,11 +660,11 @@ class GameEdit(gameedit_handlers.GameEdit):
         r"""Post popup menu when a ';...\n' comment is current token."""
         return self.post_menu_at_top_left(
             self.comment_to_end_of_line_popup,
-            self.create_comment_to_end_of_line_popup,
+            self._create_comment_to_end_of_line_popup,
             event=event,
         )
 
-    def create_escape_whole_line_popup(self):
+    def _create_escape_whole_line_popup(self):
         """Create and return popup menu for PGN escaped line token."""
         popup = self._create_non_move_popup(self.escape_whole_line_popup)
         self.escape_whole_line_popup = popup
@@ -674,7 +674,7 @@ class GameEdit(gameedit_handlers.GameEdit):
         r"""Post popup menu when a '\n%...\n' escape is current token."""
         return self._post_menu(
             self.escape_whole_line_popup,
-            self.create_escape_whole_line_popup,
+            self._create_escape_whole_line_popup,
             event=event,
         )
 
@@ -682,11 +682,11 @@ class GameEdit(gameedit_handlers.GameEdit):
         r"""Post popup menu when a '\n%...\n' escape is current token."""
         return self.post_menu_at_top_left(
             self.escape_whole_line_popup,
-            self.create_escape_whole_line_popup,
+            self._create_escape_whole_line_popup,
             event=event,
         )
 
-    def create_reserved_popup(self):
+    def _create_reserved_popup(self):
         """Create and return popup menu for PGN reserved tokens."""
         popup = self._create_non_move_popup(self.reserved_popup)
         self.reserved_popup = popup
@@ -695,13 +695,13 @@ class GameEdit(gameedit_handlers.GameEdit):
     def _post_reserved_menu(self, event=None):
         """Post popup menu when a '<...>, reserved, is current token."""
         return self._post_menu(
-            self.reserved_popup, self.create_reserved_popup, event=event
+            self.reserved_popup, self._create_reserved_popup, event=event
         )
 
     def _post_reserved_menu_at_top_left(self, event=None):
         """Post popup menu when a '<...>, reserved, is current token."""
         return self.post_menu_at_top_left(
-            self.reserved_popup, self.create_reserved_popup, event=event
+            self.reserved_popup, self._create_reserved_popup, event=event
         )
 
     def _populate_navigate_score_submenu(self, submenu):

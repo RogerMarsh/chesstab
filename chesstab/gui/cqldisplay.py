@@ -283,9 +283,9 @@ class _CQLDisplay(
         local_map = {}
         return navigation_map, local_map
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
@@ -652,9 +652,9 @@ class CQLDisplayInsert(
         """Add option to list games for selection rule to popup."""
         self._set_popup_bindings(popup, self._get_list_games_events())
 
-    def set_database_navigation_close_item_bindings(self, switch=True):
+    def _set_database_navigation_close_item_bindings(self, switch=True):
         """Delegate then set list games event bindings."""
-        super().set_database_navigation_close_item_bindings(switch=switch)
+        super()._set_database_navigation_close_item_bindings(switch=switch)
         self.set_event_bindings_score(
             self._get_list_games_events(), switch=switch
         )

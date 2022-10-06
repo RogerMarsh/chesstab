@@ -236,15 +236,15 @@ class GameDisplay(_GameDisplay, Game, DataNotify):
         if original_value.is_error_comment_present():
             original_value.set_game_source("Editor")
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add close item entry and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 
-    def create_select_move_popup(self):
+    def _create_select_move_popup(self):
         """Delegate then add close item entry and return popup menu."""
-        popup = super().create_select_move_popup()
+        popup = super()._create_select_move_popup()
         self._add_close_item_entry_to_popup(popup)
         return popup
 

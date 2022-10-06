@@ -120,7 +120,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         """Create Frame and Board, then delegate, then set grid geometry."""
         self.ui = ui
         panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
-        panel.bind("<Configure>", self.try_event(self._on_configure))
+        panel.bind("<Configure>", self.try_event(self._on_configure_initial))
         panel.grid_propagate(False)
         board = Board(panel, boardfont=boardfont, ui=ui)
         super().__init__(
@@ -219,17 +219,17 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         )
         self.panel.destroy()
 
-    def _on_configure(self, event=None):
-        """Catch initial configure and rebind to on_configure."""
+    def _on_configure_initial(self, event=None):
+        """Catch initial configure and rebind to _on_configure."""
         # Not sure, at time of writing this, how partial.py is
         # different but that module does not need this trick to display
         # the control with the right size on creation.
         # Here extra first event has width=1 height=1 followed up by event
         # with required dimensions.
         del event
-        self.panel.bind("<Configure>", self.try_event(self.on_configure))
+        self.panel.bind("<Configure>", self.try_event(self._on_configure))
 
-    def on_configure(self, event=None):
+    def _on_configure(self, event=None):
         """Reconfigure board and score after container has been resized."""
         del event
         self._configure_game_widget()
@@ -328,7 +328,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.score.tag_add(MOVETEXT_INDENT_TAG, "1.0", tkinter.END)
         self._analyse_position(*self.fen_tag_tuple_square_piece_map())
 
-    def analyse_game(self):
+    def _analyse_game(self):
         """Analyse all positions in game using all active engines."""
         uci = self.ui.uci.uci
         sas = self.analysis.score
@@ -556,17 +556,17 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.panel.grid_columnconfigure(1, weight=1)
         self.panel.grid_columnconfigure(2, weight=0)
 
-    def set_primary_activity_bindings(self, switch=True):
+    def _set_primary_activity_bindings(self, switch=True):
         """Delegate then set board pointer move navigation bindings."""
-        super().set_primary_activity_bindings(switch=switch)
+        super()._set_primary_activity_bindings(switch=switch)
         if self.score is self.takefocus_widget:
             self.set_board_pointer_move_bindings(switch=switch)
         else:
             self.analysis.set_board_pointer_move_bindings(switch=switch)
 
-    def set_select_variation_bindings(self, switch=True):
+    def _set_select_variation_bindings(self, switch=True):
         """Delegate then set board pointer select variation bindings."""
-        super().set_select_variation_bindings(switch=switch)
+        super()._set_select_variation_bindings(switch=switch)
         if self.score is self.takefocus_widget:
             self.set_board_pointer_select_variation_bindings(switch=switch)
         else:
@@ -579,9 +579,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     # is to leave Database and Close Item bindings out of self.analysis.
     # Database and Close Item refer to the item, game or repertoire, not the
     # engine analysis.
-    def set_database_navigation_close_item_bindings(self, switch=True):
+    def _set_database_navigation_close_item_bindings(self, switch=True):
         """Enable or disable bindings for navigation and database selection."""
-        super().set_database_navigation_close_item_bindings(switch=switch)
+        super()._set_database_navigation_close_item_bindings(switch=switch)
         self._set_analysis_event_bindings_score(switch=switch)
 
     def _set_board_pointer_widget_navigation_bindings(self, switch):
@@ -660,7 +660,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         """Return database analysis for position or empty position Analysis.
 
         get_analysis is not interested in the arguments, which are passed on
-        to self.generate_fen_for_position().
+        to self._generate_fen_for_position().
 
         """
         # pylint message no-value-for-parameter seems to be false positive.
@@ -668,12 +668,12 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # which does not attract the message.
         if self.analysis_data_source:
             return self.analysis_data_source.get_position_analysis(
-                self.generate_fen_for_position(*a)
+                self._generate_fen_for_position(*a)
             )
-        return Analysis(position=self.generate_fen_for_position(*a))
+        return Analysis(position=self._generate_fen_for_position(*a))
 
     @staticmethod
-    def generate_fen_for_position(squares, *a):
+    def _generate_fen_for_position(squares, *a):
         """Return FEN for current position.
 
         Ensure the Piece instances in the squares dictionary reference their
@@ -688,20 +688,20 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             piece.set_square(square)
         return generate_fen_for_position(squares.values(), *a)
 
-    def create_primary_activity_popup(self):
+    def _create_primary_activity_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
-        popup = super().create_primary_activity_popup()
+        popup = super()._create_primary_activity_popup()
         self._set_popup_bindings(
             popup,
-            ((EventSpec.analyse_game, self.analyse_game),),
+            ((EventSpec.analyse_game, self._analyse_game),),
             index=self.export_popup_label,
         )
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 
-    def create_select_move_popup(self):
+    def _create_select_move_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
-        popup = super().create_select_move_popup()
+        popup = super()._create_select_move_popup()
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
 

@@ -32,7 +32,7 @@ class EventBinding:
     At present the classes are CQL, Game, and Query.
     """
 
-    def set_database_navigation_close_item_bindings(self, switch=True):
+    def _set_database_navigation_close_item_bindings(self, switch=True):
         """Unset navigation bindings when query is closed."""
         self.set_event_bindings_score(
             self._get_database_events(), switch=switch
@@ -101,5 +101,5 @@ class BlankTextEventBinding:
         self._set_popup_bindings(popup, self.get_primary_activity_events())
 
     def _bind_for_set_primary_activity_bindings(self, switch):
-        """Call set_primary_activity_bindings in isolation."""
-        self.set_primary_activity_bindings(switch=switch)
+        """Call _set_primary_activity_bindings in isolation."""
+        self._set_primary_activity_bindings(switch=switch)
