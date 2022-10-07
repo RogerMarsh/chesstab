@@ -314,10 +314,12 @@ class _QueryDisplay(
             self._get_list_games_events(), switch=switch
         )
 
-    def _add_list_games_entry_to_popup(self, popup, index=tkinter.END):
+    def _add_list_games_entry_to_popup(self, popup):
         """Add option to list games for selection rule to popup."""
+        # index argument added when change in method resolution order caused
+        # this entry to be added after 'Close Item' rather than before.
         self._set_popup_bindings(
-            popup, self._get_list_games_events(), index=index
+            popup, bindings=self._get_list_games_events(), index="Close Item"
         )
 
     def generate_popup_navigation_maps(self):
@@ -418,7 +420,7 @@ class QueryDisplay(_QueryDisplay, Query, DataNotify):
     def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
         popup = super()._create_primary_activity_popup()
-        self._add_list_games_entry_to_popup(popup, index="Close Item")
+        self._add_list_games_entry_to_popup(popup)
         return popup
 
     def _delete_item_database(self, event=None):

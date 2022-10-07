@@ -650,7 +650,10 @@ class CQLDisplayInsert(
 
     def _add_list_games_entry_to_popup(self, popup):
         """Add option to list games for selection rule to popup."""
-        self._set_popup_bindings(popup, self._get_list_games_events())
+        # index argument added when change in method resolution order caused
+        # this entry to be added after 'Close Item' rather than before.
+        self._set_popup_bindings(
+            popup, bindings=self._get_list_games_events(), index="Close Item")
 
     def _set_database_navigation_close_item_bindings(self, switch=True):
         """Delegate then set list games event bindings."""
