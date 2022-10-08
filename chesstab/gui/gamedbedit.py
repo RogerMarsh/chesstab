@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
@@ -16,7 +16,7 @@ from .toplevelpgn import EditPGN
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 
 
-class GameDbEdit(ExceptionHandler, EditPGN, DataEdit):
+class GameDbEdit(Bindings, EditPGN, DataEdit):
     """Edit PGN text for game on database, or insert a new record.
 
     parent is used as the master argument in GameToplevel calls.

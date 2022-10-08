@@ -29,7 +29,7 @@ from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .cql import CQL
 from .cqledit import CQLEdit
@@ -51,7 +51,7 @@ class CQLDisplayListGamesError(Exception):
 
 
 class _CQLDisplay(
-    ShowText, DisplayText, CQL, Display, DataNotify, ExceptionHandler
+    ShowText, DisplayText, CQL, Display, DataNotify, Bindings
 ):
     """Extend and link ChessQL statement to database.
 

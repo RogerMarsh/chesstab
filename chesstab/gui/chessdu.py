@@ -16,7 +16,7 @@ import time
 
 from solentware_misc.core import callthreadqueue
 from solentware_misc.gui.tasklog import LogText
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -50,7 +50,7 @@ from .fonts import _get_default_font_actual
 _DATABASE_UPDATE_FACTOR = 5
 
 
-class ChessDeferredUpdate(ExceptionHandler):
+class ChessDeferredUpdate(Bindings):
     """Connect a chess database with User Interface for deferred update."""
 
     def __init__(
@@ -574,7 +574,7 @@ class ChessDeferredUpdate(ExceptionHandler):
         return bool(self.estimate_data)
 
     # Override ChessException method as ChessUI class is not used.
-    # May be wrong now solentware_misc ExceptionHandler is used.
+    # May be wrong now solentware_misc Bindings is used.
     def get_error_file_name(self):
         """Return the exception report file name."""
         return os.path.join(sys.argv[1], ERROR_LOG)

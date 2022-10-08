@@ -21,7 +21,7 @@ main display (that includes widgets displaying text).
 
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .game import Game
 from .gameedit import GameEdit
@@ -33,7 +33,7 @@ from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
 class _GameDisplay(
-    ShowPGN, DisplayPGN, Game, Display, DataNotify, ExceptionHandler
+    ShowPGN, DisplayPGN, Game, Display, DataNotify, Bindings
 ):
     """Extend and link PGN game text to database.
 

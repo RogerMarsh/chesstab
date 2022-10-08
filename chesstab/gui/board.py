@@ -30,7 +30,7 @@ x  any black piece
 import tkinter
 import tkinter.font
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
@@ -73,7 +73,7 @@ _pieces = {
 }
 
 
-class Board(ExceptionHandler):
+class Board(Bindings):
     """Chess board widget.
 
     Frame containing an 8x8 grid of Text widgets representing chess board

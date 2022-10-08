@@ -11,13 +11,13 @@ Costeff).
 import tkinter
 
 from solentware_grid.gui.datadelete import DataDelete
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .cqltoplevel import CQLToplevel
 from .topleveltext import DeleteText
 
 
-class CQLDbDelete(ExceptionHandler, DeleteText, DataDelete):
+class CQLDbDelete(Bindings, DeleteText, DataDelete):
     """Delete ChessQL statement from database.
 
     parent is used as the master argument in a CQLToplevel call.

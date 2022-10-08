@@ -22,7 +22,7 @@ text).
 
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from ..core.constants import TAG_OPENING
 from .repertoire import Repertoire
@@ -34,7 +34,7 @@ from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 from .game import Game
 
 
-class _RepertoireDisplay(ShowPGN, Game, DataNotify, ExceptionHandler, Display):
+class _RepertoireDisplay(ShowPGN, Game, DataNotify, Bindings, Display):
     """Extend and link PGN repertoire text to database.
 
     sourceobject - link to database.

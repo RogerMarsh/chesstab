@@ -8,7 +8,7 @@ import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from ..core.chessrecord import ChessDBrecordPartial
 from .cqldisplay import CQLDisplay, CQLDisplayEdit
@@ -21,7 +21,7 @@ from ..shared.allgrid import AllGrid
 
 
 class CQLListGrid(
-    ExceptionHandler, AllGrid, CQLGameListQuery, DataGrid, Display
+    Bindings, AllGrid, CQLGameListQuery, DataGrid, Display
 ):
     """A DataGrid for lists of ChessQL statements.
 

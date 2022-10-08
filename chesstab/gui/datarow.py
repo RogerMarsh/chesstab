@@ -2,12 +2,12 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide DataRow class which uses solentware_misc exception handling."""
+"""Add solentware_misc bindings and exception handling to DataRow."""
 
 from solentware_grid.gui import datarow
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 
-class DataRow(ExceptionHandler, datarow.DataRow):
-    """Override DataRow methods with those available in ExceptionHandler."""
+class DataRow(Bindings, datarow.DataRow):
+    """Bindings and ExceptionHandler methods added to DataRow class."""

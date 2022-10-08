@@ -43,6 +43,7 @@ from solentware_base import modulequery
 from solentware_grid.core.dataclient import DataSource
 
 from solentware_misc.core import callthreadqueue
+from solentware_misc.gui.bindings import Bindings
 from solentware_misc.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
@@ -110,7 +111,7 @@ class _Import:
     SelectionDS = "SelectionDS"
 
 
-class Chess(ExceptionHandler):
+class Chess(Bindings):
     """Connect a chess database with User Interface."""
 
     _index = GAMES_FILE_DEF

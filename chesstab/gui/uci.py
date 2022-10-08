@@ -11,7 +11,7 @@ import tkinter.filedialog
 
 from solentware_grid.core.dataclient import DataSource
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from uci_net.engine import (
     ReservedOptionNames,
@@ -31,7 +31,7 @@ _freebsd_platform = sys.platform.startswith("freebsd")
 del sys
 
 
-class UCI(ExceptionHandler):
+class UCI(Bindings):
     """Provide menu interface to run and control Chess Engines."""
 
     _command = None

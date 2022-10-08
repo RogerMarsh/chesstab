@@ -6,7 +6,7 @@
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -36,7 +36,7 @@ class _BookmarkStatusText:
 
 
 class GameListGrid(
-    ExceptionHandler,
+    Bindings,
     AllGrid,
     CQLGameListQuery,
     _BookmarkStatusText,

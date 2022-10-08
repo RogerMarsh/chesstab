@@ -6,13 +6,13 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .querytoplevel import QueryToplevel
 from .topleveltext import DeleteText
 
 
-class QueryDbDelete(ExceptionHandler, DeleteText, DataDelete):
+class QueryDbDelete(Bindings, DeleteText, DataDelete):
     """Delete game selection rule from database.
 
     The game selection rule is in it's own Toplevel widget.

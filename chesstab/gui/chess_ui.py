@@ -29,7 +29,7 @@ import queue
 
 from solentware_grid.core.dataclient import DataSource
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .gamerow import chess_db_row_game
 from .positionrow import chess_db_row_position
@@ -77,7 +77,7 @@ class ChessUIError(Exception):
     """Raise exception in chess_ui module."""
 
 
-class ChessUI(ExceptionHandler):
+class ChessUI(Bindings):
     """Define widgets which form the User Interface."""
 
     allow_filter = {

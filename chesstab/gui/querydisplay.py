@@ -29,7 +29,7 @@ from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .query import Query
 from .queryedit import QueryEdit
@@ -46,7 +46,7 @@ from .displaytext import (
 
 
 class _QueryDisplay(
-    ShowText, DisplayText, Query, Display, DataNotify, ExceptionHandler
+    ShowText, DisplayText, Query, Display, DataNotify, Bindings
 ):
     """Extend and link game selection rule to database.
 

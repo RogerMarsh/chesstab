@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -15,7 +15,7 @@ from .repertoiretoplevel import RepertoireToplevel
 from .toplevelpgn import ShowPGN
 
 
-class RepertoireDbShow(ExceptionHandler, ShowPGN, DataShow):
+class RepertoireDbShow(Bindings, ShowPGN, DataShow):
     """Show PGN text for repertoire from database.
 
     parent is used as the master argument in a RepertoireToplevel call.

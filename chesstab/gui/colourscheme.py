@@ -8,7 +8,7 @@ import tkinter
 import tkinter.font
 
 from solentware_misc.gui.colourslider import ColourSlider
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -16,7 +16,7 @@ from . import constants, fonts, options
 from . import game, board
 
 
-class _ColourScheme(ExceptionHandler):
+class _ColourScheme(Bindings):
     """Widgets to select fonts and colours for chess board and game score.
 
     Use the subclasses defined in this module depending on what fits on

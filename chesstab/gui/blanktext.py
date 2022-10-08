@@ -12,7 +12,7 @@ this class because their Text widgets come from solentware_grid.gui.DataRow.
 import tkinter
 import enum
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
@@ -42,7 +42,7 @@ class NonTagBind(enum.Enum):
     SELECT_VARIATION = 6
 
 
-class BlankText(BlankTextEventBinding, ExceptionHandler):
+class BlankText(BlankTextEventBinding, Bindings):
     """Create Text widget with configuration shared by subclasses.
 
     The subclasses are cqltext.CQLText, querytext.QueryText, score.Score,

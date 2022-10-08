@@ -10,7 +10,7 @@ from urllib.parse import urlunsplit
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from ..core.chessrecord import ChessDBrecordEngine
 from .enginerow import ChessDBrowEngine
@@ -19,7 +19,7 @@ from .display import Display
 from ..shared.allgrid import AllGrid
 
 
-class EngineListGrid(ExceptionHandler, AllGrid, DataGrid, Display):
+class EngineListGrid(Bindings, AllGrid, DataGrid, Display):
     """A DataGrid for lists of chess engine definition.
 
     Subclasses provide navigation and extra methods appropriate to list use.

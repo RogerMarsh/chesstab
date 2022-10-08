@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -16,7 +16,7 @@ from .gametoplevel import GameToplevel
 from .toplevelpgn import ShowPGN
 
 
-class GameDbShow(ExceptionHandler, ShowPGN, DataShow):
+class GameDbShow(Bindings, ShowPGN, DataShow):
     """Show PGN text for game from database.
 
     parent is used as the master argument in a GameToplevel call.

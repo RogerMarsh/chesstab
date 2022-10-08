@@ -12,7 +12,7 @@ PositionScore
 
 import tkinter
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
@@ -50,7 +50,7 @@ from ._score_scaffold import _ScoreScaffold
 
 # May need to make this a superclass of Tkinter.Text because DataRow method
 # make_row_widgets expects to be able to call Tkinter widget methods.
-class PositionScore(ExceptionHandler):
+class PositionScore(Bindings):
     """Chess game score widget composed from a Text widget."""
 
     m_color = MOVE_COLOR

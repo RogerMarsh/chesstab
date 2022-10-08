@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+from solentware_misc.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
@@ -15,7 +15,7 @@ from .gametoplevel import GameToplevel
 from .toplevelpgn import DeletePGN
 
 
-class GameDbDelete(ExceptionHandler, DeletePGN, DataDelete):
+class GameDbDelete(Bindings, DeletePGN, DataDelete):
     """Delete PGN text for game from database.
 
     parent is used as the master argument in a GameToplevel call.
