@@ -50,9 +50,7 @@ class CQLDisplayListGamesError(Exception):
     """Exception class for display of lists of games."""
 
 
-class _CQLDisplay(
-    ShowText, DisplayText, CQL, Display, DataNotify, Bindings
-):
+class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
     """Extend and link ChessQL statement to database.
 
     sourceobject - link to database.
@@ -653,7 +651,8 @@ class CQLDisplayInsert(
         # index argument added when change in method resolution order caused
         # this entry to be added after 'Close Item' rather than before.
         self._set_popup_bindings(
-            popup, bindings=self._get_list_games_events(), index="Close Item")
+            popup, bindings=self._get_list_games_events(), index="Close Item"
+        )
 
     def _set_database_navigation_close_item_bindings(self, switch=True):
         """Delegate then set list games event bindings."""

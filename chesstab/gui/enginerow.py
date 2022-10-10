@@ -77,7 +77,7 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
         oldobject - a ChessDBrecordEngine containing original data
 
         """
-        return EngineDbShow(dialog, oldobject, ui=self.ui)
+        return EngineDbShow(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def delete_row(self, dialog, oldobject):
         """Return a EngineDbDelete toplevel for oldobject.
@@ -86,7 +86,7 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
         oldobject - a ChessDBrecordEngine containing original data
 
         """
-        return EngineDbDelete(dialog, oldobject, ui=self.ui)
+        return EngineDbDelete(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
         """Return a EngineDbEdit toplevel for oldobject.
@@ -99,7 +99,11 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
 
         """
         return EngineDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+            newobject=newobject,
+            parent=dialog,
+            oldobject=oldobject,
+            showinitial=showinitial,
+            ui=self.ui,
         )
 
     def grid_row(self, textitems=(), **kargs):

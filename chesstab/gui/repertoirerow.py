@@ -104,7 +104,7 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return RepertoireDbShow(dialog, oldobject, ui=self.ui)
+        return RepertoireDbShow(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def delete_row(self, dialog, oldobject):
         """Return a RepertoireDbDelete toplevel for instance.
@@ -113,7 +113,9 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         oldobject - a ChessDBrecordGame containing original data
 
         """
-        return RepertoireDbDelete(dialog, oldobject, ui=self.ui)
+        return RepertoireDbDelete(
+            parent=dialog, oldobject=oldobject, ui=self.ui
+        )
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
         """Return a RepertoireDbEdit toplevel for instance.
@@ -125,7 +127,11 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
 
         """
         return RepertoireDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+            newobject=newobject,
+            parent=dialog,
+            oldobject=oldobject,
+            showinitial=showinitial,
+            ui=self.ui,
         )
 
     def grid_row(self, textitems=(), **kargs):

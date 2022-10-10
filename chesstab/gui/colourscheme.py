@@ -43,6 +43,7 @@ class _ColourScheme(Bindings):
 
         """
         del kargs
+        super().__init__()
         self.ui = ui
         tags = ui.tags_variations_comments_font
         moves = ui.moves_played_in_game_font
@@ -595,8 +596,9 @@ class _ColourScheme(Bindings):
         self.moves_played_in_game_font["weight"] = mfweight
 
     def __del__(self):
-        """Force IsOk to return False after destructor call."""
+        """Force IsOk to return False after __del__ call."""
         self._ok = False
+        super().__del__()
 
     def _make_font_selector(self, frame, title, variable, baserow, command):
         """Create a font selector."""

@@ -42,17 +42,22 @@ class CQLDbEdit(Bindings, EditText, DataEdit):
     text_name = "ChessQL Statement"
 
     def __init__(
-        self, newobject, parent, oldobject, showinitial=True, ui=None
+        self,
+        newobject=None,
+        parent=None,
+        oldobject=None,
+        showinitial=True,
+        ui=None,
     ):
         """Extend and create toplevel to edit or insert ChessQL statement."""
         if not oldobject:
             showinitial = False
         super().__init__(
-            newobject,
-            parent,
-            oldobject,
-            CQLToplevelEdit(master=parent, ui=ui),
-            "",
+            newobject=newobject,
+            parent=parent,
+            oldobject=oldobject,
+            newview=CQLToplevelEdit(master=parent, ui=ui),
+            title="",
             oldview=CQLToplevel(master=parent, ui=ui)
             if showinitial
             else showinitial,

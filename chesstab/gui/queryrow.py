@@ -77,7 +77,7 @@ class ChessDBrowQuery(AllRow, ChessDBrecordQuery, DataRow):
         oldobject - a ChessDBrecordQuery containing original data
 
         """
-        return QueryDbShow(dialog, oldobject, ui=self.ui)
+        return QueryDbShow(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def delete_row(self, dialog, oldobject):
         """Return a QueryDbDelete dialog for oldobject.
@@ -86,7 +86,7 @@ class ChessDBrowQuery(AllRow, ChessDBrecordQuery, DataRow):
         oldobject - a ChessDBrecordQuery containing original data
 
         """
-        return QueryDbDelete(dialog, oldobject, ui=self.ui)
+        return QueryDbDelete(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
         """Return a QueryDbEdit dialog for oldobject.
@@ -99,7 +99,11 @@ class ChessDBrowQuery(AllRow, ChessDBrecordQuery, DataRow):
 
         """
         return QueryDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+            newobject=newobject,
+            parent=dialog,
+            oldobject=oldobject,
+            showinitial=showinitial,
+            ui=self.ui,
         )
 
     def grid_row(self, textitems=(), **kargs):

@@ -37,11 +37,14 @@ class GameDbShow(Bindings, ShowPGN, DataShow):
 
     pgn_score_name = "Game"
 
-    def __init__(self, parent, oldobject, ui=None):
+    def __init__(self, parent=None, oldobject=None, ui=None):
         """Extend and create toplevel widget for displaying chess game."""
         # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
-            oldobject, parent, GameToplevel(master=parent, ui=ui), ""
+            instance=oldobject,
+            parent=parent,
+            oldview=GameToplevel(master=parent, ui=ui),
+            title="",
         )
         self._initialize()
 

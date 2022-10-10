@@ -20,9 +20,7 @@ from ..shared.cql_gamelist_query import CQLGameListQuery
 from ..shared.allgrid import AllGrid
 
 
-class QueryListGrid(
-    Bindings, AllGrid, CQLGameListQuery, DataGrid, Display
-):
+class QueryListGrid(Bindings, AllGrid, CQLGameListQuery, DataGrid, Display):
     """A DataGrid for lists of game selection rules.
 
     Subclasses provide navigation and extra methods appropriate to list use.

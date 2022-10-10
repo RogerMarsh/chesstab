@@ -49,17 +49,22 @@ class GameDbEdit(Bindings, EditPGN, DataEdit):
     pgn_score_source = "Editor"
 
     def __init__(
-        self, newobject, parent, oldobject, showinitial=True, ui=None
+        self,
+        newobject=None,
+        parent=None,
+        oldobject=None,
+        showinitial=True,
+        ui=None,
     ):
         """Extend and create dialogue widget to edit or insert chess game."""
         if not oldobject:
             showinitial = False
         super().__init__(
-            newobject,
-            parent,
-            oldobject,
-            GameToplevelEdit(master=parent, ui=ui),
-            "",
+            newobject=newobject,
+            parent=parent,
+            oldobject=oldobject,
+            newview=GameToplevelEdit(master=parent, ui=ui),
+            title="",
             oldview=GameToplevel(master=parent, ui=ui)
             if showinitial
             else showinitial,

@@ -32,9 +32,7 @@ from .display import Display
 from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
-class _GameDisplay(
-    ShowPGN, DisplayPGN, Game, Display, DataNotify, Bindings
-):
+class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
     """Extend and link PGN game text to database.
 
     sourceobject - link to database.

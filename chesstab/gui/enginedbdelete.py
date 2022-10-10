@@ -33,7 +33,7 @@ class EngineDbDelete(Bindings, DeleteText, DataDelete):
 
     text_name = "Engine Definition"
 
-    def __init__(self, parent, oldobject, ui=None):
+    def __init__(self, parent=None, oldobject=None, ui=None):
         """Extend and create toplevel widget to delete chess engine definition.
 
         ui should be a UCI instance.
@@ -41,7 +41,10 @@ class EngineDbDelete(Bindings, DeleteText, DataDelete):
         """
         # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
-            oldobject, parent, EngineToplevel(master=parent, ui=ui), ""
+            instance=oldobject,
+            parent=parent,
+            oldview=EngineToplevel(master=parent, ui=ui),
+            title="",
         )
         self._initialize()
 

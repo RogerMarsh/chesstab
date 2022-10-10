@@ -46,7 +46,7 @@ from .displaytext import (
 
 
 class _QueryDisplay(
-    ShowText, DisplayText, Query, Display, DataNotify, Bindings
+    ShowText, DisplayText, Query, Display, Bindings, DataNotify
 ):
     """Extend and link game selection rule to database.
 

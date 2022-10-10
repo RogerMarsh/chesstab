@@ -38,11 +38,14 @@ class CQLDbDelete(Bindings, DeleteText, DataDelete):
 
     text_name = "ChessQL Statement"
 
-    def __init__(self, parent, oldobject, ui=None):
+    def __init__(self, parent=None, oldobject=None, ui=None):
         """Extend and create toplevel widget to delete ChessQL statement."""
         # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
-            oldobject, parent, CQLToplevel(master=parent, ui=ui), ""
+            instance=oldobject,
+            parent=parent,
+            oldview=CQLToplevel(master=parent, ui=ui),
+            title="",
         )
         self._initialize()
 

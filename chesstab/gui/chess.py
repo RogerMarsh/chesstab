@@ -134,6 +134,7 @@ class Chess(Bindings):
         **kargs - passed through to database object
 
         """
+        super().__init__()
         self.root = tkinter.Tk()
         try:
             self.root.wm_title(APPLICATION_NAME)
@@ -505,6 +506,7 @@ class Chess(Bindings):
         if self.opendatabase:
             self.opendatabase.close_database()
             self.opendatabase = None
+        super().__del__()
 
     # The methods which do actions on an open database.
 

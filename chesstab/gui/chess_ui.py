@@ -98,6 +98,7 @@ class ChessUI(Bindings):
         uci: ChessUI objects communicate with chess engines via uci object.
         toolbarframe: selection rule control widgets are placed here.
         """
+        super().__init__()
         self.top_pw = panel
         self.database = None
         self.partialpositionds = None

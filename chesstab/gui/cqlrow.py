@@ -77,7 +77,7 @@ class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
         oldobject - a ChessDBrecordPartial containing original data
 
         """
-        return CQLDbShow(dialog, oldobject, ui=self.ui)
+        return CQLDbShow(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def delete_row(self, dialog, oldobject):
         """Return a CQLDbDelete dialog for instance.
@@ -86,7 +86,7 @@ class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
         oldobject - a ChessDBrecordPartial containing original data
 
         """
-        return CQLDbDelete(dialog, oldobject, ui=self.ui)
+        return CQLDbDelete(parent=dialog, oldobject=oldobject, ui=self.ui)
 
     def edit_row(self, dialog, newobject, oldobject, showinitial=True):
         """Return a CQLDbEdit dialog for instance.
@@ -99,7 +99,11 @@ class ChessDBrowCQL(AllRow, ChessDBrecordPartial, DataRow):
 
         """
         return CQLDbEdit(
-            newobject, dialog, oldobject, showinitial=showinitial, ui=self.ui
+            newobject=newobject,
+            parent=dialog,
+            oldobject=oldobject,
+            showinitial=showinitial,
+            ui=self.ui,
         )
 
     def grid_row(self, textitems=(), **kargs):

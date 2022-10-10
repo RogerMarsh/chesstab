@@ -95,6 +95,7 @@ class Board(Bindings):
         adjust fonts. Neither propagates geometry changes to it's master.
 
         """
+        super().__init__()
         self.ui = ui
         if boardfont:
             self.boardfont = boardfont

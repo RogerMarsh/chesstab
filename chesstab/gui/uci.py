@@ -40,6 +40,7 @@ class UCI(Bindings):
 
     def __init__(self, menu_engines, menu_commands):
         """Build the engine and command menus for the menubar."""
+        super().__init__()
         self._do_toplevel = None
         self._show_engines_toplevel = None
         self.database = None

@@ -53,17 +53,22 @@ class RepertoireDbEdit(Bindings, EditPGN, DataEdit):
     pgn_score_source = "No opening name"
 
     def __init__(
-        self, newobject, parent, oldobject, showinitial=True, ui=None
+        self,
+        newobject=None,
+        parent=None,
+        oldobject=None,
+        showinitial=True,
+        ui=None,
     ):
         """Extend and create toplevel to edit or insert repertoire."""
         if not oldobject:
             showinitial = False
         super().__init__(
-            newobject,
-            parent,
-            oldobject,
-            RepertoireToplevelEdit(master=parent, ui=ui),
-            "",
+            newobject=newobject,
+            parent=parent,
+            oldobject=oldobject,
+            newview=RepertoireToplevelEdit(master=parent, ui=ui),
+            title="",
             oldview=RepertoireToplevel(master=parent, ui=ui)
             if showinitial
             else showinitial,

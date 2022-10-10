@@ -35,11 +35,14 @@ class QueryDbDelete(Bindings, DeleteText, DataDelete):
 
     text_name = "Selection Rule Statement"
 
-    def __init__(self, parent, oldobject, ui=None):
+    def __init__(self, parent=None, oldobject=None, ui=None):
         """Extend and create toplevel widget to delete game selection rule."""
         # Toplevel title set '' in __init__ and to proper value in _initialize.
         super().__init__(
-            oldobject, parent, QueryToplevel(master=parent, ui=ui), ""
+            instance=oldobject,
+            parent=parent,
+            oldview=QueryToplevel(master=parent, ui=ui),
+            title="",
         )
         if ui is not None:
             self.oldview.query_statement.set_database(
