@@ -257,7 +257,7 @@ class UCI(Bindings):
             return
         self._command = initial_value.split(None, maxsplit=1)[0]
         self._do_toplevel = tkinter.Toplevel(
-            master=self.menu_engines.winfo_toplevel()
+            master=self.menu_engines.winfo_toplevel(), cnf={}
         )
         if hint:
             if wraplength is None:
@@ -270,7 +270,7 @@ class UCI(Bindings):
             ).pack()
         entrythingy = tkinter.Entry(self._do_toplevel)
         entrythingy.pack(fill=tkinter.BOTH)
-        buttonbar = tkinter.Frame(master=self._do_toplevel)
+        buttonbar = tkinter.Frame(master=self._do_toplevel, cnf={})
         buttonbar.pack(fill=tkinter.X, expand=tkinter.TRUE)
         cancel = tkinter.Button(
             master=buttonbar,
@@ -594,7 +594,7 @@ class UCI(Bindings):
 
         self._spinbox = initial_value
         self._do_toplevel = tkinter.Toplevel(
-            master=self.menu_engines.winfo_toplevel()
+            master=self.menu_engines.winfo_toplevel(), cnf={}
         )
         self._do_toplevel.bind("<Destroy>", destroy)
         if hint:
@@ -608,7 +608,7 @@ class UCI(Bindings):
             ).pack()
         entrythingy = tkinter.Spinbox(self._do_toplevel)
         entrythingy.pack(fill=tkinter.BOTH)
-        buttonbar = tkinter.Frame(master=self._do_toplevel)
+        buttonbar = tkinter.Frame(master=self._do_toplevel, cnf={})
         buttonbar.pack(fill=tkinter.X, expand=tkinter.TRUE)
         tkinter.Button(
             master=buttonbar,
@@ -645,7 +645,7 @@ class UCI(Bindings):
             self._show_engines_toplevel = None
 
         self._show_engines_toplevel = tkinter.Toplevel(
-            master=self.menu_engines.winfo_toplevel()
+            master=self.menu_engines.winfo_toplevel(), cnf={}
         )
         self._show_engines_toplevel.wm_title("Chess Engines")
         self._show_engines_toplevel.bind("<Destroy>", destroy)

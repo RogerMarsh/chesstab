@@ -56,7 +56,9 @@ class CQL(CQLText, EventBinding):
     ):
         """Create Frame and delegate to superclass, then set grid geometry."""
         del boardfont
-        panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
+        panel = tkinter.Frame(
+            master=master, cnf=dict(borderwidth=2, relief=tkinter.RIDGE)
+        )
         panel.bind("<Configure>", self.try_event(self._on_configure))
         panel.grid_propagate(False)
         super().__init__(

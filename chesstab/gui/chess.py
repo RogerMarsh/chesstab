@@ -466,7 +466,7 @@ class Chess(Bindings):
                     self.try_event(self.create_menu_changed_callback(menu)),
                 )
 
-            toolbarframe = tkinter.ttk.Frame(self.root)
+            toolbarframe = tkinter.ttk.Frame(master=self.root)
             toolbarframe.pack(side=tkinter.TOP, fill=tkinter.X)
             self.statusbar = Statusbar(
                 toolbarframe, self.root.cget("background")

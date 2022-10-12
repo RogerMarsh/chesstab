@@ -119,7 +119,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     ):
         """Create Frame and Board, then delegate, then set grid geometry."""
         self.ui = ui
-        panel = tkinter.Frame(master, borderwidth=2, relief=tkinter.RIDGE)
+        panel = tkinter.Frame(
+            master=master, cnf=dict(borderwidth=2, relief=tkinter.RIDGE)
+        )
         panel.bind("<Configure>", self.try_event(self._on_configure_initial))
         panel.grid_propagate(False)
         board = Board(panel, boardfont=boardfont, ui=ui)

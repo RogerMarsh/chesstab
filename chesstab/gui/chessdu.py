@@ -85,9 +85,9 @@ class ChessDeferredUpdate(Bindings):
                 )
             )
         )
-        frame = tkinter.Frame(master=self.root)
+        frame = tkinter.Frame(master=self.root, cnf={})
         frame.pack(side=tkinter.BOTTOM)
-        self.buttonframe = tkinter.Frame(master=frame)
+        self.buttonframe = tkinter.Frame(master=frame, cnf={})
         self.buttonframe.pack(side=tkinter.BOTTOM)
 
         # See comment near end of this class definition for explanation of this
@@ -138,17 +138,14 @@ class ChessDeferredUpdate(Bindings):
         # Consequential changes, self.append_text to self.report.append_text
         # mainly, are not marked.
         # Added 07 August 2016:
+        # Edited 12 October 2022 when all tkinter.Text arguments put in cnf.
         # _get_default_font_actual() value used as cnf to avoid picking fonts
         # like 'Chess Cases' as default font when running under Wine from
         # ~/.wine/drive_c/windows/Fonts or /usr/local/share/fonts.
-        # The cnf is not needed under Microsoft Windows or unix-like OS.
-        self.report = LogText(
-            master=self.root,
-            wrap=tkinter.WORD,
-            undo=tkinter.FALSE,
-            get_app=self,
-            cnf=_get_default_font_actual(tkinter.Text),
-        )
+        # The _get_default_font_actual() value is not needed in cnf otherwise.
+        cnf = _get_default_font_actual(tkinter.Text)
+        cnf.update(dict(wrap=tkinter.WORD, undo=tkinter.FALSE))
+        self.report = LogText(master=self.root, get_app=self, cnf=cnf)
         self.report.focus_set()
         self.report.bind(
             "<Alt-b>", self.try_event(self._do_import_with_backup)

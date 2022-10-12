@@ -74,7 +74,7 @@ class _ColourScheme(Bindings):
             self.wildpiecesfont = tkinter.font.nametofont(
                 constants.WILDPIECES_ON_BOARD_FONT
             ).copy()
-        self.chooser = tkinter.Toplevel(height=height, width=700)
+        self.chooser = tkinter.Toplevel(cnf=dict(height=height, width=700))
         self.chooser.wm_resizable(False, False)
         self.chooser.wm_title(title)
         self.chooser.pack_propagate(False)
@@ -137,7 +137,7 @@ class _ColourScheme(Bindings):
 
     def _create_buttons(self, buttons):
         """Create buttons."""
-        buttons_frame = tkinter.Frame(master=self.chooser)
+        buttons_frame = tkinter.Frame(master=self.chooser, cnf={})
         buttons_frame.pack(side=tkinter.BOTTOM, fill=tkinter.X)
         buttonrow = buttons_frame.pack_info()["side"] in ("top", "bottom")
         for index, item in enumerate(buttons):
@@ -160,7 +160,7 @@ class _ColourScheme(Bindings):
 
     def _create_colour_frame(self):
         """Create colour selector widgets."""
-        colour_frame = tkinter.Frame(master=self.chooser)
+        colour_frame = tkinter.Frame(master=self.chooser, cnf={})
         colour_frame.pack(fill=tkinter.X)
         gboard = self.game.board
         for row, label, color, setter in (
@@ -221,15 +221,15 @@ class _ColourScheme(Bindings):
 
             return fset
 
-        font_frame = tkinter.Frame(master=self.chooser)
+        font_frame = tkinter.Frame(master=self.chooser, cnf={})
         font_frame.pack(fill=tkinter.X)
         # font chooser for board
         font_frame.columnconfigure(0, weight=1, uniform="fontpanels")
         tkinter.Label(master=font_frame, text="Pieces").grid_configure(
             row=0, column=0
         )
-        fontfr = tkinter.Frame(master=font_frame, padx=5)
-        boardfr = tkinter.Frame(master=fontfr)
+        fontfr = tkinter.Frame(master=font_frame, cnf=dict(padx=5))
+        boardfr = tkinter.Frame(master=fontfr, cnf={})
         self.b_families = tkinter.Listbox(boardfr)
         scrollfont = tkinter.Scrollbar(boardfr)
         scrollfont.configure(
@@ -243,7 +243,7 @@ class _ColourScheme(Bindings):
         )
         scrollfont.pack(side=tkinter.LEFT, fill=tkinter.Y)
         boardfr.pack(fill=tkinter.Y, expand=tkinter.TRUE)
-        wssf = tkinter.Frame(master=fontfr)
+        wssf = tkinter.Frame(master=fontfr, cnf={})
         self.b_family = tkinter.Label(
             master=wssf, text=self.boardfont["family"]
         )
@@ -273,8 +273,8 @@ class _ColourScheme(Bindings):
         tkinter.Label(master=font_frame, text="Score").grid_configure(
             row=0, column=1
         )
-        fontfr = tkinter.Frame(master=font_frame, padx=5)
-        scorefr = tkinter.Frame(master=fontfr)
+        fontfr = tkinter.Frame(master=font_frame, cnf=dict(padx=5))
+        scorefr = tkinter.Frame(master=fontfr, cnf={})
         self.s_families = tkinter.Listbox(scorefr)
         scrollfont = tkinter.Scrollbar(scorefr)
         scrollfont.configure(
@@ -288,7 +288,7 @@ class _ColourScheme(Bindings):
         )
         scrollfont.pack(side=tkinter.LEFT, fill=tkinter.Y)
         scorefr.pack()
-        wssf = tkinter.Frame(master=fontfr)
+        wssf = tkinter.Frame(master=fontfr, cnf={})
         self.s_family = tkinter.Label(
             master=wssf, text=self.tags_variations_comments_font["family"]
         )
@@ -317,7 +317,7 @@ class _ColourScheme(Bindings):
         tkinter.Label(master=wssf, text="Size:").grid_configure(
             column=0, row=9
         )
-        sizeframe = tkinter.Frame(master=wssf)
+        sizeframe = tkinter.Frame(master=wssf, cnf={})
         fsize = self.tags_variations_comments_font.cget("size")
         sizeframe.grid_configure(
             column=1, row=9, columnspan=3, sticky=tkinter.EW

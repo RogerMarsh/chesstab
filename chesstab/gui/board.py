@@ -107,12 +107,15 @@ class Board(Bindings):
             self.font = tkinter.font.nametofont(self.boardfont).copy()
         except (AttributeError, tkinter.TclError):
             self.font = self.boardfont.copy()
-        self.container = tkinter.Frame(master, width=0, height=0)
+        self.container = tkinter.Frame(
+            master=master, cnf=dict(width=0, height=0)
+        )
         self.container.bind(
             "<Configure>", self.try_event(self._on_configure_container)
         )
         self.board = tkinter.Frame(
-            self.container, borderwidth=boardborder, relief=tkinter.SUNKEN
+            master=self.container,
+            cnf=dict(borderwidth=boardborder, relief=tkinter.SUNKEN)
         )
         board = self.board
         boardsquares = self.boardsquares
