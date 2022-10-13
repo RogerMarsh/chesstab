@@ -115,7 +115,7 @@ class Board(Bindings):
         )
         self.board = tkinter.Frame(
             master=self.container,
-            cnf=dict(borderwidth=boardborder, relief=tkinter.SUNKEN)
+            cnf=dict(borderwidth=boardborder, relief=tkinter.SUNKEN),
         )
         board = self.board
         boardsquares = self.boardsquares

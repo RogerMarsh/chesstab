@@ -6,7 +6,7 @@
 
 import tkinter
 
-from solentware_misc.gui.help import help_widget
+from solentware_misc.gui.help_ import help_widget
 
 from .. import help_
 
