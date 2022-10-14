@@ -19,6 +19,8 @@ import tkinter
 import tkinter.messagebox
 import re
 
+from solentware_misc.workarounds.workarounds import text_count
+
 from pgn_read.core.constants import (
     TAG_RESULT,
     SEVEN_TAG_ROSTER,
@@ -760,7 +762,7 @@ class GameEdit(Game):
 
     def delete_move_char_right(self, event):
         """ """
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
             self.process_move()
         elif self.is_game_or_rav_valid_without_move():
@@ -769,7 +771,7 @@ class GameEdit(Game):
 
     def delete_move_char_left(self, event):
         """ """
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
             )
@@ -780,7 +782,7 @@ class GameEdit(Game):
 
     def delete_token_char_right(self, event):
         """ """
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self.delete_char_next_to_insert_mark(tkinter.INSERT, END_EDIT_MARK)
         else:
             self.delete_empty_token()
@@ -788,7 +790,7 @@ class GameEdit(Game):
 
     def delete_token_char_left(self, event):
         """ """
-        if self.score.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(self.score, START_EDIT_MARK, END_EDIT_MARK) > 1:
             self.delete_char_next_to_insert_mark(
                 START_EDIT_MARK, tkinter.INSERT
             )
@@ -1932,7 +1934,7 @@ class GameEdit(Game):
     def delete_empty_move(self):
         """Delete empty move from PGN movetext and RAV if it is empty too."""
         widget = self.score
-        if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
         tr = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if not tr:
@@ -2079,7 +2081,7 @@ class GameEdit(Game):
     def delete_empty_token(self):
         """Delete empty non-move token from PGN movetext."""
         widget = self.score
-        if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] > 1:
+        if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) > 1:
             return
         tr = widget.tag_ranges(self.get_token_tag_for_position(self.current))
         if tr:
@@ -2107,12 +2109,12 @@ class GameEdit(Game):
 
         """
         widget = self.score
-        if widget.count(first, last)[0]:
+        if text_count(widget, first, last):
             if widget.compare(first, "==", tkinter.INSERT):
                 widget.delete(tkinter.INSERT)
             else:
                 widget.delete(tkinter.INSERT + "-1 chars")
-            if widget.count(START_EDIT_MARK, END_EDIT_MARK)[0] == 0:
+            if text_count(widget, START_EDIT_MARK, END_EDIT_MARK) == 0:
                 if (
                     self._lead
                 ):  # self.current will have a range. Or test range.
@@ -3935,12 +3937,12 @@ class GameEdit(Game):
 
     def get_token_text_length(self, start, end):
         """Set token editing bound marks from TOKEN<suffix> in tagnames"""
-        return self.score.count(start, end)[0]
+        return text_count(self.score, start, end)
 
     def set_marks_for_editing_comment_eol(self, tagnames, tagranges):
         """Set token editing bound marks from TOKEN<suffix> in tagnames"""
         start, end = tagranges
-        if self.score.count(start, end)[0] < 2:
+        if text_count(self.score, start, end) < 2:
             for tn in tagnames:
                 if tn.startswith(TOKEN):
                     start = self.score.tag_nextrange(tn, "1.0")[0]
@@ -4255,7 +4257,7 @@ class GameEdit(Game):
                 return
         widget = self.score
         start, end = widget.tag_ranges(self.current)
-        non_empty = widget.count(start, end)[0] - self._header_length
+        non_empty = text_count(widget, start, end) - self._header_length
         insert = str(widget.index(tkinter.INSERT))
         copy_from_insert = widget.compare(start, "==", insert)
         widget.insert(tkinter.INSERT, char)
