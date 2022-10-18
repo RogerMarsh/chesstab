@@ -85,9 +85,9 @@ class ChessDeferredUpdate(Bindings):
                 )
             )
         )
-        frame = tkinter.Frame(master=self.root, cnf={})
+        frame = tkinter.Frame(master=self.root)
         frame.pack(side=tkinter.BOTTOM)
-        self.buttonframe = tkinter.Frame(master=frame, cnf={})
+        self.buttonframe = tkinter.Frame(master=frame)
         self.buttonframe.pack(side=tkinter.BOTTOM)
 
         # See comment near end of this class definition for explanation of this
