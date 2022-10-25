@@ -21,7 +21,7 @@ main display (that includes widgets displaying text).
 
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .game import Game
 from .gameedit import GameEdit

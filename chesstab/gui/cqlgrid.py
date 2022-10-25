@@ -8,7 +8,7 @@ import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from ..core.chessrecord import ChessDBrecordPartial
 from .cqldisplay import CQLDisplay, CQLDisplayEdit

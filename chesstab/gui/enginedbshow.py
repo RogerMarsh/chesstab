@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .enginetoplevel import EngineToplevel
 from .topleveltext import ShowText

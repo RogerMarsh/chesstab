@@ -245,7 +245,7 @@ class Score(SharedTextScore, BlankText):
         for sequence, function in bindings:
             stef = ste(function) if switch and function else ""
             for widget in sbbv():
-                widget.bind(sequence[0], stef)
+                self.bind(widget, sequence[0], function=stef)
 
     # Renamed from 'bind_for_select_variation_mode' when 'bind_for_*' methods
     # tied to Tk Text widget tag names were introduced.

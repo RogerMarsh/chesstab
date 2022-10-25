@@ -6,7 +6,7 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 

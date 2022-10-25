@@ -30,7 +30,7 @@ x  any black piece
 import tkinter
 import tkinter.font
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
@@ -110,8 +110,10 @@ class Board(Bindings):
         self.container = tkinter.Frame(
             master=master, cnf=dict(width=0, height=0)
         )
-        self.container.bind(
-            "<Configure>", self.try_event(self._on_configure_container)
+        self.bind(
+            self.container,
+            "<Configure>",
+            function=self.try_event(self._on_configure_container)
         )
         self.board = tkinter.Frame(
             master=self.container,

@@ -11,7 +11,7 @@ import tkinter.filedialog
 
 from solentware_grid.core.dataclient import DataSource
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from uci_net.engine import (
     ReservedOptionNames,
@@ -282,7 +282,7 @@ class UCI(Bindings):
         self._contents = tkinter.StringVar()
         self._contents.set(initial_value)
         entrythingy["textvariable"] = self._contents
-        entrythingy.bind("<Key-Return>", callback)
+        self.bind(entrythingy, "<Key-Return>", function=callback)
         entrythingy.focus_set()
 
     def run_engine(self, program_file_name, args=None):
@@ -596,7 +596,7 @@ class UCI(Bindings):
         self._do_toplevel = tkinter.Toplevel(
             master=self.menu_engines.winfo_toplevel()
         )
-        self._do_toplevel.bind("<Destroy>", destroy)
+        self.bind(self._do_toplevel, "<Destroy>", function=destroy)
         if hint:
             if wraplength is None:
                 wraplength = 400
@@ -620,7 +620,7 @@ class UCI(Bindings):
         self._contents = tkinter.IntVar()
         self._contents.set(initial_value)
         entrythingy["textvariable"] = self._contents
-        entrythingy.bind("<Key-Return>", callback)
+        self.bind(entrythingy, "<Key-Return>", function=callback)
         entrythingy.focus_set()
 
     def _show_engines(self):
@@ -648,7 +648,7 @@ class UCI(Bindings):
             master=self.menu_engines.winfo_toplevel()
         )
         self._show_engines_toplevel.wm_title("Chess Engines")
-        self._show_engines_toplevel.bind("<Destroy>", destroy)
+        self.bind(self._show_engines_toplevel, "<Destroy>", function=destroy)
         self._close_engine_grid()
 
         # The after_idle version makes it less common for the Toplevel to not

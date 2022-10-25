@@ -29,7 +29,7 @@ import queue
 
 from solentware_grid.core.dataclient import DataSource
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .gamerow import chess_db_row_game
 from .positionrow import chess_db_row_position

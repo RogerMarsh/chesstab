@@ -11,7 +11,8 @@ Costeff).
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
-from solentware_misc.gui.bindings import Bindings
+
+from solentware_bind.gui.bindings import Bindings
 
 from .cqltoplevel import CQLToplevel, CQLToplevelEdit
 from .topleveltext import EditText

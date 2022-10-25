@@ -7,6 +7,7 @@
 import tkinter
 
 from solentware_grid.gui.datarow import (
+    DataRow,
     GRID_COLUMNCONFIGURE,
     GRID_CONFIGURE,
     WIDGET_CONFIGURE,
@@ -26,7 +27,6 @@ from pgn_read.core.constants import (
     DEFAULT_TAG_RESULT_VALUE,
 )
 
-from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordGameTags
 from . import constants
 from ..shared.allrow import AllRow

@@ -12,7 +12,7 @@ this class because their Text widgets come from solentware_grid.gui.DataRow.
 import tkinter
 import enum
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .eventspec import EventSpec
 from .displayitems import DisplayItemsStub
@@ -124,8 +124,10 @@ class BlankText(BlankTextEventBinding, Bindings):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
         for sequence, function in bindings:
-            self.score.bind(
-                sequence[0], ste(function) if switch and function else ""
+            self.bind(
+                self.score,
+                sequence[0],
+                function=ste(function) if switch and function else ""
             )
 
     def _set_keypress_binding(self, function=None, bindings=(), switch=True):
@@ -133,11 +135,11 @@ class BlankText(BlankTextEventBinding, Bindings):
         if switch and function:
             stef = self.try_event(function)
             for sequence in bindings:
-                self.score.bind(sequence[0], stef)
+                self.bind(self.score, sequence[0], function=stef)
         else:
             stekb = self.try_event(self.press_break)
             for sequence in bindings:
-                self.score.bind(sequence[0], stekb)
+                self.bind(self.score, sequence[0], function=stekb)
 
     def _get_menubar_events(self):
         """Return tuple of event binding definitions passed for menubar."""

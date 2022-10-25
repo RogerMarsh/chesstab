@@ -308,7 +308,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             command=try_command_wrapper(self._increase_index, master),
         )
         index.pack(side=tkinter.RIGHT, padx=12)
-        widget.bind("<Alt-x>", try_event_wrapper(self._increase_index))
+        self.bind(widget, "<Alt-x>", try_event_wrapper(self._increase_index))
         data = tkinter.Button(
             master=master,
             text="Increase Data",
@@ -316,7 +316,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             command=try_command_wrapper(self._increase_data, master),
         )
         data.pack(side=tkinter.RIGHT, padx=12)
-        widget.bind("<Alt-d>", try_event_wrapper(self._increase_data))
+        self.bind(widget, "<Alt-d>", try_event_wrapper(self._increase_data))
 
     def _increase_data(self, event=None):
         """Add maximum of current free space and default size to Table B.
@@ -655,14 +655,14 @@ if __name__ == "__main__":
         text.insert(
             tkinter.END, "\nRight-click to proceed after each step\n\n"
         )
-        text.bind("<Alt-KeyPress-F2>", proceed)
-        text.bind("<Alt-KeyPress-F11>", quit_)
-        text.bind("<ButtonPress-3>", show_menu)
+        self.bind(text, "<Alt-KeyPress-F2>", function=proceed)
+        self.bind(text, "<Alt-KeyPress-F11>", function=quit_)
+        self.bind(text, "<ButtonPress-3>", function=show_menu)
     else:
         menu.add_separator()
         menu.add_command(label="Quit", command=quit_, accelerator="Alt F11")
         menu.add_separator()
         text.insert(tkinter.END, "\nRight-click to quit\n")
-        text.bind("<Alt-KeyPress-F11>", quit_)
-        text.bind("<ButtonPress-3>", show_menu)
+        self.bind(text, "<Alt-KeyPress-F11>", function=quit_)
+        self.bind(text, "<ButtonPress-3>", function=show_menu)
     root.mainloop()

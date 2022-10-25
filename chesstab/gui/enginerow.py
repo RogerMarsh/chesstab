@@ -7,6 +7,7 @@
 import tkinter
 
 from solentware_grid.gui.datarow import (
+    DataRow,
     GRID_COLUMNCONFIGURE,
     GRID_CONFIGURE,
     WIDGET_CONFIGURE,
@@ -14,7 +15,6 @@ from solentware_grid.gui.datarow import (
     ROW,
 )
 
-from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordEngine
 from .enginedbedit import EngineDbEdit
 from .enginedbdelete import EngineDbDelete

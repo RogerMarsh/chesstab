@@ -12,7 +12,7 @@ PositionScore
 
 import tkinter
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
@@ -102,7 +102,7 @@ class PositionScore(Bindings):
         widget.tag_configure(MOVE_TAG, background=self.m_color)
         widget.tag_configure(ALTERNATIVE_MOVE_TAG, background=self.am_color)
         widget.tag_configure(VARIATION_TAG, background=self.v_color)
-        widget.bind("<Map>", self.try_event(self._on_map))
+        self.bind(widget, "<Map>", function=self.try_event(self._on_map))
         # None implies initial position and is deliberately not a valid Tk tag.
         self.current = None  # Tk tag of current move
         self._clear_tag_maps()

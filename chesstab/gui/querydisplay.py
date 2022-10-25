@@ -29,7 +29,7 @@ from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 from solentware_grid.core.dataclient import DataNotify
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .query import Query
 from .queryedit import QueryEdit

@@ -10,6 +10,7 @@ import tkinter
 from ast import literal_eval
 
 from solentware_grid.gui.datarow import (
+    DataRow,
     GRID_COLUMNCONFIGURE,
     GRID_CONFIGURE,
     WIDGET_CONFIGURE,
@@ -17,7 +18,6 @@ from solentware_grid.gui.datarow import (
     ROW,
 )
 
-from .datarow import DataRow
 from . import constants
 from ..core.chessrecord import ChessDBrecordGamePosition
 from .positionscore import PositionScore

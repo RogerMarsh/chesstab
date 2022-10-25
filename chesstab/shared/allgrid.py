@@ -128,9 +128,12 @@ class AllGrid:
     def _set_event_bindings_frame(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event
+        frm = self.frame
         for sequence, function in bindings:
-            self.frame.bind(
-                sequence[0], ste(function) if switch and function else ""
+            self.bind(
+                frm,
+                sequence[0],
+                function=ste(function) if switch and function else ""
             )
 
     def _set_grid_database(self, object_):

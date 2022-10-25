@@ -10,7 +10,7 @@ from urllib.parse import urlunsplit
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from ..core.chessrecord import ChessDBrecordEngine
 from .enginerow import ChessDBrowEngine

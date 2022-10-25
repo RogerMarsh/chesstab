@@ -7,6 +7,7 @@
 import tkinter
 
 from solentware_grid.gui.datarow import (
+    DataRow,
     GRID_COLUMNCONFIGURE,
     GRID_CONFIGURE,
     WIDGET_CONFIGURE,
@@ -16,7 +17,6 @@ from solentware_grid.gui.datarow import (
 
 from pgn_read.core.constants import TAG_RESULT
 
-from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordRepertoireTags
 from .repertoiredbedit import RepertoireDbEdit
 from .repertoiredbdelete import RepertoireDbDelete

@@ -7,7 +7,7 @@ import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .querytoplevel import QueryToplevel, QueryToplevelEdit
 from .topleveltext import EditText

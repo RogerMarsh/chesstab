@@ -60,7 +60,6 @@ class Query(QueryText, EventBinding):
         panel = tkinter.Frame(
             master=master, cnf=dict(borderwidth=2, relief=tkinter.RIDGE)
         )
-        panel.bind("<Configure>", self.try_event(self._on_configure))
         panel.grid_propagate(False)
         super().__init__(
             panel, ui=ui, items_manager=items_manager, itemgrid=itemgrid, **ka
@@ -69,6 +68,9 @@ class Query(QueryText, EventBinding):
         self.score.grid(column=0, row=0, rowspan=1, sticky=tkinter.NSEW)
         if not ui.visible_scrollbars:
             panel.after_idle(self.hide_scrollbars)
+        self.bind(
+            panel, "<Configure>", function=self.try_event(self._on_configure)
+        )
         self._configure_selection_widget()
 
         # The popup menus specific to Query (placed same as Game equivalent)

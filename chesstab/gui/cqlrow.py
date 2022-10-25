@@ -12,9 +12,9 @@ from solentware_grid.gui.datarow import (
     WIDGET_CONFIGURE,
     WIDGET,
     ROW,
+    DataRow,
 )
 
-from .datarow import DataRow
 from ..core.chessrecord import ChessDBrecordPartial
 from .cqldbedit import CQLDbEdit
 from .cqldbdelete import CQLDbDelete

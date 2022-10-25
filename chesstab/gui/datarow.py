@@ -6,7 +6,7 @@
 
 from solentware_grid.gui import datarow
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 
 class DataRow(Bindings, datarow.DataRow):

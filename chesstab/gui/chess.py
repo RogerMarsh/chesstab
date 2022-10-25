@@ -43,8 +43,9 @@ from solentware_base import modulequery
 from solentware_grid.core.dataclient import DataSource
 
 from solentware_misc.core import callthreadqueue
-from solentware_misc.gui.bindings import Bindings
-from solentware_misc.gui.exceptionhandler import ExceptionHandler
+
+from solentware_bind.gui.bindings import Bindings
+from solentware_bind.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
 
@@ -461,9 +462,12 @@ class Chess(Bindings):
             self.root.configure(menu=menubar)
 
             for menu in menus:
-                menu.bind(
+                self.bind(
+                    menu,
                     "<<MenuSelect>>",
-                    self.try_event(self.create_menu_changed_callback(menu)),
+                    function=self.try_event(
+                        self.create_menu_changed_callback(menu)
+                    ),
                 )
 
             toolbarframe = tkinter.ttk.Frame(master=self.root)

@@ -36,6 +36,7 @@ import re
 
 from solentware_base import modulequery
 from solentware_base.core.record import KeyData, Value, Record
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core import parser
 
@@ -4743,6 +4744,7 @@ class ChessDBrecordGameUpdate131(Record):
 
 class Main:
     def __init__(self):
+        self._bindings = Bindings()
         root = tkinter.Tk()
         root.wm_title(string="Castling Option Corrections")
         root.wm_resizable(width=tkinter.FALSE, height=tkinter.TRUE)
@@ -4781,8 +4783,8 @@ class Main:
         self.chesstab_directory = chesstab_directory
         self.counter = counter
         self.set_menu_and_entry_events(True)
-        entry.bind("<ButtonPress-3>", self.show_menu)
-        text.bind("<ButtonPress-3>", self.show_menu)
+        self._bindings.bind(entry, "<ButtonPress-3>", function=self.show_menu)
+        self._bindings.bind(text, "<ButtonPress-3>", function=self.show_menu)
         entry.focus_set()
         self._database_class = None
         self._fullposition_class = None
@@ -5186,36 +5188,41 @@ class Main:
         for entry in (self.text,):
             self._bind_for_scrolling_only(entry)
         for entry in self.entry, self.text:
-            entry.bind(
+            self._bindings.bind(
+                entry,
                 "<Alt-KeyPress-F5>",
-                "" if not active else self.select_chesstab_database,
+                function="" if not active else self.select_chesstab_database,
             )
-            entry.bind(
+            self._bindings.bind(
+                entry,
                 "<Alt-KeyPress-F4>",
-                ""
+                function=""
                 if not active
                 else self.report_games_with_inconsistent_castling_options,
             )
-            entry.bind(
+            self._bindings.bind(
+                entry,
                 "<KeyPress-Return>",
-                ""
+                function=""
                 if not active
                 else self.report_games_with_inconsistent_castling_options,
             )
-            entry.bind(
-                "<Alt-KeyPress-F2>", "" if not active else self.save_log_as
+            self._bindings.bind(
+                entry,
+                "<Alt-KeyPress-F2>",
+                function="" if not active else self.save_log_as
             )
 
     def _bind_for_scrolling_only(self, widget):
-        widget.bind("<KeyPress>", "break")
-        widget.bind("<Home>", "return")
-        widget.bind("<Left>", "return")
-        widget.bind("<Up>", "return")
-        widget.bind("<Right>", "return")
-        widget.bind("<Down>", "return")
-        widget.bind("<Prior>", "return")
-        widget.bind("<Next>", "return")
-        widget.bind("<End>", "return")
+        self._bindings.bind(widget, "<KeyPress>", function="break")
+        self._bindings.bind(widget, "<Home>", function="return")
+        self._bindings.bind(widget, "<Left>", function="return")
+        self._bindings.bind(widget, "<Up>", function="return")
+        self._bindings.bind(widget, "<Right>", function="return")
+        self._bindings.bind(widget, "<Down>", function="return")
+        self._bindings.bind(widget, "<Prior>", function="return")
+        self._bindings.bind(widget, "<Next>", function="return")
+        self._bindings.bind(widget, "<End>", function="return")
 
 
 if __name__ == "__main__":

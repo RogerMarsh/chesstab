@@ -11,7 +11,7 @@ Costeff).
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_misc.gui.bindings import Bindings
+from solentware_bind.gui.bindings import Bindings
 
 from .cqltoplevel import CQLToplevel
 from .topleveltext import ShowText

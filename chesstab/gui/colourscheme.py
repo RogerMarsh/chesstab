@@ -8,7 +8,8 @@ import tkinter
 import tkinter.font
 
 from solentware_misc.gui.colourslider import ColourSlider
-from solentware_misc.gui.bindings import Bindings
+
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -257,7 +258,7 @@ class _ColourScheme(Bindings):
             indicatoron=tkinter.FALSE,
         )
         checkbutton.grid_configure(column=0, row=3, sticky=tkinter.EW)
-        checkbutton.bind("<ButtonPress>", self.try_event(focus(checkbutton)))
+        self.bind(checkbutton, "<ButtonPress>", function=self.try_event(focus(checkbutton)))
         self.b_weight.set(tkinter.TRUE)
         wssf.grid_columnconfigure(0, weight=1)
         wssf.grid_rowconfigure(0, minsize=5)
@@ -265,8 +266,8 @@ class _ColourScheme(Bindings):
         wssf.grid_rowconfigure(4, minsize=5)
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=0, sticky=tkinter.NS)
-        self.b_families.bind(
-            "<<ListboxSelect>>", self.try_event(self._set_board_font_family)
+        self.bind(
+            self.b_families, "<<ListboxSelect>>", function=self.try_event(self._set_board_font_family)
         )
         # font chooser for score
         font_frame.columnconfigure(1, weight=2, uniform="fontpanels")
@@ -337,11 +338,11 @@ class _ColourScheme(Bindings):
                 self.s_size.set(item)
             sbutton.grid_configure(column=index + 1, row=0, sticky=tkinter.EW)
             sizeframe.grid_columnconfigure(index + 1, weight=1, uniform="fsb")
-            sbutton.bind("<ButtonPress>", self.try_event(focus(sbutton)))
+            self.bind(sbutton, "<ButtonPress>", function=self.try_event(focus(sbutton)))
         wssf.pack(fill=tkinter.X)
         fontfr.grid_configure(row=1, column=1)
-        self.s_families.bind(
-            "<<ListboxSelect>>", self.try_event(self._set_score_font_family)
+        self.bind(
+            self.s_families, "<<ListboxSelect>>", function=self.try_event(self._set_score_font_family)
         )
 
     def _create_game_frame(self):
@@ -358,7 +359,7 @@ class _ColourScheme(Bindings):
             del event
             self.game.score.focus_set()
 
-        self.game.score.bind("<ButtonPress>", self.try_event(focus))
+        self.bind(self.game.score, "<ButtonPress>", function=self.try_event(focus))
         gamescore = "".join(
             (
                 '[Event"National Club: Gosport - Wood Green"]',
@@ -629,8 +630,8 @@ class _ColourScheme(Bindings):
             radiobutton.grid_configure(
                 column=index, row=baserow, sticky=tkinter.EW
             )
-            radiobutton.bind(
-                "<ButtonPress>", self.try_event(focus(radiobutton))
+            self.bind(
+                radiobutton, "<ButtonPress>", function=self.try_event(focus(radiobutton))
             )
         radiobutton = tkinter.Radiobutton(
             master=frame,
@@ -643,7 +644,7 @@ class _ColourScheme(Bindings):
         radiobutton.grid_configure(
             column=1, row=baserow + 1, columnspan=3, sticky=tkinter.EW
         )
-        radiobutton.bind("<ButtonPress>", self.try_event(focus(radiobutton)))
+        self.bind(radiobutton, "<ButtonPress>", function=self.try_event(focus(radiobutton)))
 
 
 class ColourChooser(_ColourScheme):

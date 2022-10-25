@@ -122,7 +122,6 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         panel = tkinter.Frame(
             master=master, cnf=dict(borderwidth=2, relief=tkinter.RIDGE)
         )
-        panel.bind("<Configure>", self.try_event(self._on_configure_initial))
         panel.grid_propagate(False)
         board = Board(panel, boardfont=boardfont, ui=ui)
         super().__init__(
@@ -136,6 +135,11 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             **ka
         )
         self.scrollbar.grid(column=2, row=0, rowspan=1, sticky=tkinter.NSEW)
+        self.bind(
+            panel,
+            "<Configure>",
+            function=self.try_event(self._on_configure_initial)
+        )
         self.analysis = AnalysisScore(
             panel,
             board,
@@ -229,7 +233,11 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # Here extra first event has width=1 height=1 followed up by event
         # with required dimensions.
         del event
-        self.panel.bind("<Configure>", self.try_event(self._on_configure))
+        self.bind(
+            self.panel,
+            "<Configure>",
+            function=self.try_event(self._on_configure)
+        )
 
     def _on_configure(self, event=None):
         """Reconfigure board and score after container has been resized."""

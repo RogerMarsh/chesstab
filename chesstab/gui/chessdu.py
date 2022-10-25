@@ -16,7 +16,8 @@ import time
 
 from solentware_misc.core import callthreadqueue
 from solentware_misc.gui.tasklog import LogText
-from solentware_misc.gui.bindings import Bindings
+
+from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
@@ -140,20 +141,31 @@ class ChessDeferredUpdate(Bindings):
         # Added 07 August 2016:
         # Edited 12 October 2022 when all tkinter.Text arguments put in cnf.
         # _get_default_font_actual() value used as cnf to avoid picking fonts
-        # like 'Chess Cases' as default font when running under Wine from
+        # like 'Chess Cases' as default font, when running under Wine, from
         # ~/.wine/drive_c/windows/Fonts or /usr/local/share/fonts.
         # The _get_default_font_actual() value is not needed in cnf otherwise.
-        cnf = _get_default_font_actual(tkinter.Text)
-        cnf.update(dict(wrap=tkinter.WORD, undo=tkinter.FALSE))
-        self.report = LogText(master=self.root, get_app=self, cnf=cnf)
+        # cnf = _get_default_font_actual(tkinter.Text) is not accepted as an
+        # argument by tkinter.Text().  It seems this argument was ignored
+        # previously en-route to the Text() call.
+        self.report = LogText(
+            master=self.root,
+            get_app=self,
+            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE))
         self.report.focus_set()
-        self.report.bind(
-            "<Alt-b>", self.try_event(self._do_import_with_backup)
+        self.bind(
+            self.report,
+            "<Alt-b>",
+            function=self.try_event(self._do_import_with_backup)
         )
-        self.report.bind(
-            "<Alt-i>", self.try_event(self._do_import_without_backup)
+        self.bind(
+            self.report,
+            "<Alt-i>",
+            function=self.try_event(self._do_import_without_backup)
         )
-        self.report.bind("<Alt-q>", self.try_event(self._quit_import))
+        self.bind(
+            self.report,
+            "<Alt-q>",
+            function=self.try_event(self._quit_import))
         self.database.add_import_buttons(
             self.buttonframe, self.try_command, self.try_event, self.report
         )
