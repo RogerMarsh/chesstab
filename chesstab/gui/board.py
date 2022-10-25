@@ -113,7 +113,7 @@ class Board(Bindings):
         self.bind(
             self.container,
             "<Configure>",
-            function=self.try_event(self._on_configure_container)
+            function=self.try_event(self._on_configure_container),
         )
         self.board = tkinter.Frame(
             master=self.container,

@@ -5210,7 +5210,7 @@ class Main:
             self._bindings.bind(
                 entry,
                 "<Alt-KeyPress-F2>",
-                function="" if not active else self.save_log_as
+                function="" if not active else self.save_log_as,
             )
 
     def _bind_for_scrolling_only(self, widget):

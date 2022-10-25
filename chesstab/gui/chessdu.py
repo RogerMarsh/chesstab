@@ -150,22 +150,22 @@ class ChessDeferredUpdate(Bindings):
         self.report = LogText(
             master=self.root,
             get_app=self,
-            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE))
+            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE),
+        )
         self.report.focus_set()
         self.bind(
             self.report,
             "<Alt-b>",
-            function=self.try_event(self._do_import_with_backup)
+            function=self.try_event(self._do_import_with_backup),
         )
         self.bind(
             self.report,
             "<Alt-i>",
-            function=self.try_event(self._do_import_without_backup)
+            function=self.try_event(self._do_import_without_backup),
         )
         self.bind(
-            self.report,
-            "<Alt-q>",
-            function=self.try_event(self._quit_import))
+            self.report, "<Alt-q>", function=self.try_event(self._quit_import)
+        )
         self.database.add_import_buttons(
             self.buttonframe, self.try_command, self.try_event, self.report
         )

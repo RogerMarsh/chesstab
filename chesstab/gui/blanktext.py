@@ -127,7 +127,7 @@ class BlankText(BlankTextEventBinding, Bindings):
             self.bind(
                 self.score,
                 sequence[0],
-                function=ste(function) if switch and function else ""
+                function=ste(function) if switch and function else "",
             )
 
     def _set_keypress_binding(self, function=None, bindings=(), switch=True):

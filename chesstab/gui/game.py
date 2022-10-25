@@ -138,7 +138,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.bind(
             panel,
             "<Configure>",
-            function=self.try_event(self._on_configure_initial)
+            function=self.try_event(self._on_configure_initial),
         )
         self.analysis = AnalysisScore(
             panel,
@@ -236,7 +236,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self.bind(
             self.panel,
             "<Configure>",
-            function=self.try_event(self._on_configure)
+            function=self.try_event(self._on_configure),
         )
 
     def _on_configure(self, event=None):

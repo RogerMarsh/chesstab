@@ -133,7 +133,7 @@ class AllGrid:
             self.bind(
                 frm,
                 sequence[0],
-                function=ste(function) if switch and function else ""
+                function=ste(function) if switch and function else "",
             )
 
     def _set_grid_database(self, object_):
