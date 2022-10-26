@@ -170,7 +170,7 @@ class ChessDeferredUpdate(Bindings):
             self.try_command,
             self.try_event,
             self.bind,
-            self.report
+            self.report,
         )
 
         self.report.tag_configure(
