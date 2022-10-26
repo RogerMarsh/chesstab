@@ -294,7 +294,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         return filesize, increase
 
     def add_import_buttons(
-        self, master, try_command_wrapper, try_event_wrapper, widget
+        self, master, try_command_wrapper, try_event_wrapper, bind, widget
     ):
         """Add button actions for DPT to Import dialogue.
 
@@ -308,7 +308,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             command=try_command_wrapper(self._increase_index, master),
         )
         index.pack(side=tkinter.RIGHT, padx=12)
-        self.bind(widget, "<Alt-x>", try_event_wrapper(self._increase_index))
+        bind(widget, "<Alt-x>", try_event_wrapper(self._increase_index))
         data = tkinter.Button(
             master=master,
             text="Increase Data",
@@ -316,7 +316,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             command=try_command_wrapper(self._increase_data, master),
         )
         data.pack(side=tkinter.RIGHT, padx=12)
-        self.bind(widget, "<Alt-d>", try_event_wrapper(self._increase_data))
+        bind(widget, "<Alt-d>", try_event_wrapper(self._increase_data))
 
     def _increase_data(self, event=None):
         """Add maximum of current free space and default size to Table B.
@@ -581,6 +581,9 @@ if __name__ == "__main__":
     import tkinter.ttk
     import tkinter.filedialog
 
+    from solentware_bind.gui.bindings import Bindings
+
+    binder = Bindings()
     root = tkinter.Tk()
     root.wm_title("Sample do_deferred_updates")
     frame = tkinter.ttk.Frame(master=root)
@@ -655,14 +658,14 @@ if __name__ == "__main__":
         text.insert(
             tkinter.END, "\nRight-click to proceed after each step\n\n"
         )
-        self.bind(text, "<Alt-KeyPress-F2>", function=proceed)
-        self.bind(text, "<Alt-KeyPress-F11>", function=quit_)
-        self.bind(text, "<ButtonPress-3>", function=show_menu)
+        binder.bind(text, "<Alt-KeyPress-F2>", function=proceed)
+        binder.bind(text, "<Alt-KeyPress-F11>", function=quit_)
+        binder.bind(text, "<ButtonPress-3>", function=show_menu)
     else:
         menu.add_separator()
         menu.add_command(label="Quit", command=quit_, accelerator="Alt F11")
         menu.add_separator()
         text.insert(tkinter.END, "\nRight-click to quit\n")
-        self.bind(text, "<Alt-KeyPress-F11>", function=quit_)
-        self.bind(text, "<ButtonPress-3>", function=show_menu)
+        binder.bind(text, "<Alt-KeyPress-F11>", function=quit_)
+        binder.bind(text, "<ButtonPress-3>", function=show_menu)
     root.mainloop()

@@ -27,7 +27,6 @@ from .. import (
     APPLICATION_NAME,
 )
 from ..core.filespec import GAMES_FILE_DEF
-from .fonts import _get_default_font_actual
 
 # Time taken to parse a sample of a PGN file is measured.
 # Number of games in file is estimated from number of bytes used in game scores
@@ -167,7 +166,11 @@ class ChessDeferredUpdate(Bindings):
             self.report, "<Alt-q>", function=self.try_event(self._quit_import)
         )
         self.database.add_import_buttons(
-            self.buttonframe, self.try_command, self.try_event, self.report
+            self.buttonframe,
+            self.try_command,
+            self.try_event,
+            self.bind,
+            self.report
         )
 
         self.report.tag_configure(
