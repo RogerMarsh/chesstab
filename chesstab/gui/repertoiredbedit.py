@@ -6,8 +6,6 @@
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_bind.gui.bindings import Bindings
-
 from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
@@ -19,7 +17,7 @@ from .toplevelpgn import EditPGN
 from .constants import EMPTY_REPERTOIRE_GAME
 
 
-class RepertoireDbEdit(Bindings, EditPGN, DataEdit):
+class RepertoireDbEdit(EditPGN, DataEdit):
     """Edit PGN text for repertoire on database, or insert a new record.
 
     parent is used as the master argument in RepertoireToplevel calls.

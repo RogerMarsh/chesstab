@@ -7,13 +7,11 @@ import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_bind.gui.bindings import Bindings
-
 from .enginetoplevel import EngineToplevel, EngineToplevelEdit
 from .topleveltext import EditText
 
 
-class EngineDbEdit(Bindings, EditText, DataEdit):
+class EngineDbEdit(EditText, DataEdit):
     """Edit chess engine definition on database, or insert a new record.
 
     parent is used as the master argument in EngineToplevelEdit calls.

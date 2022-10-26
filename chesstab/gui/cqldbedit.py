@@ -12,13 +12,11 @@ import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_bind.gui.bindings import Bindings
-
 from .cqltoplevel import CQLToplevel, CQLToplevelEdit
 from .topleveltext import EditText
 
 
-class CQLDbEdit(Bindings, EditText, DataEdit):
+class CQLDbEdit(EditText, DataEdit):
     """Edit ChessQL statement on database, or insert a new record.
 
     parent is used as the master argument in CQLToplevel calls.

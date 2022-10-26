@@ -11,13 +11,11 @@ Costeff).
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_bind.gui.bindings import Bindings
-
 from .cqltoplevel import CQLToplevel
 from .topleveltext import ShowText
 
 
-class CQLDbShow(Bindings, ShowText, DataShow):
+class CQLDbShow(ShowText, DataShow):
     """Show ChessQL statement from database.
 
     parent is used as the master argument in a CQLToplevel call.

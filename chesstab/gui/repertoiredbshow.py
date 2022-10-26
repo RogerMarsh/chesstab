@@ -6,8 +6,6 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_bind.gui.bindings import Bindings
-
 from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
@@ -15,7 +13,7 @@ from .repertoiretoplevel import RepertoireToplevel
 from .toplevelpgn import ShowPGN
 
 
-class RepertoireDbShow(Bindings, ShowPGN, DataShow):
+class RepertoireDbShow(ShowPGN, DataShow):
     """Show PGN text for repertoire from database.
 
     parent is used as the master argument in a RepertoireToplevel call.

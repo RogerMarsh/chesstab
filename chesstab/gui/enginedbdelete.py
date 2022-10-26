@@ -6,13 +6,11 @@
 
 from solentware_grid.gui.datadelete import DataDelete
 
-from solentware_bind.gui.bindings import Bindings
-
 from .enginetoplevel import EngineToplevel
 from .topleveltext import DeleteText
 
 
-class EngineDbDelete(Bindings, DeleteText, DataDelete):
+class EngineDbDelete(DeleteText, DataDelete):
     """Delete a chess engine definition from database.
 
     parent is used as the master argument in a EngineToplevel call.

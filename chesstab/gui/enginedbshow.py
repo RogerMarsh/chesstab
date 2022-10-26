@@ -6,13 +6,11 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_bind.gui.bindings import Bindings
-
 from .enginetoplevel import EngineToplevel
 from .topleveltext import ShowText
 
 
-class EngineDbShow(Bindings, ShowText, DataShow):
+class EngineDbShow(ShowText, DataShow):
     """Show a chess engine definition from database.
 
     parent is used as the master argument in an EngineToplevel call.

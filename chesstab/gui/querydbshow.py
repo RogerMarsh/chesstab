@@ -6,13 +6,11 @@
 
 from solentware_grid.gui.datashow import DataShow
 
-from solentware_bind.gui.bindings import Bindings
-
 from .querytoplevel import QueryToplevel
 from .topleveltext import ShowText
 
 
-class QueryDbShow(Bindings, ShowText, DataShow):
+class QueryDbShow(ShowText, DataShow):
     """Show a game selection rule from database.
 
     parent is used as the master argument in a QueryToplevel call.

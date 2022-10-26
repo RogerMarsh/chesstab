@@ -7,13 +7,11 @@ import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
 
-from solentware_bind.gui.bindings import Bindings
-
 from .querytoplevel import QueryToplevel, QueryToplevelEdit
 from .topleveltext import EditText
 
 
-class QueryDbEdit(Bindings, EditText, DataEdit):
+class QueryDbEdit(EditText, DataEdit):
     """Edit game selection rule on database, or insert a new record.
 
     parent is used as the master argument in QueryToplevel calls.
