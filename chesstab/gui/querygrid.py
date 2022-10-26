@@ -8,8 +8,6 @@ import tkinter.messagebox
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_bind.gui.bindings import Bindings
-
 from ..core.chessrecord import ChessDBrecordQuery
 from .querydisplay import QueryDisplay, QueryDisplayEdit
 from .queryrow import ChessDBrowQuery
@@ -20,7 +18,7 @@ from ..shared.cql_gamelist_query import CQLGameListQuery
 from ..shared.allgrid import AllGrid
 
 
-class QueryListGrid(Bindings, AllGrid, CQLGameListQuery, DataGrid, Display):
+class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
     """A DataGrid for lists of game selection rules.
 
     Subclasses provide navigation and extra methods appropriate to list use.

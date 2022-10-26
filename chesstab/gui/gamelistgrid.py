@@ -6,8 +6,6 @@
 
 from solentware_grid.datagrid import DataGrid
 
-from solentware_bind.gui.bindings import Bindings
-
 from pgn_read.core.parser import PGN
 
 from ..core.chessrecord import ChessDBrecordGameUpdate
@@ -36,7 +34,6 @@ class _BookmarkStatusText:
 
 
 class GameListGrid(
-    Bindings,
     AllGrid,
     CQLGameListQuery,
     _BookmarkStatusText,
