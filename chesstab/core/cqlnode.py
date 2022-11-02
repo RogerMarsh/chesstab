@@ -20,7 +20,7 @@ from chessql.core.constants import (
     PIECE_NAMES,
     SQUARE_DESIGNATOR_SEPARATOR,
     FILE_NAMES,
-    RANK_NAMES,
+    CQL_RANK_NAMES,
 )
 from chessql.core.node import Node
 from chessql.core.piecedesignator import PieceDesignator
@@ -250,30 +250,31 @@ class CQLNode(Node):
 class FSNode:
     """Scaffolding to evaluate CQLNodes created by the cql package."""
 
-    INITIAL_RANK_LIMITS = RANK_NAMES[-1], RANK_NAMES[0]
+    INITIAL_RANK_LIMITS = CQL_RANK_NAMES[-1], CQL_RANK_NAMES[0]
     INITIAL_FILE_LIMITS = FILE_NAMES[-1], FILE_NAMES[0]
 
     ROTATE_90 = dict(
         zip(
-            RANK_NAMES + FILE_NAMES,
+            CQL_RANK_NAMES + FILE_NAMES,
             (
                 "".join(z for z in reversed(FILE_NAMES))
-                + "".join(z for z in RANK_NAMES)
+                + "".join(z for z in CQL_RANK_NAMES)
             ),
         )
     )
 
     # This comprehension construct did not work at Python3.6.1 at this place.
-    # ROTATE_180 = {x:ROTATE_90[ROTATE_90[x]] for x in RANK_NAMES + FILE_NAMES}
+    # ROTATE_180 = {x:ROTATE_90[ROTATE_90[x]]
+    # for x in CQL_RANK_NAMES + FILE_NAMES}
 
     ROTATE_180 = {}
-    for x in RANK_NAMES + FILE_NAMES:
+    for x in CQL_RANK_NAMES + FILE_NAMES:
         ROTATE_180[x] = ROTATE_90[ROTATE_90[x]]
     ROTATE_270 = {}
-    for x in RANK_NAMES + FILE_NAMES:
+    for x in CQL_RANK_NAMES + FILE_NAMES:
         ROTATE_270[x] = ROTATE_90[ROTATE_180[x]]
     REFLECT_HORIZONTAL = dict(
-        zip(RANK_NAMES, "".join(z for z in reversed(RANK_NAMES)))
+        zip(CQL_RANK_NAMES, "".join(z for z in reversed(CQL_RANK_NAMES)))
     )
     REFLECT_VERTICAL = dict(
         zip(FILE_NAMES, "".join(z for z in reversed(FILE_NAMES)))
@@ -283,7 +284,7 @@ class FSNode:
     # generate the diagonal reflections needed to complete the flip transform.
     ROTATE_90_REFLECT_HORIZONTAL = {}
     ROTATE_90_REFLECT_VERTICAL = {}
-    for x in RANK_NAMES + FILE_NAMES:
+    for x in CQL_RANK_NAMES + FILE_NAMES:
         y = ROTATE_90[x]
         ROTATE_90_REFLECT_HORIZONTAL[x] = REFLECT_HORIZONTAL.get(y, y)
         ROTATE_90_REFLECT_VERTICAL[x] = REFLECT_VERTICAL.get(y, y)
@@ -570,7 +571,7 @@ class FSNode:
         # pylint message unused-variable.
         # Find a way of doing without count in this method's loops.
         del count
-        sourceranks = list(RANK_NAMES)
+        sourceranks = list(CQL_RANK_NAMES)
         rankrange = (
             sourceranks.index(ranklow) + 8 - sourceranks.index(rankhigh)
         )
@@ -578,7 +579,7 @@ class FSNode:
             sourceranks.append(sourceranks.pop(0))
         transforms = []
         for count in range(rankrange):
-            rankshifts = dict(zip(sourceranks, RANK_NAMES))
+            rankshifts = dict(zip(sourceranks, CQL_RANK_NAMES))
             for fshift in fileshifts:
                 if (
                     fshift[filelow] != filelow
@@ -596,14 +597,14 @@ class FSNode:
         self.node.get_shift_limits(ranklimits=ranklimits)
         if tuple(ranklimits) == FSNode.INITIAL_RANK_LIMITS:
             return
-        self._shift_one_direction(ranklimits, RANK_NAMES, FILE_NAMES)
+        self._shift_one_direction(ranklimits, CQL_RANK_NAMES, FILE_NAMES)
 
     def _shifthorizontal(self):
         filelimits = list(FSNode.INITIAL_FILE_LIMITS)
         self.node.get_shift_limits(filelimits=filelimits)
         if tuple(filelimits) == FSNode.INITIAL_FILE_LIMITS:
             return
-        self._shift_one_direction(filelimits, FILE_NAMES, RANK_NAMES)
+        self._shift_one_direction(filelimits, FILE_NAMES, CQL_RANK_NAMES)
 
     _transform = {
         Token.FLIP: _flip,
@@ -710,14 +711,14 @@ def _normalize_rotated_squares(squares):
     for designator in squares.split(SQUARE_DESIGNATOR_SEPARATOR):
         square = list(designator)
         if len(square) == 2:
-            if square[0] in RANK_NAMES:
+            if square[0] in CQL_RANK_NAMES:
                 square[0], square[1] = square[1], square[0]
         elif len(square) == 6:
             if square[0] > square[2]:
                 square[0], square[2] = square[2], square[0]
             if square[3] > square[5]:
                 square[3], square[5] = square[5], square[3]
-            if square[0] in RANK_NAMES:
+            if square[0] in CQL_RANK_NAMES:
                 square[0], square[2], square[3], square[5] = (
                     square[3],
                     square[5],
@@ -727,12 +728,12 @@ def _normalize_rotated_squares(squares):
         elif square[1] == RANGE_SEPARATOR:
             if square[0] > square[2]:
                 square[0], square[2] = square[2], square[0]
-            if square[0] in RANK_NAMES:
+            if square[0] in CQL_RANK_NAMES:
                 square.insert(0, square.pop())
         elif square[2] == RANGE_SEPARATOR:
             if square[1] > square[3]:
                 square[1], square[3] = square[3], square[1]
-            if square[0] in RANK_NAMES:
+            if square[0] in CQL_RANK_NAMES:
                 square.append(square.pop(0))
         normalized_squares.append("".join(square))
     return SQUARE_DESIGNATOR_SEPARATOR.join(normalized_squares)

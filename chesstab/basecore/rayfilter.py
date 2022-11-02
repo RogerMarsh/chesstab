@@ -20,11 +20,13 @@ from ..core import filespec
 # Longest line is eight squares.  Two end points give a maximum of six internal
 # squares.  Shorter lines drop elements from the right.  May add a seventh zero
 # element to avoid a len() < 8 test to work around an index error exception.
-# ray ( Q n b r ) for lines of length five uses MAP_RAY_TO_LINE[2][:][:3] where
-# the [:3] part contains two non-zero elements.  These are the lines with one
-# empty internal square.
-# Non-zero elements in MAP_RAY_TO_LINE[n][m] are the internal piece designator
-# in the ray.
+# Non-zero elements in MAP_RAY_TO_LINE[n][m] are the position of the internal
+# piece designator in the ray.
+# Zero elements indicate an empty square in the line.
+# Thus ray ( Q n b r ) for lines of length five uses MAP_RAY_TO_LINE[2][:][:3]
+# where the [:3] part contains two non-zero elements.  These are the lines
+# with one empty internal square.  In this ray 'n' is represented by 1 and 'b'
+# is represented by 2.
 MAP_RAY_TO_LINE = [
     [[0, 0, 0, 0, 0, 0]],  # ray ( a A )
     [
@@ -507,8 +509,8 @@ class RayFilter:
 #                    for s in ecs(
 #                        FILE_NAMES[0],
 #                        FILE_NAMES[-1],
-#                        RANK_NAMES[0],
-#                        RANK_NAMES[-1],
+#                        CQL_RANK_NAMES[0],
+#                        CQL_RANK_NAMES[-1],
 #                    )
 #                }
 #            )
@@ -525,7 +527,7 @@ def piece_square_to_index(designator_set, index_prefix):
 
     """
     file_names = constants.FILE_NAMES
-    rank_names = constants.RANK_NAMES
+    rank_names = constants.CQL_RANK_NAMES
     ecs = piecedesignator.PieceDesignator.expand_composite_square
     indexset = set()
     for piece_square in designator_set:
