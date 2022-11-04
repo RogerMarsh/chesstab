@@ -13,6 +13,7 @@ horizontal, vertical, and diagonal, which need to be evaluated.
 from chessql.core import constants
 from chessql.core import piecedesignator
 from chessql.core.cql import Token
+from chessql.core import rays
 
 from ..core.constants import MOVE_NUMBER_KEYS
 from ..core import filespec
@@ -109,8 +110,8 @@ class RayFilterError(Exception):
 class RayFilter:
     """ChessQL ray filter evaluator.
 
-    The ray and between filters have a list of square specifiers, usually piece
-    designators, which define the rays to be evaluated.
+    The ray filter has a list of square specifiers, piece designators
+    usually, which define the rays to be evaluated.
 
     This class assumes the caller has expanded the piece designator parameters
     to the ray or between filter; and applied any transforms.
@@ -126,35 +127,24 @@ class RayFilter:
 
     def __init__(self, filter_, move_number, variation_code):
         """Initialize to apply filter_ on move_number."""
-        if filter_.tokendef not in {Token.BETWEEN, Token.RAY}:
+        if filter_.tokendef is not Token.RAY:
             raise RayFilterError(
                 "".join(
                     (
                         "Filter '",
                         filter_.name,
-                        "' does not support rays.",
+                        "' is not a ray filter.",
                     )
                 )
             )
 
-        # Is this really needed!
-        if len(filter_.children) != 1:
+        if len(filter_.children) < 2:
             raise RayFilterError(
                 "".join(
                     (
                         "Filter '",
                         filter_.name,
-                        "' format not correct.",
-                    )
-                )
-            )
-        if filter_.children[0].tokendef is not Token.LEFTPARENTHESIS:
-            raise RayFilterError(
-                "".join(
-                    (
-                        "Filter '",
-                        filter_.name,
-                        "' format not correct.",
+                        "' must have at least two arguments.",
                     )
                 )
             )
@@ -163,7 +153,7 @@ class RayFilter:
         self.variation_code = variation_code
         raycomponents = []
         mvi = move_number_str(move_number) + variation_code
-        for node in filter_.children[0].children:
+        for node in filter_.children:
             designator_set = set()
             raycomponents.append(designator_set)
             stack = [node]
@@ -228,11 +218,7 @@ class RayFilter:
         anyblackpiece = constants.ANY_BLACK_PIECE_NAME
         anypiece = anywhitepiece + anyblackpiece
         record_selector = finder.db.record_selector
-        # Bug: no RAYS attribute in constants module.
-        # pylint gives E1101 no-member message.
-        # Resolution depends on fixing or completing implementation of
-        # ray filter handling in chessql project.
-        rays = constants.RAYS
+        get_ray = rays.get_ray
         empty_square_games = self.empty_square_games
         piece_square_games = self.piece_square_games
         recordset_cache = self.recordset_cache
@@ -240,10 +226,10 @@ class RayFilter:
         final = self.raycomponents[-1]
         for start_element in start:
             start_square = start_element[-3:-1]
-            ray_squares = rays[start_square]
             for final_element in final:
                 final_square = final_element[-3:-1]
-                if final_square not in ray_squares:
+                ray_squares = get_ray(start_square, final_square)
+                if ray_squares is None:
                     continue
                 for psqkey in (
                     start_element,
@@ -286,10 +272,10 @@ class RayFilter:
         final = self.emptycomponents[-1]
         for start_element in start:
             start_square = start_element[-2:]
-            ray_squares = rays[start_square]
             for final_element in final:
                 final_square = final_element[-2:]
-                if final_square not in ray_squares:
+                ray_squares = get_ray(start_square, final_square)
+                if ray_squares is None:
                     continue
                 for esqkey in (
                     start_element,
@@ -379,6 +365,7 @@ class RayFilter:
         # internal_ray_length = len(self.raycomponents) - 2
         # empty_square_games = self.empty_square_games
         # piece_square_games = self.piece_square_games
+        get_ray = rays.get_ray
         recordset_cache = self.recordset_cache
         raycomponents = self.raycomponents
         internal_raycomponents = raycomponents[1:-1]
@@ -390,11 +377,10 @@ class RayFilter:
             for item in component:
                 sqi.setdefault(item[-3:-1], set()).add(item)
         for start, final in self.ray_games:
-            # Bug: no RAYS attribute in constants module.
-            # pylint gives E1101 no-member message.
-            # Resolution depends on fixing or completing implementation of
-            # ray filter handling in chessql project.
-            line = constants.RAYS[start][final][1:-1]
+            line = get_ray(start, final)
+            if line is None:
+                continue
+            line = line[1:-1]
             if len(line) < len(internal_raycomponents):
                 continue
             mapraytoline = MAP_RAY_TO_LINE[len(internal_raycomponents)]

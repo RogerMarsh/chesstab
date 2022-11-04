@@ -344,22 +344,6 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
                     message=msg,
                 )
                 return
-            except Exception as exc:
-                msg = "".join(
-                    (
-                        "Unable to add ChessQL statement to database:\n\n",
-                        "The reported error is:\n\n",
-                        str(exc),
-                    )
-                )
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="Insert ChessQL Statement",
-                    message=msg,
-                )
-                raise CQLDisplayListGamesError(
-                    "Unable to list games for inserted statement"
-                ) from exc
         else:
 
             # Unfortunatly the existing list will have to be recalculated if
@@ -392,22 +376,6 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
                     message=msg,
                 )
                 return
-            except Exception as exc:
-                msg = "".join(
-                    (
-                        "Unable to edit ChessQL statement on database:\n\n",
-                        "The reported error is:\n\n",
-                        str(exc),
-                    )
-                )
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="Insert ChessQL Statement",
-                    message=msg,
-                )
-                raise CQLDisplayListGamesError(
-                    "Unable to list games for edited statement"
-                ) from exc
 
         if self is self.ui.partial_items.active_item:
             if self.sourceobject is not None and key == self.sourceobject.key:
@@ -482,22 +450,7 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
                 title="Delete ChessQL Statement",
                 message=msg,
             )
-        except Exception as exc:
-            msg = "".join(
-                (
-                    "Unable to list games for ChessQL statement:\n\n",
-                    "The reported error is:\n\n",
-                    str(exc),
-                )
-            )
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title="Delete ChessQL Statement",
-                message=msg,
-            )
-            raise CQLDisplayListGamesError(
-                "Unable to list games for deleted statement"
-            ) from exc
+            return
         pgd.fill_view(currentkey=key, exclude=False)
         if pgd.datasource.not_implemented:
             tkinter.messagebox.showinfo(
@@ -694,22 +647,6 @@ class CQLDisplayInsert(
                 title="ChessQL Statement",
                 message=msg,
             )
-        except Exception as exc:
-            msg = "".join(
-                (
-                    "Unable to list games for ChessQL statement:\n\n",
-                    "The reported error is:\n\n",
-                    str(exc),
-                )
-            )
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title="ChessQL Statement",
-                message=msg,
-            )
-            raise CQLDisplayListGamesError(
-                "Uanble to list games for displayed statement"
-            ) from exc
         return "break"
 
 

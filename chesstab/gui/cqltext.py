@@ -146,23 +146,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                     title="ChessQL Statement",
                     message=msg,
                 )
-            except Exception as exc:
-                msg = "".join(
-                    (
-                        "Unable to list games for ChessQL statement:\n\n",
-                        "The reported error is:\n\n",
-                        str(exc),
-                    )
-                )
-                grid.datasource.get_cql_statement_games(None, None)
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="ChessQL Statement",
-                    message=msg,
-                )
-                raise CQLTextListGamesError(
-                    "Unable to refresh list of games for statement"
-                ) from exc
         grid.partial = self._get_partial_key_cql_statement()
         # grid.rows = 1
         grid.load_new_index()
