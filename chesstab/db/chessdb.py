@@ -67,7 +67,9 @@ class ChessDatabase(database.Database, bsddb3_database.Database):
             "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
         }
 
-        super().__init__(dbnames, DBfile, environment)
+        super().__init__(
+            dbnames, folder=DBfile, environment=environment, **kargs
+        )
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""

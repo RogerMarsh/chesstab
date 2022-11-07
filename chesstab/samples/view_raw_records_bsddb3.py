@@ -35,6 +35,8 @@ if __name__ == "__main__":
         "games_pgndate": "PGNdate",
         "games_partialposition": "PartialPosition",
         "games_piecesquaremove": "PieceSquareMove",
+        "games_piecemove": "PieceMove",
+        "games_squaremove": "SquareMove",
         "games_positions": "Positions",
         "games_Result": "Result",
         "games_Round": "Round",
