@@ -25,6 +25,8 @@ from chessql.core.constants import (
 from chessql.core.node import Node
 from chessql.core.piecedesignator import PieceDesignator
 
+from ..basecore.rayfilter import RayFilter
+
 
 class CQLNodeError(Exception):
     """Exception class for cqlnode module."""
@@ -77,6 +79,27 @@ class CQLNode(Node):
                 piece_designator.parse()
                 piece_designator.expand_piece_designator()
                 self.data = piece_designator
+
+    # Beginning of attempt to generalize self.data to instantiate set filter.
+    # Deal with ray filter in addition to piece designator.
+    def expand_set_filters(self):
+        """Expand set filters in child nodes.
+
+        Expanded piece designators are made available in FSNode.designator_set,
+        and cache for optimizing index access.
+
+        """
+        for node in self.children:
+            node.expand_set_filters()
+        if self.leaf:
+            if self.tokendef is Token.PIECE_DESIGNATOR:
+                piece_designator = PieceDesignator(self.leaf)
+                piece_designator.parse()
+                piece_designator.expand_piece_designator()
+                self.data = piece_designator
+            return
+        if self.tokendef is Token.RAY:
+            self.data = RayFilter(self)
 
     def get_shift_limits(self, ranklimits=None, filelimits=None):
         """Set rank and file shift limits."""
