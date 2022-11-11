@@ -92,15 +92,15 @@ class _ToplevelPGN:
         item.set_board_pointer_move_bindings(True)
 
 
-class ShowPGN(_ToplevelPGN, ShowText):
+class ShowPGNToplevel(_ToplevelPGN, ShowText):
     """Show original PGN."""
 
 
-class DeletePGN(_ToplevelPGN, DeleteText):
+class DeletePGNToplevel(_ToplevelPGN, DeleteText):
     """Show original PGN for record deletion."""
 
 
-class EditPGN(_ToplevelPGN, EditText):
+class EditPGNToplevel(_ToplevelPGN, EditText):
     """Show original and editable PGN versions for record editing."""
 
     def dialog_ok(self):

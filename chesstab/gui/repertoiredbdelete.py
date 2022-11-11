@@ -10,10 +10,10 @@ from pgn_read.core.parser import PGN
 
 from ..core.constants import TAG_OPENING
 from .repertoiretoplevel import RepertoireToplevel
-from .toplevelpgn import DeletePGN
+from .toplevelpgn import DeletePGNToplevel
 
 
-class RepertoireDbDelete(DeletePGN, DataDelete):
+class RepertoireDbDelete(DeletePGNToplevel, DataDelete):
     """Delete PGN text for repertoire from database.
 
     parent is used as the master argument in a RepertoireToplevel call.

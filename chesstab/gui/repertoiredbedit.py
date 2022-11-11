@@ -13,11 +13,11 @@ from .repertoiretoplevel import (
     RepertoireToplevel,
     RepertoireToplevelEdit,
 )
-from .toplevelpgn import EditPGN
+from .toplevelpgn import EditPGNToplevel
 from .constants import EMPTY_REPERTOIRE_GAME
 
 
-class RepertoireDbEdit(EditPGN, DataEdit):
+class RepertoireDbEdit(EditPGNToplevel, DataEdit):
     """Edit PGN text for repertoire on database, or insert a new record.
 
     parent is used as the master argument in RepertoireToplevel calls.

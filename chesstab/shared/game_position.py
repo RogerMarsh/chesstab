@@ -10,7 +10,7 @@ from ..gui.gamedbshow import GameDbShow
 
 
 class GamePosition:
-    """Provide methods shared by ChessDBrowGame and ChessDBrowGame."""
+    """Provide methods shared by ChessDBrowGame and ChessDBrowPosition."""
 
     def show_row(self, dialog, oldobject):
         """Return a GameDbShow toplevel for oldobject record.

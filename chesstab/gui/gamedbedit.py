@@ -10,11 +10,11 @@ from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from .gametoplevel import GameToplevel, GameToplevelEdit
-from .toplevelpgn import EditPGN
+from .toplevelpgn import EditPGNToplevel
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 
 
-class GameDbEdit(EditPGN, DataEdit):
+class GameDbEdit(EditPGNToplevel, DataEdit):
     """Edit PGN text for game on database, or insert a new record.
 
     parent is used as the master argument in GameToplevel calls.

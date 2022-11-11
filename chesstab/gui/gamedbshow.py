@@ -11,10 +11,10 @@ from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from .gametoplevel import GameToplevel
-from .toplevelpgn import ShowPGN
+from .toplevelpgn import ShowPGNToplevel
 
 
-class GameDbShow(ShowPGN, DataShow):
+class GameDbShow(ShowPGNToplevel, DataShow):
     """Show PGN text for game from database.
 
     parent is used as the master argument in a GameToplevel call.
