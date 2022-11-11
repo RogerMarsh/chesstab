@@ -43,9 +43,9 @@ class _ToplevelText:
         """Initialize the widgets and event bindings in Toplevel widget."""
         oldview = self.oldview
         self.ui_items_in_toplevels.add(oldview)
+        self._set_item(oldview, self.object)
         self.parent.wm_title(self._get_title_for_object(self.object))
         self._initialize_item_bindings(oldview)
-        self._set_item(oldview, self.object)
 
     def _initialize_item_bindings(self, item):
         """Initialize keypress and buttonpress bindings for item."""
@@ -96,6 +96,7 @@ class EditText(_ToplevelText):
         if self.oldview:
             self.ui_items_in_toplevels.add(self.oldview)
             self._set_item(self.oldview, self.oldobject)
+            self._initialize_item_bindings(self.oldview)
         newview = self.newview
         self.ui_items_in_toplevels.add(newview)
         self._set_item(newview, self.newobject)
