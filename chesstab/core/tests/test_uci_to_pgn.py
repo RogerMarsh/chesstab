@@ -119,9 +119,11 @@ class Generate_pgn_for_uci_illegal_moves(unittest.TestCase):
         pass
 
     def test_generate_pgn_for_uci_illegal_moves_01(self):
-        self.assertEqual(
-            generate_pgn_for_uci_moves_in_position([], self.fen),
-            "{'[]' cannot be a move, 'Yz0' inserted.}Yz0",
+        self.assertRaisesRegex(
+            AttributeError,
+            "'list' object has no attribute 'split'",
+            generate_pgn_for_uci_moves_in_position,
+            *([], self.fen),
         )
 
     def test_generate_pgn_for_uci_illegal_moves_02(self):
