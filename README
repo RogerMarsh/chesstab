@@ -76,11 +76,13 @@ If bsddb3 is used, a version of `Berkeley DB`_ supported by bsddb3 must be insta
 Fonts
 =====
 
+The unicode chess pieces are used by default.
+
 The chesstab package incudes the Chess Merida, Chess Cases, Chess Motif, and Chess Lucena fonts by Armando H Marroquin.
 
 These are available from `www.enpassant.dk/chess/fonteng.htm`_ and the relevant files have been included in this package for convenience.
 
-Install at least one of these fonts using the tool(s) available on your platform.
+Install if you prefer them to the unicode chess pieces.
 
 
 Run

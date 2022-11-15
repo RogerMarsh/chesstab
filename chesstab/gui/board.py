@@ -17,14 +17,6 @@ t  Rook
 v  Bishop
 m  Knight
 o  Pawn
-
-PartialBoard uses additional characters:
-
--  no piece
-?  any piece
-X  any white piece
-x  any black piece
-   space means any or no piece: the square is ignored when selecting games.
 """
 
 import tkinter
@@ -53,24 +45,133 @@ from pgn_read.core.squares import Squares
 from . import constants
 from ..core.constants import NOPIECE
 
-# Characters are black pieces on light square in the four Chess fonts, Cases
-# Lucena Merida and Motif, by Armando H Marroquin.
-# Fonts were downloaded from www.enpassant.dk/chess/fonteng.htm
-_pieces = {
-    NOPIECE: "",
-    FEN_WHITE_KING: "l",
-    FEN_WHITE_QUEEN: "w",
-    FEN_WHITE_ROOK: "t",
-    FEN_WHITE_BISHOP: "v",
-    FEN_WHITE_KNIGHT: "m",
-    FEN_WHITE_PAWN: "o",
-    FEN_BLACK_KING: "l",
-    FEN_BLACK_QUEEN: "w",
-    FEN_BLACK_ROOK: "t",
-    FEN_BLACK_BISHOP: "v",
-    FEN_BLACK_KNIGHT: "m",
-    FEN_BLACK_PAWN: "o",
-}
+_pieces = (
+    NOPIECE,
+    FEN_WHITE_KING,
+    FEN_WHITE_QUEEN,
+    FEN_WHITE_ROOK,
+    FEN_WHITE_BISHOP,
+    FEN_WHITE_KNIGHT,
+    FEN_WHITE_PAWN,
+    FEN_BLACK_KING,
+    FEN_BLACK_QUEEN,
+    FEN_BLACK_ROOK,
+    FEN_BLACK_BISHOP,
+    FEN_BLACK_KNIGHT,
+    FEN_BLACK_PAWN,
+)
+# Chess pieces are solid unicode piece characters or the black pieces on
+# light square in the four Chess fonts, Cases, Lucena, Merida and Motif,
+# by Armando H Marroquin.
+# The four 'Chess *' fonts were downloaded from
+# www.enpassant.dk/chess/fonteng.htm
+# Which set of chess pieces are used depends on the chosen font when the
+# board is drawn: sometimes the characters "l", "w", "t", "v", "m", and
+# "o", will appear: only to be replaced by the next action which causes
+# the board to be redrawn.
+_piece_chars = (
+    dict(
+        zip(
+            _pieces,
+            (
+                "",
+                "l",
+                "w",
+                "t",
+                "v",
+                "m",
+                "o",
+                "l",
+                "w",
+                "t",
+                "v",
+                "m",
+                "o",
+            ),
+        )
+    ),  # 'Chess Cases', 'Chess Lucena', 'Chess Merida', and 'ChessMotif'.
+    dict(
+        zip(
+            _pieces,
+            (
+                "",
+                "\u265a",
+                "\u265b",
+                "\u265c",
+                "\u265d",
+                "\u265e",
+                "\u265f",
+                "\u265a",
+                "\u265b",
+                "\u265c",
+                "\u265d",
+                "\u265e",
+                "\u265f",
+            ),
+        )
+    ),  # Both solid unicode chess pieces.
+    dict(
+        zip(
+            _pieces,
+            (
+                "",
+                "\u265a",
+                "\u265b",
+                "\u265c",
+                "\u265d",
+                "\u265e",
+                "\u265f",
+                "\u2654",
+                "\u2655",
+                "\u2656",
+                "\u2657",
+                "\u2658",
+                "\u2659",
+            ),
+        )
+    ),  # White solid and black outline unicode chess pieces.
+    dict(
+        zip(
+            _pieces,
+            (
+                "",
+                "\u2654",
+                "\u2655",
+                "\u2656",
+                "\u2657",
+                "\u2658",
+                "\u2659",
+                "\u265a",
+                "\u265b",
+                "\u265c",
+                "\u265d",
+                "\u265e",
+                "\u265f",
+            ),
+        )
+    ),  # White outline and black solid unicode chess pieces.
+    dict(
+        zip(
+            _pieces,
+            (
+                "",
+                "\u2654",
+                "\u2655",
+                "\u2656",
+                "\u2657",
+                "\u2658",
+                "\u2659",
+                "\u2654",
+                "\u2655",
+                "\u2656",
+                "\u2657",
+                "\u2658",
+                "\u2659",
+            ),
+        )
+    ),  # Both outline unicode chess pieces.
+)
+del _pieces
 
 
 class Board(Bindings):
@@ -86,6 +187,7 @@ class Board(Bindings):
     whitecolor = constants.WHITECOLOR
     blackcolor = constants.BLACKCOLOR
     boardfont = constants.PIECES_ON_BOARD_FONT
+    _preferred_pieces = frozenset(constants.PREFERRED_PIECES)
 
     def __init__(self, master, boardborder=2, boardfont=None, ui=None):
         """Create board widget.
@@ -156,6 +258,10 @@ class Board(Bindings):
 
     def draw_board(self):
         """Set font size to match board size and redraw pieces."""
+        if self.font.actual()["family"] in self._preferred_pieces:
+            piece_chars = _piece_chars[0]
+        else:
+            piece_chars = _piece_chars[1]
         for index in self.squares:
             piece = self.squares[index]
             if piece in FEN_WHITE_PIECES:
@@ -170,7 +276,7 @@ class Board(Bindings):
             else:
                 continue
             self.boardsquares[index].configure(
-                foreground=pcolor, text=_pieces[piece]
+                foreground=pcolor, text=piece_chars[piece]
             )
 
     def get_top_widget(self):
