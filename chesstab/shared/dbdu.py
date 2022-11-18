@@ -11,16 +11,6 @@ DB.
 import os
 import zipfile
 
-from bsddb3.db import (
-    DB_CREATE,
-    DB_RECOVER,
-    DB_INIT_MPOOL,
-    DB_INIT_LOCK,
-    DB_INIT_LOG,
-    DB_INIT_TXN,
-    DB_PRIVATE,
-)
-
 from solentware_base.core.constants import (
     SUBFILE_DELIMITER,
     EXISTENCE_BITMAP_SUFFIX,
@@ -48,7 +38,7 @@ class Dbdu(DptCompatdu, Database):
     Berkeley DB interfaces because this choice exists.
     """
 
-    def __init__(self, databasefile, exception_class, **kargs):
+    def __init__(self, databasefile, exception_class, db_, **kargs):
         """Define chess database.
 
         **kargs
@@ -60,13 +50,13 @@ class Dbdu(DptCompatdu, Database):
         assert issubclass(exception_class, Exception)
         environment = {
             "flags": (
-                DB_CREATE
-                | DB_RECOVER
-                | DB_INIT_MPOOL
-                | DB_INIT_LOCK
-                | DB_INIT_LOG
-                | DB_INIT_TXN
-                | DB_PRIVATE
+                db_.DB_CREATE
+                | db_.DB_RECOVER
+                | db_.DB_INIT_MPOOL
+                | db_.DB_INIT_LOCK
+                | db_.DB_INIT_LOG
+                | db_.DB_INIT_TXN
+                | db_.DB_PRIVATE
             ),
             "gbytes": DB_ENVIRONMENT_GIGABYTES,
             "bytes": DB_ENVIRONMENT_BYTES,

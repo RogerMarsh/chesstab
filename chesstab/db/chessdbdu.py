@@ -4,6 +4,8 @@
 
 """Chess database update using custom deferred update for Berkeley DB."""
 
+import bsddb3.db
+
 from solentware_base import bsddb3du_database
 
 from ..shared.dbdu import Dbdu
@@ -31,4 +33,4 @@ class ChessDatabase(Alldu, Dbdu, bsddb3du_database.Database):
 
     def __init__(self, DBfile, **kargs):
         """Delegate with Chessbsddb3duError as exception class."""
-        super().__init__(DBfile, Chessbsddb3duError, **kargs)
+        super().__init__(DBfile, Chessbsddb3duError, bsddb3.db, **kargs)
