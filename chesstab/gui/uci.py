@@ -642,6 +642,9 @@ class UCI(Bindings):
             del event
             if self._show_engines_toplevel is not None:
                 self._close_engine_grid()
+                # Added to compensate for removal of spare widget pool in
+                # solentware_grid.datagrid module.
+                self.base_engines = None
             self._show_engines_toplevel = None
 
         self._show_engines_toplevel = tkinter.Toplevel(
@@ -681,10 +684,12 @@ class UCI(Bindings):
 
     def _close_engine_grid(self):
         """Close the existing EngineGrid instance."""
-        if self.base_engines is not None:
-            self.base_engines.get_top_widget().pack_forget()
-            self.base_engines.set_data_source()
-            self.base_engines = None
+        # Commented to compensate for removal of spare widget pool in
+        # solentware_grid.datagrid module.
+        # if self.base_engines is not None:
+        #     self.base_engines.get_top_widget().pack_forget()
+        #     self.base_engines.set_data_source()
+        #     self.base_engines = None
 
     def _open_engine_grid(self):
         """Open and show an EngineGrid instance."""
