@@ -9,9 +9,9 @@ class DptCompatdu:
     """Provide do nothing methods for compatibility with DPT interface."""
 
     def add_import_buttons(self, *a):
-        """Add button actions for Berkeley DB to Import dialogue.
+        """Return None.
 
-        None required.  Method exists for DPT compatibility.
+        No extra buttons required.  Method exists for DPT compatibility.
 
         """
 

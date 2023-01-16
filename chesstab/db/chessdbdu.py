@@ -8,6 +8,7 @@ import bsddb3.db
 
 from solentware_base import bsddb3du_database
 
+from ..shared.dbdudb import DbduDb
 from ..shared.dbdu import Dbdu
 from ..shared.alldu import chess_du, Alldu
 
@@ -28,9 +29,22 @@ def chess_dbdu(dbpath, *args, **kwargs):
 chess_database_du = chess_dbdu
 
 
-class ChessDatabase(Alldu, Dbdu, bsddb3du_database.Database):
+class ChessDatabase(Alldu, DbduDb, Dbdu, bsddb3du_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):
         """Delegate with Chessbsddb3duError as exception class."""
-        super().__init__(DBfile, Chessbsddb3duError, bsddb3.db, **kargs)
+        super().__init__(
+            DBfile,
+            Chessbsddb3duError,
+            (
+                bsddb3.db.DB_CREATE
+                | bsddb3.db.DB_RECOVER
+                | bsddb3.db.DB_INIT_MPOOL
+                | bsddb3.db.DB_INIT_LOCK
+                | bsddb3.db.DB_INIT_LOG
+                | bsddb3.db.DB_INIT_TXN
+                | bsddb3.db.DB_PRIVATE
+            ),
+            **kargs
+        )

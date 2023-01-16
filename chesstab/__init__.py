@@ -29,6 +29,7 @@ from solentware_base.core.constants import (
     VEDIS_MODULE,
     GNU_MODULE,
     NDBM_MODULE,
+    DB_TCL_MODULE,
 )
 
 APPLICATION_NAME = "ChessTab"
@@ -61,6 +62,9 @@ _GNUCHESS = __name__ + ".gnu.chessgnu"
 # dbm.ndbm interface module name
 _NDBMCHESS = __name__ + ".ndbm.chessndbm"
 
+# dbm.ndbm interface module name
+_DB_TCLCHESS = __name__ + ".db_tkinter.chessdbtkinter"
+
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {
     BERKELEYDB_MODULE: _BERKELEYDBCHESS,
@@ -72,6 +76,7 @@ APPLICATION_DATABASE_MODULE = {
     VEDIS_MODULE: _VEDISCHESS,
     GNU_MODULE: _GNUCHESS,
     NDBM_MODULE: _NDBMCHESS,
+    DB_TCL_MODULE: _DB_TCLCHESS,
 }
 
 # Default partial position dataset module name
@@ -91,6 +96,7 @@ PARTIAL_POSITION_MODULE = {
     VEDIS_MODULE: _DEFAULTPARTIALPOSITION,
     GNU_MODULE: _DEFAULTPARTIALPOSITION,
     NDBM_MODULE: _DEFAULTPARTIALPOSITION,
+    DB_TCL_MODULE: _DEFAULTPARTIALPOSITION,
 }
 
 # Default full position dataset module name
@@ -110,6 +116,7 @@ FULL_POSITION_MODULE = {
     VEDIS_MODULE: _DEFAULTFULLPOSITION,
     GNU_MODULE: _DEFAULTFULLPOSITION,
     NDBM_MODULE: _DEFAULTFULLPOSITION,
+    DB_TCL_MODULE: _DEFAULTFULLPOSITION,
 }
 
 # Default analysis dataset module name
@@ -129,6 +136,7 @@ ANALYSIS_MODULE = {
     VEDIS_MODULE: _DEFAULTANALYSIS,
     GNU_MODULE: _DEFAULTANALYSIS,
     NDBM_MODULE: _DEFAULTANALYSIS,
+    DB_TCL_MODULE: _DEFAULTANALYSIS,
 }
 
 # Default selection rules dataset module name
@@ -148,4 +156,5 @@ SELECTION_MODULE = {
     VEDIS_MODULE: _DEFAULTSELECTION,
     GNU_MODULE: _DEFAULTSELECTION,
     NDBM_MODULE: _DEFAULTSELECTION,
+    DB_TCL_MODULE: _DEFAULTSELECTION,
 }

@@ -85,6 +85,13 @@ class DeleteText(_ToplevelText):
             )
             self.destroy_dialog_on_ok_and_blockchange()
             return False
+        # 'RuntimeError: dictionary changed size during iteration'
+        # for deleting chess engine record first noticed 11 January 2023.
+        # Does not affect deletion of other types of record.
+        # Fixed by adjustments in .uci module to compensate for removal of
+        # spare widget pool.  Root cause initially masked by RuntimeError
+        # exception avoided by changes in solentware_grid.core.dataclient
+        # refresh_widgets method.
         return super().dialog_ok()
 
 

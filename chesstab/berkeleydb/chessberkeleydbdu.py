@@ -34,5 +34,16 @@ class ChessDatabase(Alldu, Dbdu, berkeleydbdu_database.Database):
     def __init__(self, DBfile, **kargs):
         """Delegate with ChessberkeleydbduError as exception class."""
         super().__init__(
-            DBfile, ChessberkeleydbduError, berkeleydb.db, **kargs
+            DBfile,
+            ChessberkeleydbduError,
+            (
+                berkeleydb.db.DB_CREATE
+                | berkeleydb.db.DB_RECOVER
+                | berkeleydb.db.DB_INIT_MPOOL
+                | berkeleydb.db.DB_INIT_LOCK
+                | berkeleydb.db.DB_INIT_LOG
+                | berkeleydb.db.DB_INIT_TXN
+                | berkeleydb.db.DB_PRIVATE
+            ),
+            **kargs
         )

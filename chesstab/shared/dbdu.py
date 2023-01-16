@@ -2,10 +2,10 @@
 # Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""The DbDu class for methods shared by Berkeley DB interface modules.
+"""The Dbdu class for methods shared by Berkeley DB interface modules.
 
-This module is relevant to the berkeleydb and bsddb3 interfaces to Berkeley
-DB.
+This module is relevant to the berkeleydb, bsddb3, and tcl, interfaces to
+Berkeley DB.
 
 """
 import os
@@ -16,7 +16,6 @@ from solentware_base.core.constants import (
     EXISTENCE_BITMAP_SUFFIX,
     SEGMENT_SUFFIX,
 )
-from solentware_base.core._db import Database
 
 from ..core.filespec import (
     SECONDARY,
@@ -29,16 +28,18 @@ from .alldu import get_filespec
 from .dptcompatdu import DptCompatdu
 
 
-class Dbdu(DptCompatdu, Database):
+class Dbdu(DptCompatdu):
     """Provide deferred update methods shared by the Berkeley DB interfaces.
+
+    The methods provided by DptCompatdu are shared with engines other than
+    Berkeley DB.
 
     The whole database can be put in a single file, or each table (called a
     database in Berkeley DB terminology) in the database can be put in a
-    file of it's own.  The litedu.Litedu class cannot be used with the
-    Berkeley DB interfaces because this choice exists.
+    file of it's own.
     """
 
-    def __init__(self, databasefile, exception_class, db_, **kargs):
+    def __init__(self, databasefile, exception_class, flags, **kargs):
         """Define chess database.
 
         **kargs
@@ -49,15 +50,7 @@ class Dbdu(DptCompatdu, Database):
         """
         assert issubclass(exception_class, Exception)
         environment = {
-            "flags": (
-                db_.DB_CREATE
-                | db_.DB_RECOVER
-                | db_.DB_INIT_MPOOL
-                | db_.DB_INIT_LOCK
-                | db_.DB_INIT_LOG
-                | db_.DB_INIT_TXN
-                | db_.DB_PRIVATE
-            ),
+            "flags": flags,
             "gbytes": DB_ENVIRONMENT_GIGABYTES,
             "bytes": DB_ENVIRONMENT_BYTES,
             "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
