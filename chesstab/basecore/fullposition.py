@@ -29,11 +29,15 @@ class FullPosition:
             self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
             return
 
-        recordset = self.dbhome.recordlist_key(
-            self.dbset,
-            POSITIONS_FIELD_DEF,
-            self.dbhome.encode_record_selector(fullposition),
-        )
+        self.dbhome.start_read_only_transaction()
+        try:
+            recordset = self.dbhome.recordlist_key(
+                self.dbset,
+                POSITIONS_FIELD_DEF,
+                self.dbhome.encode_record_selector(fullposition),
+            )
+        finally:
+            self.dbhome.end_read_only_transaction()
 
         self.set_recordset(recordset)
         self.fullposition = fullposition

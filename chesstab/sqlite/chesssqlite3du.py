@@ -14,16 +14,12 @@ class Chesssqlite3duError(Exception):
     """Exception class for chesssqlite3du module."""
 
 
-def chess_sqlite3du(dbpath, *args, **kwargs):
+def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
     # There are no recoverable file full conditions for sqlite3 (see DPT).
     return True
-
-
-# 'def chess_sqlite3du' will be changed to 'def chess_database_du' some time.
-chess_database_du = chess_sqlite3du
 
 
 class ChessDatabase(Alldu, Litedu, sqlite3du_database.Database):

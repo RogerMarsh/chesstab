@@ -213,6 +213,7 @@ class ChessQLGames:
         if query is None:
             self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
             return
+        self.dbhome.start_read_only_transaction()
 
         # Use the previously calculated record set if possible.
         # sourceobject is set to None if query must be recalculated.
@@ -246,6 +247,7 @@ class ChessQLGames:
                     # Hand the list of games over to the user interface.
                     self.set_recordset(games)
 
+                    self.dbhome.end_read_only_transaction()
                     return
 
         # Evaluate query.
@@ -258,6 +260,7 @@ class ChessQLGames:
             query,
             self._get_games_matching_parameters(query, initial_recordlist),
         )
+        self.dbhome.end_read_only_transaction()
 
         # Hand the list of games over to the user interface.
         self.set_recordset(games)

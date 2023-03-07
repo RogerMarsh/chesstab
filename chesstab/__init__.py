@@ -30,12 +30,13 @@ from solentware_base.core.constants import (
     GNU_MODULE,
     NDBM_MODULE,
     DB_TCL_MODULE,
+    LMDB_MODULE,
 )
 
 APPLICATION_NAME = "ChessTab"
 ERROR_LOG = "ErrorLog"
 
-# bsddb3 interface module name
+# berkeleydb interface module name
 _BERKELEYDBCHESS = __name__ + ".berkeleydb.chessberkeleydb"
 
 # bsddb3 interface module name
@@ -62,8 +63,11 @@ _GNUCHESS = __name__ + ".gnu.chessgnu"
 # dbm.ndbm interface module name
 _NDBMCHESS = __name__ + ".ndbm.chessndbm"
 
-# dbm.ndbm interface module name
+# tkinter.tcl Berkeley DB interface module name
 _DB_TCLCHESS = __name__ + ".db_tkinter.chessdbtkinter"
+
+# lmdb interface module name
+_LMDBCHESS = __name__ + ".lmdb.chesslmdb"
 
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {
@@ -77,6 +81,7 @@ APPLICATION_DATABASE_MODULE = {
     GNU_MODULE: _GNUCHESS,
     NDBM_MODULE: _NDBMCHESS,
     DB_TCL_MODULE: _DB_TCLCHESS,
+    LMDB_MODULE: _LMDBCHESS,
 }
 
 # Default partial position dataset module name
@@ -97,6 +102,7 @@ PARTIAL_POSITION_MODULE = {
     GNU_MODULE: _DEFAULTPARTIALPOSITION,
     NDBM_MODULE: _DEFAULTPARTIALPOSITION,
     DB_TCL_MODULE: _DEFAULTPARTIALPOSITION,
+    LMDB_MODULE: _DEFAULTPARTIALPOSITION,
 }
 
 # Default full position dataset module name
@@ -117,6 +123,7 @@ FULL_POSITION_MODULE = {
     GNU_MODULE: _DEFAULTFULLPOSITION,
     NDBM_MODULE: _DEFAULTFULLPOSITION,
     DB_TCL_MODULE: _DEFAULTFULLPOSITION,
+    LMDB_MODULE: _DEFAULTFULLPOSITION,
 }
 
 # Default analysis dataset module name
@@ -137,6 +144,7 @@ ANALYSIS_MODULE = {
     GNU_MODULE: _DEFAULTANALYSIS,
     NDBM_MODULE: _DEFAULTANALYSIS,
     DB_TCL_MODULE: _DEFAULTANALYSIS,
+    LMDB_MODULE: _DEFAULTANALYSIS,
 }
 
 # Default selection rules dataset module name
@@ -157,4 +165,5 @@ SELECTION_MODULE = {
     GNU_MODULE: _DEFAULTSELECTION,
     NDBM_MODULE: _DEFAULTSELECTION,
     DB_TCL_MODULE: _DEFAULTSELECTION,
+    LMDB_MODULE: _DEFAULTSELECTION,
 }

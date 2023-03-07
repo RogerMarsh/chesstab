@@ -18,9 +18,9 @@ import tkinter.filedialog
 from ..core.chessrecord import ChessDBrecordGameImport
 
 
-def file_du(database, dbpath, pgnpath):
+def file_du(database, dbpath, pgnpath, **kwargs):
     """Open database, import games and close database."""
-    cdb = database(dbpath, allowcreate=True)
+    cdb = database(dbpath, allowcreate=True, **kwargs)
     importer = ChessDBrecordGameImport()
     cdb.open_database()
     cdb.set_defer_update()
@@ -35,7 +35,7 @@ def file_du(database, dbpath, pgnpath):
 class FileWidget:
     """Provide select PGN game file dialogue and import from selected file."""
 
-    def __init__(self, database, engine_name):
+    def __init__(self, database, engine_name, **kwargs):
         """Import games into database using engine_name database engine."""
         root = tkinter.Tk()
         root.wm_title(string=" - ".join((engine_name, "Import PGN file")))
@@ -53,5 +53,5 @@ class FileWidget:
                 if tkinter.messagebox.askyesno(
                     title="Import Games", message="Proceed with import"
                 ):
-                    file_du(database, dbdir, filename)
+                    file_du(database, dbdir, filename, **kwargs)
         root.destroy()

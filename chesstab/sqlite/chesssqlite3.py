@@ -28,7 +28,13 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
         os.path.basename(os.path.dirname(__file__)), "runchesssqlite3du.py"
     )
 
-    def __init__(self, sqlite3file, **kargs):
+    def __init__(
+        self,
+        sqlite3file,
+        use_specification_items=None,
+        dpt_records=None,
+        **kargs,
+    ):
         """Define chess database.
 
         **kargs
@@ -37,7 +43,10 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
         Other arguments are passed through to superclass __init__.
 
         """
-        names = FileSpec(**kargs)
+        names = FileSpec(
+            use_specification_items=use_specification_items,
+            dpt_records=dpt_records,
+        )
 
         if not kargs.get("allowcreate", False):
             try:
@@ -52,7 +61,12 @@ class ChessDatabase(database.Database, sqlite3_database.Database):
                 ) from error
 
         try:
-            super().__init__(names, sqlite3file, **kargs)
+            super().__init__(
+                names,
+                sqlite3file,
+                use_specification_items=use_specification_items,
+                **kargs,
+            )
         except ChessDatabaseError as error:
             if __name__ == "__main__":
                 raise

@@ -83,6 +83,7 @@ def chess_dptdu(
     pgnpaths,
     file_records=None,
     reporter=lambda text, timestamp=True: None,
+    estimated_number_of_games=0,
 ):
     """Open database, import games and close database."""
     cdb = ChessDatabase(dbpath, allowcreate=True)
@@ -109,7 +110,11 @@ def chess_dptdu(
 
 
 def chess_dptdu_chunks(
-    dbpath, pgnpaths, file_records, reporter=lambda text, timestamp=True: None
+    dbpath,
+    pgnpaths,
+    file_records,
+    reporter=lambda text, timestamp=True: None,
+    estimated_number_of_games=0,
 ):
     """Open database, import games in fixed chunks and close database."""
 
@@ -189,7 +194,13 @@ class ChessDatabaseDeferred(dptdu_database.Database):
     # to DPT's memory usage questions.
     deferred_update_points = frozenset(_DEFERRED_UPDATE_POINTS)
 
-    def __init__(self, databasefolder, **kargs):
+    def __init__(
+        self,
+        databasefolder,
+        use_specification_items=None,
+        dpt_records=None,
+        **kargs,
+    ):
         """Define chess database.
 
         **kargs
@@ -198,7 +209,10 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         Other arguments are passed through to superclass __init__.
 
         """
-        ddnames = FileSpec(**kargs)
+        ddnames = FileSpec(
+            use_specification_items=use_specification_items,
+            dpt_records=dpt_records,
+        )
         # Deferred update for games file only
         for ddname in list(ddnames.keys()):
             if ddname != GAMES_FILE_DEF:

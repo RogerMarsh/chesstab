@@ -171,7 +171,12 @@ class CQLDbEdit(EditText, DataEdit):
         """Delegate to superclass to edit record then update game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        super().edit(commit=False)
+        # Hack to prevent _lmdb interface via lmdb to Symas LMMD crash.
+        # Do a widget navigation action to cause refresh after edit in lmdb.
+        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
+            super().edit_no_refresh(commit=False)
+        else:
+            super().edit(commit=False)
         cqls = self.ui.partialpositionds(
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,

@@ -42,6 +42,10 @@ try:
 except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
     chessdpt = None
 try:
+    from ..lmdb import chesslmdb
+except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
+    chesslmdb = None
+try:
     from ..ndbm import chessndbm
 except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
     chessndbm = None
@@ -78,6 +82,8 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
             engines[chessapsw.apsw_database.apsw] = chessapsw.ChessDatabase
         if chessdb:
             engines[chessdb.bsddb3_database.bsddb3] = chessdb.ChessDatabase
+        if chesslmdb:
+            engines[chesslmdb.lmdb_database.lmdb] = chesslmdb.ChessDatabase
         if chessberkeleydb:
             engines[
                 chessberkeleydb.berkeleydb_database.berkeleydb

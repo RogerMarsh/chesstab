@@ -112,11 +112,15 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                 ),
             )
         elif statement.where:
-            statement.where.evaluate(
-                grid.datasource.dbhome.record_finder(
-                    grid.datasource.dbset, ChessDBrecordGameTags
+            grid.datasource.dbhome.start_read_only_transaction()
+            try:
+                statement.where.evaluate(
+                    grid.datasource.dbhome.record_finder(
+                        grid.datasource.dbset, ChessDBrecordGameTags
+                    )
                 )
-            )
+            finally:
+                grid.datasource.dbhome.end_read_only_transaction()
 
             # Workaround problem with query ''.  See Where.evaluate() also.
             result = statement.where.node.get_root().result

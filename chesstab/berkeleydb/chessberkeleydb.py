@@ -43,14 +43,23 @@ class ChessDatabase(database.Database, berkeleydb_database.Database):
         os.path.basename(os.path.dirname(__file__)), "runchessberkeleydbdu.py"
     )
 
-    def __init__(self, DBfile, **kargs):
+    def __init__(
+        self,
+        DBfile,
+        use_specification_items=None,
+        dpt_records=None,
+        **kargs,
+    ):
         """Define chess database.
 
         **kargs
         Arguments are passed through to superclass __init__.
 
         """
-        dbnames = FileSpec(**kargs)
+        dbnames = FileSpec(
+            use_specification_items=use_specification_items,
+            dpt_records=dpt_records,
+        )
 
         environment = {
             "flags": (

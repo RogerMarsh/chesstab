@@ -95,6 +95,7 @@ class AnalysisIndex:
         It is assumed merging data from all records matching fen makes sense.
 
         """
+        self.dbhome.start_read_only_transaction()
         self._find_position_analysis(fen)
         analysis = self.newrow().value
         row = self.newrow()
@@ -110,10 +111,12 @@ class AnalysisIndex:
             analysis.position = fen
         finally:
             rsc.close()
+            self.dbhome.end_read_only_transaction()
         return analysis
 
     def get_position_analysis_records(self, fen):
         """Return list of analysis records matching fen position."""
+        self.dbhome.start_read_only_transaction()
         self._find_position_analysis(fen)
         records = []
         rsc = self.get_cursor()
@@ -126,4 +129,5 @@ class AnalysisIndex:
                 rec = rsc.next()
         finally:
             rsc.close()
+            self.dbhome.end_read_only_transaction()
         return records

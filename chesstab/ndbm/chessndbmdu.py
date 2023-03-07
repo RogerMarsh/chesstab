@@ -14,16 +14,12 @@ class ChessndbmduError(Exception):
     """Exception class for chessndbmdu module."""
 
 
-def chess_ndbmdu(dbpath, *args, **kwargs):
+def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
     # There are no recoverable file full conditions for dbm.ndbm (see DPT).
     return True
-
-
-# 'def chess_ndbmdu' will be changed to 'def chess_database_du' at some time.
-chess_database_du = chess_ndbmdu
 
 
 class ChessDatabase(Alldu, Litedu, ndbmdu_database.Database):

@@ -127,7 +127,12 @@ class CQLDbDelete(DeleteText, DataDelete):
         """Delegate to superclass to delete record then delete game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        super().delete(commit=False)
+        # Hack to prevent _lmdb interface via lmdb to Symas LMMD crash.
+        # Do a widget navigation action to cause refresh after delete in lmdb.
+        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
+            super().delete_no_refresh(commit=False)
+        else:
+            super().delete(commit=False)
         cqls = self.ui.partialpositionds(
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,

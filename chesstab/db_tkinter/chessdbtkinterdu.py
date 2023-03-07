@@ -15,17 +15,12 @@ class ChessdbtkinterduError(Exception):
     """Exception class for chessdbdu module."""
 
 
-def chess_dbtkinterdu(dbpath, *args, **kwargs):
+def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
     # There are no recoverable file full conditions for Berkeley DB (see DPT).
     return True
-
-
-# 'def chess_dbtkinterdu' will be changed to 'def chess_database_du' at some
-# time.
-chess_database_du = chess_dbtkinterdu
 
 
 class ChessDatabase(Alldu, DbduTcl, Dbdu, db_tkinterdu_database.Database):

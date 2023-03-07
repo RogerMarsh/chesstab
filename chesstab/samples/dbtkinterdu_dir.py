@@ -8,6 +8,6 @@
 if __name__ == "__main__":
 
     from .directory_widget import DirectoryWidget
-    from ..db_tkinter.chessdbtkinterdu import chess_dbtkinterdu
+    from ..db_tkinter.chessdbtkinterdu import chess_database_du
 
-    DirectoryWidget(chess_dbtkinterdu, "db_tcl")
+    DirectoryWidget(chess_database_du, "db_tcl")

@@ -14,16 +14,12 @@ class ChessgnuduError(Exception):
     """Exception class for chessgnudu module."""
 
 
-def chess_gnudu(dbpath, *args, **kwargs):
+def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
     # There are no recoverable file full conditions for dbm.gnu (see DPT).
     return True
-
-
-# 'def chess_gnudu' will be changed to 'def chess_database_du' at some time.
-chess_database_du = chess_gnudu
 
 
 class ChessDatabase(Alldu, Litedu, gnudu_database.Database):

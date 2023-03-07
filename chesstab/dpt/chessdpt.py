@@ -40,7 +40,13 @@ class ChessDatabase(database.Database, dpt_database.Database):
         os.path.basename(os.path.dirname(__file__)), "runchessdptdu.py"
     )
 
-    def __init__(self, databasefolder, **kargs):
+    def __init__(
+        self,
+        databasefolder,
+        use_specification_items=None,
+        dpt_records=None,
+        **kargs,
+    ):
         """Define chess database.
 
         **kargs
@@ -53,7 +59,10 @@ class ChessDatabase(database.Database, dpt_database.Database):
             sysprint = kargs.pop("sysprint")
         except KeyError:
             sysprint = "CONSOLE"
-        ddnames = FileSpec(**kargs)
+        ddnames = FileSpec(
+            use_specification_items=use_specification_items,
+            dpt_records=dpt_records,
+        )
 
         if not kargs.get("allowcreate", False):
             try:

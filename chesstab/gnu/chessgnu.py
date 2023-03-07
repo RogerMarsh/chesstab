@@ -26,7 +26,13 @@ class ChessDatabase(database.Database, gnu_database.Database):
         os.path.basename(os.path.dirname(__file__)), "runchessgnudu.py"
     )
 
-    def __init__(self, nosqlfile, **kargs):
+    def __init__(
+        self,
+        nosqlfile,
+        use_specification_items=None,
+        dpt_records=None,
+        **kargs,
+    ):
         """Define chess database.
 
         **kargs
@@ -35,7 +41,10 @@ class ChessDatabase(database.Database, gnu_database.Database):
         Other arguments are passed through to superclass __init__.
 
         """
-        names = FileSpec(**kargs)
+        names = FileSpec(
+            use_specification_items=use_specification_items,
+            dpt_records=dpt_records,
+        )
 
         if not kargs.get("allowcreate", False):
             try:

@@ -678,8 +678,10 @@ class ChessDeferredUpdate(Bindings):
                 self.report.append_text_only("")
                 status = False
                 try:
-                    status = self.dumethod(*a)
-                except Exception:
+                    status = self.dumethod(
+                        *a, estimated_number_of_games=self.estimate_data[0]
+                    )
+                except Exception as error:
                     try:
                         write_error_to_log()
                     except Exception as error:

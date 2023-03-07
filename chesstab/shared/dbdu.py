@@ -64,7 +64,7 @@ class Dbdu(DptCompatdu):
             raise exception_class("DB description invalid") from error
 
         try:
-            super().__init__(names, databasefile, environment)
+            super().__init__(names, databasefile, environment, **kargs)
         except Exception as error:
             if __name__ == "__main__":
                 raise
