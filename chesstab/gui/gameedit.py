@@ -2181,7 +2181,7 @@ class GameEdit(Game):
         current = self.current
         choice = None
         if self.current is None:
-            # Insert RAV after first move of game
+            # Insert RAV after first move of game.
             prior = None
             choice, range_ = self._get_choice_tag_and_range_of_first_move()
             if not choice:
@@ -2189,7 +2189,7 @@ class GameEdit(Game):
             variation = self._get_variation_tag_of_index(range_[0])
             nextmove = widget.tag_nextrange(variation, range_[0])
         else:
-            # Insert RAV after move after current move
+            # Insert RAV after move after current move.
             prior, range_ = self._get_prior_tag_and_range_of_move(self.current)
             if prior:
                 choice = self.get_choice_tag_for_prior(prior)
@@ -2202,6 +2202,7 @@ class GameEdit(Game):
         # Figure point where the new empty RAV should be inserted.
         ctr = widget.tag_ranges(choice)
         if ctr:
+            # New RAV inserted just before first existing RAV for move.
             point = widget.tag_ranges(
                 self.get_rav_tag_for_rav_moves(
                     self._get_rav_moves_of_index(ctr[2])
@@ -2209,15 +2210,25 @@ class GameEdit(Game):
             )[0]
         else:
             # No existing RAVs for the next move.
-            for tn_q in variation, RAV_END_TAG, EDIT_RESULT:
-                tr_q = widget.tag_nextrange(tn_q, nextmove[1])
+            # New RAV inserted just after last token before move after next
+            # move.  Thus non-move tokens, comments of some kind, stick to
+            # their preceding move; and move numbers which precede moves
+            # stick to their move; and the game termination marker stays on
+            # it's own line.
+            tr_q = widget.tag_nextrange(variation, nextmove[1])
+            if tr_q:
+                tr_q = widget.tag_prevrange(NAVIGATE_TOKEN, tr_q[0])
+                point = widget.index(tr_q[1] + "+1char")
+            else:
+                tr_q = widget.tag_nextrange(RAV_END_TAG, nextmove[1])
                 if tr_q:
                     point = tr_q[0]
-                    # Assume it was a bug that break was missing here.
-                    # Detected by pylint message useless-else-on-loop.
-                    break
-            else:
-                point = widget.index(nextmove[1] + "+1char")
+                else:
+                    tr_q = widget.tag_nextrange(EDIT_RESULT, nextmove[1])
+                    if tr_q:
+                        point = widget.index(tr_q[0] + "-1char")
+                    else:
+                        point = widget.index(nextmove[1] + "+1char")
         colourvariation = "".join((RAV_SEP, variation))
 
         # Apply choice tags to next move if not already done, implied by

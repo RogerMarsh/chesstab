@@ -26,7 +26,7 @@ from .constants import (
 )
 from .eventspec import EventSpec
 from .blanktext import NonTagBind
-from .score import Score
+from .score import Score, ScoreNoInitialPositionException
 
 
 class ScoreMapToBoardException(Exception):
@@ -180,7 +180,7 @@ class AnalysisScore(Score):
             # map_game.
             try:
                 self.board.set_board(self.fen_tag_square_piece_map())
-            except TypeError:
+            except ScoreNoInitialPositionException:
                 return False
 
             self._see_first_move()
