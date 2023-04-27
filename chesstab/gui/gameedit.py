@@ -331,7 +331,19 @@ class GameEdit(Game):
         # Define popup menu for '<...>' reserved tokens.
         self.reserved_popup = None
 
+        # Prevent drag relocation of insertion cursor, including scrolling
+        # after pointer leaves widget at top or bottom.  This avoids some
+        # exceptions when inserting or editing moves.
+        # Prevent drag stroking out a selection with consequential visible
+        # effect on Windows.
+        self.score.bind("<Button1-Motion>", self._suppress_class_binding)
+        self.score.bind("<Button1-Leave>", self._suppress_class_binding)
+
     # These methods define event bindings.
+
+    def _suppress_class_binding(self, event):
+        """Return 'break'"""
+        return "break"
 
     def _set_primary_activity_bindings(self, switch=True):
         """Delegate then set bindings for primary activity.
@@ -433,6 +445,15 @@ class GameEdit(Game):
                 ((EventSpec.gameedit_insert_castle_queenside, function),),
                 switch=switch,
             )
+
+        # "<Control-o>" may insert a newline at the wrong place, breaking
+        # things if typing newline is inhibited.
+        if not include_ooo or not switch:
+            self.score.bind(
+                EventSpec.gameedit_insert_castle_queenside[0],
+                self._suppress_class_binding
+            )
+
         self.set_event_bindings_score(
             self._get_button_events(
                 buttonpress1=self._go_to_token, buttonpress3=popup_pointer
