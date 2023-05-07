@@ -55,7 +55,6 @@ class _ToplevelText:
     def tidy_on_destroy(self):
         """Clear up after Toplevel destruction."""
         self.ui_items_in_toplevels.discard(self.oldview)
-        self.ui_base_table.selection.clear()
 
 
 class ShowText(_ToplevelText):
@@ -129,4 +128,3 @@ class EditText(_ToplevelText):
         """Clear up after Toplevel destruction."""
         self.ui_items_in_toplevels.discard(self.oldview)
         self.ui_items_in_toplevels.discard(self.newview)
-        self.ui_base_table.selection.clear()
