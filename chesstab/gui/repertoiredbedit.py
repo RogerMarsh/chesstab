@@ -134,3 +134,29 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
             object_ = self.oldobject
         if object_ is not None:
             object_.value.set_game_source(self.pgn_score_source)
+
+    def dialog_ok(self):
+        """Extend to adjust equality comparison of old and new versions.
+
+        Selection highlighting behaviour for repertoires is made same as
+        other item types.
+
+        """
+        # Problem arises because gamesource is treated differently in game
+        # and repertoire items.
+        # The selection highlight is removed if the referenced toplevel is
+        # changed, but not if some other item (same type with or without
+        # referenced toplevel) is highlighted.  This is inconsistent too,
+        # but arises from poor implementation of opening up a toplevel using
+        # just the pointer without affecting the selection highlight.  One
+        # solution is to change the intent so the pointer does affect the
+        # selection highlight when opening a toplevel, but not when closing
+        # a toplevel: most of behaviour at time of writing is consistent
+        # with this solution.
+        if self.oldobject and self.newobject:
+            oldv = self.oldobject.value
+            newv = self.newobject.value
+            # Force the test in DataEdit.dialog_ok to give desired outcome.
+            if oldv.collected_game == newv.collected_game:
+                newv.gamesource = oldv.gamesource
+        return super().dialog_ok()
