@@ -113,12 +113,12 @@ class ChessQLGames:
         commit indicates if this method should start and commit transaction.
 
         """
+        if commit:
+            self.dbhome.start_transaction()
         # Forget the list of games under the query key.
         ppview = self.dbhome.recordlist_record_number(
             PARTIAL_FILE_DEF, key=sourceobject.key.recno
         )
-        if commit:
-            self.dbhome.start_transaction()
         self.dbhome.unfile_records_under(
             self.dbset,
             PARTIALPOSITION_FIELD_DEF,
@@ -154,6 +154,8 @@ class ChessQLGames:
         """
         assert sourceobject is not None
         # Evaluate query.
+        if commit:
+            self.dbhome.start_read_only_transaction()
         if initial_recordset is None:
             initial_recordlist = self.dbhome.recordlist_ebm(self.dbset)
         else:
@@ -169,6 +171,12 @@ class ChessQLGames:
         ppview = self.dbhome.recordlist_record_number(
             PARTIAL_FILE_DEF, key=sourceobject.key.recno
         )
+        # The read-only transaction is added for Symas LMMD.
+        # The read-write transaction start is not moved to read-only start
+        # to preserve the transaction boundaries in the other database
+        # engines.  (Moving it should be ok though.)
+        if commit:
+            self.dbhome.end_read_only_transaction()
         if commit:
             self.dbhome.start_transaction()
         self.dbhome.file_records_under(
