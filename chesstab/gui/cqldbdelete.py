@@ -143,3 +143,7 @@ class CQLDbDelete(DeleteText, DataDelete):
         cqls.forget_cql_statement_games(self.object, commit=False)
         if commit:
             self.datasource.dbhome.commit()
+        # Problem seems to be a read-only transaction done in refresh_widgets
+        # callbacks for chessql actions: which does not occur for other items.
+        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
+            self.datasource.refresh_widgets(self.object)
