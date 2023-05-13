@@ -16,7 +16,6 @@ import tkinter
 import tkinter.messagebox
 
 from ..core.cqlstatement import CQLStatement
-from ..basecore.cqlgames import ChessQLGamesError
 from .blanktext import NonTagBind, BlankText
 from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
 
@@ -147,32 +146,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                     title="ChessQL Statement",
                     message=msg,
                 )
-            except ChessQLGamesError as exc:
-                if str(exc) == "lmdb segment_record is None":
-                    msg = "".join(
-                        (
-                            "Unable to list games for ChessQL statement. ",
-                            "Closing the item and opening it again by\n\n",
-                            "'Display allow edit'\n\nshould show ",
-                            "the correct result given ",
-                            "the reported error is:\n\n",
-                            str(exc),
-                        )
-                    )
-                else:
-                    msg = "".join(
-                        (
-                            "Unable to list games for ChessQL statement.\n\n",
-                            "The reported error is:\n\n",
-                            str(exc),
-                        )
-                    )
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="ChessQL Statement",
-                    message=msg,
-                )
-                #return
         grid.partial = self._get_partial_key_cql_statement()
         # grid.rows = 1
         grid.load_new_index()

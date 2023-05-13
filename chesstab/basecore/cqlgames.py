@@ -237,41 +237,19 @@ class ChessQLGames:
             pprecalc &= ppview
             if pprecalc.count_records() == 0:
 
-                # Workaround problem seen doing 'Database | Edit' in an item
-                # opened by 'Display allow edit' in list opened from menu by
-                # 'Partial | Show'.
-                # Test case was Symas LMMD database populated with games
-                # imported from 'www.4ncl.co.uk/pre2010/96-97.pgn'.
-                # The ChessQL item is populated by a statement which is
-                # alternately, by editing,
-                #
-                # Test 3
-                # cql() Kh2 kh7 nh5
-                #
-                # and
-                #
-                # Test 3
-                # cql() Kh2 kh7 qh5
-                #
-                # because two small different game lists are found.
-                # Editing from '...nh5 to '...qh5' worked as expected but
-                # from '...qh5 to '...nh5' caused the problem.
-                # If Na4 is used rather than qh5 both directions suffer the
-                # problem.  qh5 goes down the 'one record in segment' path
-                # in _lmdb module avoiding the problem.
-                try:
-                    ppcalc = self.dbhome.recordlist_key_startswith(
-                        self.dbset,
-                        PARTIALPOSITION_FIELD_DEF,
-                        keystart=self.dbhome.encode_record_number(
-                            sourceobject.key.recno
-                        ),
-                    )
-                except TypeError as exc:
-                    if str(exc) != "lmdb segment_record is None":
-                        raise
-                    self.set_recordset(self.dbhome.recordlist_nil(self.dbset))
-                    raise ChessQLGamesError(str(exc))
+                # At version 7.0.3.dev3 the workaround introduced at version
+                # 7.0.3.dev1 was removed.
+                # The problem was a missing record write in file_records_under
+                # method in solentware_base's _lmdb module, not a transaction
+                # design problem related to explicit read-only transactions,
+                # as originally thought.
+                ppcalc = self.dbhome.recordlist_key_startswith(
+                    self.dbset,
+                    PARTIALPOSITION_FIELD_DEF,
+                    keystart=self.dbhome.encode_record_number(
+                        sourceobject.key.recno
+                    ),
+                )
 
                 if ppcalc.count_records() != 0:
                     games = self.dbhome.recordlist_key(
@@ -400,7 +378,7 @@ class ChessQLGames:
     def pieces_matching_piece_designator(filter_):
         """Return pieces matching a piece designator."""
         if filter_.tokendef is not Token.PIECE_DESIGNATOR:
-            raise (
+            raise ChessQLGamesError(
                 "".join(
                     (
                         "'",

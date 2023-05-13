@@ -35,7 +35,6 @@ from .cql import CQL
 from .cqledit import CQLEdit
 from ..core.chessrecord import ChessDBrecordPartial
 from ..core.cqlstatement import CQLStatement
-from ..basecore.cqlgames import ChessQLGamesError
 from .eventspec import EventSpec
 from .display import Display
 from .displaytext import (
@@ -449,31 +448,6 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Delete ChessQL Statement",
-                message=msg,
-            )
-            return
-        except ChessQLGamesError as exc:
-            if str(exc) == "lmdb segment_record is None":
-                msg = "".join(
-                    (
-                        "Unable to list games for ChessQL statement.\n\n",
-                        "Closing the item and opening it again should show ",
-                        "the correct result given ",
-                        "the reported error is:\n\n",
-                        str(exc),
-                    )
-                )
-            else:
-                msg = "".join(
-                    (
-                        "Unable to list games for ChessQL statement.\n\n",
-                        "The reported error is:\n\n",
-                        str(exc),
-                    )
-                )
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title="Edit ChessQL Statement",
                 message=msg,
             )
             return
