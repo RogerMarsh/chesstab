@@ -45,7 +45,11 @@ class ChessDatabase(Alldu, LmdbduDb, Lmdbdu, lmdbdu_database.Database):
         )
         self.open_database()
         (
-            map_bytes, map_pages, used_bytes, used_pages, stats
+            map_bytes,
+            map_pages,
+            used_bytes,
+            used_pages,
+            stats,
         ) = self.database_stats_summary()
         self.close_database()
         mfpas = filespec.LMMD_MINIMUM_FREE_PAGES_AT_START

@@ -451,7 +451,7 @@ class GameEdit(Game):
         if not include_ooo or not switch:
             self.score.bind(
                 EventSpec.gameedit_insert_castle_queenside[0],
-                self._suppress_class_binding
+                self._suppress_class_binding,
             )
 
         self.set_event_bindings_score(

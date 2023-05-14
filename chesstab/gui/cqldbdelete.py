@@ -127,8 +127,9 @@ class CQLDbDelete(DeleteText, DataDelete):
         """Delegate to superclass to delete record then delete game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent _lmdb interface via lmdb to Symas LMMD crash.
-        # Do a widget navigation action to cause refresh after delete in lmdb.
+        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
+        # There is, correctly at this point, no way to determine _lmdb is in
+        # use apart from some assumption about the state of database engine.
         if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
             super().delete_no_refresh(commit=False)
         else:

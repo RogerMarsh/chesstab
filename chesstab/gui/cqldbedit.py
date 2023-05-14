@@ -171,8 +171,9 @@ class CQLDbEdit(EditText, DataEdit):
         """Delegate to superclass to edit record then update game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent _lmdb interface via lmdb to Symas LMMD crash.
-        # Do a widget navigation action to cause refresh after edit in lmdb.
+        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
+        # There is, correctly at this point, no way to determine _lmdb is in
+        # use apart from some assumption about the state of database engine.
         if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
             super().edit_no_refresh(commit=False)
         else:
@@ -195,8 +196,9 @@ class CQLDbEdit(EditText, DataEdit):
         """Delegate to superclass to insert record then insert game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent _lmdb interface via lmdb to Symas LMMD crash.
-        # Do a widget navigation action to cause refresh after edit in lmdb.
+        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
+        # There is, correctly at this point, no way to determine _lmdb is in
+        # use apart from some assumption about the state of database engine.
         if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
             super().put_no_refresh(commit=False)
         else:

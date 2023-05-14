@@ -45,19 +45,20 @@ class ChessDatabase(database.Database, lmdb_database.Database):
         super().__init__(dbnames, folder=DBfile, **kargs)
         self.open_database()
         (
-            map_bytes, map_pages, used_bytes, used_pages, stats
+            map_bytes,
+            map_pages,
+            used_bytes,
+            used_pages,
+            stats,
         ) = self.database_stats_summary()
         self.close_database()
         self.map_blocks = map_pages // constants.DEFAULT_MAP_PAGES
         if map_pages - used_pages < LMMD_MINIMUM_FREE_PAGES_AT_START:
-            short = (
-                LMMD_MINIMUM_FREE_PAGES_AT_START + map_pages - used_pages
-            )
+            short = LMMD_MINIMUM_FREE_PAGES_AT_START + map_pages - used_pages
         else:
             short = 0
         self.map_blocks = (
-            1
-            + (map_pages + short) // constants.DEFAULT_MAP_PAGES
+            1 + (map_pages + short) // constants.DEFAULT_MAP_PAGES
         )
 
     def _delete_database_names(self):
