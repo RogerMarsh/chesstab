@@ -516,3 +516,22 @@ class CQLGrid(CQLListGrid):
                     )
                 ),
             )
+
+    def on_data_change(self, instance):
+        """Delegate to superclass by after_idle() if database is Symas LMMD.
+
+        For other database engines delegate to superclass directly.
+
+        """
+        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
+        # The crash occurred on using the 'non-F11' options to insert, edit,
+        # or delete, a ChessQL statement.
+        # Problem seems to be a read-only transaction done in refresh_widgets
+        # callbacks for chessql actions: which does not occur for other items.
+        # There is, correctly at this point, no way to determine _lmdb is in
+        # use apart from some assumption about the state of database engine.
+        # The 'after_idle' route for all database engines may be fine too.
+        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
+            self.parent.after_idle(super().on_data_change, *(instance,))
+        else:
+            super().on_data_change(instance)

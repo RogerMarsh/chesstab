@@ -171,13 +171,7 @@ class CQLDbEdit(EditText, DataEdit):
         """Delegate to superclass to edit record then update game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
-        # There is, correctly at this point, no way to determine _lmdb is in
-        # use apart from some assumption about the state of database engine.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            super().edit_no_refresh(commit=False)
-        else:
-            super().edit(commit=False)
+        super().edit(commit=False)
         cqls = self.ui.partialpositionds(
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
@@ -187,22 +181,12 @@ class CQLDbEdit(EditText, DataEdit):
         cqls.update_cql_statement_games(self.newobject, commit=False)
         if commit:
             self.datasource.dbhome.commit()
-        # Problem seems to be a read-only transaction done in refresh_widgets
-        # callbacks for chessql actions: which does not occur for other items.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            self.datasource.refresh_widgets(self.oldobject)
 
     def put(self, commit=True):
         """Delegate to superclass to insert record then insert game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
-        # There is, correctly at this point, no way to determine _lmdb is in
-        # use apart from some assumption about the state of database engine.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            super().put_no_refresh(commit=False)
-        else:
-            super().put(commit=False)
+        super().put(commit=False)
         cqls = self.ui.partialpositionds(
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
@@ -212,7 +196,3 @@ class CQLDbEdit(EditText, DataEdit):
         cqls.update_cql_statement_games(self.newobject, commit=False)
         if commit:
             self.datasource.dbhome.commit()
-        # Problem seems to be a read-only transaction done in refresh_widgets
-        # callbacks for chessql actions: which does not occur for other items.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            self.datasource.refresh_widgets(self.newobject)

@@ -127,13 +127,7 @@ class CQLDbDelete(DeleteText, DataDelete):
         """Delegate to superclass to delete record then delete game list."""
         if commit:
             self.datasource.dbhome.start_transaction()
-        # Hack to prevent crash in _lmdb accessing Symas LMMD via lmdb.
-        # There is, correctly at this point, no way to determine _lmdb is in
-        # use apart from some assumption about the state of database engine.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            super().delete_no_refresh(commit=False)
-        else:
-            super().delete(commit=False)
+        super().delete(commit=False)
         cqls = self.ui.partialpositionds(
             self.ui.base_games.datasource.dbhome,
             self.ui.base_games.datasource.dbset,
@@ -144,7 +138,3 @@ class CQLDbDelete(DeleteText, DataDelete):
         cqls.forget_cql_statement_games(self.object, commit=False)
         if commit:
             self.datasource.dbhome.commit()
-        # Problem seems to be a read-only transaction done in refresh_widgets
-        # callbacks for chessql actions: which does not occur for other items.
-        if self.datasource.dbhome.dbenv.__class__.__name__ == "Environment":
-            self.datasource.refresh_widgets(self.object)
