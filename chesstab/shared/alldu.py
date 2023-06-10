@@ -6,30 +6,103 @@
 
 'Most' means all database interfaces except DPT.
 """
+import os
+import traceback
+import datetime
+
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import FILEDESC
 
 from ..core.filespec import FileSpec
 from ..core.chessrecord import ChessDBrecordGameImport
+from .. import ERROR_LOG, APPLICATION_NAME
 
 
-def chess_du(
-    cdb, pgnpaths, file_records, reporter=lambda text, timestamp=True: None
-):
+def chess_du(cdb, pgnpaths, file_records, reporter=None, quit_event=None):
     """Open database, import games and close database."""
     del file_records
     importer = ChessDBrecordGameImport()
     cdb.open_database()
     cdb.set_defer_update()
-    for pgnfile in pgnpaths:
-        with open(pgnfile, "r", encoding="iso-8859-1") as source:
-            importer.import_pgn(cdb, source, pgnfile, reporter=reporter)
-    if reporter is not None:
-        reporter("Finishing import: please wait.")
-        reporter("", timestamp=False)
-    cdb.do_final_segment_deferred_updates()
+    try:
+        for pgnfile in pgnpaths:
+            with open(pgnfile, "r", encoding="iso-8859-1") as source:
+                if not importer.import_pgn(
+                    cdb,
+                    source,
+                    pgnfile,
+                    reporter=reporter,
+                    quit_event=quit_event,
+                ):
+                    cdb.backout()
+                    cdb.close_database()
+                    return
+        if reporter is not None:
+            reporter.append_text("Finishing import: please wait.")
+            reporter.append_text_only("")
+        cdb.do_final_segment_deferred_updates()
+    except Exception as exc:
+        errorlog_written = True
+        try:
+            with open(
+                os.path.join(cdb.home_directory, ERROR_LOG), "a",
+            ) as errorlog:
+                errorlog.write(
+                    "".join(
+                        (
+                            "\n\n\n",
+                            " ".join(
+                                (
+                                    APPLICATION_NAME,
+                                    "exception report at",
+                                    datetime.datetime.isoformat(
+                                        datetime.datetime.today()
+                                    ),
+                                )
+                            ),
+                            "\n\n",
+                            traceback.format_exc(),
+                            "\n\n",
+                        )
+                    )
+                )
+        except:
+            errorlog_written = False
+        if reporter is not None:
+            reporter.append_text("An exception has occured during import:")
+            reporter.append_text_only("")
+            reporter.append_text_only(str(exc))
+            reporter.append_text_only("")
+            if errorlog_written:
+                reporter.append_text_only(
+                    "".join(
+                        (
+                            "detail appended to ",
+                            os.path.join(cdb.home_directory, ERROR_LOG),
+                            " file.",
+                        )
+                    )
+                )
+            else:
+                reporter.append_text_only(
+                    "".join(
+                        (
+                            "attempt to append detail to ",
+                            os.path.join(cdb.home_directory, ERROR_LOG),
+                            " file failed.",
+                        )
+                    )
+                )
+            reporter.append_text_only("")
+            reporter.append_text(
+                "Import abandonned in way depending on database engine."
+            )
+        raise
     cdb.unset_defer_update()
     cdb.close_database()
+    if reporter is not None:
+        reporter.append_text("Import finished.")
+        reporter.append_text_only("")
 
 
 def get_filespec(**kargs):
@@ -96,3 +169,8 @@ class Alldu:
 
                 break
         del f, m
+
+    def do_final_segment_deferred_updates(self):
+        """Extend to report number of games in final segment."""
+        #print("Report number of games in final segment")
+        super().do_final_segment_deferred_updates()

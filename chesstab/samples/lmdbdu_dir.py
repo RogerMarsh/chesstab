@@ -10,4 +10,4 @@ if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from ..lmdb.chesslmdbdu import chess_database_du
 
-    DirectoryWidget(chess_database_du, "db", estimated_number_of_games=10000)
+    DirectoryWidget(chess_database_du, "db")

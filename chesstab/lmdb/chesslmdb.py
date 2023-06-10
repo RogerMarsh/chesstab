@@ -7,7 +7,6 @@
 import os
 
 from solentware_base import lmdb_database
-from solentware_base.core import constants
 
 from ..core.filespec import (
     FileSpec,
@@ -41,26 +40,20 @@ class ChessDatabase(database.Database, lmdb_database.Database):
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )
-
         super().__init__(dbnames, folder=DBfile, **kargs)
-        self.open_database()
-        (
-            map_bytes,
-            map_pages,
-            used_bytes,
-            used_pages,
-            stats,
-        ) = self.database_stats_summary()
-        self.close_database()
-        self.map_blocks = map_pages // constants.DEFAULT_MAP_PAGES
-        if map_pages - used_pages < LMMD_MINIMUM_FREE_PAGES_AT_START:
-            short = LMMD_MINIMUM_FREE_PAGES_AT_START + map_pages - used_pages
-        else:
-            short = 0
-        self.map_blocks = (
-            1 + (map_pages + short) // constants.DEFAULT_MAP_PAGES
-        )
+
+        # Allow space for lots of chess engine analysis.
+        self._set_map_blocks_above_used_pages(200)
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
         return (self.database_file,)
+
+    def checkpoint_before_close_dbenv(self):
+        """Override.  Hijack method to set map size to file size.
+
+        Reverse, to the extent possible, the increase in map size done
+        when the database was opened.
+
+        """
+        self._set_map_size_above_used_pages_between_transactions(0)

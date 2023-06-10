@@ -13,9 +13,11 @@ import tkinter.font
 import tkinter.messagebox
 import queue
 import time
+import multiprocessing
+import multiprocessing.dummy
+import time
 
-from solentware_misc.core import callthreadqueue
-from solentware_misc.gui.tasklog import LogText
+from solentware_misc.gui.logtextbase import LogTextBase
 
 from solentware_bind.gui.bindings import Bindings
 
@@ -50,158 +52,96 @@ from ..core.filespec import GAMES_FILE_DEF
 _DATABASE_UPDATE_FACTOR = 5
 
 
-class ChessDeferredUpdate(Bindings):
-    """Connect a chess database with User Interface for deferred update."""
+class _Reporter:
+    """Helper class to keep 'LogText' API for adding text to log.
 
-    def __init__(
-        self, deferred_update_method=None, database_class=None, sample=5000
-    ):
-        """Create the database and ChessUI objects.
+    Not used in dptcompatdu module but is used in chessdptdu module.
 
-        deferred_update_method - the method to do the import
-        database_class - access the database with an instance of this class
-        sample - estimate size of import from first 'sample' games in PGN file
+    """
 
-        """
-        super().__init__()
-        self.queue = callthreadqueue.CallThreadQueue()
-        self.reportqueue = queue.Queue(maxsize=1)
+    def __init__(self, append_text, append_text_only):
+        """Note the timestamp plus text, and text only, append methods."""
+        self.append_text = append_text
+        self.append_text_only = append_text_only
 
-        self.dumethod = deferred_update_method
+
+class DeferredUpdateProcess:
+    """Define a process to do a deferred update task."""
+
+    def __init__(self, database, method, report_queue, quit_event):
+        """Provide queues for communication with GUI."""
+        self.database = database
+        self.method = method
+        self.report_queue = report_queue
+        self.quit_event = quit_event
+        self.process = multiprocessing.Process(
+            target=self._run_import,
+            args=(),
+        )
+
+    def _report_to_log(self, text):
+        """Add text to report queue with timestamp."""
+        day, time = datetime.datetime.isoformat(
+            datetime.datetime.today()
+        ).split("T")
+        time = time.split(".")[0]
+        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+
+    def _report_to_log_text_only(self, text):
+        """Add text to report queue without timestamp."""
+        self.report_queue.put("".join(("                     ", text, "\n")))
+
+    def _run_import(self):
+        """Invoke method to do the deferred update and display job status."""
+        status = self.method(
+            sys.argv[1],
+            sys.argv[2:],
+            self.database.get_file_sizes(),
+            _Reporter(
+                self._report_to_log,
+                self._report_to_log_text_only,
+            ),
+            quit_event=self.quit_event,
+        )
+
+
+class DeferredUpdateEstimateProcess:
+    """Define a process to do a deferred update estimate task."""
+
+    def __init__(self, database, sample, report_queue, quit_event):
+        """Provide queues for communication with GUI."""
+        self.database = database
         self.sample = sample
+        self.report_queue = report_queue
+        self.quit_event = quit_event
         self.estimate_data = None
-        self._allow_job = None
-        self._import_job = None
-        self.database = database_class(
-            sys.argv[1], allowcreate=True, deferupdatefiles={GAMES_FILE_DEF}
+        self.process = multiprocessing.Process(
+            target=self._allow_import,
+            args=(),
         )
 
-        self.root = tkinter.Tk()
-        self.root.wm_title(
-            " - ".join(
-                (
-                    " ".join((APPLICATION_NAME, "Import")),
-                    os.path.basename(sys.argv[1]),
-                )
-            )
-        )
-        frame = tkinter.Frame(master=self.root)
-        frame.pack(side=tkinter.BOTTOM)
-        self.buttonframe = tkinter.Frame(master=frame)
-        self.buttonframe.pack(side=tkinter.BOTTOM)
+    def _report_to_log(self, text):
+        """Add text to report queue with timestamp."""
+        day, time = datetime.datetime.isoformat(
+            datetime.datetime.today()
+        ).split("T")
+        time = time.split(".")[0]
+        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
 
-        # See comment near end of this class definition for explanation of this
-        # change.  It was simpler to display all the buttons at once and add
-        # some control logic, than wrap the things in a task queue for the main
-        # thread to process.  But the presence or absence of the buttons should
-        # be the control logic.
-        self._quit_message = "".join(
-            (
-                "The import has not been started.",
-                "\n\nDo you want to abandon the import?",
-            )
-        )
-        self.cancel = tkinter.Button(
-            master=self.buttonframe,
-            # text='Cancel',
-            text="Quit",
-            underline=0,
-            command=self.try_command(
-                # self.quit_before_import_started, self.buttonframe))
-                self._quit_import,
-                self.buttonframe,
-            ),
-        )
-        self.cancel.pack(side=tkinter.RIGHT, padx=12)
-        backup = tkinter.Button(
-            master=self.buttonframe,
-            text="Import with Backups",
-            underline=12,
-            command=self.try_command(
-                self._do_import_with_backup, self.buttonframe
-            ),
-        )
-        backup.pack(side=tkinter.RIGHT, padx=12)
-        import_ = tkinter.Button(
-            master=self.buttonframe,
-            text="Import",
-            underline=0,
-            command=self.try_command(
-                self._do_import_without_backup, self.buttonframe
-            ),
-        )
-        import_.pack(side=tkinter.RIGHT, padx=12)
+    def _report_to_log_text_only(self, text):
+        """Add text to report queue without timestamp."""
+        self.report_queue.put("".join(("                     ", text, "\n")))
 
-        # See comment near end of this class definition for explanation of this
-        # change.  Replacing Text by LogText fixes the majority of the
-        # problems.
-        # Consequential changes, self.append_text to self.report.append_text
-        # mainly, are not marked.
-        # Added 07 August 2016:
-        # Edited 12 October 2022 when all tkinter.Text arguments put in cnf.
-        # _get_default_font_actual() value used as cnf to avoid picking fonts
-        # like 'Chess Cases' as default font, when running under Wine, from
-        # ~/.wine/drive_c/windows/Fonts or /usr/local/share/fonts.
-        # The _get_default_font_actual() value is not needed in cnf otherwise.
-        # cnf = _get_default_font_actual(tkinter.Text) is not accepted as an
-        # argument by tkinter.Text().  It seems this argument was ignored
-        # previously en-route to the Text() call.
-        self.report = LogText(
-            master=self.root,
-            get_app=self,
-            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE),
-        )
-        self.report.focus_set()
-        self.bind(
-            self.report,
-            "<Alt-b>",
-            function=self.try_event(self._do_import_with_backup),
-        )
-        self.bind(
-            self.report,
-            "<Alt-i>",
-            function=self.try_event(self._do_import_without_backup),
-        )
-        self.bind(
-            self.report, "<Alt-q>", function=self.try_event(self._quit_import)
-        )
-        self.database.add_import_buttons(
-            self.buttonframe,
-            self.try_command,
-            self.try_event,
-            self.bind,
-            self.report,
-        )
-
-        self.report.tag_configure(
-            "margin",
-            lmargin2=tkinter.font.nametofont(self.report.cget("font")).measure(
-                "2010-05-23 10:20:57  "
-            ),
-        )
-        self.tagstart = "1.0"
-        self.report.append_text(
-            "".join(("Importing to database ", sys.argv[1], "."))
-        )
-        self.report.append_text(
-            "All times quoted assume no other applications running.",
-            timestamp=False,
-        )
-        self.report.append_text_only("")
-        self.report.append_text("Estimating number of games in import.")
-        self.report.append_text_only("")
-        self.report.pack(
-            side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
-        )
-        self.root.iconify()
-        self.root.update()
-        self.root.deiconify()
-        self.__run_ui_task_from_queue(1000)
-        self.root.after(100, self.try_command(self._run_allow, self.root))
-        self.root.mainloop()
+    def _wait_for_quit_event(self):
+        """Wait for quit event."""
+        self.quit_event.wait()
 
     def _allow_import(self):
         """Do checks for database engine and return True if import allowed."""
+        self.stop_thread = multiprocessing.dummy.DummyProcess(
+            target=self._wait_for_quit_event
+        )
+        self.stop_thread.start()
         # The close_database() in finally clause used to be the first statement
         # after runjob() definition in _run_import() method.  An exception was
         # raised using the sqlite3 module because run_input() is run in a
@@ -212,196 +152,24 @@ class ChessDeferredUpdate(Bindings):
         self.database.open_database()
         try:
             if not self._estimate_games_in_import():
-                self.report.append_text("There are no games to import.")
-                self.report.append_text_only("")
+                #self._report_to_log("There are no games to import.")
+                #self._report_to_log_text_only("")
                 return None
             if self._allow_time():
                 self.database.report_plans_for_estimate(
-                    self._get_pgn_file_estimates(), self.report
+                    self._get_pgn_file_estimates(),
+                    _Reporter(
+                        self._report_to_log,
+                        self._report_to_log_text_only,
+                    ),
                 )
+                self.quit_event.set()
                 return True
-            self.report.append_text("Unable to estimate time to do import.")
-            self.report.append_text_only("")
+            self._report_to_log("Unable to estimate time to do import.")
+            self._report_to_log_text_only("")
             return False
         finally:
             self.database.close_database()
-
-    def _allow_time(self):
-        """Ask is deferred update to proceed if game count is estimated.
-
-        The time taken will vary significantly depending on environment.
-
-        """
-        if not self.estimate_data:
-            return False
-        seconds = (
-            (self.estimate_data[0] + self.estimate_data[4])
-            * self.estimate_data[9]
-            * _DATABASE_UPDATE_FACTOR
-        )
-        minutes, seconds = divmod(round(seconds), 60)
-        hours, minutes = divmod(minutes, 60)
-        days, hours = divmod(hours, 24)
-        duration = []
-        if days:
-            duration.append(str(days))
-            duration.append("days")
-            if hours:
-                duration.append(str(hours))
-                duration.append("hours")
-        elif hours:
-            duration.append(str(hours))
-            duration.append("hours")
-            if minutes:
-                duration.append(str(minutes))
-                duration.append("minutes")
-        elif minutes:
-            duration.append(str(minutes))
-            duration.append("minutes")
-            if seconds:
-                duration.append(str(seconds))
-                duration.append("seconds")
-        elif seconds > 1:
-            duration.append(str(seconds))
-            duration.append("seconds")
-        else:
-            duration.append(str(1))
-            duration.append("second")
-        self.report.append_text(
-            "".join(
-                (
-                    "The estimate is the time taken to process the sample ",
-                    "scaled up to the estimated number of games then ",
-                    "multiplied by ",
-                    str(_DATABASE_UPDATE_FACTOR),
-                    ".  Expect the import to take longer if the database ",
-                    "already contains games: the effect is worse for smaller "
-                    "imports.  Progress reports are made if the import is ",
-                    "large enough.",
-                )
-            )
-        )
-        self.report.append_text_only("")
-        self.report.append_text(
-            "".join(
-                ("The import is expected to take ", " ".join(duration), ".")
-            )
-        )
-        self.report.append_text_only("")
-        return True
-
-    def _do_import_with_backup(self, event=None):
-        """Run import thread if allowed and not already run.
-
-        event is ignored and is present for compatibility between button click
-        and keypress.
-
-        """
-        del event
-        if self._import_job:
-            return
-        names, exists = self.database.get_archive_names(
-            files=(GAMES_FILE_DEF,)
-        )
-        if exists:
-            if not tkinter.messagebox.askokcancel(
-                parent=self.root,
-                title="Import Backup",
-                message="".join(
-                    (
-                        "Import backups of the following files already ",
-                        "exist.\n\n",
-                        "\n".join(exists),
-                        "\n\nThis may mean an earlier Import action failed ",
-                        'and has not yet been resolved.\n\nClick "Ok" to ',
-                        "delete these backups and create new ones before ",
-                        "doing the Import.  These backups will be deleted ",
-                        "if the Import succeeds.\n\nClick ",
-                        '"Cancel" to leave things as they are.',
-                    )
-                ),
-            ):
-                return
-            self.report.append_text(
-                "Backups will be taken before doing the import."
-            )
-            self.report.append_text(
-                "These backups will replace the existing backups.",
-                timestamp=False,
-            )
-        elif not tkinter.messagebox.askokcancel(
-            parent=self.root,
-            title="Import Backup",
-            message="".join(
-                ("Please confirm the import is to be done with backups.",)
-            ),
-        ):
-            return
-        else:
-            self.report.append_text(
-                "Backups will be taken before doing the import."
-            )
-        self.report.append_text(
-            "These backups will be deleted if the import succeeds.",
-            timestamp=False,
-        )
-        self.report.append_text_only("")
-        self._run_import(backup=True, names=names)
-
-    def _do_import_without_backup(self, event=None):
-        """Run import thread if allowed and not already run.
-
-        event is ignored and is present for compatibility between button click
-        and keypress.
-
-        """
-        del event
-        if self._import_job:
-            return
-        names, exists = self.database.get_archive_names(
-            files=(GAMES_FILE_DEF,)
-        )
-        if exists:
-            if not tkinter.messagebox.askokcancel(
-                parent=self.root,
-                title="Import Backup",
-                message="".join(
-                    (
-                        "Import backups of the following files already ",
-                        "exist.\n\n",
-                        "\n".join(exists),
-                        "\n\nThis may mean an earlier Import action failed ",
-                        'and has not yet been resolved.\n\nClick "Ok" to ',
-                        "delete these backups and create new ones before ",
-                        "doing the Import.  These backups will be deleted ",
-                        "if the Import succeeds.\n\nClick ",
-                        '"Cancel" to leave things as they are.',
-                    )
-                ),
-            ):
-                return
-            self.report.append_text(
-                "The import will be done without taking backups."
-            )
-            self.report.append_text_only("")
-            self.report.append_text(
-                "Existing backups will be deleted before doing the import.",
-                timestamp=False,
-            )
-            self.report.append_text_only("")
-        elif not tkinter.messagebox.askokcancel(
-            parent=self.root,
-            title="Import Backup",
-            message="".join(
-                ("Please confirm the import is to be done without backups.",)
-            ),
-        ):
-            # self.report.append_text(
-            #     "The import will be done without taking backups."
-            # )
-            # self.report.append_text_only("")
-            return
-        self._run_import(backup=False, names=names)
 
     def _estimate_games_in_import(self):
         """Estimate import size from the first sample games in import files."""
@@ -424,6 +192,20 @@ class ChessDeferredUpdate(Bindings):
                 break
             with open(pgnfile, "r", encoding="iso-8859-1") as source:
                 for rcg in reader.read_games(source):
+                    if self.quit_event.is_set():
+                        self._report_to_log_text_only("")
+                        self._report_to_log(
+                            " ".join(
+                                (
+                                    "Estimating task stopped when",
+                                    str(gamecount),
+                                    "games and",
+                                    str(errorcount),
+                                    "games with errors found.",
+                                )
+                            )
+                        )
+                        return False
                     if gamecount + errorcount >= self.sample:
                         estimate = True
                         break
@@ -483,40 +265,38 @@ class ChessDeferredUpdate(Bindings):
             (time_end - time_start) / (gamecount + errorcount),
         )
         if estimate:
-            self.report.append_text(
+            self._report_to_log_text_only("")
+            self._report_to_log(
                 " ".join(("Estimated Games:", str(self.estimate_data[0])))
             )
-            self.report.append_text(
+            self._report_to_log_text_only(
                 " ".join(("Estimated Errors:", str(self.estimate_data[4]))),
-                timestamp=False,
             )
-            self.report.append_text(
-                " ".join(("Sample Games:", str(gamecount))), timestamp=False
+            self._report_to_log_text_only(
+                " ".join(("Sample Games:", str(gamecount)))
             )
-            self.report.append_text(
-                " ".join(("Sample Errors:", str(errorcount))), timestamp=False
+            self._report_to_log_text_only(
+                " ".join(("Sample Errors:", str(errorcount)))
             )
         else:
-            self.report.append_text(
+            self._report_to_log_text_only("")
+            self._report_to_log(
                 "The import is small so all games are counted."
             )
-            self.report.append_text(
-                " ".join(("Games in import:", str(gamecount))), timestamp=False
+            self._report_to_log_text_only(
+                " ".join(("Games in import:", str(gamecount)))
             )
-            self.report.append_text(
+            self._report_to_log_text_only(
                 " ".join(("Errors in import:", str(errorcount))),
-                timestamp=False,
             )
-        self.report.append_text(
-            " ".join(("Bytes per game:", str(bytes_per_game))), timestamp=False
+        self._report_to_log_text_only(
+            " ".join(("Bytes per game:", str(bytes_per_game)))
         )
-        self.report.append_text(
+        self._report_to_log_text_only(
             " ".join(("Bytes per error:", str(bytes_per_error))),
-            timestamp=False,
         )
-        self.report.append_text(
+        self._report_to_log_text_only(
             " ".join(("Positions per game:", str(positions_per_game))),
-            timestamp=False,
         )
 
         # positions_per_game == 0 if there are no valid games.
@@ -527,39 +307,37 @@ class ChessDeferredUpdate(Bindings):
         ):
             if positions_per_game:
                 ppp = str(count // positions_per_game)
-            self.report.append_text(" ".join((text, ppp)), timestamp=False)
-        self.report.append_text("", timestamp=False)
+            self._report_to_log_text_only(" ".join((text, ppp)))
+        self._report_to_log_text_only("")
 
         # Check if import can proceed
         if gamecount + errorcount == 0:
-            self.report.append_text(
+            self._report_to_log(
                 "No games, or games with errors, found in import."
             )
             return False
         if errorcount == 0:
             if estimate:
-                self.report.append_text("No games with errors in sample.")
-                self.report.append_text(
+                self._report_to_log("No games with errors in sample.")
+                self._report_to_log_text_only(
                     " ".join(
                         (
                             "It is estimated no games with",
                             "errors exist in import.",
                         )
                     ),
-                    timestamp=False,
                 )
-                self.report.append_text(
+                self._report_to_log_text_only(
                     "Any found in import will be indexed only as errors.",
-                    timestamp=False,
                 )
             else:
-                self.report.append_text("No games with errors in import.")
-            self.report.append_text_only("")
+                self._report_to_log("No games with errors in import.")
+            self._report_to_log_text_only("")
         elif estimate:
-            self.report.append_text(
+            self._report_to_log(
                 "Games with errors have been found in sample."
             )
-            self.report.append_text(
+            self._report_to_log_text_only(
                 " ".join(
                     (
                         "The sample is the first",
@@ -567,23 +345,308 @@ class ChessDeferredUpdate(Bindings):
                         "games in import.",
                     )
                 ),
-                timestamp=False,
             )
-            self.report.append_text(
+            self._report_to_log_text_only(
                 "All found in import will be indexed only as errors.",
-                timestamp=False,
             )
-            self.report.append_text_only("")
+            self._report_to_log_text_only("")
         else:
-            self.report.append_text(
+            self._report_to_log(
                 "Games with errors have been found in sample."
             )
-            self.report.append_text(
+            self._report_to_log_text_only(
                 "All found in import will be indexed only as errors.",
-                timestamp=False,
             )
-            self.report.append_text_only("")
-        return bool(self.estimate_data)
+            self._report_to_log_text_only("")
+        return True
+
+    def _allow_time(self):
+        """Ask is deferred update to proceed if game count is estimated.
+
+        The time taken will vary significantly depending on environment.
+
+        """
+        if not self.estimate_data:
+            return False
+        seconds = (
+            (self.estimate_data[0] + self.estimate_data[4])
+            * self.estimate_data[9]
+            * _DATABASE_UPDATE_FACTOR
+        )
+        minutes, seconds = divmod(round(seconds), 60)
+        hours, minutes = divmod(minutes, 60)
+        days, hours = divmod(hours, 24)
+        duration = []
+        if days:
+            duration.append(str(days))
+            duration.append("days")
+            if hours:
+                duration.append(str(hours))
+                duration.append("hours")
+        elif hours:
+            duration.append(str(hours))
+            duration.append("hours")
+            if minutes:
+                duration.append(str(minutes))
+                duration.append("minutes")
+        elif minutes:
+            duration.append(str(minutes))
+            duration.append("minutes")
+            if seconds:
+                duration.append(str(seconds))
+                duration.append("seconds")
+        elif seconds > 1:
+            duration.append(str(seconds))
+            duration.append("seconds")
+        else:
+            duration.append(str(1))
+            duration.append("second")
+        self._report_to_log(
+            "".join(
+                (
+                    "The estimate is the time taken to process the sample ",
+                    "scaled up to the estimated number of games then ",
+                    "multiplied by ",
+                    str(_DATABASE_UPDATE_FACTOR),
+                    ".  Expect the import to take longer if the database ",
+                    "already contains games: the effect is worse for smaller "
+                    "imports.  Progress reports are made if the import is ",
+                    "large enough.",
+                )
+            )
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log(
+            "".join(
+                ("The import is expected to take ", " ".join(duration), ".")
+            )
+        )
+        return True
+
+    def _get_pgn_file_estimates(self):
+        """Return the estimates of object counts for a PGN file."""
+        return self.estimate_data
+
+
+class ChessDeferredUpdate(Bindings):
+    """Connect a chess database with User Interface for deferred update."""
+
+    def __init__(
+        self, deferred_update_method=None, database_class=None, sample=5000
+    ):
+        """Create the database and ChessUI objects.
+
+        deferred_update_method - the method to do the import
+        database_class - access the database with an instance of this class
+        sample - estimate size of import from first 'sample' games in PGN file
+
+        """
+        super().__init__()
+        self.report_queue = multiprocessing.Queue()
+        self.quit_event = multiprocessing.Event()
+        self.dumethod = deferred_update_method
+        self.sample = sample
+        self._import_done = False
+        self._import_job = None
+        self._task_name = "estimating"
+        self.database = database_class(
+            sys.argv[1], allowcreate=True, deferupdatefiles={GAMES_FILE_DEF}
+        )
+
+        self.root = tkinter.Tk()
+        self.root.wm_title(
+            " - ".join(
+                (
+                    " ".join((APPLICATION_NAME, "Import")),
+                    os.path.basename(sys.argv[1]),
+                )
+            )
+        )
+        frame = tkinter.Frame(master=self.root)
+        frame.pack(side=tkinter.BOTTOM)
+        # Not yet sure 'self.buttonframe' should become 'buttonframe'.
+        self.buttonframe = tkinter.Frame(master=frame)
+        self.buttonframe.pack(side=tkinter.BOTTOM)
+        tkinter.Button(
+            master=self.buttonframe,
+            text="Dismiss Log",
+            underline=0,
+            command=self.try_command(
+                self._dismiss_import_log,
+                self.buttonframe,
+            ),
+        ).pack(side=tkinter.RIGHT, padx=12)
+        tkinter.Button(
+            master=self.buttonframe,
+            text='Stop Process',
+            underline=0,
+            command=self.try_command(
+                self._stop_task,
+                self.buttonframe,
+            ),
+        ).pack(side=tkinter.RIGHT, padx=12)
+        tkinter.Button(
+            master=self.buttonframe,
+            text="Import",
+            underline=0,
+            command=self.try_command(self._do_import, self.buttonframe),
+        ).pack(side=tkinter.RIGHT, padx=12)
+
+        self.report = LogTextBase(
+            master=self.root,
+            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE),
+        )
+        self.report.focus_set()
+        self.bind(
+            self.report,
+            "<Alt-i>",
+            function=self.try_event(self._do_import),
+        )
+        self.bind(
+            self.report,
+            "<Alt-d>",
+            function=self.try_event(self._dismiss_import_log,),
+        )
+        self.bind(
+            self.report,
+            "<Alt-s>",
+            function=self.try_event(self._stop_task),
+        )
+        self.database.add_import_buttons(
+            self.buttonframe,
+            self.try_command,
+            self.try_event,
+            self.bind,
+            self.report,
+        )
+
+        self.report.tag_configure(
+            "margin",
+            lmargin2=tkinter.font.nametofont(self.report.cget("font")).measure(
+                "2010-05-23 10:20:57  "
+            ),
+        )
+        self.tagstart = "1.0"
+        self._report_to_log(
+            "".join(("Importing to database ", sys.argv[1], "."))
+        )
+        self._report_to_log_text_only(
+            "All times quoted assume no other applications running.",
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log("Estimating number of games in import.")
+        self.report.pack(
+            side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
+        )
+        self.root.iconify()
+        self.root.update()
+        self.root.deiconify()
+        self._allow_job = False
+        self.deferred_update = DeferredUpdateEstimateProcess(
+            self.database,
+            self.sample,
+            self.report_queue,
+            self.quit_event,
+        )
+        self.deferred_update.process.start()
+        self.quit_thread = multiprocessing.dummy.DummyProcess(
+            target=self._deferred_update_estimate_join
+        )
+        self.quit_thread.start()
+        self._add_queued_reports_to_log()
+        self.root.mainloop()
+
+    def _report_to_log(self, text):
+        """Add text to report queue with timestamp."""
+        day, time = datetime.datetime.isoformat(
+            datetime.datetime.today()
+        ).split("T")
+        time = time.split(".")[0]
+        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+
+    def _report_to_log_text_only(self, text):
+        """Add text to report queue without timestamp."""
+        self.report_queue.put("".join(("                     ", text, "\n")))
+
+    def _add_queued_reports_to_log(self):
+        """Check report queue every 200ms and add reports to log."""
+        # Items are put on queue infrequently relative to polling, so testing
+        # the unreliable qsize() value is worthwhile because it will usually
+        # be 0 thus avoiding the Empty exception.
+        while self.report_queue.qsize():
+            try:
+                self.report.append_raw_text(self.report_queue.get_nowait())
+            except queue.Empty:
+                pass
+        self.root.after(200, self._add_queued_reports_to_log)
+
+    def _deferred_update_estimate_join(self):
+        """join() deferred_update process then allow quit."""
+        self.deferred_update.process.join()
+        self._allow_job = True
+
+    def _deferred_update_join(self):
+        """join() deferred_update process then allow quit."""
+        self.deferred_update.process.join()
+        self._allow_job = True
+        self._import_done = True
+
+    def _do_import(self, event=None):
+        """Run import process if allowed and not already run.
+
+        event is ignored and is present for compatibility between button click
+        and keypress.
+
+        """
+        del event
+        if not self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Import",
+                message="".join(
+                    (
+                        "Cannot start import because a task is in progress",
+                        ".\n\nThe current task must be allowed to finish, ",
+                        "or be stopped, before starting task.",
+                    )
+                ),
+            )
+            return
+        if self._import_done:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Import",
+                message="".join(
+                    (
+                        "The import has been done.",
+                        "\n\nDismiss Log and start again to repeat it or ",
+                        "do another one.",
+                    )
+                ),
+            )
+            return
+        if not tkinter.messagebox.askokcancel(
+            parent=self.root,
+            title="Import",
+            message="".join(
+                ("Please confirm the import is to be started.",)
+            ),
+        ):
+            return
+        self._allow_job = False
+        self._task_name = "import"
+        self.quit_event.clear()
+        self.deferred_update = DeferredUpdateProcess(
+            self.database,
+            self.dumethod,
+            self.report_queue,
+            self.quit_event,
+        )
+        self.deferred_update.process.start()
+        self.quit_thread = multiprocessing.dummy.DummyProcess(
+            target=self._deferred_update_join
+        )
+        self.quit_thread.start()
 
     # Override ChessException method as ChessUI class is not used.
     # May be wrong now solentware_misc Bindings is used.
@@ -591,235 +654,58 @@ class ChessDeferredUpdate(Bindings):
         """Return the exception report file name."""
         return os.path.join(sys.argv[1], ERROR_LOG)
 
-    def _get_pgn_file_estimates(self):
-        """Return the estimates of object counts for a PGN file."""
-        return self.estimate_data
-
-    def quit_after_import_started(self):
-        """Quit process after import has started."""
-        if tkinter.messagebox.askyesno(
-            parent=self.root,
-            title="Abandon Import",
-            message="".join(
-                (
-                    "The import has been started.\n\n",
-                    APPLICATION_NAME,
-                    " will attempt ",
-                    "to restore the files using the backups if they were ",
-                    "taken.\n\nDo you want to abandon the import?",
-                )
-            ),
-        ):
-            self.root.destroy()
-
-    def _quit_import(self, event=None):
-        """Quit process.
+    def _stop_task(self, event=None):
+        """Stop task.
 
         event is ignored and is present for compatibility between button click
         and keypress.
 
         """
         del event
+        if self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Stop",
+                message="No task running to be stopped.",
+            )
+            return
+        if not tkinter.messagebox.askokcancel(
+            parent=self.root,
+            title="Stop",
+            message=self._task_name.join(
+                ("Please confirm the ", " task is to be stopped.")
+            ),
+        ):
+            return
+        self.quit_event.set()
+
+    def _dismiss_import_log(self, event=None):
+        """Dismiss log display and quit process.
+
+        event is ignored and is present for compatibility between button click
+        and keypress.
+
+        """
+        del event
+        if not self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Dismiss",
+                message="".join(
+                    (
+                        "Cannot dismiss because a task is in progress",
+                        ".\n\nThe current task must be allowed to finish, ",
+                        "or be stopped, before dismissing.",
+                    )
+                ),
+            )
+            return
         if tkinter.messagebox.askyesno(
-            parent=self.root, title="Quit Import", message=self._quit_message
+            parent=self.root,
+            title="Dismiss",
+            message="Do you want to dismiss the import log?",
         ):
             self.root.destroy()
-
-    def _run_allow(self):
-        """Run import thread if allowed and not already run."""
-        if self._allow_job:
-            return
-        self._allow_job = True
-        self.queue.put_method(self.try_thread(self._allow_import, self.root))
-
-    def _run_import(self, backup=None, names=None):
-        """Invoke method to do the deferred update and display job status.
-
-        backup - the answer given to the 'take backups' prompt
-        names - the files to backup if requested
-
-        Closing the job status widget terminates the job.
-
-        """
-        if self._import_job:
-            return
-
-        def runjob(*a):
-            try:
-                if backup:
-                    self.report.append_text("Taking backups.")
-                    if self.database.archive(flag=backup, names=names) is None:
-                        self.report.append_text("Taking backups abandonned")
-                        self.report.append_text(
-                            "".join(
-                                (
-                                    "The existing backup does not ",
-                                    "look like a ",
-                                    APPLICATION_NAME,
-                                    " backup.",
-                                )
-                            ),
-                            timestamp=False,
-                        )
-                        self.report.append_text_only("")
-                        # self.cancel.configure(
-                        #    command=self.try_command(
-                        #        self.quit_before_import_started, self.cancel))
-                        self._quit_message = "".join(
-                            (
-                                "The import has not been started.",
-                                "\n\nDo you want to abandon the import?",
-                            )
-                        )
-                        return
-                    self.report.append_text("Backups saved.")
-                    self.report.append_text_only("")
-                self.report.append_text("Import started.")
-                self.report.append_text_only("")
-                status = False
-                try:
-                    status = self.dumethod(
-                        *a, estimated_number_of_games=self.estimate_data[0]
-                    )
-                except Exception as error:
-                    try:
-                        write_error_to_log()
-                    except Exception as error:
-                        raise SystemExit(
-                            " reporting exception in ".join(
-                                ("Exception while", APPLICATION_NAME)
-                            )
-                        ) from error
-                    raise SystemExit(
-                        "Exception reported in " + APPLICATION_NAME
-                    ) from error
-                self.report.append_text("Import finished.")
-                self.report.append_text_only("")
-                if not status:
-                    if backup:
-                        self.report.append_text(
-                            "".join(
-                                (
-                                    "Problem encountered doing import. ",
-                                    "Backups are retained for recovery.",
-                                )
-                            )
-                        )
-                    else:
-                        self.report.append_text(
-                            "".join(
-                                (
-                                    "Problem encountered doing import. ",
-                                    "No backups available.",
-                                )
-                            )
-                        )
-                    self.report.append_text_only(
-                        "".join(("See ", ERROR_LOG, " for details."))
-                    )
-                elif backup:
-                    self.report.append_text("Deleting backups.")
-                    if (
-                        self.database.delete_archive(flag=backup, names=names)
-                        is None
-                    ):
-                        self.report.append_text("Deleting backups abandonned.")
-                        self.report.append_text_only(
-                            "".join(
-                                (
-                                    "The existing backup does not ",
-                                    "look like a ",
-                                    APPLICATION_NAME,
-                                    " backup.",
-                                )
-                            )
-                        )
-                    else:
-                        self.report.append_text("Backups deleted.")
-                # self.cancel.configure(
-                #    command=self.try_command(
-                #        self.quit_after_import_finished, self.cancel),
-                #    text='Quit')
-                self._quit_message = "".join(
-                    (
-                        "The import has been completed.",
-                        "\n\nDo you want to dismiss the import log?",
-                    )
-                )
-            except Exception as error:
-                try:
-                    write_error_to_log()
-                except Exception as error:
-                    raise SystemExit(
-                        " reporting exception in ".join(
-                            ("Exception while", APPLICATION_NAME)
-                        )
-                    ) from error
-                raise SystemExit(
-                    "Exception reported in " + APPLICATION_NAME
-                ) from error
-
-        self._import_job = True
-        self.queue.put_method(
-            self.try_thread(runjob, self.root),
-            args=(
-                sys.argv[1],
-                sys.argv[2:],
-                self.database.get_file_sizes(),
-                self.report.append_text,
-            ),
-        )
-
-    # Methods __call__, get_reportqueue, __run_ui_task_from_queue, and
-    # get_thread_queue, introduced to allow this module to work if tkinter is
-    # compiled without --enable-threads as in OpenBSD 5.7 i386 packages.  The
-    # standard build from FreeBSD ports until early 2015 at least, when this
-    # change was introduced, is compiled with --enable-threads so the unchanged
-    # code worked.  Not sure if the change in compiler on FreeBSD from gcc to
-    # clang made a difference.  The Microsoft Windows' Pythons seem to be
-    # compiled with --enable-threads because the unchanged code works in that
-    # environment.  The situation on OS X, and any GNU-Linux distribution, is
-    # not known.
-
-    # Code in the solentware_misc.gui.tasklog module already dealt with this
-    # problem, so the minimum necessary was copied to here.  The classes in
-    # tasklog are modified versions of code present in this module before this
-    # change.
-
-    def __call__(self):
-        """Return self allowing the construct <instance>()."""
-        return self
-
-    def get_reportqueue(self):
-        """Return queue from which reports to be displayed are taken.
-
-        Tasks run from self.queue place responses on this queue.
-
-        """
-        return self.reportqueue
-
-    def get_thread_queue(self):
-        """Return queue on which tasks to be run are placed.
-
-        A task runner takes tasks from this queue.
-
-        """
-        return self.queue
-
-    def __run_ui_task_from_queue(self, interval):
-        """Do all queued tasks then wake-up after interval."""
-        while True:
-            try:
-                method, args, kwargs = self.reportqueue.get_nowait()
-                method(*args, **kwargs)
-            except queue.Empty:
-                self.root.after(
-                    interval,
-                    self.try_command(self.__run_ui_task_from_queue, self.root),
-                    *(interval,)
-                )
-                break
-            self.reportqueue.task_done()
 
 
 def write_error_to_log():

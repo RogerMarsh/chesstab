@@ -22,6 +22,7 @@ from ..core.filespec import (
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
     DB_ENVIRONMENT_MAXLOCKS,
+    DB_ENVIRONMENT_MAXOBJECTS,
 )
 from .archivedu import _delete_archive, _archive
 from .alldu import get_filespec
@@ -54,6 +55,7 @@ class Dbdu(DptCompatdu):
             "gbytes": DB_ENVIRONMENT_GIGABYTES,
             "bytes": DB_ENVIRONMENT_BYTES,
             "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
+            "maxobjects": DB_ENVIRONMENT_MAXOBJECTS,
         }
 
         try:

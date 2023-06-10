@@ -14,7 +14,7 @@ class ChessgnuduError(Exception):
     """Exception class for chessgnudu module."""
 
 
-def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
+def chess_database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 

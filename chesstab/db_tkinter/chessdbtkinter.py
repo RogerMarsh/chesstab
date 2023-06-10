@@ -19,6 +19,7 @@ from ..core.filespec import (
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
     DB_ENVIRONMENT_MAXLOCKS,
+    DB_ENVIRONMENT_MAXOBJECTS,
 )
 from ..basecore import database
 
@@ -59,6 +60,7 @@ class ChessDatabase(database.Database, db_tkinter_database.Database):
             "gbytes": DB_ENVIRONMENT_GIGABYTES,
             "bytes": DB_ENVIRONMENT_BYTES,
             "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
+            "maxobjects": DB_ENVIRONMENT_MAXOBJECTS,
         }
 
         super().__init__(

@@ -78,22 +78,22 @@ class ChessdptduError(Exception):
     """Exception class for chessdptdu module."""
 
 
-def chess_dptdu(
-    dbpath,
-    pgnpaths,
-    file_records=None,
-    reporter=lambda text, timestamp=True: None,
-    estimated_number_of_games=0,
-):
+def chess_dptdu(dbpath, pgnpaths, file_records=None, reporter=None):
     """Open database, import games and close database."""
     cdb = ChessDatabase(dbpath, allowcreate=True)
     importer = ChessDBrecordGameImport()
     cdb.open_database(files=file_records)
     for pgnfile in pgnpaths:
         with open(pgnfile, "r", encoding="iso-8859-1") as source:
-            importer.import_pgn(cdb, source, pgnfile, reporter=reporter)
-    reporter("Finishing import: please wait.")
-    reporter("", timestamp=False)
+            importer.import_pgn(
+                cdb,
+                source,
+                pgnfile,
+                reporter=reporter,
+            )
+    if reporter is not None:
+        reporter.append_text("Finishing import: please wait.")
+        reporter.append_text_only("")
     cdb.close_database_contexts(files=file_records)
     cdb.open_database_contexts(files=file_records)
     status = True
@@ -109,13 +109,7 @@ def chess_dptdu(
     return status
 
 
-def chess_dptdu_chunks(
-    dbpath,
-    pgnpaths,
-    file_records,
-    reporter=lambda text, timestamp=True: None,
-    estimated_number_of_games=0,
-):
+def chess_dptdu_chunks(dbpath, pgnpaths, file_records, reporter=None):
     """Open database, import games in fixed chunks and close database."""
 
     def write_chunk(pgnpath, sample=None):
@@ -137,7 +131,8 @@ def chess_dptdu_chunks(
     for pgnfile in pgnpaths:
         with open(pgnfile, "r", encoding="iso-8859-1") as inp:
             line = inp.readline()
-            reporter("Extracting games from " + pgnfile)
+            if reporter is not None:
+                reporter.append_text("Extracting games from " + pgnfile)
             count = 0
             while line:
                 if line.startswith(newgamestring):
@@ -146,25 +141,28 @@ def chess_dptdu_chunks(
                     if len(games) >= CHUNKGAMES:
                         write_chunk(pgnfile, sample=records)
                         count += 1
-                        reporter(
-                            " ".join(
-                                (
-                                    "Chunk",
-                                    str(count),
-                                    "written, total games added:",
-                                    str(CHUNKGAMES * count),
+                        if reporter is not None:
+                            reporter.append_text(
+                                " ".join(
+                                    (
+                                        "Chunk",
+                                        str(count),
+                                        "written, total games added:",
+                                        str(CHUNKGAMES * count),
+                                    )
                                 )
                             )
-                        )
                 gamelines.append(line)
                 line = inp.readline()
         if gamelines:
             games.append("".join(gamelines))
             write_chunk(pgnfile, sample=records)
-        reporter("Extraction from " + pgnfile + " done")
-        reporter("", timestamp=False)
-    reporter("Finishing import: please wait.")
-    reporter("", timestamp=False)
+        if reporter is not None:
+            reporter.append_text("Extraction from " + pgnfile + " done")
+            reporter.append_text_only("")
+    if reporter is not None:
+        reporter.append_text("Finishing import: please wait.")
+        reporter.append_text_only("")
     cdb.open_database_contexts(files=file_records)
     status = True
     for file in file_records:
@@ -588,98 +586,3 @@ class ChessDatabaseDeferred(dptdu_database.Database):
 
 class ChessDatabase(Archivedu, ChessDatabaseDeferred):
     """Provide single-step deferred update for a database of games of chess."""
-
-
-if __name__ == "__main__":
-
-    import tkinter.ttk
-    import tkinter.filedialog
-
-    from solentware_bind.gui.bindings import Bindings
-
-    binder = Bindings()
-    root = tkinter.Tk()
-    root.wm_title("Sample do_deferred_updates")
-    frame = tkinter.ttk.Frame(master=root)
-    text = tkinter.Text(master=frame, wrap=tkinter.WORD)
-    frame.pack(fill=tkinter.Y, expand=tkinter.TRUE)
-    text.pack(fill=tkinter.BOTH, expand=tkinter.TRUE)
-    databasepath = tkinter.filedialog.askdirectory(
-        parent=root, title="Select database directory", initialdir="~"
-    )
-    if databasepath:
-        text.insert(tkinter.END, "Database directory: " + databasepath + "\n")
-    else:
-        text.insert(tkinter.END, "No database selected\n")
-
-    def quit_(*a):
-        """Destroy application."""
-        del a
-        root.destroy()
-
-    def show_menu(event=None):
-        """Post popup menu at pointer location."""
-        menu.tk_popup(*event.widget.winfo_pointerxy())
-
-    menu = tkinter.Menu(master=root, tearoff=False)
-    if databasepath:
-
-        class _FilePath:
-            """Wrap filepath as a class attribute.
-
-            pylint by default reports problems with filepath as a module
-            constant and as a global in the proceed() method.
-
-            Class attributes are allowed any format by pylint by default.
-            """
-
-            filepath = None
-
-        def do_function(dbp, pgnpath):
-            """Run chess_dptdu with database at dbp and PGN file at fp."""
-            chess_dptdu(dbp, pgnpath)
-            text.insert(tkinter.END, "Process finished\nProceed or Quit?\n\n")
-
-        def proceed(*a):
-            """Run a process by the do_function function.
-
-            *a soaks up any arguments: in particular event if proceed is
-            invoked by KeyPress rather than a menu command.
-
-            """
-            del a
-            filepath = _FilePath.filepath  # Used to be 'global filepath'.
-            if filepath:
-                text.insert(tkinter.END, "\nProcess started, please wait.\n")
-                text.after(1, do_function, *(databasepath, [filepath]))
-                _FilePath.filepath = None
-            elif databasepath:
-                filepath = tkinter.filedialog.askopenfilename(
-                    parent=root, title="Select data file", initialdir="~"
-                )
-                _FilePath.filepath = filepath
-                if filepath:
-                    text.insert(tkinter.END, "Data file: " + filepath + "\n")
-                else:
-                    text.insert(tkinter.END, "No data file selected\n")
-
-        menu.add_separator()
-        menu.add_command(
-            label="Proceed", command=proceed, accelerator="Alt F2"
-        )
-        menu.add_command(label="Quit", command=quit_, accelerator="Alt F11")
-        menu.add_separator()
-        text.insert(
-            tkinter.END, "\nRight-click to proceed after each step\n\n"
-        )
-        binder.bind(text, "<Alt-KeyPress-F2>", function=proceed)
-        binder.bind(text, "<Alt-KeyPress-F11>", function=quit_)
-        binder.bind(text, "<ButtonPress-3>", function=show_menu)
-    else:
-        menu.add_separator()
-        menu.add_command(label="Quit", command=quit_, accelerator="Alt F11")
-        menu.add_separator()
-        text.insert(tkinter.END, "\nRight-click to quit\n")
-        binder.bind(text, "<Alt-KeyPress-F11>", function=quit_)
-        binder.bind(text, "<ButtonPress-3>", function=show_menu)
-    root.mainloop()

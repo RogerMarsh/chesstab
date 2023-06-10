@@ -5,7 +5,6 @@
 """Chess database update using custom deferred update for Symas LMMD."""
 
 from solentware_base import lmdbdu_database
-from solentware_base.core.constants import DEFAULT_MAP_PAGES
 
 from ..shared.lmdbdudb import LmdbduDb
 from ..shared.lmdbdu import Lmdbdu
@@ -17,17 +16,9 @@ class ChesslmdbduError(Exception):
     """Exception class for chesslmdbdu module."""
 
 
-def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
+def chess_database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
-    chess_du(
-        ChessDatabase(
-            dbpath,
-            allowcreate=True,
-            estimated_number_of_games=estimated_number_of_games,
-        ),
-        *args,
-        **kwargs,
-    )
+    chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
     # There are no recoverable file full conditions for Symas LMMD (see DPT).
     return True
@@ -36,29 +27,22 @@ def chess_database_du(dbpath, *args, estimated_number_of_games=0, **kwargs):
 class ChessDatabase(Alldu, LmdbduDb, Lmdbdu, lmdbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
-    def __init__(self, DBfile, estimated_number_of_games=0, **kargs):
+    def __init__(self, DBfile, **kargs):
         """Delegate with ChesslmdbduError as exception class."""
-        super().__init__(
-            DBfile,
-            ChesslmdbduError,
-            **kargs,
-        )
-        self.open_database()
-        (
-            map_bytes,
-            map_pages,
-            used_bytes,
-            used_pages,
-            stats,
-        ) = self.database_stats_summary()
-        self.close_database()
-        mfpas = filespec.LMMD_MINIMUM_FREE_PAGES_AT_START
-        if map_pages - used_pages < mfpas:
-            short = mfpas + map_pages - used_pages
-        else:
-            short = 0
-        self.map_blocks = (
-            1
-            + (map_pages + short) // DEFAULT_MAP_PAGES
-            + estimated_number_of_games // 1000
-        )
+        super().__init__(DBfile, ChesslmdbduError, **kargs)
+
+        # Assume DEFAULT_MAP_PAGES * 100 is enough for adding 64000 normal
+        # sized games: the largest segment size holds 64000 games and a
+        # commit is done after every segment.
+        self._set_map_blocks_above_used_pages(100)
+
+    def deferred_update_housekeeping(self):
+        """Override to check map size and pages used expected page usage.
+
+        The checks are done here because housekeeping happens when segments
+        become full, a convenient point for commit and database resize.
+
+        """
+        self.commit()
+        self._set_map_size_above_used_pages_between_transactions(100)
+        self.start_transaction()

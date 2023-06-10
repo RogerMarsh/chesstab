@@ -622,44 +622,62 @@ class ChessDBrecordGameImport(Record):
         """Customise Record with chess database key and value classes."""
         super().__init__(ChessDBkeyGame, ChessDBvaluePGNUpdate)
 
-    def import_pgn(self, database, source, sourcename, reporter=None):
+    def import_pgn(
+        self, database, source, sourcename, reporter=None, quit_event=None
+    ):
         """Update database with games read from source."""
         self.set_database(database)
         # self.value.set_game_source(sourcename)
         if reporter is not None:
-            reporter("Extracting games from " + sourcename)
+            reporter.append_text_only("")
+            reporter.append_text("Extracting games from " + sourcename)
         ddup = database.deferred_update_points
         db_segment_size = SegmentSize.db_segment_size
         value = self.value
         count = 0
         for collected_game in value.read_games(source):
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Import stopped.")
+                return False
             value.set_game_source(
                 sourcename if not collected_game.is_pgn_valid() else None
             )
             self.key.recno = None
             value.collected_game = collected_game
             self.put_record(self.database, GAMES_FILE_DEF)
-            if reporter is not None:
-                if not count:
-                    base = self.key.recno - self.key.recno % db_segment_size
-                count += 1
-                if self.key.recno % db_segment_size in ddup:
-                    reporter(
-                        " ".join(
+            if not count:
+                base = self.key.recno - self.key.recno % db_segment_size
+            count += 1
+            if self.key.recno % db_segment_size in ddup:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
                             (
-                                "Game",
+                                "Game ",
                                 str(count),
-                                "stored as record",
+                                ", to character ",
+                                str(collected_game.game_offset),
+                                " in PGN, is record ",
                                 str(self.key.recno),
-                                "offset",
-                                str(self.key.recno - base),
                             )
                         )
                     )
-                    database.deferred_update_housekeeping()
+                database.deferred_update_housekeeping()
         if reporter is not None:
-            reporter("Extraction from " + sourcename + " done")
-            reporter("", timestamp=False)
+            reporter.append_text(
+                "".join(
+                    (
+                        str(count),
+                        " games, to character ",
+                        str(collected_game.game_offset),
+                        " in PGN, read from ",
+                        sourcename,
+                        ))
+            )
+            reporter.append_text_only("")
+        return True
 
 
 class ChessDBkeyPartial(KeyData):

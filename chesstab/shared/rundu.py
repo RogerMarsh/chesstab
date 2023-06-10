@@ -4,15 +4,21 @@
 
 """Chess database update using custom deferred update for database engine.
 
-The rundu function is run in a new process from the chess GUI by
-subprocess.popen.
+The rundu function is run in a new multiprocessing.Process started from the
+chess GUI.
+
+Spawn the deferred update process by the multiprocessing module.
 
 """
 import sys
 import importlib
+import multiprocessing
 
 if sys.platform.startswith("openbsd"):
     import resource
+
+multiprocessing.set_start_method("spawn")
+del multiprocessing
 
 
 class RunduError(Exception):

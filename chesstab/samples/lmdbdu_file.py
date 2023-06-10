@@ -10,4 +10,4 @@ if __name__ == "__main__":
     from .file_widget import FileWidget
     from ..lmdb.chesslmdbdu import ChessDatabase
 
-    FileWidget(ChessDatabase, "db", estimated_number_of_games=10000)
+    FileWidget(ChessDatabase, "db")
