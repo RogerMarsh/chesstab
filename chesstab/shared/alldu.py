@@ -18,11 +18,9 @@ from ..core.chessrecord import ChessDBrecordGameImport
 from .. import ERROR_LOG, APPLICATION_NAME
 
 
-def chess_du(cdb, pgnpaths, file_records, reporter=None, quit_event=None):
-    """Open database, import games and close database."""
-    del file_records
+def chess_du_import(cdb, pgnpaths, reporter=None, quit_event=None):
+    """Import games from pgnpaths into open database cdb."""
     importer = ChessDBrecordGameImport()
-    cdb.open_database()
     cdb.set_defer_update()
     try:
         for pgnfile in pgnpaths:
@@ -35,7 +33,6 @@ def chess_du(cdb, pgnpaths, file_records, reporter=None, quit_event=None):
                     quit_event=quit_event,
                 ):
                     cdb.backout()
-                    cdb.close_database()
                     return
         if reporter is not None:
             reporter.append_text("Finishing import: please wait.")
@@ -45,7 +42,8 @@ def chess_du(cdb, pgnpaths, file_records, reporter=None, quit_event=None):
         errorlog_written = True
         try:
             with open(
-                os.path.join(cdb.home_directory, ERROR_LOG), "a",
+                os.path.join(cdb.home_directory, ERROR_LOG),
+                "a",
             ) as errorlog:
                 errorlog.write(
                     "".join(
@@ -99,10 +97,17 @@ def chess_du(cdb, pgnpaths, file_records, reporter=None, quit_event=None):
             )
         raise
     cdb.unset_defer_update()
-    cdb.close_database()
     if reporter is not None:
         reporter.append_text("Import finished.")
         reporter.append_text_only("")
+
+
+def chess_du(cdb, pgnpaths, file_records=None, reporter=None, quit_event=None):
+    """Open database, import games and close database."""
+    del file_records
+    cdb.open_database()
+    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+    cdb.close_database()
 
 
 def get_filespec(**kargs):
@@ -172,5 +177,4 @@ class Alldu:
 
     def do_final_segment_deferred_updates(self):
         """Extend to report number of games in final segment."""
-        #print("Report number of games in final segment")
         super().do_final_segment_deferred_updates()

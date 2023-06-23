@@ -21,7 +21,7 @@ from dptdb.dptapi import (
 from solentware_base import dpt_database
 from solentware_base.core.constants import FILEDESC
 
-from ..core.filespec import FileSpec
+from .filespec import FileSpec
 from ..basecore import database
 from .. import APPLICATION_NAME
 
@@ -87,51 +87,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
     def use_deferred_update_process(self, **kargs):
         """Return path to deferred update module."""
-        chunk = self._use_deferred_update_process_chunk(**kargs)
-        if chunk is not None:
-            return chunk
         return super().use_deferred_update_process(**kargs)
-
-    @staticmethod
-    def _use_deferred_update_process_chunk(
-        dptmultistepdu=False, dptchunksize=None, **kargs
-    ):
-        """Return module name or None.
-
-        dptmultistepdu is ignored if dptchunksize is not None.
-        dptmultistepdu is ignored because multi-step is no longer supported.
-
-        dptchunksize is None: dptmultistepdu determines deferred update module
-        otherwise use single-step deferred update with the chunk size (assumed
-        to be a valid chunk size)
-
-        **kargs - soak up any arguments other database engines need.
-
-        On non-Microsoft operating systems single-step update may not work.
-        First encountered on upgrade to FreeBSD7.2 wine-1.1.23,1 dptv2r19.
-        But single-step works on FreeBSD7.2 wine-1.1.0,1 dptv2r19.
-        Wine source code comments state that memory-use calls do not return
-        correct values. Evidently the incorrectness can vary by version
-        making the DPT workarounds liable to fail also.
-
-        runchessdptdu.py does DPT's single-step deferred update process.
-        runchessdptduchunk.py does DPT's single-step deferred update process
-        but splits the task into fixed size chunks, a number of games, which
-        it is hoped are small enough to finish before all memory is used.
-        The deleted runchessdptdumulti.py did DPT's multi-step deferred
-        update process.
-
-        Multi-step was about half an order of magnitude slower than
-        single-step.
-
-        """
-        del dptmultistepdu, kargs
-        if dptchunksize is not None:
-            return os.path.join(
-                os.path.basename(os.path.dirname(__file__)),
-                "runchessdptduchunk.py",
-            )
-        return None
 
     def adjust_database_for_retry_import(self, files):
         """Increase file sizes taking file full into account."""

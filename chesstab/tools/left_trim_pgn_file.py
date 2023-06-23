@@ -112,9 +112,7 @@ class LeftTrimPGNFile:
                 self.HEADING, background=self.HEADING_COLOR
             )
         if self.SOURCE:
-            self.text.tag_configure(
-                self.SOURCE, background=self.SOURCE_COLOR
-            )
+            self.text.tag_configure(self.SOURCE, background=self.SOURCE_COLOR)
         if self.TRIMMED:
             self.text.tag_configure(
                 self.TRIMMED, background=self.TRIMMED_COLOR
@@ -183,9 +181,8 @@ class LeftTrimPGNFile:
             tkinter.messagebox.showinfo(
                 master=self.root,
                 message=trimmedfile.join(
-                    (
-                        "Trimmed PGN file name ",
-                        " is a directory")),
+                    ("Trimmed PGN file name ", " is a directory")
+                ),
             )
             return False
         if query_overwrite and os.path.isfile(trimmedfile):
@@ -366,7 +363,10 @@ class LeftTrimPGNFile:
         )
         bindings = self._bindings
         for entry in (
-            self.sourcepgn, self.trimmedpgn, self.location, self.text
+            self.sourcepgn,
+            self.trimmedpgn,
+            self.location,
+            self.text,
         ):
             for sequence, function in sequence_map:
                 key = (entry, sequence)

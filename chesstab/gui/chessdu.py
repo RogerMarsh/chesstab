@@ -152,8 +152,6 @@ class DeferredUpdateEstimateProcess:
         self.database.open_database()
         try:
             if not self._estimate_games_in_import():
-                #self._report_to_log("There are no games to import.")
-                #self._report_to_log_text_only("")
                 return None
             if self._allow_time():
                 self.database.report_plans_for_estimate(
@@ -334,9 +332,7 @@ class DeferredUpdateEstimateProcess:
                 self._report_to_log("No games with errors in import.")
             self._report_to_log_text_only("")
         elif estimate:
-            self._report_to_log(
-                "Games with errors have been found in sample."
-            )
+            self._report_to_log("Games with errors have been found in sample.")
             self._report_to_log_text_only(
                 " ".join(
                     (
@@ -351,9 +347,7 @@ class DeferredUpdateEstimateProcess:
             )
             self._report_to_log_text_only("")
         else:
-            self._report_to_log(
-                "Games with errors have been found in sample."
-            )
+            self._report_to_log("Games with errors have been found in sample.")
             self._report_to_log_text_only(
                 "All found in import will be indexed only as errors.",
             )
@@ -478,7 +472,7 @@ class ChessDeferredUpdate(Bindings):
         ).pack(side=tkinter.RIGHT, padx=12)
         tkinter.Button(
             master=self.buttonframe,
-            text='Stop Process',
+            text="Stop Process",
             underline=0,
             command=self.try_command(
                 self._stop_task,
@@ -505,7 +499,9 @@ class ChessDeferredUpdate(Bindings):
         self.bind(
             self.report,
             "<Alt-d>",
-            function=self.try_event(self._dismiss_import_log,),
+            function=self.try_event(
+                self._dismiss_import_log,
+            ),
         )
         self.bind(
             self.report,
@@ -628,9 +624,7 @@ class ChessDeferredUpdate(Bindings):
         if not tkinter.messagebox.askokcancel(
             parent=self.root,
             title="Import",
-            message="".join(
-                ("Please confirm the import is to be started.",)
-            ),
+            message="".join(("Please confirm the import is to be started.",)),
         ):
             return
         self._allow_job = False

@@ -647,8 +647,6 @@ class ChessDBrecordGameImport(Record):
             self.key.recno = None
             value.collected_game = collected_game
             self.put_record(self.database, GAMES_FILE_DEF)
-            if not count:
-                base = self.key.recno - self.key.recno % db_segment_size
             count += 1
             if self.key.recno % db_segment_size in ddup:
                 if reporter is not None:
@@ -674,7 +672,8 @@ class ChessDBrecordGameImport(Record):
                         str(collected_game.game_offset),
                         " in PGN, read from ",
                         sourcename,
-                        ))
+                    )
+                )
             )
             reporter.append_text_only("")
         return True

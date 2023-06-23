@@ -109,7 +109,34 @@ class CQLGameListQuery:
         """Create display item for selected record."""
         selected = self.get_visible_record(key)
         if selected is not None:
-            self._display_selected_item_kind(key, selected)
+            try:
+                self._display_selected_item_kind(key, selected)
+
+            # Bad data, or perhaps legitimate absence of data, in a record
+            # leads first to a SyntaxError in ast.literal_eval() and then
+            # to a StopIteration condition.  With the DPT database engine
+            # absence of data is legitimate but not expected.  In the other
+            # database engines bad data is expected to be the cause.
+            except StopIteration:
+                if len(selected.srvalue) < 10:
+                    message = selected.srvalue
+                else:
+                    message = "...".join(
+                        (
+                            selected.srvalue[:5],
+                            selected.srvalue[-5:],
+                        )
+                    )
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
+                    title="Display Item",
+                    message=message.join(
+                        (
+                            "Unable to build display item from ",
+                            " data",
+                        )
+                    ),
+                )
 
     def select_down(self):
         """Extend to show selection summary in status bar."""

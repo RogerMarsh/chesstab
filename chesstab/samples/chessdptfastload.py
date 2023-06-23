@@ -1,19 +1,16 @@
-# chessdptdu.py
-# Copyright 2008 Roger Marsh
+# chessdptfastload.py
+# Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using DPT single-step deferred update.
+"""Chess database update using DPT fastload.
 
-This module on Windows only.  Use multi-step module on Wine because Wine
-support for a critical function used by single-step is not reliable. There
-is no sure way to spot that module is running on Wine.
+This module on Windows only.
 
-See www.dptoolkit.com for details of DPT
+See www.dptoolkit.com for details of DPT.
 
 """
 
 import os
-from io import StringIO
 import multiprocessing  # Removed later by 'del multiprocessing'.
 
 import tkinter
@@ -26,162 +23,70 @@ import tkinter.messagebox
 # The importlib module is used to import chessdptdu if needed.
 from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
 
-from solentware_base import dptdu_database
+from solentware_base import dptfastload_database
 from solentware_base.core.constants import (
     FILEDESC,
     BRECPPG,
     TABLE_B_SIZE,
 )
 
-from .filespec import FileSpec
+from ..dpt.filespec import FileSpec
 from ..core.filespec import (
     GAMES_FILE_DEF,
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
 )
-from ..core.chessrecord import ChessDBrecordGameImport
 from ..shared.archivedu import Archivedu
 from ..shared.alldu import chess_du_import
 
-# Current practical way to determine if running on Wine, taking advantage of
-# a problem found in ..core.uci which prevents UCI chess engines being used to
-# do position analysis in this environment.  Here the consequence is Wine's
-# useless answers to queries about memory usage made within DPT and the impact
-# on the useful frequency of progress reports.
-# CHUNKGAMES deals this this under Wine.  A safe value for a PC with 2Gb memory
-# is 6144.  Almost get away with 8192 but it seems system housekeeping tasks,
-# if nothing else, will cause this to fail at some point during a large import.
-# Must be safe to add 8192 for every extra 2Gb, and possibly every extra 1Gb
-# assuming system tasks are not greedy with the extra memory.
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
-# the 8192 byte page are used for the bitmap.  Use 65536 as segment size and
-# ignore the DPT segment size so report points are similar to other database
-# engines.
+# the 8192 byte page are used for the bitmap.
 # DB_SEGMENT_SIZE has no effect on processing apart from report points.
 DB_SEGMENT_SIZE = 65280
-try:
-    multiprocessing.Queue()
-    _DEFERRED_UPDATE_POINTS = (DB_SEGMENT_SIZE - 1,)
-except OSError:
-    _DEFERRED_UPDATE_POINTS = tuple(
-        i
-        for i in range(
-            DB_SEGMENT_SIZE // 8 - 1, DB_SEGMENT_SIZE, DB_SEGMENT_SIZE // 8
-        )
-    )
-del multiprocessing
+_DEFERRED_UPDATE_POINTS = (DB_SEGMENT_SIZE - 1,)
 del DB_SEGMENT_SIZE
 
-CHUNKGAMES = 6144
+
+class ChessdptfastloadError(Exception):
+    """Exception class for chessdptfastload module."""
 
 
-class ChessdptduError(Exception):
-    """Exception class for chessdptdu module."""
-
-
-def chess_dptdu(
+def chess_dptfastload(
     dbpath, pgnpaths, file_records=None, reporter=None, quit_event=None
 ):
     """Open database, import games and close database."""
     cdb = ChessDatabase(dbpath, allowcreate=True)
     cdb.open_database(files=file_records)
+
+    # Intend to start a process, via multiprocessing, to do the database
+    # update.  That process will do the reporting, not the one running
+    # this method.
     chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+
     cdb.close_database_contexts(files=file_records)
     cdb.open_database_contexts(files=file_records)
     status = True
     for file in (
         cdb.specification.keys() if file_records is None else file_records
     ):
-        if (
-            FISTAT_DEFERRED_UPDATES
-            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
-        ):
+        if cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]:
             status = False
     cdb.close_database_contexts()
     return status
 
 
-def chess_dptdu_chunks(dbpath, pgnpaths, file_records, reporter=None):
-    """Open database, import games in fixed chunks and close database."""
-
-    def write_chunk(pgnpath, sample=None):
-        cdb.open_database(files=sample)
-
-        # chess_dptdu_chunks does the reporting so do not pass reporter to
-        # import_pgn, but the name of the source file is mandantory.
-        importer.import_pgn(cdb, StringIO("".join(games)), pgnpath)
-
-        cdb.close_database_contexts()
-        games[:] = []
-
-    cdb = ChessDatabase(dbpath, allowcreate=True)
-    importer = ChessDBrecordGameImport()
-    games = []
-    gamelines = []
-    newgamestring = '[Event "'
-    records = file_records
-    for pgnfile in pgnpaths:
-        with open(pgnfile, "r", encoding="iso-8859-1") as inp:
-            line = inp.readline()
-            if reporter is not None:
-                reporter.append_text("Extracting games from " + pgnfile)
-            count = 0
-            while line:
-                if line.startswith(newgamestring):
-                    games.append("".join(gamelines))
-                    gamelines = []
-                    if len(games) >= CHUNKGAMES:
-                        write_chunk(pgnfile, sample=records)
-                        count += 1
-                        if reporter is not None:
-                            reporter.append_text(
-                                " ".join(
-                                    (
-                                        "Chunk",
-                                        str(count),
-                                        "written, total games added:",
-                                        str(CHUNKGAMES * count),
-                                    )
-                                )
-                            )
-                gamelines.append(line)
-                line = inp.readline()
-        if gamelines:
-            games.append("".join(gamelines))
-            write_chunk(pgnfile, sample=records)
-        if reporter is not None:
-            reporter.append_text("Extraction from " + pgnfile + " done")
-            reporter.append_text_only("")
-    if reporter is not None:
-        reporter.append_text("Finishing import: please wait.")
-        reporter.append_text_only("")
-    cdb.open_database_contexts(files=file_records)
-    status = True
-    for file in file_records:
-        if (
-            FISTAT_DEFERRED_UPDATES
-            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
-        ):
-            status = False
-    cdb.close_database_contexts()
-    return status
-
-
-class ChessDatabaseDeferred(dptdu_database.Database):
+class ChessDatabaseDeferred(dptfastload_database.Database):
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
 
     """
 
-    # ChessDatabaseDeferred.deferred_update_points is not needed in DPT, like
-    # the similar attribute in chessdbbitdu.ChessDatabase for example, because
-    # DPT does it's own memory management for deferred updates.
-    # The same attribute is provided to allow the import_pgn method called in
-    # this module's chess_dptdu and chess_dptdu_chunks functions to report
-    # progress at regular intervals.
-    # The values are set differently because Wine does not give a useful answer
-    # to DPT's memory usage questions.
+    # deferred_update_points is the existing name but here it signifies
+    # the interval at which a fastload call updates the database.
+    # The number is arbitrary in relation to segment sizes since there may
+    # be gaps in the record number sequence due to long games preventing
+    # all slots in a page being used.
     deferred_update_points = frozenset(_DEFERRED_UPDATE_POINTS)
 
     def __init__(
@@ -216,14 +121,16 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             except Exception as error:
                 if __name__ == "__main__":
                     raise
-                raise ChessdptduError("DPT description invalid") from error
+                raise ChessdptfastloadError(
+                    "DPT description invalid"
+                ) from error
 
         try:
             super().__init__(ddnames, databasefolder, **kargs)
-        except ChessdptduError as error:
+        except ChessdptfastloadError as error:
             if __name__ == "__main__":
                 raise
-            raise ChessdptduError("DPT description invalid") from error
+            raise ChessdptfastloadError("DPT description invalid") from error
 
         # Retain import estimates for increase size by button actions
         self._import_estimates = None
@@ -232,21 +139,18 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         self._reporter = None
 
     def open_database(self, files=None):
-        """Delegate then raise ChessdptduError if database is inconsistent.
+        """Delegate then raise ChessdptfastloadError for inconsistent database.
 
         Normally return None with the database open.
 
-        Close the database and raise ChessdptduError exception if the
+        Close the database and raise ChessdptfastloadError exception if the
         database FISTAT parameter is not equal FISTAT_DEFERRED_UPDATES.
 
         """
         super().open_database(files=files)
         viewer = self.dbenv.Core().GetViewerResetter()
         for dbo in self.table.values():
-            if (
-                viewer.ViewAsInt("FISTAT", dbo.opencontext)
-                != FISTAT_DEFERRED_UPDATES
-            ):
+            if viewer.ViewAsInt("FISTAT", dbo.opencontext):
                 break
         else:
             if files is None:
@@ -254,7 +158,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             self.increase_database_size(files=files)
             return
         self.close_database()
-        raise ChessdptduError("A file is not in deferred update mode")
+        raise ChessdptfastloadError("A file is not in deferred update mode")
 
     def open_context_prepare_import(self):
         """Open all files normally."""
