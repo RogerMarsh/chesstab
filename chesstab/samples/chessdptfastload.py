@@ -139,9 +139,7 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         self._reporter = None
 
     def open_database(self, files=None):
-        """Delegate then raise ChessdptfastloadError for inconsistent database.
-
-        Normally return None with the database open.
+        """Delegate then return None if database in deferred update mode.
 
         Close the database and raise ChessdptfastloadError exception if the
         database FISTAT parameter is not equal FISTAT_DEFERRED_UPDATES.
@@ -202,7 +200,13 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         return filesize, increase
 
     def add_import_buttons(
-        self, master, try_command_wrapper, try_event_wrapper, bind, widget
+        self,
+        master,
+        try_command_wrapper,
+        try_event_wrapper,
+        bind,
+        widget,
+        *args,
     ):
         """Add button actions for DPT to Import dialogue.
 

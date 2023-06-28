@@ -23,6 +23,15 @@ only by changing the FileSpec to have all field names upper case.
 # difference in run time may be from the ~1G calls, assuming only one call
 # per index entry, via the swigged interface for deferred update and the
 # 1 (one) call via the swigged interface for fastload.
+# When an import of 2 million games was attempted the fastload slowed down
+# a lot at around 500,000 games: taking about an hour to do 65280 games
+# compared with about 6 or 7 minutes per 65280 games up to about 200,000
+# games.  The fastload files need to be merged into one, like what happens
+# in a deferred update, to minimise out-of-order, index updates.
+# Generating the fastload TAPE files for 65280 games takes just under 8
+# minutes compared with just under 10 minutes in deferred update.  This is
+# likely because deferred update writes several sets of 'chunk' files
+# rather than one set of TAPE files.
 
 import tkinter
 import os

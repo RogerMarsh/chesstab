@@ -15,7 +15,6 @@ import queue
 import time
 import multiprocessing
 import multiprocessing.dummy
-import time
 
 from solentware_misc.gui.logtextbase import LogTextBase
 
@@ -23,12 +22,20 @@ from solentware_bind.gui.bindings import Bindings
 
 from pgn_read.core.parser import PGN
 
+from solentware_base.core.constants import (
+    BRECPPG,
+    DEFAULT_RECORDS,
+)
+
 from ..core.pgn import GameUpdateEstimate
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
 )
-from ..core.filespec import GAMES_FILE_DEF
+from ..core.filespec import (
+    GAMES_FILE_DEF,
+    BTOD_FACTOR,
+)
 
 # Time taken to parse a sample of a PGN file is measured.
 # Number of games in file is estimated from number of bytes used in game scores
@@ -65,6 +72,296 @@ class _Reporter:
         self.append_text_only = append_text_only
 
 
+class IncreaseDataProcess:
+    """Define a process to do an increase data size (table B) process."""
+
+    def __init__(self, database, report_queue, quit_event):
+        """Provide queues for communication with GUI."""
+        self.database = database
+        self.report_queue = report_queue
+        self.quit_event = quit_event
+        self.process = multiprocessing.Process(
+            target=self._increase_data_size,
+            args=(),
+        )
+
+    def _report_to_log(self, text):
+        """Add text to report queue with timestamp."""
+        day, time = datetime.datetime.isoformat(
+            datetime.datetime.today()
+        ).split("T")
+        time = time.split(".")[0]
+        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+
+    def _report_to_log_text_only(self, text):
+        """Add text to report queue without timestamp."""
+        self.report_queue.put("".join(("                     ", text, "\n")))
+
+    def _increase_data_size(self):
+        """Increase data size."""
+        self.stop_thread = multiprocessing.dummy.DummyProcess(
+            target=self._wait_for_quit_event
+        )
+        self.stop_thread.start()
+        self._increase()
+        self.quit_event.set()
+
+    def _wait_for_quit_event(self):
+        """Wait for quit event."""
+        self.quit_event.wait()
+
+    def _increase(self):
+        """Implementation of increase data size."""
+        database = self.database
+        files = (GAMES_FILE_DEF,)
+        database.open_context_prepare_import(files=files)
+        try:
+            parameter = database.get_database_parameters(files=files)[
+                GAMES_FILE_DEF
+            ]
+            bsize = parameter["BSIZE"]
+            bused = max(0, parameter["BHIGHPG"])
+            bfree = bsize - bused
+            dsize = parameter["DSIZE"]
+            dused = parameter["DPGSUSED"]
+            dfree = dsize - dused
+            table = database.table[GAMES_FILE_DEF]
+            specification = database.specification[GAMES_FILE_DEF]
+            default_records = specification[DEFAULT_RECORDS]
+            btod_factor = specification[BTOD_FACTOR]
+            brecppg = table.filedesc[BRECPPG]
+            bdefault, ddefault = database._get_pages_for_record_counts(
+                (default_records, default_records)
+            )
+            bfree_recs = bfree * brecppg
+            dfree_recs = (dfree * brecppg) // btod_factor
+            blow = bfree + min(bdefault, bfree)
+            bhigh = bfree + max(bdefault, bfree)
+            blowrecs = bfree_recs + min(default_records, bfree_recs)
+            bhighrecs = bfree_recs + max(default_records, bfree_recs)
+            if len(table.get_extents()) % 2 == 0:
+                if not tkinter.messagebox.askokcancel(
+                    title="Increase Data Size",
+                    message="".join(
+                        (
+                            "At present it is better to do index ",
+                            "increases first for this file, if any ",
+                            "are needed.\n\nIt is estimated the ",
+                            "current index size can cope with an ",
+                            "estimated extra ",
+                            str(dfree_recs),
+                            " games.\n\nPlease confirm you wish to ",
+                            "continue with data increase.",
+                        )
+                    ),
+                ):
+                    return
+            if blow != bhigh:
+                choice = tkinter.messagebox.askyesnocancel(
+                    title="Increase Data Size",
+                    message="".join(
+                        (
+                            "Please choose between a data size increase ",
+                            "to cope with an estimated extra ",
+                            str(blowrecs),
+                            " or ",
+                            str(bhighrecs),
+                            " games.\n\nThe current data size can cope ",
+                            "with an estimated extra ",
+                            str(bfree_recs),
+                            " games.\n\nDo you want to increase the data ",
+                            "size for the smaller number of games?",
+                        )
+                    ),
+                )
+                if choice is True:  # Yes
+                    bincrease = blow - bfree
+                    bextrarecs = blowrecs
+                elif choice is False:  # No
+                    bincrease = bhigh - bfree
+                    bextrarecs = bhighrecs
+                else:  # Cancel assumed (choice is None).
+                    return
+            else:
+                choice = tkinter.messagebox.askokcancel(
+                    title="Increase Data Size",
+                    message="".join(
+                        (
+                            "Please confirm a data size increase ",
+                            "to cope with an estimated extra ",
+                            str(blowrecs),
+                            " games.\n\nThe current data size can cope ",
+                            "with an estimated extra ",
+                            str(bfree_recs),
+                            " games.",
+                        )
+                    ),
+                )
+                if choice is True:  # Yes
+                    bincrease = blow - bfree
+                    bextrarecs = blowrecs
+                else:  # Cancel assumed (choice is None).
+                    return
+            table.opencontext.Increase(bincrease, False)
+            self._report_to_log_text_only("")
+            self._report_to_log("Data size increased.")
+            self._report_to_log_text_only(
+                " ".join(
+                    (
+                        "Estimate of standard profile games which fit:",
+                        str(bextrarecs),
+                    )
+                )
+            )
+        finally:
+            database.close_database()
+
+
+class IncreaseIndexProcess:
+    """Define a process to do an increase index size (table D) process."""
+
+    def __init__(self, database, report_queue, quit_event):
+        """Provide queues for communication with GUI."""
+        self.database = database
+        self.report_queue = report_queue
+        self.quit_event = quit_event
+        self.process = multiprocessing.Process(
+            target=self._increase_index_size,
+            args=(),
+        )
+
+    def _report_to_log(self, text):
+        """Add text to report queue with timestamp."""
+        day, time = datetime.datetime.isoformat(
+            datetime.datetime.today()
+        ).split("T")
+        time = time.split(".")[0]
+        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+
+    def _report_to_log_text_only(self, text):
+        """Add text to report queue without timestamp."""
+        self.report_queue.put("".join(("                     ", text, "\n")))
+
+    def _increase_index_size(self):
+        """Increase index size."""
+        self.stop_thread = multiprocessing.dummy.DummyProcess(
+            target=self._wait_for_quit_event
+        )
+        self.stop_thread.start()
+        self._increase()
+        self.quit_event.set()
+
+    def _wait_for_quit_event(self):
+        """Wait for quit event."""
+        self.quit_event.wait()
+
+    def _increase(self):
+        """Implementation of increase index size."""
+        database = self.database
+        files = (GAMES_FILE_DEF,)
+        database.open_context_prepare_import(files=(GAMES_FILE_DEF,))
+        try:
+            parameter = database.get_database_parameters(files=files)[
+                GAMES_FILE_DEF
+            ]
+            bsize = parameter["BSIZE"]
+            bused = max(0, parameter["BHIGHPG"])
+            bfree = bsize - bused
+            dsize = parameter["DSIZE"]
+            dused = parameter["DPGSUSED"]
+            dfree = dsize - dused
+            table = database.table[GAMES_FILE_DEF]
+            specification = database.specification[GAMES_FILE_DEF]
+            default_records = specification[DEFAULT_RECORDS]
+            btod_factor = specification[BTOD_FACTOR]
+            brecppg = table.filedesc[BRECPPG]
+            bdefault, ddefault = database._get_pages_for_record_counts(
+                (default_records, default_records)
+            )
+            bfree_recs = bfree * brecppg
+            dfree_recs = (dfree * brecppg) // btod_factor
+            dlow = dfree + min(ddefault, dfree)
+            dhigh = dfree + max(ddefault, dfree)
+            dlowrecs = dfree_recs + min(default_records, dfree_recs)
+            dhighrecs = dfree_recs + max(default_records, dfree_recs)
+            if len(table.get_extents()) % 2 != 0:
+                if not tkinter.messagebox.askokcancel(
+                    title="Increase Index Size",
+                    message="".join(
+                        (
+                            "At present it is better to do data ",
+                            "increases first for this file, if any ",
+                            "are needed.\n\nIt is estimated the ",
+                            "current data size can cope with an ",
+                            "estimated extra ",
+                            str(bfree_recs),
+                            " games.\n\nPlease confirm you wish to ",
+                            "continue with index increase.",
+                        )
+                    ),
+                ):
+                    return
+            if dlow != dhigh:
+                choice = tkinter.messagebox.askyesnocancel(
+                    title="Increase Index Size",
+                    message="".join(
+                        (
+                            "Please choose between an index size increase ",
+                            "to cope with an estimated extra ",
+                            str(dlowrecs),
+                            " or ",
+                            str(dhighrecs),
+                            " games.\n\nThe current index size can cope ",
+                            "with an estimated extra ",
+                            str(dfree_recs),
+                            " games.\n\nDo you want to increase the index ",
+                            "size for the smaller number of games?",
+                        )
+                    ),
+                )
+                if choice is True:  # Yes
+                    dincrease = dlow - dfree
+                    dextrarecs = dlowrecs
+                elif choice is False:  # No
+                    dincrease = dhigh - dfree
+                    dextrarecs = dhighrecs
+                else:  # Cancel assumed (choice is None).
+                    return
+            else:
+                choice = tkinter.messagebox.askokcancel(
+                    title="Increase Index Size",
+                    message="".join(
+                        (
+                            "Please confirm an index size increase ",
+                            "to cope with an estimated extra ",
+                            str(dlowrecs),
+                            " games.\n\nThe current index size can cope ",
+                            "with an estimated extra ",
+                            str(dfree_recs),
+                            " games.",
+                        )
+                    ),
+                )
+                if choice is True:  # Yes
+                    dincrease = dlow - dfree
+                    dextrarecs = dlowrecs
+                else:  # Cancel assumed (choice is None).
+                    return
+            table.opencontext.Increase(dincrease, True)
+            self._report_to_log_text_only("")
+            self._report_to_log("Index size increased.")
+            self._report_to_log_text_only(
+                " ".join(
+                    (
+                        "Estimate of standard profile games which fit:",
+                        str(dextrarecs),
+                    )
+                )
+            )
+        finally:
+            database.close_database()
+
+
 class DeferredUpdateProcess:
     """Define a process to do a deferred update task."""
 
@@ -97,7 +394,7 @@ class DeferredUpdateProcess:
             sys.argv[1],
             sys.argv[2:],
             self.database.get_file_sizes(),
-            _Reporter(
+            reporter=_Reporter(
                 self._report_to_log,
                 self._report_to_log_text_only,
             ),
@@ -255,6 +552,7 @@ class DeferredUpdateEstimateProcess:
             bytes_per_game,
             positions_per_game,
             pieces_per_game,
+            piecetypes_per_game,
             int(errorcount * scale),
             bytes_per_error,
             estimate,
@@ -268,7 +566,7 @@ class DeferredUpdateEstimateProcess:
                 " ".join(("Estimated Games:", str(self.estimate_data[0])))
             )
             self._report_to_log_text_only(
-                " ".join(("Estimated Errors:", str(self.estimate_data[4]))),
+                " ".join(("Estimated Errors:", str(self.estimate_data[5]))),
             )
             self._report_to_log_text_only(
                 " ".join(("Sample Games:", str(gamecount)))
@@ -363,8 +661,8 @@ class DeferredUpdateEstimateProcess:
         if not self.estimate_data:
             return False
         seconds = (
-            (self.estimate_data[0] + self.estimate_data[4])
-            * self.estimate_data[9]
+            (self.estimate_data[0] + self.estimate_data[5])
+            * self.estimate_data[10]
             * _DATABASE_UPDATE_FACTOR
         )
         minutes, seconds = divmod(round(seconds), 60)
@@ -474,10 +772,7 @@ class ChessDeferredUpdate(Bindings):
             master=self.buttonframe,
             text="Stop Process",
             underline=0,
-            command=self.try_command(
-                self._stop_task,
-                self.buttonframe,
-            ),
+            command=self.try_command(self._stop_task, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
         tkinter.Button(
             master=self.buttonframe,
@@ -485,12 +780,40 @@ class ChessDeferredUpdate(Bindings):
             underline=0,
             command=self.try_command(self._do_import, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
+        if self._database_looks_like_dpt():
+            tkinter.Button(
+                master=self.buttonframe,
+                text="Increase Index",
+                underline=13,
+                command=self.try_command(
+                    self._increase_index, self.buttonframe
+                ),
+            ).pack(side=tkinter.RIGHT, padx=12)
+            tkinter.Button(
+                master=self.buttonframe,
+                text="Increase Data",
+                underline=9,
+                command=self.try_command(
+                    self._increase_data, self.buttonframe
+                ),
+            ).pack(side=tkinter.RIGHT, padx=12)
 
         self.report = LogTextBase(
             master=self.root,
             cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE),
         )
         self.report.focus_set()
+        if self._database_looks_like_dpt():
+            self.bind(
+                self.report,
+                "<Alt-d>",
+                function=self.try_event(self._increase_data),
+            )
+            self.bind(
+                self.report,
+                "<Alt-x>",
+                function=self.try_event(self._increase_index),
+            )
         self.bind(
             self.report,
             "<Alt-i>",
@@ -507,13 +830,6 @@ class ChessDeferredUpdate(Bindings):
             self.report,
             "<Alt-s>",
             function=self.try_event(self._stop_task),
-        )
-        self.database.add_import_buttons(
-            self.buttonframe,
-            self.try_command,
-            self.try_event,
-            self.bind,
-            self.report,
         )
 
         self.report.tag_configure(
@@ -552,6 +868,29 @@ class ChessDeferredUpdate(Bindings):
         self._add_queued_reports_to_log()
         self.root.mainloop()
 
+    def _database_looks_like_dpt(self):
+        """Return True if database attribute signature looks like DPT.
+
+        Check a few attriute names expected only in Database class in
+        solentware_base.core._dpt module.
+
+        """
+        # An alternative implementation of this difference calls a method
+        # add_import_buttons() rather than add the buttons if the test
+        # here returns True.  Two versions of add_import_buttons() are
+        # defined in classes ..dpt.chessdptdu.ChessDatabaseDeferred and
+        # ..shared.dptcompatdu.DptCompatdu and the class hierarchy does
+        # the test implemented here.  At present that implementation fails
+        # because module pickling errors occur for the import action if
+        # preceded by an increase action: but some solved problems in this
+        # implementation hint at changes which might allow the alternative
+        # implementation to succeed.  A practical benefit of the alternative
+        # is losing the process startup overhead in the two (quite quick)
+        # increase actions relevant only in DPT.
+        return hasattr(self.database, "parms") and hasattr(
+            self.database, "msgctl"
+        )
+
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
         day, time = datetime.datetime.isoformat(
@@ -586,6 +925,90 @@ class ChessDeferredUpdate(Bindings):
         self.deferred_update.process.join()
         self._allow_job = True
         self._import_done = True
+
+    def _increase_data(self, event=None):
+        """Run Increase Data Size process."""
+        del event
+        if not self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Increase Data",
+                message="".join(
+                    (
+                        "Cannot start increase data because a task is in ",
+                        "progress.\n\nThe current task must be allowed to ",
+                        "finish, or be stopped, before starting task.",
+                    )
+                ),
+            )
+            return
+        if self._import_done:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Increase Data",
+                message="".join(
+                    (
+                        "The import has been done.",
+                        "\n\nIncrease data is intended for before import.",
+                    )
+                ),
+            )
+            return
+        self._allow_job = False
+        self._task_name = "increase data"
+        self.quit_event.clear()
+        self.deferred_update = IncreaseDataProcess(
+            self.database,
+            self.report_queue,
+            self.quit_event,
+        )
+        self.deferred_update.process.start()
+        self.quit_thread = multiprocessing.dummy.DummyProcess(
+            target=self._deferred_update_estimate_join
+        )
+        self.quit_thread.start()
+
+    def _increase_index(self, event=None):
+        """Run Increase Index Size process."""
+        del event
+        if not self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Increase Index",
+                message="".join(
+                    (
+                        "Cannot start increase index because a task is in ",
+                        "progress.\n\nThe current task must be allowed to ",
+                        "finish, or be stopped, before starting task.",
+                    )
+                ),
+            )
+            return
+        if self._import_done:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Increase Index",
+                message="".join(
+                    (
+                        "The import has been done.",
+                        "\n\nIncrease index is intended for before import.",
+                    )
+                ),
+            )
+            return
+        self._allow_job = False
+        self._task_name = "increase index"
+        self.quit_event.clear()
+        self.deferred_update = IncreaseIndexProcess(
+            self.database,
+            self.report_queue,
+            self.quit_event,
+        )
+        self.deferred_update.process.start()
+        self.quit_thread = multiprocessing.dummy.DummyProcess(
+            target=self._deferred_update_estimate_join
+        )
+        self.quit_thread.start()
 
     def _do_import(self, event=None):
         """Run import process if allowed and not already run.

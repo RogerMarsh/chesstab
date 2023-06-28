@@ -13,8 +13,8 @@ See www.dptoolkit.com for details of DPT
 """
 
 import os
-from io import StringIO
-import multiprocessing  # Removed later by 'del multiprocessing'.
+import multiprocessing
+import multiprocessing.dummy
 
 import tkinter
 import tkinter.messagebox
@@ -31,6 +31,7 @@ from solentware_base.core.constants import (
     FILEDESC,
     BRECPPG,
     TABLE_B_SIZE,
+    DEFAULT_RECORDS,
 )
 
 from .filespec import FileSpec
@@ -38,126 +39,44 @@ from ..core.filespec import (
     GAMES_FILE_DEF,
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
+    PIECES_TYPES_PER_POSITION,
+    BYTES_PER_GAME,
 )
-from ..core.chessrecord import ChessDBrecordGameImport
 from ..shared.archivedu import Archivedu
 from ..shared.alldu import chess_du_import
 
-# Current practical way to determine if running on Wine, taking advantage of
-# a problem found in ..core.uci which prevents UCI chess engines being used to
-# do position analysis in this environment.  Here the consequence is Wine's
-# useless answers to queries about memory usage made within DPT and the impact
-# on the useful frequency of progress reports.
-# CHUNKGAMES deals this this under Wine.  A safe value for a PC with 2Gb memory
-# is 6144.  Almost get away with 8192 but it seems system housekeeping tasks,
-# if nothing else, will cause this to fail at some point during a large import.
-# Must be safe to add 8192 for every extra 2Gb, and possibly every extra 1Gb
-# assuming system tasks are not greedy with the extra memory.
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
-# the 8192 byte page are used for the bitmap.  Use 65536 as segment size and
-# ignore the DPT segment size so report points are similar to other database
-# engines.
-# DB_SEGMENT_SIZE has no effect on processing apart from report points.
-DB_SEGMENT_SIZE = 65280
-try:
-    multiprocessing.Queue()
-    _DEFERRED_UPDATE_POINTS = (DB_SEGMENT_SIZE - 1,)
-except OSError:
-    _DEFERRED_UPDATE_POINTS = tuple(
-        i
-        for i in range(
-            DB_SEGMENT_SIZE // 8 - 1, DB_SEGMENT_SIZE, DB_SEGMENT_SIZE // 8
-        )
-    )
-del multiprocessing
-del DB_SEGMENT_SIZE
-
-CHUNKGAMES = 6144
+# the 8192 byte page are used for the bitmap.
+# TABLE_B_SIZE value is necessarily the same byte size, and already defined.
+_DEFERRED_UPDATE_POINTS = (TABLE_B_SIZE * 8 - 1,)
+del TABLE_B_SIZE
 
 
-class ChessdptduError(Exception):
-    """Exception class for chessdptdu module."""
+class DPTFileSpecError(Exception):
+    """File definition problem in ChessDatabaseDeferred initialisation."""
 
 
-def chess_dptdu(
-    dbpath, pgnpaths, file_records=None, reporter=None, quit_event=None
+class DPTFistatError(Exception):
+    """Attempt to open a file when not in deferred update mode."""
+
+
+class DPTSizingError(Exception):
+    """Unable to plan file size increases from PGN import estimates."""
+
+
+def chess_database_du(
+    dbpath, pgnpaths, estimates, file_records=None, **kwargs
 ):
     """Open database, import games and close database."""
     cdb = ChessDatabase(dbpath, allowcreate=True)
     cdb.open_database(files=file_records)
-    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+    chess_du_import(cdb, pgnpaths, **kwargs)
     cdb.close_database_contexts(files=file_records)
     cdb.open_database_contexts(files=file_records)
     status = True
     for file in (
         cdb.specification.keys() if file_records is None else file_records
     ):
-        if (
-            FISTAT_DEFERRED_UPDATES
-            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
-        ):
-            status = False
-    cdb.close_database_contexts()
-    return status
-
-
-def chess_dptdu_chunks(dbpath, pgnpaths, file_records, reporter=None):
-    """Open database, import games in fixed chunks and close database."""
-
-    def write_chunk(pgnpath, sample=None):
-        cdb.open_database(files=sample)
-
-        # chess_dptdu_chunks does the reporting so do not pass reporter to
-        # import_pgn, but the name of the source file is mandantory.
-        importer.import_pgn(cdb, StringIO("".join(games)), pgnpath)
-
-        cdb.close_database_contexts()
-        games[:] = []
-
-    cdb = ChessDatabase(dbpath, allowcreate=True)
-    importer = ChessDBrecordGameImport()
-    games = []
-    gamelines = []
-    newgamestring = '[Event "'
-    records = file_records
-    for pgnfile in pgnpaths:
-        with open(pgnfile, "r", encoding="iso-8859-1") as inp:
-            line = inp.readline()
-            if reporter is not None:
-                reporter.append_text("Extracting games from " + pgnfile)
-            count = 0
-            while line:
-                if line.startswith(newgamestring):
-                    games.append("".join(gamelines))
-                    gamelines = []
-                    if len(games) >= CHUNKGAMES:
-                        write_chunk(pgnfile, sample=records)
-                        count += 1
-                        if reporter is not None:
-                            reporter.append_text(
-                                " ".join(
-                                    (
-                                        "Chunk",
-                                        str(count),
-                                        "written, total games added:",
-                                        str(CHUNKGAMES * count),
-                                    )
-                                )
-                            )
-                gamelines.append(line)
-                line = inp.readline()
-        if gamelines:
-            games.append("".join(gamelines))
-            write_chunk(pgnfile, sample=records)
-        if reporter is not None:
-            reporter.append_text("Extraction from " + pgnfile + " done")
-            reporter.append_text_only("")
-    if reporter is not None:
-        reporter.append_text("Finishing import: please wait.")
-        reporter.append_text_only("")
-    cdb.open_database_contexts(files=file_records)
-    status = True
-    for file in file_records:
         if (
             FISTAT_DEFERRED_UPDATES
             != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
@@ -178,8 +97,8 @@ class ChessDatabaseDeferred(dptdu_database.Database):
     # the similar attribute in chessdbbitdu.ChessDatabase for example, because
     # DPT does it's own memory management for deferred updates.
     # The same attribute is provided to allow the import_pgn method called in
-    # this module's chess_dptdu and chess_dptdu_chunks functions to report
-    # progress at regular intervals.
+    # this module's chess_database_du function to report progress at regular
+    # intervals.
     # The values are set differently because Wine does not give a useful answer
     # to DPT's memory usage questions.
     deferred_update_points = frozenset(_DEFERRED_UPDATE_POINTS)
@@ -216,14 +135,14 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             except Exception as error:
                 if __name__ == "__main__":
                     raise
-                raise ChessdptduError("DPT description invalid") from error
+                raise DPTFileSpecError("DPT description invalid") from error
 
         try:
             super().__init__(ddnames, databasefolder, **kargs)
-        except ChessdptduError as error:
+        except Exception as error:
             if __name__ == "__main__":
                 raise
-            raise ChessdptduError("DPT description invalid") from error
+            raise DPTFileSpecError("DPT description invalid") from error
 
         # Retain import estimates for increase size by button actions
         self._import_estimates = None
@@ -232,11 +151,11 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         self._reporter = None
 
     def open_database(self, files=None):
-        """Delegate then raise ChessdptduError if database is inconsistent.
+        """Delegate then raise DPTFistatError if database not in DU mode.
 
         Normally return None with the database open.
 
-        Close the database and raise ChessdptduError exception if the
+        Close the database and raise DPTFistatError exception if the
         database FISTAT parameter is not equal FISTAT_DEFERRED_UPDATES.
 
         """
@@ -254,11 +173,11 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             self.increase_database_size(files=files)
             return
         self.close_database()
-        raise ChessdptduError("A file is not in deferred update mode")
+        raise DPTFistatError("A file is not in deferred update mode")
 
-    def open_context_prepare_import(self):
+    def open_context_prepare_import(self, files=None):
         """Open all files normally."""
-        super().open_database()
+        super().open_database(files=files)
 
     def get_archive_names(self, files=()):
         """Return specified files and existing operating system files."""
@@ -297,157 +216,6 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         self.close_database_contexts()
         return filesize, increase
 
-    def add_import_buttons(
-        self, master, try_command_wrapper, try_event_wrapper, bind, widget
-    ):
-        """Add button actions for DPT to Import dialogue.
-
-        Increase data and index space available.
-
-        """
-        index = tkinter.Button(
-            master=master,
-            text="Increase Index",
-            underline=13,
-            command=try_command_wrapper(self._increase_index, master),
-        )
-        index.pack(side=tkinter.RIGHT, padx=12)
-        bind(widget, "<Alt-x>", try_event_wrapper(self._increase_index))
-        data = tkinter.Button(
-            master=master,
-            text="Increase Data",
-            underline=9,
-            command=try_command_wrapper(self._increase_data, master),
-        )
-        data.pack(side=tkinter.RIGHT, padx=12)
-        bind(widget, "<Alt-d>", try_event_wrapper(self._increase_data))
-
-    def _increase_data(self, event=None):
-        """Add maximum of current free space and default size to Table B.
-
-        event is ignored and is present for compatibility between button click
-        and keypress,
-
-        """
-        del event
-        self.open_database_contexts(files=(GAMES_FILE_DEF,))
-        increase_done = False
-        for key, value in self.get_database_parameters(
-            files=(GAMES_FILE_DEF,)
-        ).items():
-            bsize = value["BSIZE"]
-            bused = max(0, value["BHIGHPG"])
-            bneeded = self._get_pages_for_record_counts(
-                self._notional_record_counts[key]
-            )[0]
-            bincrease = min(bneeded * 2, bsize - bused)
-            message = "".join(
-                (
-                    "The free data size of the ",
-                    key,
-                    " file will be increased from ",
-                    str(bsize - bused),
-                    " pages to ",
-                    str(bincrease + bsize - bused),
-                    " pages.",
-                )
-            )
-            if len(self.table[key].get_extents()) % 2 == 0:
-                message = "".join(
-                    (
-                        message,
-                        "\n\nAt present it is better to do index increases ",
-                        "first for this file, if you need to do any, because ",
-                        "a new extent (fragment) would not be needed.",
-                    )
-                )
-            if tkinter.messagebox.askyesno(
-                title="Increase Data Size",
-                message="".join(
-                    (
-                        message,
-                        "\n\nDo you want to increase the data size?",
-                    )
-                ),
-            ):
-                increase_done = True
-                self.table[key].opencontext.Increase(bincrease, False)
-        if increase_done:
-            self._reporter.append_text(
-                " ".join(
-                    (
-                        "Recalculation of planned database size increases",
-                        "after data size increase by user action.",
-                    )
-                )
-            )
-            self._reporter.append_text_only("")
-            self._report_plans_for_estimate()
-        self.close_database_contexts()
-
-    def _increase_index(self, event=None):
-        """Add maximum of current free space and default size to Table D.
-
-        event is ignored and is present for compatibility between button click
-        and keypress,
-
-        """
-        del event
-        self.open_database_contexts(files=(GAMES_FILE_DEF,))
-        increase_done = False
-        for key, value in self.get_database_parameters(
-            files=(GAMES_FILE_DEF,)
-        ).items():
-            dsize = value["DSIZE"]
-            dused = value["DPGSUSED"]
-            dneeded = self._get_pages_for_record_counts(
-                self._notional_record_counts[key]
-            )[1]
-            dincrease = min(dneeded * 2, dsize - dused)
-            message = "".join(
-                (
-                    "The free index size of the ",
-                    key,
-                    " file will be increased from ",
-                    str(dsize - dused),
-                    " pages to ",
-                    str(dincrease + dsize - dused),
-                    " pages.",
-                )
-            )
-            if len(self.table[key].get_extents()) % 2 != 0:
-                message = "".join(
-                    (
-                        message,
-                        "\n\nAt present it is better to do data increases ",
-                        "first for this file, if you need to do any, because ",
-                        "a new extent (fragment) would not be needed.",
-                    )
-                )
-            if tkinter.messagebox.askyesno(
-                title="Increase Index Size",
-                message="".join(
-                    (
-                        message,
-                        "\n\nDo you want to increase the index size?",
-                    )
-                ),
-            ):
-                increase_done = True
-                self.table[key].opencontext.Increase(dincrease, True)
-        if increase_done:
-            self._reporter.append_text(
-                " ".join(
-                    (
-                        "Recalculation of planned database size increases",
-                        "after index size increase by user action.",
-                    )
-                )
-            )
-            self._reporter.append_text_only("")
-            self._report_plans_for_estimate()
-        self.close_database_contexts()
-
     def get_file_sizes(self):
         """Return dictionary of notional record counts for data and index."""
         return self._notional_record_counts
@@ -464,7 +232,16 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         # See comment near end of class definition Chess in relative module
         # ..gui.chess for explanation of this change.
         self._reporter = reporter
-        self._report_plans_for_estimate(estimates=estimates)
+        try:
+            self._report_plans_for_estimate(estimates=estimates)
+        except DPTSizingError:
+            if reporter:
+                reporter.append_text_only("")
+                reporter.append_text(
+                    "No estimates available to calculate file size increase."
+                )
+        reporter.append_text_only("")
+        reporter.append_text("Ready to start import.")
 
     def _report_plans_for_estimate(self, estimates=None):
         """Recalculate and report file size adjustments to do import.
@@ -485,82 +262,128 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         append_text_only = self._reporter.append_text_only
         if estimates is not None:
             self._import_estimates = estimates
-        (
-            gamecount,
-            bytes_per_game,
-            positions_per_game,
-            pieces_per_game,
-        ) = self._import_estimates[:4]
+        try:
+            (
+                gamecount,
+                bytes_per_game,
+                positions_per_game,
+                pieces_per_game,
+                piecetypes_per_game,
+            ) = self._import_estimates[:5]
+        except TypeError as exc:
+            raise DPTSizingError("No estimates available for sizing") from exc
+        for item in self._import_estimates[:5]:
+            if not isinstance(item, int):
+                raise DPTSizingError("Value must be an 'int' instance")
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
-        d_count = (gamecount * (positions_per_game + pieces_per_game)) // (
-            POSITIONS_PER_GAME * (1 + PIECES_PER_POSITION)
+
+        # Calculate number of standard profile games needed to generate
+        # the number of index entries implied by the estimated profile
+        # and number of games.
+        d_count = (
+            gamecount
+            * (positions_per_game + pieces_per_game + piecetypes_per_game)
+        ) // (
+            POSITIONS_PER_GAME
+            * (1 + PIECES_PER_POSITION + PIECES_TYPES_PER_POSITION)
         )
-        if bytes_per_game > (TABLE_B_SIZE // brecppg):
-            b_count = int(
-                (gamecount * bytes_per_game) / (TABLE_B_SIZE / brecppg)
-            )
+
+        # Calculate number of standard profile games needed to generate
+        # the number of bytes implied by the estimated profile and number
+        # of games.
+        if bytes_per_game > BYTES_PER_GAME:
+            b_count = int((gamecount * bytes_per_game) / BYTES_PER_GAME)
         else:
             b_count = gamecount
+
+        # Use 'dict's because self._get_database_table_sizes() method
+        # needs them internally, even though this case uses one file only.
         self._notional_record_counts = {
             GAMES_FILE_DEF: (b_count, d_count),
         }
-        append_text("Current file size and free space:")
         free = dict()
         sizes, increases = self._get_database_table_sizes(
             files=self._notional_record_counts
         )
-        for filename, bdsize in sizes.items():
-            bsize, bused, dsize, dused = bdsize
-            bused = max(0, bused)
-            free[filename] = (bsize - bused, dsize - dused)
-            append_text_only(filename)
-            append_text_only(
-                " ".join(("Current data area size", str(bsize), "pages"))
-            )
-            append_text_only(
-                " ".join(("Current index area size", str(dsize), "pages"))
-            )
-            append_text_only(
-                " ".join(
-                    ("Current data area free", str(bsize - bused), "pages")
-                )
-            )
-            append_text_only(
-                " ".join(
-                    ("Current index area free", str(dsize - dused), "pages")
-                )
-            )
+
         append_text_only("")
-        append_text("File space needed for import:")
-        for filename, nr_count in self._notional_record_counts.items():
-            append_text_only(filename)
-            b_pages, d_pages = self._get_pages_for_record_counts(nr_count)
-            append_text_only(
-                " ".join(("Estimated", str(b_pages), "pages needed for data"))
-            )
-            append_text_only(
-                " ".join(
-                    ("Estimated", str(d_pages), "pages needed for indexes")
+        append_text("Standard profile game counts used in calculations.")
+        append_text_only(
+            " ".join(
+                (
+                    "Standard profile game count for data sizing:",
+                    str(b_count),
                 )
             )
+        )
+        append_text_only(
+            " ".join(
+                (
+                    "Standard profile game count for index sizing:",
+                    str(d_count),
+                )
+            )
+        )
         append_text_only("")
-        append_text("File size increases planned and free space when done:")
-        for filename, increments in increases.items():
-            b_incr, d_incr = increments
-            b_free, d_free = free[filename]
-            append_text_only(filename)
-            append_text_only(
-                " ".join(("Data area increase", str(b_incr), "pages"))
+        append_text_only(
+            "".join(
+                (
+                    "A standard profile game is defined to have ",
+                    str(POSITIONS_PER_GAME),
+                    " positions, ",
+                    str(PIECES_PER_POSITION),
+                    " pieces per position, ",
+                    str(PIECES_TYPES_PER_POSITION),
+                    " piece types per position, and occupy ",
+                    str(BYTES_PER_GAME),
+                    " bytes.",
+                )
             )
-            append_text_only(
-                " ".join(("Index area increase", str(d_incr), "pages"))
-            )
-            append_text_only(
-                " ".join(("Data area free", str(b_incr + b_free), "pages"))
-            )
-            append_text_only(
-                " ".join(("Index area free", str(d_incr + d_free), "pages"))
-            )
+        )
+
+        # Loops on sizes, increases, and free, dict objects removed because
+        # this case does one file only.
+        append_text_only("")
+        append_text("Current file size and free space as pages.")
+        bdsize = sizes[GAMES_FILE_DEF]
+        bsize, bused, dsize, dused = bdsize
+        bused = max(0, bused)
+        free[GAMES_FILE_DEF] = (bsize - bused, dsize - dused)
+        append_text_only(" ".join(("Current data area size:", str(bsize))))
+        append_text_only(" ".join(("Current index area size:", str(dsize))))
+        append_text_only(
+            " ".join(("Current data area free:", str(bsize - bused)))
+        )
+        append_text_only(
+            " ".join(("Current index area free:", str(dsize - dused)))
+        )
+        nr_count = self._notional_record_counts[GAMES_FILE_DEF]
+        b_pages, d_pages = self._get_pages_for_record_counts(nr_count)
+        append_text_only("")
+        append_text("File space needed for import.")
+        append_text_only(
+            " ".join(("Estimated pages needed for data:", str(b_pages)))
+        )
+        append_text_only(
+            " ".join(("Estimated pages needed for indexing:", str(d_pages)))
+        )
+        increments = increases[GAMES_FILE_DEF]
+        b_incr, d_incr = increments
+        b_free, d_free = free[GAMES_FILE_DEF]
+        append_text_only("")
+        append_text("Planned file size increase and free space before import.")
+        append_text_only(
+            " ".join(("Planned increase in data pages:", str(b_incr)))
+        )
+        append_text_only(
+            " ".join(("Planned increase in index pages:", str(d_incr)))
+        )
+        append_text_only(
+            " ".join(("Free data pages before import:", str(b_incr + b_free)))
+        )
+        append_text_only(
+            " ".join(("Free index pages before import:", str(d_incr + d_free)))
+        )
         append_text_only("")
         append_text_only(
             "".join(
@@ -572,8 +395,6 @@ class ChessDatabaseDeferred(dptdu_database.Database):
                 )
             )
         )
-        append_text_only("")
-        append_text_only("")
 
 
 class ChessDatabase(Archivedu, ChessDatabaseDeferred):

@@ -8,6 +8,6 @@
 if __name__ == "__main__":
 
     from .directory_widget import DirectoryWidget
-    from ..dpt.chessdptdu import chess_dptdu
+    from ..dpt.chessdptdu import chess_database_du
 
-    DirectoryWidget(chess_dptdu, "dpt")
+    DirectoryWidget(chess_database_du, "dpt")

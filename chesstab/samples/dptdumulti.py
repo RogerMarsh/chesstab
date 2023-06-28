@@ -12,7 +12,7 @@ if __name__ == "__main__":
     import tkinter.messagebox
     import tkinter.filedialog
 
-    from chesstab.dpt.chessdptdumulti import chess_dptdu
+    from chesstab.dpt.chessdptdumulti import chess_database_du
 
     root = tkinter.Tk()
     root.wm_title(string="Test Import Chess Games")
@@ -28,5 +28,5 @@ if __name__ == "__main__":
             if tkinter.messagebox.askyesno(
                 title="Import Games", message="Proceed with import"
             ):
-                chess_dptdu(dbdir, (filename,), {})
+                chess_database_du(dbdir, (filename,), {})
     root.destroy()

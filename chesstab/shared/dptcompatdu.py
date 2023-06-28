@@ -8,13 +8,6 @@
 class DptCompatdu:
     """Provide do nothing methods for compatibility with DPT interface."""
 
-    def add_import_buttons(self, *a):
-        """Return None.
-
-        No extra buttons required.  Method exists for DPT compatibility.
-
-        """
-
     # pylint no-self-use message.
     # Why this method and not the other two?
     # Does it imply 'self' should not be removed given purpose of methods?
@@ -35,8 +28,5 @@ class DptCompatdu:
         """
         # See comment near end of class definition Chess in relative module
         # ..gui.chess for explanation of this change.
-        # reporter.append_text_only(''.join(
-        #    ('The expected duration of the import may make starting ',
-        #     'it now inconvenient.',
-        #     )))
-        # reporter.append_text_only('')
+        reporter.append_text_only("")
+        reporter.append_text("Ready to start import.")

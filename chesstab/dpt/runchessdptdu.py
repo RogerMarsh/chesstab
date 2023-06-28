@@ -10,42 +10,20 @@ Run as a new process from the chess GUI.
 
 if __name__ == "__main__":
 
-    # run by subprocess.popen from ../core/chess.py
     import sys
     import os
 
-    try:
-        # If module not loaded from Python site-packages put the folder
-        # containing chesstab at front of sys.path on the assumption all the
-        # sibling packages are there too.
-        try:
-            sp = sys.path[-1].replace("\\\\", "\\")
-            packageroot = os.path.dirname(
-                os.path.dirname(os.path.dirname(__file__))
-            )
-            if sp != packageroot:
-                sys.path.insert(0, packageroot)
-        except NameError as msg:
-            # When run in the py2exe generated executable the module will
-            # not have the __file__ attribute.
-            # But the siblings can be assumed to be in the right place.
-            if " '__file__' " not in str(msg):
-                raise
+    # When run in the py2exe generated executable the module will
+    # not have the __file__ attribute.
+    # But the siblings can be assumed to be in the right place.
+    # (Comment above at least 11 years old in 2023.)
+    # sys.path[-1] is assumed to be '/usr/.../site-packages'.
+    if "__file__" in dir():
+        packageroot = os.path.dirname(os.path.dirname(__file__))
+        if sys.path[-1].replace("\\\\", "\\") != packageroot:
+            sys.path.insert(0, os.path.dirname(packageroot))
+        assert os.path.basename(packageroot) == "chesstab"
 
-        # sys.path should now contain correct chesstab modules
-        from chesstab.dpt import chessdptdu
-        from chesstab.gui import chessdu
+    from chesstab.shared import rundu
 
-        cdu = chessdu.ChessDeferredUpdate(
-            deferred_update_method=chessdptdu.chess_dptdu,
-            database_class=chessdptdu.ChessDatabase,
-        )
-    except Exception as error:
-        try:
-            chessdu.write_error_to_log()
-        except Exception:
-            # Assume that parent process will report the failure
-            raise SystemExit(
-                " reporting exception in ".join(("Exception while", "DPTdu"))
-            ) from error
-        raise SystemExit("Reporting exception in DPTdu") from error
+    rundu.rundu("chesstab.gui.chessdu", "chesstab.dpt.chessdptdu")

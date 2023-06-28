@@ -31,6 +31,8 @@ import solentware_base.core.filespec
 # Reference profile of a typical game (see FileSpec docstring)
 POSITIONS_PER_GAME = 75
 PIECES_PER_POSITION = 23
+PIECES_TYPES_PER_POSITION = 10  # Added after introduction of chessql.
+BYTES_PER_GAME = 700  # Records per page set to 10 because 700 was good.
 
 # Names used to refer to file descriptions
 # DPT files or Berkeley DB primary databases
