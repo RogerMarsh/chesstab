@@ -418,7 +418,7 @@ class _ColourScheme(Bindings):
             constants.VARIATION_COLOR_NAME: cg.v_color,
         }
         for fontname in options.font_names:
-            olddefaults[fontname] = dict()
+            olddefaults[fontname] = {}
         fonts.copy_font_attributes(
             tkinter.font.nametofont(
                 constants.MOVES_PLAYED_IN_GAME_FONT
@@ -452,7 +452,7 @@ class _ColourScheme(Bindings):
             constants.VARIATION_COLOR_NAME: self.game.v_color,
         }
         for fontname in options.font_names:
-            newdefaults[fontname] = dict()
+            newdefaults[fontname] = {}
         fonts.copy_font_attributes(
             self.tags_variations_comments_font.actual(),
             newdefaults[constants.TAGS_VARIATIONS_COMMENTS_FONT],

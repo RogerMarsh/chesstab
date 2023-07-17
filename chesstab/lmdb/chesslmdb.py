@@ -8,11 +8,7 @@ import os
 
 from solentware_base import lmdb_database
 
-from ..core.filespec import (
-    FileSpec,
-    GAMES_FILE_DEF,
-    LMMD_MINIMUM_FREE_PAGES_AT_START,
-)
+from ..core.filespec import FileSpec
 from ..basecore import database
 
 

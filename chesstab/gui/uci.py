@@ -26,8 +26,11 @@ from ..core.filespec import (
 )
 from .eventspec import EventSpec
 
-_win32_platform = sys.platform == "win32"
+# Eyeball logic wants these attribute names to be same style.
+# pylint logic disagrees.
+_WIN32_PLATFORM = sys.platform == "win32"
 _freebsd_platform = sys.platform.startswith("freebsd")
+
 del sys
 
 
@@ -187,7 +190,7 @@ class UCI(Bindings):
         #             'this is expected if running under Wine.')))
         #    return
 
-        if _win32_platform:
+        if _WIN32_PLATFORM:
             filetypes = (("Chess Engines", "*.exe"),)
         else:
             filetypes = ()
@@ -742,7 +745,7 @@ class UCI(Bindings):
         pending_counts = []
         for engine, pending in self.uci.positions_pending.items():
             pending_counts.append(
-                (engine, sum([len(p) for p in pending.values()]))
+                (engine, sum(len(p) for p in pending.values()))
             )
         if not pending_counts:
             tkinter.messagebox.showinfo(

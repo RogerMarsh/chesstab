@@ -84,14 +84,14 @@ class Database:
                     inp = file_in.read(1000000)
         return True
 
-    @staticmethod
-    def _delete_database_names():
+    # @staticmethod
+    def _delete_database_names(self):
         """Return tuple of filenames to delete from database directory.
 
         Subclasses should override this method to delete the relevant files.
 
         """
-        return ()
+        # return ()
 
     def delete_database(self):
         """Close and delete the open chess database."""
@@ -128,19 +128,31 @@ class Database:
             pass
         return message
 
-    def get_archive_names(self, files=()):
+    def get_archive_names(self, file=None):
         """Return names and operating system files for archives and guards."""
-        del files
-        names = (self.database_file,)
-        archives = dict()
-        guards = dict()
-        for name in names:
-            archiveguard = ".".join((name, "grd"))
-            archivefile = ".".join((name, "bz2"))
-            for box, file in ((archives, archivefile), (guards, archiveguard)):
-                if os.path.exists(file):
-                    box[name] = file
-        return (names, archives, guards)
+        if self.home_directory is None:
+            return (None, (), ())
+        archives = {}
+        guards = {}
+        if self._file_per_database:
+            for key in self.specification:
+                if key != file:
+                    continue
+                file = os.path.join(self.home_directory, key)
+                for box, arch in (
+                    (archives, ".".join((file, "zip"))),
+                    (guards, ".".join((file, "grd"))),
+                ):
+                    if os.path.exists(arch):
+                        box[file] = arch
+                return ([file], archives, guards)
+        for box, arch in (
+            (archives, ".".join((self.database_file, "bz2"))),
+            (guards, ".".join((self.database_file, "grd"))),
+        ):
+            if os.path.exists(arch):
+                box[self.database_file] = arch
+        return ([file], archives, guards)
 
     def open_after_import_without_backups(self, files=()):
         """Return True after doing database engine specific open actions.

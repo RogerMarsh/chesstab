@@ -13,11 +13,6 @@ See www.dptoolkit.com for details of DPT
 """
 
 import os
-import multiprocessing
-import multiprocessing.dummy
-
-import tkinter
-import tkinter.messagebox
 
 # pylint will always give import-error message on non-Microsoft Windows
 # systems.
@@ -31,7 +26,6 @@ from solentware_base.core.constants import (
     FILEDESC,
     BRECPPG,
     TABLE_B_SIZE,
-    DEFAULT_RECORDS,
 )
 
 from .filespec import FileSpec
@@ -42,7 +36,6 @@ from ..core.filespec import (
     PIECES_TYPES_PER_POSITION,
     BYTES_PER_GAME,
 )
-from ..shared.archivedu import Archivedu
 from ..shared.alldu import chess_du_import
 
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
@@ -53,7 +46,7 @@ del TABLE_B_SIZE
 
 
 class DPTFileSpecError(Exception):
-    """File definition problem in ChessDatabaseDeferred initialisation."""
+    """File definition problem in ChessDatabase initialisation."""
 
 
 class DPTFistatError(Exception):
@@ -64,36 +57,35 @@ class DPTSizingError(Exception):
     """Unable to plan file size increases from PGN import estimates."""
 
 
-def chess_database_du(
-    dbpath, pgnpaths, estimates, file_records=None, **kwargs
-):
+def chess_database_du(dbpath, *args, file=None, **kwargs):
     """Open database, import games and close database."""
+    files = (file,) if file is not None else None
     cdb = ChessDatabase(dbpath, allowcreate=True)
-    cdb.open_database(files=file_records)
-    chess_du_import(cdb, pgnpaths, **kwargs)
-    cdb.close_database_contexts(files=file_records)
-    cdb.open_database_contexts(files=file_records)
+    cdb.open_database(files=files)
+    chess_du_import(cdb, *args, file=file, **kwargs)
+    cdb.close_database_contexts(files=files)
+    cdb.open_database_contexts(files=files)
     status = True
-    for file in (
-        cdb.specification.keys() if file_records is None else file_records
-    ):
+    for key in cdb.specification.keys():
+        if key != file:
+            continue
         if (
             FISTAT_DEFERRED_UPDATES
-            != cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]
+            != cdb.table[key].get_file_parameters(cdb.dbenv)["FISTAT"][0]
         ):
             status = False
     cdb.close_database_contexts()
     return status
 
 
-class ChessDatabaseDeferred(dptdu_database.Database):
+class ChessDatabase(dptdu_database.Database):
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
 
     """
 
-    # ChessDatabaseDeferred.deferred_update_points is not needed in DPT, like
+    # ChessDatabase.deferred_update_points is not needed in DPT, like
     # the similar attribute in chessdbbitdu.ChessDatabase for example, because
     # DPT does it's own memory management for deferred updates.
     # The same attribute is provided to allow the import_pgn method called in
@@ -168,9 +160,9 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             ):
                 break
         else:
-            if files is None:
-                files = dict()
-            self.increase_database_size(files=files)
+            # Previous algorithm called self.increase_database_size here.
+            # Now the increase is done in chess_du_import call from
+            # chess_database_du function.
             return
         self.close_database()
         raise DPTFistatError("A file is not in deferred update mode")
@@ -179,18 +171,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         """Open all files normally."""
         super().open_database(files=files)
 
-    def get_archive_names(self, files=()):
-        """Return specified files and existing operating system files."""
-        specs = {f for f in files if f in self.table}
-        names = [v.file for k, v in self.table.items() if k in specs]
-        exists = [
-            os.path.basename(n)
-            for n in names
-            if os.path.exists(".".join((n, "bz2")))
-        ]
-        return (names, exists)
-
-    def _get_pages_for_record_counts(self, counts=(0, 0)):
+    def get_pages_for_record_counts(self, counts=(0, 0)):
         """Return Table B and Table D pages needed for record counts."""
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         return (
@@ -201,8 +182,8 @@ class ChessDatabaseDeferred(dptdu_database.Database):
     def _get_database_table_sizes(self, files=None):
         """Return Table B and D size and usage in pages for files."""
         if files is None:
-            files = dict()
-        filesize = dict()
+            files = {}
+        filesize = {}
         for key, value in self.get_database_parameters(
             files=list(files.keys())
         ).items():
@@ -220,7 +201,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         """Return dictionary of notional record counts for data and index."""
         return self._notional_record_counts
 
-    def report_plans_for_estimate(self, estimates, reporter):
+    def report_plans_for_estimate(self, estimates, reporter, increases):
         """Calculate and report file size adjustments to do import.
 
         Note the reporter and headline methods for initial report and possible
@@ -233,7 +214,10 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         # ..gui.chess for explanation of this change.
         self._reporter = reporter
         try:
-            self._report_plans_for_estimate(estimates=estimates)
+            self._report_plans_for_estimate(
+                estimates=estimates,
+                increases=increases,
+            )
         except DPTSizingError:
             if reporter:
                 reporter.append_text_only("")
@@ -243,7 +227,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         reporter.append_text_only("")
         reporter.append_text("Ready to start import.")
 
-    def _report_plans_for_estimate(self, estimates=None):
+    def _report_plans_for_estimate(self, estimates=None, increases=None):
         """Recalculate and report file size adjustments to do import.
 
         Create dictionary of effective game counts for sizing Games file.
@@ -275,7 +259,6 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         for item in self._import_estimates[:5]:
             if not isinstance(item, int):
                 raise DPTSizingError("Value must be an 'int' instance")
-        brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
 
         # Calculate number of standard profile games needed to generate
         # the number of index entries implied by the estimated profile
@@ -301,8 +284,8 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         self._notional_record_counts = {
             GAMES_FILE_DEF: (b_count, d_count),
         }
-        free = dict()
-        sizes, increases = self._get_database_table_sizes(
+        free = {}
+        sizes, increments = self._get_database_table_sizes(
             files=self._notional_record_counts
         )
 
@@ -358,7 +341,7 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             " ".join(("Current index area free:", str(dsize - dused)))
         )
         nr_count = self._notional_record_counts[GAMES_FILE_DEF]
-        b_pages, d_pages = self._get_pages_for_record_counts(nr_count)
+        b_pages, d_pages = self.get_pages_for_record_counts(nr_count)
         append_text_only("")
         append_text("File space needed for import.")
         append_text_only(
@@ -367,8 +350,13 @@ class ChessDatabaseDeferred(dptdu_database.Database):
         append_text_only(
             " ".join(("Estimated pages needed for indexing:", str(d_pages)))
         )
-        increments = increases[GAMES_FILE_DEF]
-        b_incr, d_incr = increments
+        b_incr, d_incr = increments[GAMES_FILE_DEF]
+
+        # Save table B and D increases for import process to do later.
+        if increases is not None:
+            increases[0] = b_incr
+            increases[1] = d_incr
+
         b_free, d_free = free[GAMES_FILE_DEF]
         append_text_only("")
         append_text("Planned file size increase and free space before import.")
@@ -396,6 +384,67 @@ class ChessDatabaseDeferred(dptdu_database.Database):
             )
         )
 
+    # The attempt to generate a bz2 archive of the games database with
+    # Python's builtin 'open' method fails because of a PermissionError.
+    # The attempt to generate a DPT fast unload dump of the games
+    # database fails because it is open in deferred update mode, and
+    # attempting to open it temporarely in normal mode fails because the
+    # audit file already exists (the database has to be closed down more
+    # thoroughly than is convenient given need to keep other database
+    # engines in play in the shared code).
+    # Converting the archive to 'fast unload'  depend on being able to
+    # produce a reliable crafted 'fast load' implementation to do the
+    # import.  Till then the algorithm derived from 'text export' will
+    # have to do.
+    def archive(self, name=None):
+        """Override, write a txt backup of games in database.
 
-class ChessDatabase(Archivedu, ChessDatabaseDeferred):
-    """Provide single-step deferred update for a database of games of chess."""
+        Argument 'name' is the key of the FileSpec dict entry which
+        defines the file.
+
+        Intended to be a backup in case import fails.
+
+        """
+        self.delete_archive(name=name)
+        file = self._generate_database_file_name(name)
+        archiveguard = ".".join((file, "grd"))
+        archivename = ".".join((file, "txt"))
+        allgames = self.recordlist_ebm(name)
+        rscursor = allgames.recordset.OpenCursor()
+        table = self.table[name]
+        with open(archivename, "wb") as gamesout:
+            try:
+                while rscursor.Accessible():
+                    text = table.join_primary_field_occurrences(
+                        rscursor.AccessCurrentRecordForRead()
+                    )
+                    gamesout.write(text.encode("iso-8859-1"))
+                    gamesout.write(b"\n")
+                    rscursor.Advance(1)
+            finally:
+                allgames.recordset.CloseCursor(rscursor)
+        with open(archiveguard, "wb"):
+            pass
+
+    def delete_archive(self, name=None):
+        """Override, delete a txt backup of games in database.
+
+        Argument 'name' is the key of the FileSpec dict entry which
+        defines the file.
+
+        """
+        file = self._generate_database_file_name(name)
+        archiveguard = ".".join((file, "grd"))
+        archivename = ".".join((file, "txt"))
+        try:
+            os.remove(archiveguard)
+        except FileNotFoundError:
+            pass
+        try:
+            os.remove(archivename)
+        except FileNotFoundError:
+            pass
+
+    def _generate_database_file_name(self, name):
+        """Override, return path to DPT file for name."""
+        return self.table[name].file

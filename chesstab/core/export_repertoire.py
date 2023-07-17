@@ -7,6 +7,8 @@
 from . import chessrecord, filespec
 from .export_pgn_import_format import get_game_pgn_import_format
 
+_ENCODING = "utf-8"
+
 
 def export_all_repertoires_pgn(database, filename):
     """Export all repertoires in PGN export format."""
@@ -18,7 +20,7 @@ def export_all_repertoires_pgn(database, filename):
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -43,7 +45,7 @@ def export_all_repertoires_pgn_no_comments(database, filename):
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -69,7 +71,7 @@ def export_all_repertoires_pgn_import_format(database, filename):
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -96,7 +98,7 @@ def export_all_repertoires_text(database, filename):
         filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -121,7 +123,7 @@ def export_selected_repertoires_pgn(grid, filename):
         database = grid.get_data_source().dbhome
         instance = chessrecord.ChessDBrecordRepertoire()
         instance.set_database(database)
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             for bookmark in sorted(grid.bookmarks):
                 instance.load_record(
                     database.get_primary_record(
@@ -150,7 +152,7 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
         database = grid.get_data_source().dbhome
         instance = chessrecord.ChessDBrecordRepertoire()
         instance.set_database(database)
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             for bookmark in sorted(grid.bookmarks):
                 instance.load_record(
                     database.get_primary_record(
@@ -253,7 +255,7 @@ def export_selected_repertoires_pgn_import_format(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
             gamesout.write("\n\n")
@@ -326,7 +328,7 @@ def export_selected_repertoires_text(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
             gamesout.write("\n")
@@ -341,7 +343,7 @@ def export_single_repertoire_pgn(collected_game, filename):
     """
     if filename is None:
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_repertoire_pgn())
 
 
@@ -353,5 +355,5 @@ def export_single_repertoire_pgn_no_comments(collected_game, filename):
     """
     if filename is None:
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_repertoire_pgn_no_comments())

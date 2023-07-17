@@ -369,7 +369,7 @@ class FastloadDatabase:
         are not needed if the field=value pairs are in the taped file.
 
         This may not be true for invisible fields, following the example
-        of their treatment in _dpt._DPTFile.put_instance() method, because
+        of their treatment in _dpt.DPTFile.put_instance() method, because
         it did not work when tried.
 
         """

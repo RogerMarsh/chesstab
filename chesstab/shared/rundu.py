@@ -55,20 +55,20 @@ def rundu(engine_module_name, database_module_name):
                 resource.setrlimit(
                     resource.RLIMIT_DATA, (min(soft * 2, hard), hard)
                 )
-            except Exception as error:
+            except Exception as exc_a:
                 try:
                     engine_module.write_error_to_log()
-                except Exception as error:
+                except Exception as exc_b:
                     # Maybe the import is small enough to get away with
                     # limited memory (~500Mb).
                     raise SystemExit(
                         " reporting exception in ".join(
                             ("Exception while", "set resource limit in rundu")
                         )
-                    ) from error
+                    ) from exc_b
                 raise SystemExit(
                     "Exception in rundu while setting resource limit"
-                ) from error
+                ) from exc_a
 
     try:
         engine_module.ChessDeferredUpdate(

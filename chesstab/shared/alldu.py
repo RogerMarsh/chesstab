@@ -18,9 +18,38 @@ from ..core.chessrecord import ChessDBrecordGameImport
 from .. import ERROR_LOG, APPLICATION_NAME
 
 
-def chess_du_import(cdb, pgnpaths, reporter=None, quit_event=None):
+def chess_du_import(
+    cdb, pgnpaths, file=None, reporter=None, quit_event=None, increases=None
+):
     """Import games from pgnpaths into open database cdb."""
     importer = ChessDBrecordGameImport()
+    if cdb.take_backup_before_deferred_update:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Make backup before import.")
+        try:
+            cdb.archive(name=file)
+        except Exception as exc:
+            _report_exception(cdb, reporter, exc)
+            raise
+        if reporter is not None:
+            reporter.append_text("Backup completed.")
+    for key in cdb.table.keys():
+        if key == file:
+            counts = [increases[0], increases[1]]
+            cdb.increase_database_record_capacity(files={key: counts})
+            _chess_du_report_increases(reporter, key, counts)
+            break
+    else:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text(
+                repr(file).join(
+                    ("Unable to import to '", "': not found in database.")
+                )
+            )
+            reporter.append_text_only("")
+        return
     cdb.set_defer_update()
     try:
         for pgnfile in pgnpaths:
@@ -39,75 +68,114 @@ def chess_du_import(cdb, pgnpaths, reporter=None, quit_event=None):
             reporter.append_text_only("")
         cdb.do_final_segment_deferred_updates()
     except Exception as exc:
-        errorlog_written = True
-        try:
-            with open(
-                os.path.join(cdb.home_directory, ERROR_LOG),
-                "a",
-            ) as errorlog:
-                errorlog.write(
-                    "".join(
-                        (
-                            "\n\n\n",
-                            " ".join(
-                                (
-                                    APPLICATION_NAME,
-                                    "exception report at",
-                                    datetime.datetime.isoformat(
-                                        datetime.datetime.today()
-                                    ),
-                                )
-                            ),
-                            "\n\n",
-                            traceback.format_exc(),
-                            "\n\n",
-                        )
-                    )
-                )
-        except:
-            errorlog_written = False
-        if reporter is not None:
-            reporter.append_text("An exception has occured during import:")
-            reporter.append_text_only("")
-            reporter.append_text_only(str(exc))
-            reporter.append_text_only("")
-            if errorlog_written:
-                reporter.append_text_only(
-                    "".join(
-                        (
-                            "detail appended to ",
-                            os.path.join(cdb.home_directory, ERROR_LOG),
-                            " file.",
-                        )
-                    )
-                )
-            else:
-                reporter.append_text_only(
-                    "".join(
-                        (
-                            "attempt to append detail to ",
-                            os.path.join(cdb.home_directory, ERROR_LOG),
-                            " file failed.",
-                        )
-                    )
-                )
-            reporter.append_text_only("")
-            reporter.append_text(
-                "Import abandonned in way depending on database engine."
-            )
+        _report_exception(cdb, reporter, exc)
         raise
     cdb.unset_defer_update()
+    if cdb.take_backup_before_deferred_update:
+        if reporter is not None:
+            reporter.append_text("Delete backup for import.")
+        cdb.delete_archive(name=file)
+        if reporter is not None:
+            reporter.append_text("Backup deleted.")
+            reporter.append_text_only("")
     if reporter is not None:
         reporter.append_text("Import finished.")
         reporter.append_text_only("")
 
 
-def chess_du(cdb, pgnpaths, file_records=None, reporter=None, quit_event=None):
-    """Open database, import games and close database."""
-    del file_records
+def chess_du(cdb, *args, file=None, **kwargs):
+    """Open database, delegate to chess_du_import, and close database."""
     cdb.open_database()
-    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+    chess_du_import(cdb, *args, file=file, **kwargs)
     cdb.close_database()
+
+
+def _chess_du_report_increases(reporter, file, increases):
+    """Report size increases for file if any and there is a reporter.
+
+    All elements of increases will be 0 (zero) if explicit increase in
+    file size is not supported, or if not required when it is supported.
+
+    """
+    if reporter is None:
+        return
+    if sum(increases) == 0:
+        return
+    reporter.append_text_only("")
+    reporter.append_text(file.join(("Increase size of '", "' file.")))
+    label = ("Data", "Index")
+    for item, count in enumerate(increases):
+        reporter.append_text_only(
+            " ".join(
+                (
+                    "Applied increase in",
+                    label[item],
+                    "pages:",
+                    str(count),
+                )
+            )
+        )
+
+
+def _report_exception(cdb, reporter, exception):
+    """Write exception to error log file, and reporter if available."""
+    errorlog_written = True
+    try:
+        with open(
+            os.path.join(cdb.home_directory, ERROR_LOG),
+            "a",
+            encoding="utf-8",
+        ) as errorlog:
+            errorlog.write(
+                "".join(
+                    (
+                        "\n\n\n",
+                        " ".join(
+                            (
+                                APPLICATION_NAME,
+                                "exception report at",
+                                datetime.datetime.isoformat(
+                                    datetime.datetime.today()
+                                ),
+                            )
+                        ),
+                        "\n\n",
+                        traceback.format_exc(),
+                        "\n\n",
+                    )
+                )
+            )
+    except Exception:
+        errorlog_written = False
+    if reporter is not None:
+        reporter.append_text("An exception has occured during import:")
+        reporter.append_text_only("")
+        reporter.append_text_only(str(exception))
+        reporter.append_text_only("")
+        if errorlog_written:
+            reporter.append_text_only(
+                "".join(
+                    (
+                        "detail appended to ",
+                        os.path.join(cdb.home_directory, ERROR_LOG),
+                        " file.",
+                    )
+                )
+            )
+        else:
+            reporter.append_text_only(
+                "".join(
+                    (
+                        "attempt to append detail to ",
+                        os.path.join(cdb.home_directory, ERROR_LOG),
+                        " file failed.",
+                    )
+                )
+            )
+        reporter.append_text_only("")
+        reporter.append_text(
+            "Import abandonned in way depending on database engine."
+        )
 
 
 def get_filespec(**kargs):

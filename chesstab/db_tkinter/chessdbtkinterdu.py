@@ -2,11 +2,13 @@
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB."""
+"""Chess database update using custom deferred update for Berkeley DB.
+
+This module uses the tcl interface via tkinter.
+"""
 
 from solentware_base import db_tkinterdu_database
 
-from ..shared.dbdutcl import DbduTcl
 from ..shared.dbdu import Dbdu
 from ..shared.alldu import chess_du, Alldu
 
@@ -23,7 +25,7 @@ def chess_database_du(dbpath, *args, **kwargs):
     return True
 
 
-class ChessDatabase(Alldu, DbduTcl, Dbdu, db_tkinterdu_database.Database):
+class ChessDatabase(Alldu, Dbdu, db_tkinterdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):

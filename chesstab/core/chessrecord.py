@@ -663,13 +663,13 @@ class ChessDBrecordGameImport(Record):
                         )
                     )
                 database.deferred_update_housekeeping()
-        if reporter is not None:
+        if reporter is not None and value.collected_game is not None:
             reporter.append_text(
                 "".join(
                     (
                         str(count),
                         " games, to character ",
-                        str(collected_game.game_offset),
+                        str(value.collected_game.game_offset),
                         " in PGN, read from ",
                         sourcename,
                     )

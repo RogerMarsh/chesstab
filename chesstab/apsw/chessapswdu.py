@@ -2,7 +2,10 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for sqlite3."""
+"""Chess database update using custom deferred update for Sqlite 3.
+
+This module uses the apsw interface.
+"""
 
 from solentware_base import apswdu_database
 

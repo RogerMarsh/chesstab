@@ -7,6 +7,8 @@
 from . import chessrecord, filespec
 from .cqlstatement import CQLStatement
 
+_ENCODING = "utf-8"
+
 
 def export_all_positions(database, filename):
     """Export CQL statements in database to text file in internal format."""
@@ -18,7 +20,7 @@ def export_all_positions(database, filename):
         filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -38,7 +40,7 @@ def export_selected_positions(grid, filename):
         database = grid.get_data_source().dbhome
         instance = chessrecord.ChessDBrecordPartial()
         instance.set_database(database)
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             for bookmark in sorted(grid.bookmarks):
                 instance.load_record(
                     database.get_primary_record(
@@ -55,7 +57,7 @@ def export_selected_positions(grid, filename):
         filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -75,5 +77,5 @@ def export_single_position(partialposition, filename):
     cql_statement.process_statement(partialposition)
     if not cql_statement.is_statement():
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(cql_statement.get_statement_text())

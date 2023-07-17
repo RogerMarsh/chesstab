@@ -9,6 +9,14 @@ from pgn_read.core.parser import PGN
 from . import chessrecord, filespec
 from .export_pgn_import_format import get_game_pgn_import_format
 
+# PGN specification states ascii but these export functions used the
+# default encoding before introduction of _ENCODING attribute.
+# PGN files were read as "iso-8859-1" encoding when _ENCODING attribute
+# was introduced.
+# _ENCODING = "ascii"
+# _ENCODING = "iso-8859-1"
+_ENCODING = "utf-8"
+
 
 def export_all_games_text(database, filename):
     """Export games in database to text file in internal record format."""
@@ -20,7 +28,7 @@ def export_all_games_text(database, filename):
         filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 instance.load_record(current_record)
@@ -46,7 +54,7 @@ def export_all_games_pgn(database, filename):
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 if current_record[0] != prev_date:
@@ -101,7 +109,7 @@ def export_all_games_pgn_import_format(database, filename):
         filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 try:
@@ -140,7 +148,7 @@ def export_all_games_pgn_no_comments(database, filename):
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 if current_record[0] != prev_date:
@@ -202,7 +210,7 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename):
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 if current_record[0] != prev_date:
@@ -264,7 +272,7 @@ def export_all_games_pgn_reduced_export_format(database, filename):
         filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
     )
     try:
-        with open(filename, "w") as gamesout:
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
             current_record = cursor.first()
             while current_record:
                 if current_record[0] != prev_date:
@@ -405,7 +413,7 @@ def export_selected_games_pgn_import_format(grid, filename):
 
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
             gamesout.write("\n\n")
@@ -509,7 +517,7 @@ def export_selected_games_pgn(grid, filename):
 
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in sorted(games):
             gamesout.write(game[0])
             gamesout.write("\n")
@@ -604,7 +612,7 @@ def export_selected_games_pgn_no_comments(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in sorted(games):
             gamesout.write(game[0])
             gamesout.write("\n")
@@ -709,7 +717,7 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in sorted(games):
             gamesout.write(game[0])
             gamesout.write("\n")
@@ -804,7 +812,7 @@ def export_selected_games_pgn_reduced_export_format(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in sorted(games):
             gamesout.write(game[0])
             gamesout.write("\n")
@@ -879,7 +887,7 @@ def export_selected_games_text(grid, filename):
             cursor.close()
     if len(games) == 0:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
             gamesout.write("\n")
@@ -894,7 +902,7 @@ def export_single_game_pgn_reduced_export_format(collected_game, filename):
     """
     if filename is None:
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_archive_movetext())
@@ -909,7 +917,7 @@ def export_single_game_pgn(collected_game, filename):
     """
     if filename is None:
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
@@ -929,7 +937,7 @@ def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
     """
     if filename is None:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
@@ -947,7 +955,7 @@ def export_single_game_pgn_no_comments(collected_game, filename):
     """
     if filename is None:
         return None
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(collected_game.get_seven_tag_roster_tags())
         gamesout.write("\n")
         gamesout.write(collected_game.get_non_seven_tag_roster_tags())
@@ -963,7 +971,7 @@ def export_single_game_pgn_import_format(collected_game, filename):
     """Export collected_game to pgn file in a PGN import format."""
     if filename is None:
         return
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(get_game_pgn_import_format(collected_game))
 
 
@@ -972,6 +980,6 @@ def export_single_game_text(collected_game, filename):
     if filename is None:
         return
     internal_format = next(PGN().read_games(collected_game.get_text_of_game()))
-    with open(filename, "w") as gamesout:
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(internal_format.get_text_of_game())
         gamesout.write("\n")

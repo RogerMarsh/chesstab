@@ -97,9 +97,9 @@ class AnalysisScore(Score):
         self.choice_number = 0
         self.choicestack = []
         self.position_number = 0
-        self.tagpositionmap = dict()
-        self.previousmovetags = dict()
-        self.nextmovetags = dict()
+        self.tagpositionmap = {}
+        self.previousmovetags = {}
+        self.nextmovetags = {}
 
     def _go_to_token(self, event=None):
         """Set position and highlighting for token under pointer in analysis.

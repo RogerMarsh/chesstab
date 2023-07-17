@@ -19,8 +19,11 @@ from ..core.engine import Engine
 from . import engine
 from .eventspec import EventSpec
 
-_win32_platform = sys.platform == "win32"
+# Eyeball logic wants these attribute names to be same style.
+# pylint logic disagrees.
+_WIN32_PLATFORM = sys.platform == "win32"
 _freebsd_platform = sys.platform.startswith("freebsd")
+
 del sys
 
 
@@ -52,7 +55,7 @@ class EngineEdit(engine.Engine):
     def _browse_engine(self, event=None):
         """Dialogue to replace chess engine definition in editor."""
         del event
-        if _win32_platform:
+        if _WIN32_PLATFORM:
             filetypes = (("Chess Engines", "*.exe"),)
         else:
             filetypes = ()

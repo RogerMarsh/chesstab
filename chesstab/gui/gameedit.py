@@ -300,7 +300,7 @@ class GameEdit(Game):
         self.ravstack = []
 
         self._allowed_chars_in_token = ""  # or an iterable of characters.
-        self.edit_move_context = dict()
+        self.edit_move_context = {}
 
         # Define popup menu for comment tokens.
         self.comment_popup = None
@@ -342,7 +342,8 @@ class GameEdit(Game):
     # These methods define event bindings.
 
     def _suppress_class_binding(self, event):
-        """Return 'break'"""
+        """Return 'break'."""
+        del event
         return "break"
 
     def _set_primary_activity_bindings(self, switch=True):

@@ -30,7 +30,7 @@ def get_saved_options(folder):
     if not os.path.isfile(optionsfilename):
         return None
     try:
-        with open(optionsfilename, "r") as optionsfile:
+        with open(optionsfilename, "r", encoding="utf-8") as optionsfile:
             return _extract_options(optionsfile)
     except OSError:
         pass
@@ -52,7 +52,7 @@ def save_options(folder, changes):
     if os.path.exists(optionsfilename):
         if not os.path.isfile(optionsfilename):
             return
-    with open(optionsfilename, "a+") as optionsfile:
+    with open(optionsfilename, "a+", encoding="utf-8") as optionsfile:
         defaults = _extract_options(optionsfile)
         olddefaults, newdefaults = changes
         for key, value in olddefaults.items():
@@ -101,11 +101,11 @@ def _extract_options(fileid):
         constants.MOVE_COLOR_NAME: None,
         constants.ALTERNATIVE_MOVE_COLOR_NAME: None,
         constants.VARIATION_COLOR_NAME: None,
-        constants.MOVES_PLAYED_IN_GAME_FONT: dict(),
-        constants.PIECES_ON_BOARD_FONT: dict(),
-        constants.WILDPIECES_ON_BOARD_FONT: dict(),
-        constants.LISTS_OF_GAMES_FONT: dict(),
-        constants.TAGS_VARIATIONS_COMMENTS_FONT: dict(),
+        constants.MOVES_PLAYED_IN_GAME_FONT: {},
+        constants.PIECES_ON_BOARD_FONT: {},
+        constants.WILDPIECES_ON_BOARD_FONT: {},
+        constants.LISTS_OF_GAMES_FONT: {},
+        constants.TAGS_VARIATIONS_COMMENTS_FONT: {},
     }
     for attr in fonts.modify_font_attributes:
         defaults[attr] = None

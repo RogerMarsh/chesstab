@@ -36,7 +36,6 @@ from ..core.filespec import (
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
 )
-from ..shared.archivedu import Archivedu
 from ..shared.alldu import chess_du_import
 
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
@@ -75,8 +74,8 @@ def chess_dptfastload(
     return status
 
 
-class ChessDatabaseDeferred(dptfastload_database.Database):
-    """Provide deferred update methods for a database of games of chess.
+class ChessDatabase(dptfastload_database.Database):
+    """Provide fast load deferred methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
 
@@ -88,6 +87,11 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
     # be gaps in the record number sequence due to long games preventing
     # all slots in a page being used.
     deferred_update_points = frozenset(_DEFERRED_UPDATE_POINTS)
+
+    # Override
+    # dptfastload_database.Database._take_backup_before_deferred_update
+    # while DPT archive() and delete_archive() methods absent.
+    _take_backup_before_deferred_update = False
 
     def __init__(
         self,
@@ -162,18 +166,7 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         """Open all files normally."""
         super().open_database()
 
-    def get_archive_names(self, files=()):
-        """Return specified files and existing operating system files."""
-        specs = {f for f in files if f in self.table}
-        names = [v.file for k, v in self.table.items() if k in specs]
-        exists = [
-            os.path.basename(n)
-            for n in names
-            if os.path.exists(".".join((n, "bz2")))
-        ]
-        return (names, exists)
-
-    def _get_pages_for_record_counts(self, counts=(0, 0)):
+    def get_pages_for_record_counts(self, counts=(0, 0)):
         """Return Table B and Table D pages needed for record counts."""
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         return (
@@ -245,7 +238,7 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         ).items():
             bsize = value["BSIZE"]
             bused = max(0, value["BHIGHPG"])
-            bneeded = self._get_pages_for_record_counts(
+            bneeded = self.get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[0]
             bincrease = min(bneeded * 2, bsize - bused)
@@ -308,7 +301,7 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         ).items():
             dsize = value["DSIZE"]
             dused = value["DPGSUSED"]
-            dneeded = self._get_pages_for_record_counts(
+            dneeded = self.get_pages_for_record_counts(
                 self._notional_record_counts[key]
             )[1]
             dincrease = min(dneeded * 2, dsize - dused)
@@ -442,7 +435,7 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         append_text("File space needed for import:")
         for filename, nr_count in self._notional_record_counts.items():
             append_text_only(filename)
-            b_pages, d_pages = self._get_pages_for_record_counts(nr_count)
+            b_pages, d_pages = self.get_pages_for_record_counts(nr_count)
             append_text_only(
                 " ".join(("Estimated", str(b_pages), "pages needed for data"))
             )
@@ -482,7 +475,3 @@ class ChessDatabaseDeferred(dptfastload_database.Database):
         )
         append_text_only("")
         append_text_only("")
-
-
-class ChessDatabase(Archivedu, ChessDatabaseDeferred):
-    """Provide single-step deferred update for a database of games of chess."""

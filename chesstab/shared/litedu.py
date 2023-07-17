@@ -12,10 +12,8 @@ to the gnu, ndbm, unqlite, and vedis, interfaces to their respective
 'key:value' databases.
 
 """
+from solentware_base.core.archivedu import Archivedu
 
-import os
-
-from .archivedu import Archivedu
 from .alldu import get_filespec
 from .dptcompatdu import DptCompatdu
 
@@ -33,7 +31,7 @@ class Litedu(DptCompatdu, Archivedu):
     # mro 'C, ..., Litedu, ..., <class defining database_file>, ..., object'.
     # Each C has a different <class defining database_file> with various
     # rules for generating the value.
-    database_file = None
+    database_file = None  # Put this in core._database.Database if anywhere.
 
     def __init__(self, databasefile, exception_class, **kargs):
         """Define chess database.
@@ -69,14 +67,3 @@ class Litedu(DptCompatdu, Archivedu):
 
         """
         return True
-
-    def get_archive_names(self, files=()):
-        """Return database file name and existing operating system files."""
-        del files
-        names = [self.database_file]
-        exists = [
-            os.path.basename(n)
-            for n in names
-            if os.path.exists(".".join((n, "bz2")))
-        ]
-        return (names, exists)

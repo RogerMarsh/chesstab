@@ -87,11 +87,11 @@ class IncreaseDataProcess:
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
-        day, time = datetime.datetime.isoformat(
+        day, hms = datetime.datetime.isoformat(
             datetime.datetime.today()
         ).split("T")
-        time = time.split(".")[0]
-        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+        hms = hms.split(".")[0]
+        self.report_queue.put("".join((day, " ", hms, "  ", text, "\n")))
 
     def _report_to_log_text_only(self, text):
         """Add text to report queue without timestamp."""
@@ -111,7 +111,7 @@ class IncreaseDataProcess:
         self.quit_event.wait()
 
     def _increase(self):
-        """Implementation of increase data size."""
+        """Increase data size in DPT games file."""
         database = self.database
         files = (GAMES_FILE_DEF,)
         database.open_context_prepare_import(files=files)
@@ -130,9 +130,9 @@ class IncreaseDataProcess:
             default_records = specification[DEFAULT_RECORDS]
             btod_factor = specification[BTOD_FACTOR]
             brecppg = table.filedesc[BRECPPG]
-            bdefault, ddefault = database._get_pages_for_record_counts(
+            bdefault = database.get_pages_for_record_counts(
                 (default_records, default_records)
-            )
+            )[0]
             bfree_recs = bfree * brecppg
             dfree_recs = (dfree * brecppg) // btod_factor
             blow = bfree + min(bdefault, bfree)
@@ -232,11 +232,11 @@ class IncreaseIndexProcess:
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
-        day, time = datetime.datetime.isoformat(
+        day, hms = datetime.datetime.isoformat(
             datetime.datetime.today()
         ).split("T")
-        time = time.split(".")[0]
-        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+        hms = hms.split(".")[0]
+        self.report_queue.put("".join((day, " ", hms, "  ", text, "\n")))
 
     def _report_to_log_text_only(self, text):
         """Add text to report queue without timestamp."""
@@ -256,7 +256,7 @@ class IncreaseIndexProcess:
         self.quit_event.wait()
 
     def _increase(self):
-        """Implementation of increase index size."""
+        """Increase index size in DPT games file."""
         database = self.database
         files = (GAMES_FILE_DEF,)
         database.open_context_prepare_import(files=(GAMES_FILE_DEF,))
@@ -275,9 +275,9 @@ class IncreaseIndexProcess:
             default_records = specification[DEFAULT_RECORDS]
             btod_factor = specification[BTOD_FACTOR]
             brecppg = table.filedesc[BRECPPG]
-            bdefault, ddefault = database._get_pages_for_record_counts(
+            ddefault = database.get_pages_for_record_counts(
                 (default_records, default_records)
-            )
+            )[1]
             bfree_recs = bfree * brecppg
             dfree_recs = (dfree * brecppg) // btod_factor
             dlow = dfree + min(ddefault, dfree)
@@ -365,12 +365,13 @@ class IncreaseIndexProcess:
 class DeferredUpdateProcess:
     """Define a process to do a deferred update task."""
 
-    def __init__(self, database, method, report_queue, quit_event):
+    def __init__(self, database, method, report_queue, quit_event, increases):
         """Provide queues for communication with GUI."""
         self.database = database
         self.method = method
         self.report_queue = report_queue
         self.quit_event = quit_event
+        self.increases = increases
         self.process = multiprocessing.Process(
             target=self._run_import,
             args=(),
@@ -378,11 +379,11 @@ class DeferredUpdateProcess:
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
-        day, time = datetime.datetime.isoformat(
+        day, hms = datetime.datetime.isoformat(
             datetime.datetime.today()
         ).split("T")
-        time = time.split(".")[0]
-        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+        hms = hms.split(".")[0]
+        self.report_queue.put("".join((day, " ", hms, "  ", text, "\n")))
 
     def _report_to_log_text_only(self, text):
         """Add text to report queue without timestamp."""
@@ -390,27 +391,29 @@ class DeferredUpdateProcess:
 
     def _run_import(self):
         """Invoke method to do the deferred update and display job status."""
-        status = self.method(
+        self.method(
             sys.argv[1],
             sys.argv[2:],
-            self.database.get_file_sizes(),
+            file=GAMES_FILE_DEF,
             reporter=_Reporter(
                 self._report_to_log,
                 self._report_to_log_text_only,
             ),
             quit_event=self.quit_event,
+            increases=self.increases,
         )
 
 
 class DeferredUpdateEstimateProcess:
     """Define a process to do a deferred update estimate task."""
 
-    def __init__(self, database, sample, report_queue, quit_event):
+    def __init__(self, database, sample, report_queue, quit_event, increases):
         """Provide queues for communication with GUI."""
         self.database = database
         self.sample = sample
         self.report_queue = report_queue
         self.quit_event = quit_event
+        self.increases = increases
         self.estimate_data = None
         self.process = multiprocessing.Process(
             target=self._allow_import,
@@ -419,11 +422,11 @@ class DeferredUpdateEstimateProcess:
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
-        day, time = datetime.datetime.isoformat(
+        day, hms = datetime.datetime.isoformat(
             datetime.datetime.today()
         ).split("T")
-        time = time.split(".")[0]
-        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+        hms = hms.split(".")[0]
+        self.report_queue.put("".join((day, " ", hms, "  ", text, "\n")))
 
     def _report_to_log_text_only(self, text):
         """Add text to report queue without timestamp."""
@@ -457,6 +460,7 @@ class DeferredUpdateEstimateProcess:
                         self._report_to_log,
                         self._report_to_log_text_only,
                     ),
+                    self.increases,
                 )
                 self.quit_event.set()
                 return True
@@ -469,7 +473,7 @@ class DeferredUpdateEstimateProcess:
     def _estimate_games_in_import(self):
         """Estimate import size from the first sample games in import files."""
         self.estimate_data = False
-        text_file_size = sum([os.path.getsize(pp) for pp in sys.argv[2:]])
+        text_file_size = sum(os.path.getsize(pp) for pp in sys.argv[2:])
         reader = PGN(game_class=GameUpdateEstimate)
         errorcount = 0
         totallen = 0
@@ -734,8 +738,10 @@ class ChessDeferredUpdate(Bindings):
 
         """
         super().__init__()
+        self.set_error_file_name(os.path.join(sys.argv[1], ERROR_LOG))
         self.report_queue = multiprocessing.Queue()
         self.quit_event = multiprocessing.Event()
+        self.increases = multiprocessing.Array("i", [0, 0])
         self.dumethod = deferred_update_method
         self.sample = sample
         self._import_done = False
@@ -859,6 +865,7 @@ class ChessDeferredUpdate(Bindings):
             self.sample,
             self.report_queue,
             self.quit_event,
+            self.increases,
         )
         self.deferred_update.process.start()
         self.quit_thread = multiprocessing.dummy.DummyProcess(
@@ -878,7 +885,7 @@ class ChessDeferredUpdate(Bindings):
         # An alternative implementation of this difference calls a method
         # add_import_buttons() rather than add the buttons if the test
         # here returns True.  Two versions of add_import_buttons() are
-        # defined in classes ..dpt.chessdptdu.ChessDatabaseDeferred and
+        # defined in classes ..dpt.chessdptdu.ChessDatabase and
         # ..shared.dptcompatdu.DptCompatdu and the class hierarchy does
         # the test implemented here.  At present that implementation fails
         # because module pickling errors occur for the import action if
@@ -893,11 +900,11 @@ class ChessDeferredUpdate(Bindings):
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
-        day, time = datetime.datetime.isoformat(
+        day, hms = datetime.datetime.isoformat(
             datetime.datetime.today()
         ).split("T")
-        time = time.split(".")[0]
-        self.report_queue.put("".join((day, " ", time, "  ", text, "\n")))
+        hms = hms.split(".")[0]
+        self.report_queue.put("".join((day, " ", hms, "  ", text, "\n")))
 
     def _report_to_log_text_only(self, text):
         """Add text to report queue without timestamp."""
@@ -1058,18 +1065,13 @@ class ChessDeferredUpdate(Bindings):
             self.dumethod,
             self.report_queue,
             self.quit_event,
+            self.increases,
         )
         self.deferred_update.process.start()
         self.quit_thread = multiprocessing.dummy.DummyProcess(
             target=self._deferred_update_join
         )
         self.quit_thread.start()
-
-    # Override ChessException method as ChessUI class is not used.
-    # May be wrong now solentware_misc Bindings is used.
-    def get_error_file_name(self):
-        """Return the exception report file name."""
-        return os.path.join(sys.argv[1], ERROR_LOG)
 
     def _stop_task(self, event=None):
         """Stop task.
@@ -1127,7 +1129,11 @@ class ChessDeferredUpdate(Bindings):
 
 def write_error_to_log():
     """Write the exception to the error log with a time stamp."""
-    with open(os.path.join(sys.argv[1], ERROR_LOG), "a") as file:
+    with open(
+        os.path.join(sys.argv[1], ERROR_LOG),
+        "a",
+        encoding="utf-8",
+    ) as file:
         file.write(
             "".join(
                 (

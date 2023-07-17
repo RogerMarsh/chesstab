@@ -25,7 +25,7 @@ import tkinter
 import sys
 import os
 
-_win32_platform = sys.platform == "win32"
+_WIN32_PLATFORM = sys.platform == "win32"
 del sys
 
 _amd64 = (
@@ -212,7 +212,7 @@ class DisplayItems:
         try:
             gain = widget.winfo_pathname(widget.winfo_id())
         except tkinter.TclError:
-            if not _win32_platform or not _amd64:
+            if not _WIN32_PLATFORM or not _amd64:
                 raise
             gain = ".".join((widget.winfo_parent(), widget.winfo_name()))
 
@@ -229,7 +229,7 @@ class DisplayItems:
                     gainfocus = item
                     break
             except tkinter.TclError:
-                if not _win32_platform or not _amd64:
+                if not _WIN32_PLATFORM or not _amd64:
                     raise
                 if gain.startswith(
                     ".".join(

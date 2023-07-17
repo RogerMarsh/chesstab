@@ -50,7 +50,7 @@ class UCI:
     def __init__(self):
         """Set data stuctures to control multiple UCI chess engines."""
         self.engine_counter = 0
-        self.uci_drivers_index = dict()
+        self.uci_drivers_index = {}
 
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
         # under Wine on FreeBSD 10.1 by disabling the UCI functions.
@@ -69,11 +69,11 @@ class UCI:
         #    self.uci_drivers_reply = None
         self.uci_drivers_reply = multiprocessing.Queue()
 
-        self.uci_drivers = dict()
-        self.uci_drivers_fen = dict()
-        self.uci_active_engines = dict()
+        self.uci_drivers = {}
+        self.uci_drivers_fen = {}
+        self.uci_active_engines = {}
         self.ui_analysis_queue = None
-        self.position_analysis = dict()
+        self.position_analysis = {}
         self._use_ucinewgame = True
         self._clear_hash = True
         self._go_depth = 10
@@ -86,9 +86,9 @@ class UCI:
         self.analysis_data_source = None
 
         # These are new and will replace some of above attributes.
-        self.positions_pending = dict()
-        self.engine_queues = dict()
-        self.clear_hash_after_bestmove = dict()
+        self.positions_pending = {}
+        self.engine_queues = {}
+        self.clear_hash_after_bestmove = {}
         self.set_option_on_empty_queues = set()
 
     def kill_engine(self, number):
@@ -565,7 +565,7 @@ class UCI:
 
         eng_a = Analysis()
         eng_a.scale = {
-            engine_name: (min([int(d[2]) for d in lines]), len(lines))
+            engine_name: (min(int(d[2]) for d in lines), len(lines))
         }
         eng_a.position = fen
         eng_a.variations = {engine_name: [(d[1], d[3]) for d in lines]}

@@ -6,10 +6,8 @@
 
 from solentware_base import lmdbdu_database
 
-from ..shared.lmdbdudb import LmdbduDb
-from ..shared.lmdbdu import Lmdbdu
+from ..shared.litedu import Litedu
 from ..shared.alldu import chess_du, Alldu
-from ..core import filespec
 
 
 class ChesslmdbduError(Exception):
@@ -24,7 +22,7 @@ def chess_database_du(dbpath, *args, **kwargs):
     return True
 
 
-class ChessDatabase(Alldu, LmdbduDb, Lmdbdu, lmdbdu_database.Database):
+class ChessDatabase(Alldu, Litedu, lmdbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):

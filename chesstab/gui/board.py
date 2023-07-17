@@ -202,8 +202,8 @@ class Board(Bindings):
         if boardfont:
             self.boardfont = boardfont
 
-        self.squares = dict()
-        self.boardsquares = dict()
+        self.squares = {}
+        self.boardsquares = {}
         # self.boardfont is name of named font or a font instance
         try:
             self.font = tkinter.font.nametofont(self.boardfont).copy()
@@ -262,8 +262,7 @@ class Board(Bindings):
             piece_chars = _piece_chars[0]
         else:
             piece_chars = _piece_chars[1]
-        for index in self.squares:
-            piece = self.squares[index]
+        for index, piece in self.squares.items():
             if piece in FEN_WHITE_PIECES:
                 pcolor = self.whitecolor
             elif piece in FEN_BLACK_PIECES:

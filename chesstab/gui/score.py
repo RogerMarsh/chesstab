@@ -224,9 +224,9 @@ class Score(SharedTextScore, BlankText):
         self.choice_number = 0
         self.choicestack = []
         self.position_number = 0
-        self.tagpositionmap = dict()
-        self.previousmovetags = dict()
-        self.nextmovetags = dict()
+        self.tagpositionmap = {}
+        self.previousmovetags = {}
+        self.nextmovetags = {}
 
         # PGN parser creates a gameclass instance for game data structure and
         # binds it to collected_game attribute.

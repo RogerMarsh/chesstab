@@ -1572,15 +1572,13 @@ class Chess(Bindings):
             )
             return
         if sum(
-            [
-                len(i.stack)
-                for i in (
-                    self.ui.game_items,
-                    self.ui.repertoire_items,
-                    self.ui.partial_items,
-                    self.ui.selection_items,
-                )
-            ]
+            len(i.stack)
+            for i in (
+                self.ui.game_items,
+                self.ui.repertoire_items,
+                self.ui.partial_items,
+                self.ui.selection_items,
+            )
         ):
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
@@ -1708,17 +1706,18 @@ class Chess(Bindings):
                 (
                     self._try_command_after_idle,
                     (after_completion, self.root),
-                    dict(),
+                    {},
                 )
             )
 
         def after_completion():
             returncode = self.ui.get_import_subprocess().returncode
             names, archives, guards = self.opendatabase.get_archive_names(
-                files=(GAMES_FILE_DEF,)
+                file=GAMES_FILE_DEF
             )
-            if len(guards) != len(archives):
-                # Failed or cancelled while taking backups
+
+            # Failed or cancelled while taking backups.
+            if guards or archives:
                 if returncode == 0:
                     msg = "was cancelled "
                 else:
@@ -1732,76 +1731,54 @@ class Chess(Bindings):
                             msg,
                             "before completion of backups.",
                             "\n\nThe database has not been changed and will ",
-                            "be opened after deleting these backups.",
+                            "not be opened.",
+                            "\n\nRestore the database from a backup, either ",
+                            "from the one just taken or from the regular ",
+                            "system backup sequence.",
                         )
                     ),
                 )
-                self._tidy_up_after_import(tidy_backups, names)
                 return
-            if len(archives) == 0:
-                # Succeeded, or failed with no backups
-                if returncode != 0:
-                    # Failed with no backups
-                    tkinter.messagebox.showinfo(
-                        parent=self._get_toplevel(),
-                        title="Import",
-                        message="".join(
-                            (
-                                "The import failed.\n\nBackups were not ",
-                                "taken so the database cannot be restored ",
-                                "and may not be usable.",
-                            )
-                        ),
-                    )
-                    self._tidy_up_after_import(dump_database, names)
-                    return
-                oaiwb = self.opendatabase.open_after_import_without_backups
-                try:
-                    action = oaiwb(files=(GAMES_FILE_DEF,))
-                except self.opendatabase.__class__.SegmentSizeError:
-                    action = oaiwb(files=(GAMES_FILE_DEF,))
-                if action is None:
-                    # Database full
-                    self.statusbar.set_status_text(text="Database full")
-                elif action is False:
-                    # Unable to open database files
-                    self._tidy_up_after_import(dump_database, names)
-                elif action is True:
-                    # Succeeded
-                    self.ui.set_import_subprocess()
-                    self._refresh_grids_after_import()
-                    self.statusbar.set_status_text(text="")
-                else:
-                    # Failed
-                    self.statusbar.set_status_text(text=action)
+
+            # Failed with no backups.
+            if returncode != 0:
+                tkinter.messagebox.showinfo(
+                    parent=self._get_toplevel(),
+                    title="Import",
+                    message="".join(
+                        (
+                            "The import failed.\n\nBackups were not ",
+                            "taken so the database cannot be restored ",
+                            "and may not be usable.",
+                        )
+                    ),
+                )
                 return
-            # Succeeded, or failed with backups
+
+            oaiwb = self.opendatabase.open_after_import_without_backups
             try:
-                action = self.opendatabase.open_after_import_with_backups()
+                action = oaiwb(files=(GAMES_FILE_DEF,))
             except self.opendatabase.__class__.SegmentSizeError:
-                action = self.opendatabase.open_after_import_with_backups()
+                action = oaiwb(files=(GAMES_FILE_DEF,))
+
+            # Database full (DPT only).
             if action is None:
-                # Database full
-                self.opendatabase.save_broken_database_details(
-                    files=(GAMES_FILE_DEF,)
-                )
-                self.opendatabase.close_database_contexts()
-                self._tidy_up_after_import(
-                    restore_backups_and_retry_imports, names, (GAMES_FILE_DEF,)
-                )
+                self.statusbar.set_status_text(text="Database full")
+
+            # Unable to open database files.
             elif action is False:
-                # Unable to open database files
-                self._tidy_up_after_import(
-                    save_broken_and_restore_backups, names
-                )
+                self._tidy_up_after_import(dump_database, names)
+
+            # Import succeeded.
             elif action is True:
-                # Succeeded
                 self.ui.set_import_subprocess()
                 self._refresh_grids_after_import()
                 self.statusbar.set_status_text(text="")
+
+            # Import failed (other than DPT database full).
             else:
-                # Failed
-                self._tidy_up_after_import(restore_backups, names)
+                self.statusbar.set_status_text(text=action)
+
             return
 
         def dump_database(names):
@@ -1813,56 +1790,6 @@ class Chess(Bindings):
             self.ui.set_import_subprocess()
             self._refresh_grids_after_import()
             self.statusbar.set_status_text(text="Broken database")
-
-        def restore_backups(names):
-            self.statusbar.set_status_text(
-                text="Please wait while restoring database from backups"
-            )
-            self.opendatabase.restore_backups(names=names)
-            self.statusbar.set_status_text(
-                text="Please wait while deleting backups"
-            )
-            self.opendatabase.delete_backups(names=names)
-            self.ui.set_import_subprocess()
-            self._refresh_grids_after_import()
-            self.statusbar.set_status_text(text="")
-
-        def restore_backups_and_retry_imports(names, files):
-            self.statusbar.set_status_text(
-                text="Please wait while restoring database from backups"
-            )
-            self.opendatabase.restore_backups(names=names)
-            self.statusbar.set_status_text(
-                text="Please wait while deleting backups"
-            )
-            self.opendatabase.delete_backups(names=names)
-            self._retry_import(files)
-
-        def save_broken_and_restore_backups(names):
-            self.statusbar.set_status_text(
-                text="Please wait while saving copy of broken database"
-            )
-            self.opendatabase.dump_database(names=names)
-            self.statusbar.set_status_text(
-                text="Please wait while restoring database from backups"
-            )
-            self.opendatabase.restore_backups(names=names)
-            self.statusbar.set_status_text(
-                text="Please wait while deleting backups"
-            )
-            self.opendatabase.delete_backups(names=names)
-            self.ui.set_import_subprocess()
-            self._refresh_grids_after_import()
-            self.statusbar.set_status_text(text="")
-
-        def tidy_backups(names):
-            self.statusbar.set_status_text(
-                text="Please wait while deleting backups"
-            )
-            self.opendatabase.delete_backups(names=names)
-            self.ui.set_import_subprocess()
-            self._refresh_grids_after_import()
-            self.statusbar.set_status_text(text="")
 
         self.queue.put_method(self.try_thread(completed, self.root))
 

@@ -83,7 +83,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 raise
             raise ChessdptError("DPT description invalid") from error
 
-        self._broken_sizes = dict()
+        self._broken_sizes = {}
 
     def use_deferred_update_process(self, **kargs):
         """Return path to deferred update module."""
@@ -93,17 +93,17 @@ class ChessDatabase(database.Database, dpt_database.Database):
         """Increase file sizes taking file full into account."""
         # Increase the size of files allowing for the file full condition
         # which occurred while doing a deferred update for import.
-        for dbn in self._broken_sizes:
+        for dbn, broken_sizes in self._broken_sizes.items():
             self.table[dbn].increase_size_of_full_file(
                 self.dbenv,
                 self.table[dbn].get_file_parameters(self.dbenv),
-                self._broken_sizes[dbn],
+                broken_sizes,
             )
 
     def open_database(self, files=None):
         """Return True if all files are opened in Normal mode (FISTAT == 0)."""
         super().open_database(files=files)
-        fistat = dict()
+        fistat = {}
         for dbo in self.table.values():
             fistat[dbo] = dbo.get_file_parameters(self.dbenv)["FISTAT"]
         for dbo in self.table.values():
@@ -145,18 +145,17 @@ class ChessDatabase(database.Database, dpt_database.Database):
             names.append(value.file)
         return tuple(names)
 
-    def get_archive_names(self, files=()):
+    def get_archive_names(self, file=None):
         """Return names and operating system files for archives and guards."""
-        specs = {f for f in files if f in self.table}
-        names = [v.file for k, v in self.table.items() if k in specs]
-        archives = dict()
-        guards = dict()
+        names = [v.file for k, v in self.table.items() if k == file]
+        archives = {}
+        guards = {}
         for name in names:
             archiveguard = ".".join((name, "grd"))
             archivefile = ".".join((name, "bz2"))
-            for box, file in ((archives, archivefile), (guards, archiveguard)):
-                if os.path.exists(file):
-                    box[name] = file
+            for box, arch in ((archives, archivefile), (guards, archiveguard)):
+                if os.path.exists(arch):
+                    box[name] = arch
         return (names, archives, guards)
 
     def open_after_import_without_backups(self, files=()):
@@ -167,8 +166,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
 
         """
         super().open_database()
-        fistat = dict()
-        file_sizes_for_import = dict()
+        fistat = {}
+        file_sizes_for_import = {}
         for dbn, dbo in self.table.items():
             gfp = dbo.get_file_parameters(self.dbenv)
             fistat[dbo] = gfp["FISTAT"]
@@ -185,11 +184,11 @@ class ChessDatabase(database.Database, dpt_database.Database):
             return True
         # At least one file is not in Normal state after Import.
         # Check the files that had imports applied
-        for dbn in file_sizes_for_import:
+        for file_sizes in file_sizes_for_import.values():
             # pylint message unused variable.
             # Document what seemed to matter at some point.
-            # status = file_sizes_for_import[dbn]["FISTAT"][0]
-            flags = file_sizes_for_import[dbn]["FIFLAGS"]
+            # status = file_sizes["FISTAT"][0]
+            flags = file_sizes["FIFLAGS"]
             if not (
                 (flags & FIFLAGS_FULL_TABLEB) or (flags & FIFLAGS_FULL_TABLED)
             ):
@@ -257,8 +256,8 @@ class ChessDatabase(database.Database, dpt_database.Database):
         super().open_database()
 
         # open_database() call after completion of Import sequence
-        fistat = dict()
-        file_sizes_for_import = dict()
+        fistat = {}
+        file_sizes_for_import = {}
         for dbn, dbo in self.table.items():
             gfp = dbo.get_file_parameters(self.dbenv)
             fistat[dbo] = gfp["FISTAT"]
@@ -273,9 +272,9 @@ class ChessDatabase(database.Database, dpt_database.Database):
             return True
         # At least one file is not in Normal state after Import.
         # Check the files that had imports applied
-        for dbn in file_sizes_for_import:
-            status = file_sizes_for_import[dbn]["FISTAT"][0]
-            flags = file_sizes_for_import[dbn]["FIFLAGS"]
+        for file_sizes in file_sizes_for_import.values():
+            status = file_sizes["FISTAT"][0]
+            flags = file_sizes["FIFLAGS"]
             if not (
                 (status == 0)
                 or (status == FISTAT_DEFERRED_UPDATES)

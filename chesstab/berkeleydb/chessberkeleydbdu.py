@@ -2,7 +2,10 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB."""
+"""Chess database update using custom deferred update for Berkeley DB.
+
+This module uses the berkeleydb interface.
+"""
 
 import berkeleydb.db
 
