@@ -4,8 +4,6 @@
 
 """Chess database using Symas LMMD."""
 
-import os
-
 from solentware_base import lmdb_database
 
 from ..core.filespec import FileSpec
@@ -15,9 +13,7 @@ from ..basecore import database
 class ChessDatabase(database.Database, lmdb_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchesslmdbdu.py"
-    )
+    _deferred_update_process = "chesstab.lmdb.chesslmdbdu"
 
     def __init__(
         self,

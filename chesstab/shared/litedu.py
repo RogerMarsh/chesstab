@@ -2,28 +2,25 @@
 # Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""The Litedu class for methods shared by <*>lite and dbm interface modules.
+"""Provide PGN import estimating and backup for non-DPT interface modules.
 
-Most of the interface modules that can use the Litedu module have 'lite' in
-their name.
+These other modules, except Symas LMMD, take space as needed so methods
+which 'do nothing' are provided.
 
-This module is relevant to the apsw and sqlite3 interfaces to Sqlite3, and
-to the gnu, ndbm, unqlite, and vedis, interfaces to their respective
-'key:value' databases.
+For Symas LMMD it is possible to set an arbitrarly large size and then
+reclaim any unused space by setting an arbitrarly low size.  The size
+determines how large the database can get before giving a 'full' error.
 
 """
 from solentware_base.core.archivedu import Archivedu
 
 from .alldu import get_filespec
-from .dptcompatdu import DptCompatdu
 
 
-class Litedu(DptCompatdu, Archivedu):
-    """Provide deferred update methods shared by various interfaces.
+class Litedu(Archivedu):
+    """Provide methods for compatibility with DPT interface.
 
-    All the supported engines put the whole database in a single file so
-    can use the same methods to manage temporary backups which may exist
-    while opening and checking the database.
+    The methods have their DPT-specific code removed.
     """
 
     # Fix pylint no-member message E1101.
@@ -60,10 +57,29 @@ class Litedu(DptCompatdu, Archivedu):
             ) from error
 
     @staticmethod
+    def get_file_sizes():
+        """Return an empty dictionary.
+
+        No sizes needed.  Method exists for DPT compatibility.
+
+        """
+        return {}
+
+    def report_plans_for_estimate(self, estimates, reporter, increases):
+        """Remind user to check estimated time to do import.
+
+        No planning needed.  Method exists for DPT compatibility.
+
+        """
+        del estimates, increases
+        reporter.append_text_only("")
+        reporter.append_text("Ready to start import.")
+
+    @staticmethod
     def open_context_prepare_import():
         """Return True.
 
-        No preparation actions thet need database open for vedis.
+        No preparation actions that need database open for non-DPT databases.
 
         """
         return True

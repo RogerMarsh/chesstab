@@ -4,8 +4,6 @@
 
 """Chess database using sqlite3."""
 
-import os
-
 # from sqlite3 import IntegrityError
 
 from solentware_base import sqlite3_database
@@ -24,9 +22,7 @@ class ChessDatabaseError(Exception):
 class ChessDatabase(database.Database, sqlite3_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchesssqlite3du.py"
-    )
+    _deferred_update_process = "chesstab.sqlite.chesssqlite3du"
 
     def __init__(
         self,

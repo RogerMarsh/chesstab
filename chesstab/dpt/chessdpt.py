@@ -15,79 +15,28 @@ import tkinter.messagebox
 from dptdb.dptapi import (
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
-    FISTAT_DEFERRED_UPDATES,
 )
 
-from solentware_base import dpt_database
-from solentware_base.core.constants import FILEDESC
-
-from .filespec import FileSpec
-from ..basecore import database
 from .. import APPLICATION_NAME
+from . import chessdptnofistat
 
 
-class ChessdptError(Exception):
-    """Exception class for chessdpt module."""
+class ChessDatabase(chessdptnofistat.ChessDatabase):
+    """Provide access to a database of games of chess.
 
+    The open_database() method is extended in a number of ways, all but
+    one with a new name.  These methods take the FISTAT flags into
+    account when attempting to open the database.
+    """
 
-class ChessDatabase(database.Database, dpt_database.Database):
-    """Provide access to a database of games of chess."""
-
-    # The default for DPT.  See use_deferred_update_process method for cases
-    # where this is not used: normally delegated to superclass to pick the
-    # default.
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchessdptdu.py"
-    )
-
-    def __init__(
-        self,
-        databasefolder,
-        use_specification_items=None,
-        dpt_records=None,
-        **kargs,
-    ):
+    def __init__(self, *args, **kwargs):
         """Define chess database.
 
-        **kargs
-        allowcreate == False - remove file descriptions from FileSpec so
-        that superclass cannot create them.
-        Other arguments are passed through to superclass __init__.
+        See superclass for argument descriptions.
 
         """
-        try:
-            sysprint = kargs.pop("sysprint")
-        except KeyError:
-            sysprint = "CONSOLE"
-        ddnames = FileSpec(
-            use_specification_items=use_specification_items,
-            dpt_records=dpt_records,
-        )
-
-        if not kargs.get("allowcreate", False):
-            try:
-                for dd_name in ddnames:
-                    if FILEDESC in ddnames[dd_name]:
-                        del ddnames[dd_name][FILEDESC]
-            except Exception as error:
-                if __name__ == "__main__":
-                    raise
-                raise ChessdptError("DPT description invalid") from error
-
-        try:
-            super().__init__(
-                ddnames, databasefolder, sysprint=sysprint, **kargs
-            )
-        except ChessdptError as error:
-            if __name__ == "__main__":
-                raise
-            raise ChessdptError("DPT description invalid") from error
-
+        super().__init__(*args, **kwargs)
         self._broken_sizes = {}
-
-    def use_deferred_update_process(self, **kargs):
-        """Return path to deferred update module."""
-        return super().use_deferred_update_process(**kargs)
 
     def adjust_database_for_retry_import(self, files):
         """Increase file sizes taking file full into account."""
@@ -158,7 +107,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     box[name] = arch
         return (names, archives, guards)
 
-    def open_after_import_without_backups(self, files=()):
+    def open_after_import(self, files=()):
         """Return open context after doing database engine specific actions.
 
         For DPT clear the file sizes before import area if the database was
@@ -205,14 +154,11 @@ class ChessDatabase(database.Database, dpt_database.Database):
                         "The import failed.\n\n",
                         APPLICATION_NAME,
                         " has opened the database but some of the files are ",
-                        "full and backups were not taken, so cannot offer ",
-                        "the option of retrying the import with a larger ",
-                        "file, and cannot restore the database.  The ",
-                        "database may not be usable.",
+                        "full.  The database may not be usable.",
                     )
                 ),
             )
-            self.close_database()
+            # self.close_database()
             return None
         # At least one file is not in Normal state.
         # None of these files had deferred updates for Import or the state does
@@ -223,7 +169,7 @@ class ChessDatabase(database.Database, dpt_database.Database):
                 for dbo in self.table.values()
             ]
         )
-        action = tkinter.messagebox.askyesno(
+        tkinter.messagebox.showinfo(
             title="Open",
             message="".join(
                 (
@@ -232,106 +178,13 @@ class ChessDatabase(database.Database, dpt_database.Database):
                     "not in the Normal state.\n\n",
                     report,
                     "\n\nAt least one of these files is neither just ",
-                    "marked Deferred Update nor marked Full, and backups ",
-                    "were not taken, so ",
-                    APPLICATION_NAME,
-                    " is not offering the option of ",
-                    "retrying the import with a larger file.\n\nDo you ",
-                    "want to save a copy of the broken database?",
+                    "marked Deferred Update nor marked Full.  The ",
+                    "database may not be usable.",
                 )
             ),
         )
-        self.close_database()
-        if not action:
-            return "Import failed"
-        return False
-
-    def open_after_import_with_backups(self, files=()):
-        """Return open context after doing database engine specific actions.
-
-        For DPT clear the file sizes before import area if the database was
-        opened successfully as there is no need to retry the import.
-
-        """
-        super().open_database()
-
-        # open_database() call after completion of Import sequence
-        fistat = {}
-        file_sizes_for_import = {}
-        for dbn, dbo in self.table.items():
-            gfp = dbo.get_file_parameters(self.dbenv)
-            fistat[dbo] = gfp["FISTAT"]
-            if dbn in files:
-                file_sizes_for_import[dbn] = gfp
-        for dbo in self.table.values():
-            if fistat[dbo][0] != 0:
-                break
-        else:
-            self.increase_database_size(files=None)
-            self.mark_partial_positions_to_be_recalculated()
-            return True
-        # At least one file is not in Normal state after Import.
-        # Check the files that had imports applied
-        for file_sizes in file_sizes_for_import.values():
-            status = file_sizes["FISTAT"][0]
-            flags = file_sizes["FIFLAGS"]
-            if not (
-                (status == 0)
-                or (status == FISTAT_DEFERRED_UPDATES)
-                or (flags & FIFLAGS_FULL_TABLEB)
-                or (flags & FIFLAGS_FULL_TABLED)
-            ):
-                break
-        else:
-            # The file states are consistent with the possibility that the
-            # import failed because at least one file was too small.
-            # The file size information is kept for calculating an increase
-            # in file size before trying the import again.
-            if tkinter.messagebox.askyesno(
-                title="Retry Import",
-                message="".join(
-                    (
-                        "The import failed because the games file was filled.",
-                        "\n\nThe file will be restored from backups.\n\nDo ",
-                        "you want to retry the import with more space (20%) ",
-                        "allocated to the games file?",
-                    )
-                ),
-            ):
-                return None
-            self.close_database()
-            return "Restore without retry"
-        # At least one file is not in Normal state.
-        # None of these files had deferred updates for Import or the state does
-        # not imply a file full condition where deferred updates occured.
-        report = "\n".join(
-            [
-                "\t".join((os.path.basename(dbo.file), fistat[dbo][1]))
-                for dbo in self.table.values()
-            ]
-        )
-        action = tkinter.messagebox.askyesno(
-            title="Open",
-            message="".join(
-                (
-                    APPLICATION_NAME,
-                    " has opened the database but some of the files are ",
-                    "not in the Normal state.\n\n",
-                    report,
-                    "\n\nAt least one of these files is neither just ",
-                    "marked Deferred Update nor marked Full so ",
-                    APPLICATION_NAME,
-                    " is not offering the option of retrying ",
-                    "the import with a larger file.\n\nDo you want to save a ",
-                    "copy of the broken database before restoring from ",
-                    "backups?",
-                )
-            ),
-        )
-        self.close_database()
-        if not action:
-            return "Import failed"
-        return False
+        # self.close_database()
+        return True
 
     def save_broken_database_details(self, files=()):
         """Save database engine specific detail of broken files to be restored.

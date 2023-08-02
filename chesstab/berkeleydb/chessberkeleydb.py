@@ -10,8 +10,6 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-import os
-
 # pylint will give import-error message if berkeleydb is not installed.
 # It is reasonable to not install Python package 'berkeleydb'.
 # The importlib module is used to import chessberkeleydb if needed.
@@ -39,9 +37,7 @@ from ..basecore import database
 class ChessDatabase(database.Database, berkeleydb_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchessberkeleydbdu.py"
-    )
+    _deferred_update_process = "chesstab.berkeleydb.chessberkeleydbdu"
 
     def __init__(
         self,

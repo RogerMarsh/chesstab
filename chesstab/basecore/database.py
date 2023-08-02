@@ -19,13 +19,12 @@ from .. import APPLICATION_NAME, ERROR_LOG
 class Database:
     """Define methods which are common to all database engine interfaces."""
 
-    def use_deferred_update_process(self, **kargs):
+    def use_deferred_update_process(self):
         """Return path to deferred update module.
 
         **kargs - soak up any arguments other database engines need.
 
         """
-        del kargs
         return self._deferred_update_process
 
     def open_database(self, files=None):
@@ -154,19 +153,7 @@ class Database:
                 box[self.database_file] = arch
         return ([file], archives, guards)
 
-    def open_after_import_without_backups(self, files=()):
-        """Return True after doing database engine specific open actions.
-
-        For SQLite3 and Berkeley DB just call open_database.
-
-        """
-        del files
-        super().open_database()
-
-        # Return True to fit behaviour of chessdpt module version of method.
-        return True
-
-    def open_after_import_with_backups(self, files=()):
+    def open_after_import(self, files=()):
         """Return True after doing database engine specific open actions.
 
         For SQLite3 and Berkeley DB just call open_database.

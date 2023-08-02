@@ -18,11 +18,17 @@ from ..core.chessrecord import ChessDBrecordGameImport
 from .. import ERROR_LOG, APPLICATION_NAME
 
 
-def chess_du_import(
-    cdb, pgnpaths, file=None, reporter=None, quit_event=None, increases=None
+# This function is not absorbed in chess_du_import because the database
+# has to be open for DPT backup, but not in the mode used to do an
+# import.
+def chess_du_backup_before_import(
+    cdb,
+    file=None,
+    reporter=None,
+    **kwargs,
 ):
-    """Import games from pgnpaths into open database cdb."""
-    importer = ChessDBrecordGameImport()
+    """Backup database cdb before import."""
+    del kwargs
     if cdb.take_backup_before_deferred_update:
         if reporter is not None:
             reporter.append_text_only("")
@@ -34,9 +40,47 @@ def chess_du_import(
             raise
         if reporter is not None:
             reporter.append_text("Backup completed.")
+
+
+# This function is not absorbed in chess_du_import because in DPT the
+# absence of 'file full' conditions has to be confirmed before deleting
+# the backups.
+def chess_du_delete_backup_after_import(
+    cdb,
+    file=None,
+    reporter=None,
+    **kwargs,
+):
+    """Delete backup of database cdb after import."""
+    del kwargs
+    if cdb.take_backup_before_deferred_update:
+        if reporter is not None:
+            reporter.append_text("Delete backup for import.")
+        cdb.delete_archive(name=file)
+        if reporter is not None:
+            reporter.append_text("Backup deleted.")
+            reporter.append_text_only("")
+    if reporter is not None:
+        reporter.append_text("Import finished.")
+        reporter.append_text_only("")
+
+
+def chess_du_import(
+    cdb,
+    pgnpaths,
+    file=None,
+    reporter=None,
+    quit_event=None,
+    increases=None,
+):
+    """Import games from pgnpaths into open database cdb."""
+    importer = ChessDBrecordGameImport()
     for key in cdb.table.keys():
         if key == file:
-            counts = [increases[0], increases[1]]
+            if increases is None:
+                counts = [0, 0]
+            else:
+                counts = [increases[0], increases[1]]
             cdb.increase_database_record_capacity(files={key: counts})
             _chess_du_report_increases(reporter, key, counts)
             break
@@ -71,47 +115,40 @@ def chess_du_import(
         _report_exception(cdb, reporter, exc)
         raise
     cdb.unset_defer_update()
-    if cdb.take_backup_before_deferred_update:
-        if reporter is not None:
-            reporter.append_text("Delete backup for import.")
-        cdb.delete_archive(name=file)
-        if reporter is not None:
-            reporter.append_text("Backup deleted.")
-            reporter.append_text_only("")
-    if reporter is not None:
-        reporter.append_text("Import finished.")
-        reporter.append_text_only("")
 
 
 def chess_du(cdb, *args, file=None, **kwargs):
     """Open database, delegate to chess_du_import, and close database."""
+    chess_du_backup_before_import(cdb, file=file, **kwargs)
     cdb.open_database()
     chess_du_import(cdb, *args, file=file, **kwargs)
     cdb.close_database()
+    chess_du_delete_backup_after_import(cdb, file=file, **kwargs)
 
 
-def _chess_du_report_increases(reporter, file, increases):
+def _chess_du_report_increases(reporter, file, size_increases):
     """Report size increases for file if any and there is a reporter.
 
-    All elements of increases will be 0 (zero) if explicit increase in
-    file size is not supported, or if not required when it is supported.
+    All elements of size_increases will be 0 (zero) if explicit increase
+    in file size is not supported, or if not required when it is
+    supported.
 
     """
     if reporter is None:
         return
-    if sum(increases) == 0:
+    if sum(size_increases) == 0:
         return
     reporter.append_text_only("")
     reporter.append_text(file.join(("Increase size of '", "' file.")))
     label = ("Data", "Index")
-    for item, count in enumerate(increases):
+    for item, size in enumerate(size_increases):
         reporter.append_text_only(
             " ".join(
                 (
                     "Applied increase in",
                     label[item],
                     "pages:",
-                    str(count),
+                    str(size),
                 )
             )
         )
@@ -242,7 +279,3 @@ class Alldu:
 
                 break
         del f, m
-
-    def do_final_segment_deferred_updates(self):
-        """Extend to report number of games in final segment."""
-        super().do_final_segment_deferred_updates()

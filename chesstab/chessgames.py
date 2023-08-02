@@ -21,7 +21,12 @@ Windows.
 
 if __name__ == "__main__":
 
+    import multiprocessing
+
     from . import APPLICATION_NAME
+
+    multiprocessing.set_start_method("spawn")
+    del multiprocessing
 
     try:
         from solentware_misc.gui.startstop import (

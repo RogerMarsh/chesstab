@@ -4,9 +4,7 @@
 
 """Define User Interface for deferred update process."""
 
-import sys
 import os
-import traceback
 import datetime
 import tkinter
 import tkinter.font
@@ -84,6 +82,7 @@ class IncreaseDataProcess:
             target=self._increase_data_size,
             args=(),
         )
+        self.stop_thread = None
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
@@ -229,6 +228,7 @@ class IncreaseIndexProcess:
             target=self._increase_index_size,
             args=(),
         )
+        self.stop_thread = None
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
@@ -365,13 +365,24 @@ class IncreaseIndexProcess:
 class DeferredUpdateProcess:
     """Define a process to do a deferred update task."""
 
-    def __init__(self, database, method, report_queue, quit_event, increases):
+    def __init__(
+        self,
+        database,
+        method,
+        report_queue,
+        quit_event,
+        increases,
+        home_directory,
+        pgnfiles,
+    ):
         """Provide queues for communication with GUI."""
         self.database = database
         self.method = method
         self.report_queue = report_queue
         self.quit_event = quit_event
         self.increases = increases
+        self.home_directory = home_directory
+        self.pgnfiles = pgnfiles
         self.process = multiprocessing.Process(
             target=self._run_import,
             args=(),
@@ -392,8 +403,8 @@ class DeferredUpdateProcess:
     def _run_import(self):
         """Invoke method to do the deferred update and display job status."""
         self.method(
-            sys.argv[1],
-            sys.argv[2:],
+            self.home_directory,
+            self.pgnfiles,
             file=GAMES_FILE_DEF,
             reporter=_Reporter(
                 self._report_to_log,
@@ -407,7 +418,15 @@ class DeferredUpdateProcess:
 class DeferredUpdateEstimateProcess:
     """Define a process to do a deferred update estimate task."""
 
-    def __init__(self, database, sample, report_queue, quit_event, increases):
+    def __init__(
+        self,
+        database,
+        sample,
+        report_queue,
+        quit_event,
+        increases,
+        pgnfiles,
+    ):
         """Provide queues for communication with GUI."""
         self.database = database
         self.sample = sample
@@ -415,10 +434,12 @@ class DeferredUpdateEstimateProcess:
         self.quit_event = quit_event
         self.increases = increases
         self.estimate_data = None
+        self.pgnfiles = pgnfiles
         self.process = multiprocessing.Process(
             target=self._allow_import,
             args=(),
         )
+        self.stop_thread = None
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
@@ -473,7 +494,7 @@ class DeferredUpdateEstimateProcess:
     def _estimate_games_in_import(self):
         """Estimate import size from the first sample games in import files."""
         self.estimate_data = False
-        text_file_size = sum(os.path.getsize(pp) for pp in sys.argv[2:])
+        text_file_size = sum(os.path.getsize(pp) for pp in self.pgnfiles)
         reader = PGN(game_class=GameUpdateEstimate)
         errorcount = 0
         totallen = 0
@@ -485,7 +506,7 @@ class DeferredUpdateEstimateProcess:
         piecemovecount = 0
         estimate = False
         time_start = time.monotonic()
-        for pgnfile in sys.argv[2:]:
+        for pgnfile in self.pgnfiles:
             if gamecount + errorcount >= self.sample:
                 estimate = True
                 break
@@ -728,7 +749,12 @@ class ChessDeferredUpdate(Bindings):
     """Connect a chess database with User Interface for deferred update."""
 
     def __init__(
-        self, deferred_update_method=None, database_class=None, sample=5000
+        self,
+        deferred_update_method=None,
+        database_class=None,
+        home_directory=None,
+        pgnfiles=None,
+        sample=5000,
     ):
         """Create the database and ChessUI objects.
 
@@ -738,17 +764,21 @@ class ChessDeferredUpdate(Bindings):
 
         """
         super().__init__()
-        self.set_error_file_name(os.path.join(sys.argv[1], ERROR_LOG))
+        self.set_error_file_name(os.path.join(home_directory, ERROR_LOG))
         self.report_queue = multiprocessing.Queue()
         self.quit_event = multiprocessing.Event()
-        self.increases = multiprocessing.Array("i", [0, 0])
+        self.increases = multiprocessing.Array("i", [0, 0, 0, 0])
+        self.home_directory = home_directory
+        self.pgnfiles = pgnfiles
         self.dumethod = deferred_update_method
         self.sample = sample
         self._import_done = False
         self._import_job = None
         self._task_name = "estimating"
         self.database = database_class(
-            sys.argv[1], allowcreate=True, deferupdatefiles={GAMES_FILE_DEF}
+            home_directory,
+            allowcreate=True,
+            deferupdatefiles={GAMES_FILE_DEF},
         )
 
         self.root = tkinter.Tk()
@@ -756,7 +786,7 @@ class ChessDeferredUpdate(Bindings):
             " - ".join(
                 (
                     " ".join((APPLICATION_NAME, "Import")),
-                    os.path.basename(sys.argv[1]),
+                    os.path.basename(home_directory),
                 )
             )
         )
@@ -846,7 +876,7 @@ class ChessDeferredUpdate(Bindings):
         )
         self.tagstart = "1.0"
         self._report_to_log(
-            "".join(("Importing to database ", sys.argv[1], "."))
+            "".join(("Importing to database ", home_directory, "."))
         )
         self._report_to_log_text_only(
             "All times quoted assume no other applications running.",
@@ -866,6 +896,7 @@ class ChessDeferredUpdate(Bindings):
             self.report_queue,
             self.quit_event,
             self.increases,
+            self.pgnfiles,
         )
         self.deferred_update.process.start()
         self.quit_thread = multiprocessing.dummy.DummyProcess(
@@ -882,6 +913,8 @@ class ChessDeferredUpdate(Bindings):
         solentware_base.core._dpt module.
 
         """
+        # This describes situation before changes to resolve problem, but
+        # the return value remains relevant.
         # An alternative implementation of this difference calls a method
         # add_import_buttons() rather than add the buttons if the test
         # here returns True.  Two versions of add_import_buttons() are
@@ -1066,6 +1099,8 @@ class ChessDeferredUpdate(Bindings):
             self.report_queue,
             self.quit_event,
             self.increases,
+            self.home_directory,
+            self.pgnfiles,
         )
         self.deferred_update.process.start()
         self.quit_thread = multiprocessing.dummy.DummyProcess(
@@ -1125,31 +1160,3 @@ class ChessDeferredUpdate(Bindings):
             message="Do you want to dismiss the import log?",
         ):
             self.root.destroy()
-
-
-def write_error_to_log():
-    """Write the exception to the error log with a time stamp."""
-    with open(
-        os.path.join(sys.argv[1], ERROR_LOG),
-        "a",
-        encoding="utf-8",
-    ) as file:
-        file.write(
-            "".join(
-                (
-                    "\n\n\n",
-                    " ".join(
-                        (
-                            APPLICATION_NAME,
-                            "exception report at",
-                            datetime.datetime.isoformat(
-                                datetime.datetime.today()
-                            ),
-                        )
-                    ),
-                    "\n\n",
-                    traceback.format_exc(),
-                    "\n\n",
-                )
-            )
-        )

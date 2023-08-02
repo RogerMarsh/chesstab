@@ -12,20 +12,57 @@ Spawn the deferred update process by the multiprocessing module.
 """
 import sys
 import importlib
-import multiprocessing
+import os
+import datetime
+import traceback
 
 if sys.platform.startswith("openbsd"):
     import resource
 
-multiprocessing.set_start_method("spawn")
-del multiprocessing
+from .. import (
+    ERROR_LOG,
+    APPLICATION_NAME,
+)
+from ..gui import chessdu
 
 
 class RunduError(Exception):
     """Exception class for rundu module."""
 
 
-def rundu(engine_module_name, database_module_name):
+def write_error_to_log(directory):
+    """Write the exception to the error log with a time stamp."""
+    with open(
+        os.path.join(directory, ERROR_LOG),  # Was sys.argv[1]
+        "a",
+        encoding="utf-8",
+    ) as file:
+        file.write(
+            "".join(
+                (
+                    "\n\n\n",
+                    " ".join(
+                        (
+                            APPLICATION_NAME,
+                            "exception report at",
+                            datetime.datetime.isoformat(
+                                datetime.datetime.today()
+                            ),
+                        )
+                    ),
+                    "\n\n",
+                    traceback.format_exc(),
+                    "\n\n",
+                )
+            )
+        )
+
+
+def rundu(
+    home_directory,
+    pgnfiles,
+    database_module_name,
+):
     """Do the deferred update using the specified database engine.
 
     engine_module_name and database_module_name must be absolute path
@@ -36,7 +73,6 @@ def rundu(engine_module_name, database_module_name):
 
     """
     database_module = importlib.import_module(database_module_name)
-    engine_module = importlib.import_module(engine_module_name)
     if sys.platform.startswith("openbsd"):
 
         # The default user class is limited to 512Mb memory but imports need
@@ -57,7 +93,7 @@ def rundu(engine_module_name, database_module_name):
                 )
             except Exception as exc_a:
                 try:
-                    engine_module.write_error_to_log()
+                    write_error_to_log(home_directory)
                 except Exception as exc_b:
                     # Maybe the import is small enough to get away with
                     # limited memory (~500Mb).
@@ -71,13 +107,15 @@ def rundu(engine_module_name, database_module_name):
                 ) from exc_a
 
     try:
-        engine_module.ChessDeferredUpdate(
+        chessdu.ChessDeferredUpdate(
             deferred_update_method=database_module.chess_database_du,
             database_class=database_module.ChessDatabase,
+            home_directory=home_directory,
+            pgnfiles=pgnfiles,
         )
     except Exception as error:
         try:
-            engine_module.write_error_to_log()
+            write_error_to_log(home_directory)
         except Exception:
             # Assume that parent process will report the failure.
             raise SystemExit(

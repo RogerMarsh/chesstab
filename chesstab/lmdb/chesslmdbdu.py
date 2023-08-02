@@ -18,9 +18,6 @@ def chess_database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
     chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
 
-    # There are no recoverable file full conditions for Symas LMMD (see DPT).
-    return True
-
 
 class ChessDatabase(Alldu, Litedu, lmdbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""

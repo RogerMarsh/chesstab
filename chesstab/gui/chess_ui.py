@@ -1428,13 +1428,13 @@ class ChessUI(Bindings):
 
     def get_import_subprocess_poll(self):
         """Poll the import subprocess and return the response."""
-        return self._import_subprocess.poll()
+        return self._import_subprocess.is_alive()
 
     def is_import_subprocess_active(self):
         """Return True if the import subprocess object is active."""
         if self._import_subprocess is None:
             return False
-        return self._import_subprocess.poll() is None
+        return self._import_subprocess.is_alive()
 
     def get_toplevel(self):
         """Return the toplevel widget."""

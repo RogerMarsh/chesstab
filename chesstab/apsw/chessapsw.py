@@ -4,8 +4,6 @@
 
 """Chess database using sqlite3."""
 
-import os
-
 # from apsw import ConstraintError
 
 from solentware_base import apsw_database
@@ -24,9 +22,7 @@ class ChessDatabaseError(Exception):
 class ChessDatabase(database.Database, apsw_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchessapswdu.py"
-    )
+    _deferred_update_process = "chesstab.apsw.chessapswdu"
 
     def __init__(
         self,

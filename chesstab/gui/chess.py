@@ -36,8 +36,8 @@ import tkinter.messagebox
 import tkinter.filedialog
 import gc
 import queue
+import multiprocessing
 
-from solentware_base import do_deferred_updates
 from solentware_base import modulequery
 
 from solentware_grid.core.dataclient import DataSource
@@ -74,6 +74,7 @@ from ..core.filespec import (
     RESULT_FIELD_DEF,
 )
 from ..core.constants import UNKNOWN_RESULT
+from ..shared import rundu
 from .gamedisplay import GameDisplayInsert
 from .cqldisplay import CQLDisplayInsert
 from .repertoiredisplay import RepertoireDisplayInsert
@@ -822,7 +823,7 @@ class Chess(Bindings):
                 self.root.after(
                     interval,
                     self.try_command(self.__run_ui_task_from_queue, self.root),
-                    *(interval,)
+                    *(interval,),
                 )
                 break
             self.reportqueue.task_done()
@@ -1653,10 +1654,7 @@ class Chess(Bindings):
         """Import games to open database."""
         self.ui.set_import_subprocess()  # raises exception if already active
         self._pgnfiles = pgnfiles
-        usedu = self.opendatabase.use_deferred_update_process(
-            dptmultistepdu=self._dptmultistepdu,
-            dptchunksize=self._dptchunksize,
-        )
+        usedu = self.opendatabase.use_deferred_update_process()
         if usedu is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
@@ -1673,14 +1671,16 @@ class Chess(Bindings):
             return
         self.opendatabase.close_database_contexts()
         self.ui.set_import_subprocess(
-            subprocess_id=do_deferred_updates.do_deferred_updates(
-                os.path.join(
-                    os.path.dirname(os.path.dirname(__file__)), usedu
+            subprocess_id=multiprocessing.Process(
+                target=rundu.rundu,
+                args=(
+                    self.opendatabase.home_directory,
+                    pgnfiles,
+                    usedu,
                 ),
-                self.opendatabase.home_directory,
-                pgnfiles,
             )
         )
+        self.ui.get_import_subprocess().start()
         self._wait_deferred_updates(pgnfiles)
         return
 
@@ -1696,7 +1696,7 @@ class Chess(Bindings):
         del pgnfiles
 
         def completed():
-            self.ui.get_import_subprocess().wait()
+            self.ui.get_import_subprocess().join()
 
             # See comment near end of class definition ChessDeferredUpdate in
             # sibling module chessdu for explanation of this change.
@@ -1711,10 +1711,10 @@ class Chess(Bindings):
             )
 
         def after_completion():
-            returncode = self.ui.get_import_subprocess().returncode
-            names, archives, guards = self.opendatabase.get_archive_names(
+            returncode = self.ui.get_import_subprocess().exitcode
+            archives, guards = self.opendatabase.get_archive_names(
                 file=GAMES_FILE_DEF
-            )
+            )[1:]
 
             # Failed or cancelled while taking backups.
             if guards or archives:
@@ -1755,51 +1755,26 @@ class Chess(Bindings):
                 )
                 return
 
-            oaiwb = self.opendatabase.open_after_import_without_backups
             try:
-                action = oaiwb(files=(GAMES_FILE_DEF,))
+                action = self.opendatabase.open_after_import(
+                    files=(GAMES_FILE_DEF,)
+                )
             except self.opendatabase.__class__.SegmentSizeError:
-                action = oaiwb(files=(GAMES_FILE_DEF,))
+                action = self.opendatabase.open_after_import(
+                    files=(GAMES_FILE_DEF,)
+                )
 
             # Database full (DPT only).
             if action is None:
                 self.statusbar.set_status_text(text="Database full")
+                return
 
-            # Unable to open database files.
-            elif action is False:
-                self._tidy_up_after_import(dump_database, names)
-
-            # Import succeeded.
-            elif action is True:
-                self.ui.set_import_subprocess()
-                self._refresh_grids_after_import()
-                self.statusbar.set_status_text(text="")
-
-            # Import failed (other than DPT database full).
-            else:
-                self.statusbar.set_status_text(text=action)
-
-            return
-
-        def dump_database(names):
-            # prompt to move existing dump first, and where to do this?
-            self.statusbar.set_status_text(
-                text="Please wait while saving copy of broken database"
-            )
-            self.opendatabase.dump_database(names=names)
             self.ui.set_import_subprocess()
             self._refresh_grids_after_import()
-            self.statusbar.set_status_text(text="Broken database")
+            self.statusbar.set_status_text(text="")
+            return
 
         self.queue.put_method(self.try_thread(completed, self.root))
-
-    def _tidy_up_after_import(self, tidy_up_method, *a):
-        """Create a Toplevel to report actions of tidy_up_method.
-
-        Run tidy_up_method in a thread and wait for completion.
-
-        """
-        self.queue.put_method(self.try_thread(tidy_up_method, self.root), a)
 
     def _refresh_grids_after_import(self):
         """Repopulate grid from database after import."""

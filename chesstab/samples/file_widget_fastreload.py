@@ -21,7 +21,7 @@ import tkinter.filedialog
 
 import dptdb.dptapi
 
-from solentware_base.core.constants import DPT_SYS_FOLDER
+from solentware_base.core.constants import DPT_SYSFL_FOLDER
 
 from ..dpt import chessdpt
 
@@ -50,9 +50,7 @@ class ChessDatabase(chessdpt.ChessDatabase):
         if databasefolder:
             databasefolder = os.path.abspath(databasefolder)
             if sysfolder is None:
-                sysfolder = os.path.join(
-                    databasefolder, DPT_SYS_FOLDER, DPT_SYS_FOLDER
-                )
+                sysfolder = os.path.join(databasefolder, DPT_SYSFL_FOLDER)
         super().__init__(databasefolder, sysfolder=sysfolder, **kargs)
 
     # Set default parameters for fastload as deferred update alternative.

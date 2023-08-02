@@ -4,8 +4,6 @@
 
 """Chess database using unqlite."""
 
-import os
-
 from solentware_base import unqlite_database
 from solentware_base.core.constants import (
     FILEDESC,
@@ -22,9 +20,7 @@ class ChessDatabaseError(Exception):
 class ChessDatabase(database.Database, unqlite_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchessunqlitedu.py"
-    )
+    _deferred_update_process = "chesstab.unqlite.chessunqlitedu"
 
     def __init__(
         self,

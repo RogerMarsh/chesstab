@@ -10,8 +10,6 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-import os
-
 from solentware_base import db_tkinter_database
 
 from ..core.filespec import (
@@ -27,9 +25,7 @@ from ..basecore import database
 class ChessDatabase(database.Database, db_tkinter_database.Database):
     """Provide access to a database of games of chess."""
 
-    _deferred_update_process = os.path.join(
-        os.path.basename(os.path.dirname(__file__)), "runchessdbtkinterdu.py"
-    )
+    _deferred_update_process = "chesstab.db_tkinter.chessdbtkinterdu"
 
     def __init__(
         self,
