@@ -1,0 +1,2 @@
+# MANIFEST.in exists to get tox.ini included in sdist distributions.
+include tox.ini
