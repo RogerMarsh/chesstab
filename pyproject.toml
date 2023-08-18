@@ -1,9 +1,76 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=61.0",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 79
+
+[project]
+name = "chesstab"
+version = "7.1.dev4"
+authors = [
+  { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
+]
+description = "Database for chess games."
+classifiers = [
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Topic :: Games/Entertainment :: Board Games",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Development Status :: 3 - Alpha",
+]
+license = {file = "LICENCE"}
+readme = "README"
+dependencies = [
+    "solentware-base==5.1.dev2",
+    "chessql==2.1.1.dev1",
+    "solentware-grid==2.1.10.dev2",
+    "pgn-read==2.3.dev1",
+    "solentware-misc==1.6.dev1",
+    "uci-net==1.2.7.dev0",
+]
+
+[project.urls]
+Homepage = "http://www.solentware.co.uk"
+Repository = "https://github.com/RogerMarsh/chesstab.git"
+"Bug Tracker" = "https://github.com/RogerMarsh/chesstab/issues"
+
+[tool.setuptools]
+packages = [
+    "chesstab",
+    "chesstab.core",
+    "chesstab.basecore",
+    "chesstab.gui",
+    "chesstab.help_",
+    "chesstab.lmdb",
+    "chesstab.berkeleydb",
+    "chesstab.db",
+    "chesstab.db_tkinter",
+    "chesstab.dpt",
+    "chesstab.sqlite",
+    "chesstab.apsw",
+    "chesstab.unqlite",
+    "chesstab.vedis",
+    "chesstab.gnu",
+    "chesstab.ndbm",
+    "chesstab.fonts",
+    "chesstab.tools",
+    "chesstab.samples",
+    "chesstab.shared",
+]
+
+[tool.setuptools.package-data]
+chesstab = [
+    "help_/*.rst",
+    "fonts/*.TTF",
+    "fonts/*.zip",
+]
