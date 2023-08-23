@@ -93,7 +93,9 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
                 chessdbtkinter.db_tkinter_database.db_tcl
             ] = chessdbtkinter.ChessDatabase
         if chessdpt:
-            engines[chessdpt.dpt_database._dpt.dptapi] = chessdpt.ChessDatabase
+            engines[
+                chessdpt.chessdptnofistat.dpt_database._dpt.dptapi
+            ] = chessdpt.ChessDatabase
         if chessndbm:
             engines[
                 chessndbm.ndbm_database.ndbm_module.dbm.ndbm
