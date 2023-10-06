@@ -31,12 +31,12 @@ classifiers = [
 license = {file = "LICENCE"}
 readme = "README"
 dependencies = [
-    "solentware-base==5.1.dev3",
+    "solentware-base==5.1",
     "chessql==2.1.1.dev1",
-    "solentware-grid==2.1.10.dev2",
+    "solentware-grid==2.1.10",
     "pgn-read==2.3.dev1",
-    "solentware-misc==1.6.dev1",
-    "uci-net==1.2.7.dev0",
+    "solentware-misc==1.6",
+    "uci-net==1.2.7",
 ]
 
 [project.urls]
