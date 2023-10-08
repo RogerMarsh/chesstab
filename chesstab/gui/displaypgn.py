@@ -144,7 +144,7 @@ class ShowPGN(ShowText, ScorePGN):
 
     # The insert_game_database method, coerced into sameness from the methods
     # in gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay with
-    # class attibutes pgn_score_name, pgn_score_source_name, pgn_score_tags,
+    # class attibutes pgn_score_name, pgn_score_source, pgn_score_tags,
     # and method mark_partial_positions_to_be_recalculated, and property
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
@@ -213,7 +213,7 @@ class ShowPGN(ShowText, ScorePGN):
                 ),
             ):
                 return None
-            updater.value.set_game_source(self.pgn_score_source_name)
+            updater.value.set_game_source(self.pgn_score_source)
         editor = RecordEdit(updater, None)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
@@ -503,7 +503,7 @@ class EditPGN(EditText):
                 ),
             ):
                 return
-            updater.value.set_game_source(self.pgn_score_source_name)
+            updater.value.set_game_source(self.pgn_score_source)
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)

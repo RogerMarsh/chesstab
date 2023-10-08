@@ -77,7 +77,7 @@ def file_du(database, dbpath, pgnpath, **kwargs):
             time.ctime(),
             "get games from PGN file and write TAPED file for first segment",
         )
-        importer.import_pgn(fldb, pgn_file, pgnpath)
+        importer.import_pgn(fldb, pgn_file, os.path.basename(pgnpath))
     fldb.do_final_segment_deferred_updates()
     fldb.unset_defer_update()
     print(time.ctime(), "end")

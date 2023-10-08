@@ -48,7 +48,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
     Attribute pgn_score_tags provides the PGN tag names used in widget titles
     and message text.  It is the opening PGN tag defined in ChessTab.
 
-    Attribute pgn_score_source_name provides the error key value to index a
+    Attribute pgn_score_source provides the error key value to index a
     PGN game score with errors.
 
     Attribute pgn_score_updater provides the class used to process PGN text
@@ -83,7 +83,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
     pgn_score_name = "repertoire"
-    pgn_score_source_name = "No opening name"
+    pgn_score_source = "No opening name"
     pgn_score_tags = (TAG_OPENING,)
     pgn_score_updater = ChessDBrecordRepertoireUpdate
 
@@ -114,7 +114,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
     # ui_base_table and mark_partial_positions_to_be_recalculated defined
     # so insert_game_database method can be shared by gamedisplay._GameDisplay
     # and repertoiredisplay._RepertoireDisplay classes.
-    # See class attributes pgn_score_name and pgn_score_source_name too.
+    # See class attributes pgn_score_name and pgn_score_source too.
 
     @property
     def ui_base_table(self):
@@ -268,7 +268,7 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
     # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and
     # gamedisplay.GameDisplayEdit classes.
-    # See class attributes pgn_score_name and pgn_score_source_name too.
+    # See class attributes pgn_score_name and pgn_score_source too.
     # The property which returns self.ui.base_repertoires is ignored because
     # the GameDisplayEdit version of the method sets properties on all grids.
     def set_properties_on_game_grids(self, newkey):

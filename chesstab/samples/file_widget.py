@@ -31,7 +31,7 @@ def file_du(database, dbpath, pgnpath, **kwargs):
         cdb.archive(name=GAMES_FILE_DEF)
     cdb.set_defer_update()
     s = open(pgnpath, "r", encoding="iso-8859-1")
-    importer.import_pgn(cdb, s, pgnpath)
+    importer.import_pgn(cdb, s, os.path.basename(pgnpath))
     s.close()
     cdb.do_final_segment_deferred_updates()
     cdb.unset_defer_update()

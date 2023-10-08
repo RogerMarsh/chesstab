@@ -101,7 +101,7 @@ def chess_du_import(
                 if not importer.import_pgn(
                     cdb,
                     source,
-                    pgnfile,
+                    os.path.basename(pgnfile),
                     reporter=reporter,
                     quit_event=quit_event,
                 ):

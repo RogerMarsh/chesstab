@@ -509,7 +509,15 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
         return value
 
     def set_game_source(self, source):
-        """Set the index value to use if full indexing is not to be done."""
+        """Set game source.
+
+        source should be os.path.basename(<source file>) or None and will
+        be used for indexing only if the source file has errors, indicated
+        by the do_full_indexing() method. (Full indexing can index only by
+        values derived from the PGN file content and the file name is not
+        part of that content.)
+
+        """
         self.gamesource = source
 
     def do_full_indexing(self):
@@ -517,6 +525,7 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
 
         Detected PGN errors are wrapped in a comment starting 'Error: ' so
         method is_pgn_valid() is not used to decide what indexing to do.
+        
         """
         return self.gamesource is None
 
@@ -627,7 +636,6 @@ class ChessDBrecordGameImport(Record):
     ):
         """Update database with games read from source."""
         self.set_database(database)
-        # self.value.set_game_source(sourcename)
         if reporter is not None:
             reporter.append_text_only("")
             reporter.append_text("Extracting games from " + sourcename)
@@ -790,7 +798,13 @@ class ChessDBvalueRepertoireUpdate(ChessDBvaluePGN):
         return value
 
     def set_game_source(self, source):
-        """Set game source (the PGN file name or '')."""
+        """Set game source.
+
+        source should be os.path.basename(<source file>) and will be used
+        for indexing only if the source file has errors, indicated by the
+        is_pgn_valid() method, and no TAG_OPENING tag value.
+
+        """
         self.gamesource = source
 
 
@@ -963,10 +977,10 @@ class ChessDBkeyEngine(KeyData):
 
 
 class ChessDBvalueEngine(Engine, Value):
-    """Game selection rule data."""
+    """Game chess engine data."""
 
     def pack(self):
-        """Extend, return game selection rule record and index data."""
+        """Extend, return chess engine record and index data."""
         value = super().pack()
         index = value[1]
         index[COMMAND_FIELD_DEF] = [self.get_name_text()]
@@ -977,5 +991,5 @@ class ChessDBrecordEngine(Record):
     """Chess engine record."""
 
     def __init__(self):
-        """Extend as a game selection rule record."""
+        """Extend as a chess engine record."""
         super().__init__(ChessDBkeyEngine, ChessDBvalueEngine)
