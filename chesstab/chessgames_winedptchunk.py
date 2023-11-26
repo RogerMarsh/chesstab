@@ -25,7 +25,6 @@ games. Two million games is large: but 10,000 games is not large.
 """
 
 if __name__ == "__main__":
-
     from . import APPLICATION_NAME
 
     APP_NAME = " ".join((APPLICATION_NAME, "(WineDPTChunk)"))

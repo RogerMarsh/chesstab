@@ -9,7 +9,6 @@ fpd: one file for each database.
 
 
 if __name__ == "__main__":
-
     from .file_widget import FileWidget
     from ..db_tkinter import chessdbtkinterdu
 

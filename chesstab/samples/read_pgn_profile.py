@@ -34,7 +34,6 @@ class Main(_utilities.Main):
 
 
 if __name__ == "__main__":
-
     Main(
         game_class=GameUpdate,
         samples_title="Sample ChessTab Update Profile Report",

@@ -10,5 +10,4 @@ from ..core.pgn import GameUpdate
 
 
 if __name__ == "__main__":
-
     main(game_class=GameUpdate, samples_title="Sample ChessTab Update Report")

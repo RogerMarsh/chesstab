@@ -10,7 +10,6 @@ This module has survived as an example of how to code multi-step in Python.
 """
 
 if __name__ == "__main__":
-
     from . import APPLICATION_NAME
 
     APP_NAME = " ".join((APPLICATION_NAME, "(WineDPTMulti)"))

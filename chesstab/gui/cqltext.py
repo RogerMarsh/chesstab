@@ -96,7 +96,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
     def _get_partial_key_cql_statement(self):
         """Return ChessQL statement for use as partial key."""
         if self.cql_statement.is_statement():
-
             # Things must be arranged so a tuple, not a list, can be returned.
             # return tuple(self.cql_statement.position)
             return self.cql_statement.get_statement_text()  # Maybe!

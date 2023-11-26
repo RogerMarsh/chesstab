@@ -1468,7 +1468,6 @@ class PGN131(object):
                     self._state = PGN_SEARCHING_AFTER_ERROR_IN_GAME
                     return
             else:
-
                 # Should not happen, caught earlier.
                 self._state = PGN_SEARCHING_AFTER_ERROR_IN_GAME
                 return
@@ -1630,7 +1629,6 @@ class PGN131(object):
                     s for s in from_squares if s not in pinned_to_king
                 ]
         if pgn_capture == PLAIN_MOVE and b[tosquare] == piece:
-
             # If moving piece is on tosquare and the next token is a square
             # identity try tosquare as fromsquare and next token as tosquare
             # for the piece move.
@@ -1708,7 +1706,6 @@ class PGN131(object):
             self._illegal_play_move()
             return
         elif pgn_piece == PGN_PAWN:
-
             # Moves like 'b1' for black, and 'b8' for white, are passed earlier
             # to cope with disambiguating queen moves like 'Qd1f1'.
             if not (
@@ -1795,7 +1792,6 @@ class PGN131(object):
         self.add_move_to_game()
 
     def _play_castles(self, token):
-
         # Verify castling availability and pick castling rules.
         if token.startswith(O_O_O):
             if self.active_side == WHITE_SIDE:
@@ -3306,7 +3302,6 @@ class PGN132(object):
                     self._state = PGN_SEARCHING_AFTER_ERROR_IN_GAME
                     return
             else:
-
                 # Should not happen, caught earlier.
                 self._state = PGN_SEARCHING_AFTER_ERROR_IN_GAME
                 return
@@ -3468,7 +3463,6 @@ class PGN132(object):
                     s for s in from_squares if s not in pinned_to_king
                 ]
         if pgn_capture == PLAIN_MOVE and b[tosquare] == piece:
-
             # If moving piece is on tosquare and the next token is a square
             # identity try tosquare as fromsquare and next token as tosquare
             # for the piece move.
@@ -3546,7 +3540,6 @@ class PGN132(object):
             self._illegal_play_move()
             return
         elif pgn_piece == PGN_PAWN:
-
             # Moves like 'b1' for black, and 'b8' for white, are passed earlier
             # to cope with disambiguating queen moves like 'Qd1f1'.
             if not (
@@ -3633,7 +3626,6 @@ class PGN132(object):
         self.add_move_to_game()
 
     def _play_castles(self, token):
-
         # Verify castling availability and pick castling rules.
         if token.startswith(O_O_O):
             if self.active_side == WHITE_SIDE:
@@ -4623,7 +4615,6 @@ class ChessDBvaluePGN131(Value):
 
 
 class ChessDBvaluePGNUpdate131(PGNUpdate131, ChessDBvaluePGN131):
-
     # Replaces ChessDBvaluePGNUpdate and ChessDBvalueGameImport which had been
     # identical for a considerable time.
     # Decided that PGNUpdate should remain in pgn.core.parser because that code
@@ -4644,7 +4635,6 @@ class ChessDBvaluePGNUpdate131(PGNUpdate131, ChessDBvaluePGN131):
             tags = cg[1]
             for field in SEVEN_TAG_ROSTER:
                 if field in PLAYER_NAME_TAGS:
-
                     # PGN specification states colon is used to separate player
                     # names in consultation games.
                     index[field] = [
@@ -4682,7 +4672,6 @@ class ChessDBrecordGameUpdate131(Record):
         )
 
     def clone(self):
-
         # are conditions for deleting this method in place?
         clone = super(ChessDBrecordGameUpdate131, self).clone()
         return clone
@@ -5226,5 +5215,4 @@ class Main:
 
 
 if __name__ == "__main__":
-
     Main().root.mainloop()

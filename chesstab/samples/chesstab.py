@@ -12,7 +12,6 @@ When allowcreate evaluates not true, databases cannot be created.
 """
 
 if __name__ == "__main__":
-
     from chesstab.gui.chess import Chess
 
     app = Chess(allowcreate=True)

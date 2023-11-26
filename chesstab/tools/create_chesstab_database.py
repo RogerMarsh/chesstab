@@ -108,5 +108,4 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
 
 
 if __name__ == "__main__":
-
     CreateChessTabDatabase().root.mainloop()

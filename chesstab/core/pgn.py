@@ -439,7 +439,6 @@ class GameTags(Game):
                 del self._state_stack[-1]
                 self._state = self._state_stack[-1]
             else:
-
                 # Cannot call append_end_rav() method because it tests some
                 # conditions that should be true when errors are absent.
                 if self._movetext_offset is None:

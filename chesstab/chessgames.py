@@ -20,7 +20,6 @@ Windows.
 """
 
 if __name__ == "__main__":
-
     import multiprocessing
 
     from . import APPLICATION_NAME

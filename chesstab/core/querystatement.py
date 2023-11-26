@@ -96,9 +96,7 @@ class QueryStatement:
             ("", text.strip()),
             [t.strip() for t in text.split(NAME_DELIMITER, 1)],
         ):
-
             if len(rule) == 1:
-
                 # The second element of rule is being processed and the text in
                 # rule[1] cannot be a valid selection rule because it is the
                 # text which was processed from the first element of rule.

@@ -122,7 +122,6 @@ class ChessDBvalueGame(ChessDBvaluePGN):
         tags = self.collected_game.pgn_tags
         for field in tags:
             if field in PLAYER_NAME_TAGS:
-
                 # PGN specification states colon is used to separate player
                 # names in consultation games.
                 index[field] = [
@@ -475,7 +474,6 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
             tags = game.pgn_tags
             for field in SEVEN_TAG_ROSTER:
                 if field in PLAYER_NAME_TAGS:
-
                     # PGN specification states colon is used to separate player
                     # names in consultation games.
                     try:
@@ -525,7 +523,7 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGN):
 
         Detected PGN errors are wrapped in a comment starting 'Error: ' so
         method is_pgn_valid() is not used to decide what indexing to do.
-        
+
         """
         return self.gamesource is None
 

@@ -85,7 +85,6 @@ class Analysis:
         scale = self.scale
         new_text = []
         for engine_name in sorted(variations):
-
             # The following stopped happening after the test database was
             # deleted and re-created, so maybe everything is sound and the
             # problem is left-over from earlier testing.

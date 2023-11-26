@@ -175,7 +175,6 @@ class AnalysisScore(Score):
 
         """
         if self.current is None:
-
             # Arises as a consequence of avoiding the exception caught in
             # map_game.
             try:
@@ -268,7 +267,6 @@ class AnalysisScore(Score):
         if not widget.tag_nextrange(
             ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         ):
-
             # start_latest_move will be the second move, at earliest,
             # in current variation except if it is the first move in
             # the game.  Thus the move before start_latest_move using

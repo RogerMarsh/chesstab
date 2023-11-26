@@ -6,7 +6,6 @@
 
 
 if __name__ == "__main__":
-
     from .directory_widget import DirectoryWidget
     from ..gnu.chessgnudu import chess_database_du
 

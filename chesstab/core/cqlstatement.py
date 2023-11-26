@@ -143,7 +143,6 @@ class CQLStatement(Statement):
         if self.cql_error:
             rule = [t.strip() for t in text.split(NAME_DELIMITER, 1)]
             if len(rule) == 1:
-
                 # The text cannot have an initial name component because text
                 # equals rule[0] and there is no point in processing the text
                 # again without the non-existent name component.

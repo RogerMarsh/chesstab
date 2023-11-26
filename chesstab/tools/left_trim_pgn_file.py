@@ -397,5 +397,4 @@ class LeftTrimPGNFile:
 
 
 if __name__ == "__main__":
-
     LeftTrimPGNFile().root.mainloop()

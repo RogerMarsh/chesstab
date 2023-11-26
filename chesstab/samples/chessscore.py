@@ -47,7 +47,6 @@ class DuckUI:
 
 
 if __name__ == "__main__":
-
     from pgn_read.core.parser import PGN
 
     from ..gui import fonts

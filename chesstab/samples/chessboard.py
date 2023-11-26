@@ -6,7 +6,6 @@
 
 
 if __name__ == "__main__":
-
     import tkinter
 
     from pgn_read.core.piece import Piece

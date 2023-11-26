@@ -4087,7 +4087,6 @@ class GameEdit(Game):
                 tns = set(tagnames)
                 tn_q = tns.intersection(_EDIT_TAGS)
                 if tn_q:
-
                     # Hack to deal with PGN Tag Value tagging while these items
                     # are tagged by EDIT_PGN_TAG_VALUE and EDIT_PGN_TAG_NAME
                     tnn = tn_q.pop()

@@ -6,7 +6,6 @@
 
 
 if __name__ == "__main__":
-
     from .directory_widget import DirectoryWidget
     from ..sqlite.chesssqlite3du import chess_database_du
 

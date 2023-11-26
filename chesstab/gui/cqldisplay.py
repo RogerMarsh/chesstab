@@ -290,13 +290,11 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
     def on_partial_change(self, instance):
         """Prevent update from self if instance refers to same record."""
         if instance.newrecord:
-
             # Editing an existing record.
             value = instance.newrecord.value
             key = instance.newrecord.key
 
         else:
-
             # Inserting a new record or deleting an existing record.
             value = instance.value
             key = instance.key
@@ -345,7 +343,6 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
                 )
                 return
         else:
-
             # Unfortunatly the existing list will have to be recalculated if
             # one of the caught exceptions occurs.
             pds.forget_cql_statement_games(instance)
@@ -379,7 +376,6 @@ class _CQLDisplay(ShowText, DisplayText, CQL, Display, Bindings, DataNotify):
 
         if self is self.ui.partial_items.active_item:
             if self.sourceobject is not None and key == self.sourceobject.key:
-
                 # Maybe should create a new CQLStatement instance.
                 # self.cql_statement is a CQLStatement instance.
                 # value is a ChessDBvaluePartial instance.
@@ -537,7 +533,6 @@ class CQLDisplay(_CQLDisplay, CQL, DataNotify):
 
         # Consider changing this since the call no longer ever returns None.
         if statement.is_statement() is not None:
-
             value = self.sourceobject.value
             if (
                 statement.get_name_text() != value.get_name_text()

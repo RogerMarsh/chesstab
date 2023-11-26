@@ -5,7 +5,6 @@
 """Demonstrate chess score class and methods to display PGN text and board."""
 
 if __name__ == "__main__":
-
     import tkinter
 
     from pgn_read.core.parser import PGN

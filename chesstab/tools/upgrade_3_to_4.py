@@ -10,7 +10,6 @@ Table names are changed and extra tables introduced in segment support.
 
 
 if __name__ == "__main__":
-
     import os
 
     from solentware_base.tools import ui_base_3_to_4

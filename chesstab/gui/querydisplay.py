@@ -341,12 +341,10 @@ class _QueryDisplay(
         but not as a consequence of updating the database.
         """
         if instance.newrecord:
-
             # Editing an existing record.
             key = instance.newrecord.key
 
         else:
-
             # Inserting a new record.
             key = instance.key
 

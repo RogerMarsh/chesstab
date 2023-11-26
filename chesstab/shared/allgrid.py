@@ -116,7 +116,6 @@ class AllGrid:
         if data_source is None:
             return False
         if data_source.get_database() is None:
-
             # Avoid exception scrolling visible grid not connected to database.
             # Make still just be hack to cope with user interface activity
             # while importing data.

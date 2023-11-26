@@ -10,7 +10,6 @@ Update names in games_Black and games_White records where the name with
 
 
 if __name__ == "__main__":
-
     import os
     import ast
     import re

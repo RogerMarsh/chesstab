@@ -236,7 +236,6 @@ class ChessQLGames:
             )
             pprecalc &= ppview
             if pprecalc.count_records() == 0:
-
                 # At version 7.0.3.dev3 the workaround introduced at version
                 # 7.0.3.dev1 was removed.
                 # The problem was a missing record write in file_records_under
@@ -640,7 +639,6 @@ def where_eq_piece_designator(move_number, variation_code, designator_set):
     smds = set()
     for pdesignator in designator_set:
         if len(pdesignator) == 1:
-
             # Rules of chess imply whole piece designator finds all games if
             # any of 'A', 'a', 'K', 'k', and '_', are in designator set.
             if pdesignator[0] in ALL_GAMES_MATCH_PIECE_DESIGNATORS:

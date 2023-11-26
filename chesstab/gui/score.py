@@ -592,7 +592,6 @@ class Score(SharedTextScore, BlankText):
         """Display choices if these exist or next position of selected line."""
         del event
         if self.current is None:
-
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self._get_choice_tag_of_move(
@@ -663,7 +662,6 @@ class Score(SharedTextScore, BlankText):
         """Remove all variation highlighting."""
         del event
         if self.current is None:
-
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self._get_choice_tag_of_move(
@@ -1312,7 +1310,6 @@ class Score(SharedTextScore, BlankText):
         if not widget.tag_nextrange(
             ALL_CHOICES, scaffold.start_latest_move, scaffold.end_latest_move
         ):
-
             # start_latest_move will be the second move, at earliest,
             # in current variation except if it is the first move in
             # the game.  Thus the move before start_latest_move using
@@ -1576,7 +1573,6 @@ class Score(SharedTextScore, BlankText):
     def _get_position_key(self):
         """Return position key string for position associated with current."""
         try:
-
             # Hack.  _get_position_for_current returns None on next/prev token
             # navigation at end of imported game with errors when editing.
             return get_position_string(*self._get_position_for_current())
@@ -1927,7 +1923,6 @@ class Score(SharedTextScore, BlankText):
         widget = self.score
         tag_range = widget.tag_prevrange(VARIATION_TAG, tkinter.END)
         if not tag_range:
-
             # Should be so just for variations on the first move of game
             return None
 
@@ -2013,7 +2008,6 @@ class Score(SharedTextScore, BlankText):
 
         """
         if move is None:
-
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self._get_choice_tag_of_move(
@@ -2050,7 +2044,6 @@ class Score(SharedTextScore, BlankText):
     def _step_one_variation(self, move):
         """Highlight next variation in choices at current position."""
         if move is None:
-
             # No prior to variation tag exists: no move to attach it to.
             prior = None
             choice = self._get_choice_tag_of_move(
@@ -2108,7 +2101,6 @@ class Score(SharedTextScore, BlankText):
                 self.previousmovetags[self.current][0]
             ]
         except KeyError:
-
             # The result at the end of an editable game score for example
             prevpos = None
 

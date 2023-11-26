@@ -1211,7 +1211,6 @@ class Chess(Bindings):
             ),
         )
         if dlg == tkinter.messagebox.YES:
-
             # Replicate _close_database_and_hide_widgets replacing
             # close_database() call with
             # delete_database() call.  The close_database() call just before
@@ -1514,7 +1513,6 @@ class Chess(Bindings):
                     if data_source.recordset:
                         data_source.recordset.close()
         for widget in ui.selection_items.order:
-
             # widget.query_statement.where.node.result.answer is an example
             # instance that must be closed when query answer is displayed.
             # If query is typed in, not read from database, the DPT message
@@ -1534,7 +1532,6 @@ class Chess(Bindings):
             pass
 
         for widget in ui.partial_items.order:
-
             # Same as selection_items, just above, for a typed CQL query but I
             # have not tracked down an example.
             # No problem for CQL query read from database.

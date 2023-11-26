@@ -22,5 +22,4 @@ def berkeleydb_du_splice_fix(home=None):
 
 
 if __name__ == "__main__":
-
     berkeleydb_du_splice_fix()

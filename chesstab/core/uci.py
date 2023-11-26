@@ -102,7 +102,6 @@ class UCI:
         engine_interface.driver.join()
         engine_name = engine_interface.parser.name
         if engine_name in self.uci_active_engines:
-
             # The command 'stockfish argument' starts stockfish but the engine
             # quits immediately citing 'Unknown command: argument'.
             # These engine_name entries do not exist in this case.
@@ -243,7 +242,6 @@ class UCI:
             and self.is_positions_pending_empty()
         ):
             if ReservedOptionNames.Hash in self.set_option_on_empty_queues:
-
                 # Postpone Hash action until all engines ready.
                 for engine_interface in self.uci_drivers.values():
                     eip = engine_interface.parser

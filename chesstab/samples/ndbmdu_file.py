@@ -6,7 +6,6 @@
 
 
 if __name__ == "__main__":
-
     from .file_widget import FileWidget
     from ..ndbm.chessndbmdu import ChessDatabase
 

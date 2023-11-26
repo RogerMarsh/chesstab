@@ -266,7 +266,6 @@ class Alldu:
             try:
                 b" " * m
             except MemoryError:
-
                 # Override the value in the superclass.
                 deferred_update_points = frozenset(
                     i

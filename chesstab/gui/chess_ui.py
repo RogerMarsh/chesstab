@@ -399,7 +399,6 @@ class ChessUI(Bindings):
         """Add game item to GUI."""
         self.game_items.add_item_to_display(item)
         if self.game_items.contains_one_item():
-
             # Call may not be necessary.
             # This one repeats call in gamedisplay.GameDisplay.
             # item.set_score_pointer_widget_navigation_bindings(True)
@@ -429,7 +428,6 @@ class ChessUI(Bindings):
         """Add repertoire item to GUI."""
         self.repertoire_items.add_item_to_display(item)
         if self.repertoire_items.contains_one_item():
-
             # Call may not be necessary.
             # item.set_score_pointer_widget_navigation_bindings(True)
 
@@ -446,7 +444,6 @@ class ChessUI(Bindings):
         """Add selection rule item to GUI."""
         self.selection_items.add_item_to_display(item)
         if self.selection_items.contains_one_item():
-
             # Call may not be necessary.
             item.set_score_pointer_widget_navigation_bindings(True)
 
@@ -551,7 +548,6 @@ class ChessUI(Bindings):
                     self.base_partials.frame.focus_set()
                     return
             if self.partial_items.count_items_in_stack() != 0:
-
                 # BUG start
                 # partial position not resized
                 self.partial_items.active_item.takefocus_widget.focus_set()
@@ -1171,7 +1167,6 @@ class ChessUI(Bindings):
     def _show_base_games(self):
         """Show widget containing list of games in database."""
         if self.list_games_pw.pane(self.games_pw, "weight"):
-
             # Size is assumed to be (1,1) as created at first call and grid
             # will be filled after <Configure> event to size the widget.
             # Subsequent calls are not associated with a <Configure> event so
@@ -1349,7 +1344,6 @@ class ChessUI(Bindings):
     def _show_base_partials(self):
         """Show widget containing list of partial positions in database."""
         if self.partials_display_pw.pane(self.partials_pw, "weight"):
-
             # Size is assumed to be (1,1) as created at first call and grid
             # will be filled after <Configure> event to size the widget.
             # Subsequent calls are not associated with a <Configure> event so
@@ -1391,7 +1385,6 @@ class ChessUI(Bindings):
     def _show_base_repertoires(self):
         """Show widget containing list of repertoire games in database."""
         if self.repertoires_display_pw.pane(self.repertoires_pw, "weight"):
-
             # Size is assumed to be (1,1) as created at first call and grid
             # will be filled after <Configure> event to size the widget.
             # Subsequent calls are not associated with a <Configure> event so
@@ -1781,7 +1774,6 @@ class ChessUI(Bindings):
     def make_position_analysis_data_source(self):
         """Create a new DataSource for stored chess engine analysis."""
         if self.database:
-
             # Without the 'is not None' seems unreliable at 08 Nov 2015.
             # What is wrong with 'if <obj>:' where obj is a bsddb3.DB instance?
             # It does work sometimes, so some environment clutter perhaps.
@@ -1817,7 +1809,6 @@ class ChessUI(Bindings):
     def _show_base_selection_rules(self):
         """Show widget containing list of selection rules in database."""
         if self.selections_pw.pane(self.selection_rules_pw, "weight"):
-
             # Size is assumed to be (1,1) as created at first call and grid
             # will be filled after <Configure> event to size the widget.
             # Subsequent calls are not associated with a <Configure> event so
