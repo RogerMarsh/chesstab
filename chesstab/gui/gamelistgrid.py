@@ -4,6 +4,8 @@
 
 """Grids for listing details of games on chess database."""
 
+import tkinter
+
 from solentware_grid.datagrid import DataGrid
 
 from pgn_read.core.parser import PGN
@@ -16,6 +18,7 @@ from .display import Display
 from ..shared.cql_gamelist_query import CQLGameListQuery
 from ..shared.allgrid import AllGrid
 from ..core.constants import UNKNOWN_RESULT
+from .score import ScoreMapToBoardException
 
 
 class _BookmarkStatusText:
@@ -156,31 +159,40 @@ class GameListGrid(
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
         )
-        self.create_delete_dialog(
-            self.objects[key], oldobject, modal, title="Delete Game"
-        )
+        try:
+            self.create_delete_dialog(
+                self.objects[key], oldobject, modal, title="Delete Game"
+            )
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Delete Game")
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
-        self.create_edit_dialog(
-            self.objects[key],
-            ChessDBrecordGameUpdate(),
-            ChessDBrecordGameUpdate(),
-            False,
-            modal,
-            title="Edit Game",
-        )
+        try:
+            self.create_edit_dialog(
+                self.objects[key],
+                ChessDBrecordGameUpdate(),
+                ChessDBrecordGameUpdate(),
+                False,
+                modal,
+                title="Edit Game",
+            )
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Edit Game")
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
-        self.create_edit_dialog(
-            self.objects[key],
-            ChessDBrecordGameUpdate(),
-            ChessDBrecordGameUpdate(),
-            True,
-            modal,
-            title="Edit Game",
-        )
+        try:
+            self.create_edit_dialog(
+                self.objects[key],
+                ChessDBrecordGameUpdate(),
+                ChessDBrecordGameUpdate(),
+                True,
+                modal,
+                title="Edit Game",
+            )
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Edit Game")
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
@@ -197,9 +209,12 @@ class GameListGrid(
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
         )
-        self.create_show_dialog(
-            self.objects[key], oldobject, modal, title="Show Game"
-        )
+        try:
+            self.create_show_dialog(
+                self.objects[key], oldobject, modal, title="Show Game"
+            )
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Show Game")
 
     def _set_object_panel_item_properties(self):
         """Adjust properties of game_items to fit configure canvas event."""
@@ -298,4 +313,12 @@ class GameListGrid(
                 self.ui.get_export_filename("Games (no comments)", pgn=True),
             ),
             "Games (no comments)",
+        )
+
+    def _score_map_exception_dialogue(self, exception_instance, title):
+        """Display dialogue to report problem displaying game."""
+        tkinter.messagebox.showinfo(
+            parent=self.get_frame(),
+            title=title,
+            message=str(exception_instance),
         )

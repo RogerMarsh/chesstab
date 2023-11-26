@@ -19,6 +19,7 @@ from .constants import (
 )
 from .eventspec import EventSpec
 from .gamelistgrid import GameListGrid
+from .score import ScoreMapToBoardException
 
 
 # Because of possible changes to GameListGrid to support database update after
@@ -779,24 +780,36 @@ class TagRosterGrid(GameListGrid):
     def _display_game(self, event=None):
         """Display selected game and cancel selection."""
         del event
-        self._display_selected_item(self.get_visible_selected_key())
+        try:
+            self._display_selected_item(self.get_visible_selected_key())
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Display Game")
         self.cancel_selection()
 
     def _display_game_from_popup(self, event=None):
         """Display game selected by pointer."""
         del event
-        self._display_selected_item(self.pointer_popup_selection)
+        try:
+            self._display_selected_item(self.pointer_popup_selection)
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Display Game")
 
     def _edit_game(self, event=None):
         """Display selected game with editing allowed and cancel selection."""
         del event
-        self._edit_selected_item(self.get_visible_selected_key())
+        try:
+            self._edit_selected_item(self.get_visible_selected_key())
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Display Game for Edit")
         self.cancel_selection()
 
     def _edit_game_from_popup(self, event=None):
         """Display game with editing allowed selected by pointer."""
         del event
-        self._edit_selected_item(self.pointer_popup_selection)
+        try:
+            self._edit_selected_item(self.pointer_popup_selection)
+        except ScoreMapToBoardException as exc:
+            self._score_map_exception_dialogue(exc, "Display Game for Edit")
 
     def on_game_change(self, instance):
         """Delegate to superclass if data source exists."""
