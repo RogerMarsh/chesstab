@@ -115,21 +115,25 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
         text = self.newview.get_score_error_escapes_removed()
         self.newobject.value.load(repr(text))
         if not self.newobject.value.collected_game.is_pgn_valid():
+            msg = [
+                "Please re-confirm request to edit ",
+                self.pgn_score_name.lower(),
+                ".",
+            ]
+            if not self.newobject.value.collected_game.is_movetext_valid():
+                msg.extend(["\n\nErrors exist in the Movetext."])
+            if not self.newobject.value.collected_game.is_tag_roster_valid():
+                msg.extend(
+                    [
+                        "\n\nEither a mandatory Tag Pair is missing,",
+                        '\n\nor a Tag Pair has value "" if this is ',
+                        "not allowed.",
+                    ]
+                )
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent=self.parent,
+                parent=self.ui.get_toplevel(),
                 title="".join(("Edit ", self.pgn_score_name)),
-                message=self.pgn_score_name.lower().join(
-                    (
-                        "The edited ",
-                        "".join(
-                            (
-                                " contains at least one illegal move in PGN.",
-                                "\n\nPlease re-confirm request to edit ",
-                            )
-                        ),
-                        ".",
-                    )
-                ),
+                message="".join(msg),
             ):
                 return False
             self.newobject.value.set_game_source(self.pgn_score_source)

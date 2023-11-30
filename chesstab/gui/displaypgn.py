@@ -195,22 +195,25 @@ class ShowPGN(ShowText, ScorePGN):
             return None
         updater = self._game_updater(repr(self.score.get("1.0", tkinter.END)))
         if not updater.value.collected_game.is_pgn_valid():
+            msg = [
+                "Please re-confirm request to insert ",
+                psn,
+                ".",
+            ]
+            if not updater.value.collected_game.is_movetext_valid():
+                msg.extend(["\n\nErrors exist in the Movetext."])
+            if not updater.value.collected_game.is_tag_roster_valid():
+                msg.extend(
+                    [
+                        "\n\nEither a mandatory Tag Pair is missing,",
+                        '\n\nor a Tag Pair has value "" if this is ',
+                        "not allowed.",
+                    ]
+                )
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=psn.join(
-                    (
-                        "The new ",
-                        "".join(
-                            (
-                                " score contains at least one illegal move ",
-                                "in PGN.\n\nPlease re-confirm request to ",
-                                "insert ",
-                            )
-                        ),
-                        ".",
-                    )
-                ),
+                message="".join(msg),
             ):
                 return None
             updater.value.set_game_source(self.pgn_score_source)
@@ -485,22 +488,25 @@ class EditPGN(EditText):
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
         if not updater.value.collected_game.is_pgn_valid():
+            msg = [
+                "Please re-confirm request to edit ",
+                psn,
+                ".",
+            ]
+            if not updater.value.collected_game.is_movetext_valid():
+                msg.extend(["\n\nErrors exist in the Movetext."])
+            if not updater.value.collected_game.is_tag_roster_valid():
+                msg.extend(
+                    [
+                        "\n\nEither a mandatory Tag Pair is missing,",
+                        '\n\nor a Tag Pair has value "" if this is ',
+                        "not allowed.",
+                    ]
+                )
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=psn.join(
-                    (
-                        "The edited ",
-                        "".join(
-                            (
-                                " score contains at least one illegal move ",
-                                "in PGN.\n\nPlease re-confirm request to ",
-                                "edit ",
-                            )
-                        ),
-                        ".",
-                    )
-                ),
+                message="".join(msg),
             ):
                 return
             updater.value.set_game_source(self.pgn_score_source)
