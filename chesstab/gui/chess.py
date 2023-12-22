@@ -951,9 +951,7 @@ class Chess(Bindings):
                     return None
                 return getattr(module, name)
 
-            self._database_class = import_name(
-                _modulename, _Import.Database
-            )
+            self._database_class = import_name(_modulename, _Import.Database)
             self._fullposition_class = import_name(
                 FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
             )
@@ -1114,9 +1112,7 @@ class Chess(Bindings):
                     return None
                 return getattr(module, name)
 
-            self._database_class = import_name(
-                _modulename, _Import.Database
-            )
+            self._database_class = import_name(_modulename, _Import.Database)
             self._fullposition_class = import_name(
                 FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
             )

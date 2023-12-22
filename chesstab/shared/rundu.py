@@ -74,7 +74,6 @@ def rundu(
     """
     database_module = importlib.import_module(database_module_name)
     if sys.platform.startswith("openbsd"):
-
         # The default user class is limited to 512Mb memory but imports need
         # ~550Mb at Python3.6 for sqlite3.
         # Processes running for users in some login classes are allowed to
@@ -85,7 +84,6 @@ def rundu(
         try:
             b" " * 1000000000
         except MemoryError:
-
             soft, hard = resource.getrlimit(resource.RLIMIT_DATA)
             try:
                 resource.setrlimit(

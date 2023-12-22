@@ -103,12 +103,12 @@ def du_import(
     importer = ChessDBrecordGameImport()
     for key in cdb.table.keys():
         if key == file:
-            #if increases is None:
+            # if increases is None:
             #    counts = [0, 0]
-            #else:
+            # else:
             #    counts = [increases[0], increases[1]]
-            #cdb.increase_database_record_capacity(files={key: counts})
-            #_du_report_increases(reporter, key, counts)
+            # cdb.increase_database_record_capacity(files={key: counts})
+            # _du_report_increases(reporter, key, counts)
             break
     else:
         if reporter is not None:
@@ -195,7 +195,10 @@ def _pre_unset_defer_update_reports(database, file, reporter):
             "".join(
                 (
                     "Data pages used in import: ",
-                    str(sizes["BHIGHPG"] - database.table[name].table_b_pages_used),
+                    str(
+                        sizes["BHIGHPG"]
+                        - database.table[name].table_b_pages_used
+                    ),
                 )
             )
         )
@@ -220,13 +223,9 @@ def _post_unset_defer_update_reports(database, file, reporter, dsize):
     for name, sizes in database.get_database_table_sizes(
         files=set((file,))
     ).items():
-        reporter.append_text(
-            "".join(("Index size status for ", name, "."))
-        )
+        reporter.append_text("".join(("Index size status for ", name, ".")))
         new_dsize = sizes["DSIZE"]
-        reporter.append_text_only(
-            "Index area size: " + str(new_dsize)
-        )
+        reporter.append_text_only("Index area size: " + str(new_dsize))
         reporter.append_text_only(
             "".join(
                 (
@@ -252,14 +251,14 @@ def _post_unset_defer_update_reports(database, file, reporter, dsize):
 
 def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
     """Open database, delegate to du_import, and close database."""
-    #du_backup_before_task(cdb, file=file, **kwargs)
+    # du_backup_before_task(cdb, file=file, **kwargs)
     cdb.open_database()
     du_import(cdb, *args, reporter=reporter, file=file, **kwargs)
     cdb.close_database()
     if reporter is not None:
         reporter.append_text("Import finished.")
         reporter.append_text_only("")
-    #du_delete_backup_after_task(cdb, file=file, **kwargs)
+    # du_delete_backup_after_task(cdb, file=file, **kwargs)
 
 
 def _du_report_increases(reporter, file, size_increases):
