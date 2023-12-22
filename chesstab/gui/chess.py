@@ -103,10 +103,10 @@ class ChessError(Exception):
 class _Import:
     """Names of classes imported by import_module from alternative modules.
 
-    For runtime "from <db|dpt>results import ChessDatabase" and similar.
+    For runtime "from <db|dpt>results import Database" and similar.
     """
 
-    ChessDatabase = "ChessDatabase"
+    Database = "Database"
     FullPositionDS = "FullPositionDS"
     ChessQueryLanguageDS = "ChessQueryLanguageDS"
     AnalysisDS = "AnalysisDS"
@@ -493,7 +493,7 @@ class Chess(Bindings):
             )
             self.queue = callthreadqueue.CallThreadQueue()
 
-            # See comment near end of class definition ChessDeferredUpdate in
+            # See comment near end of class definition DeferredUpdate in
             # sibling module chessdu for explanation of this change.
             self.__run_ui_task_from_queue(5000)
 
@@ -809,7 +809,7 @@ class Chess(Bindings):
 
         return menu_changed
 
-    # See comment near end of class definition ChessDeferredUpdate in sibling
+    # See comment near end of class definition DeferredUpdate in sibling
     # module chessdu for explanation of this change: which is addition and use
     # of the __run_ui_task_from_queue and _try_command_after_idle methods.
 
@@ -952,7 +952,7 @@ class Chess(Bindings):
                 return getattr(module, name)
 
             self._database_class = import_name(
-                _modulename, _Import.ChessDatabase
+                _modulename, _Import.Database
             )
             self._fullposition_class = import_name(
                 FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
@@ -1115,7 +1115,7 @@ class Chess(Bindings):
                 return getattr(module, name)
 
             self._database_class = import_name(
-                _modulename, _Import.ChessDatabase
+                _modulename, _Import.Database
             )
             self._fullposition_class = import_name(
                 FULL_POSITION_MODULE[_enginename], _Import.FullPositionDS
@@ -1695,7 +1695,7 @@ class Chess(Bindings):
         def completed():
             self.ui.get_import_subprocess().join()
 
-            # See comment near end of class definition ChessDeferredUpdate in
+            # See comment near end of class definition DeferredUpdate in
             # sibling module chessdu for explanation of this change.
             # self.root.after_idle(
             #     self.try_command(after_completion, self.root))

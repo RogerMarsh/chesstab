@@ -162,7 +162,7 @@ class Database:
         del files
         super().open_database()
 
-        # Return True to fit behaviour of chessdpt module version of method.
+        # Return True to fit behaviour of dpt.database version of method.
         return True
 
     def save_broken_database_details(self, files=()):

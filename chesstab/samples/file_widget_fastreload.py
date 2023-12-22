@@ -23,13 +23,13 @@ import dptdb.dptapi
 
 from solentware_base.core.constants import DPT_SYSFL_FOLDER
 
-from ..dpt import chessdpt
+from ..dpt import database
 
 
 def file_fastreload(dbpath, inputdir):
     """Open database, fast load Games file, and close database."""
     print(time.ctime())
-    cdb = ChessDatabase(dbpath, allowcreate=True)
+    cdb = Database(dbpath, allowcreate=True)
     cdb.open_database()
     for table in cdb.table.values():
         # Load accepts positional arguments only.
@@ -42,7 +42,7 @@ def file_fastreload(dbpath, inputdir):
     print(time.ctime())
 
 
-class ChessDatabase(chessdpt.ChessDatabase):
+class Database(database.Database):
     """Provide access to a database of games of chess."""
 
     def __init__(self, databasefolder, sysfolder=None, **kargs):

@@ -1,4 +1,4 @@
-# chessdbdu.py
+# database_du.py
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -11,27 +11,29 @@ import bsddb3.db
 
 from solentware_base import bsddb3du_database
 
-from ..shared.dbdu import Dbdu
-from ..shared.alldu import chess_du, Alldu
+from ..shared import dbdu
+from ..shared import alldu
 
 
-class Chessbsddb3duError(Exception):
-    """Exception class for chessdbdu module."""
+class Bsddb3DatabaseduError(Exception):
+    """Exception class for db.database_du module."""
 
 
-def chess_database_du(dbpath, *args, **kwargs):
+def database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
-    chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
+    alldu.do_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
 
 
-class ChessDatabase(Alldu, Dbdu, bsddb3du_database.Database):
+class Database(alldu.Alldu, dbdu.Dbdu, bsddb3du_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):
-        """Delegate with Chessbsddb3duError as exception class."""
+        """Delegate with Bsddb3DatabaseduError as exception class."""
         super().__init__(
             DBfile,
-            Chessbsddb3duError,
+            Bsddb3DatabaseduError,
             (
                 bsddb3.db.DB_CREATE
                 | bsddb3.db.DB_RECOVER

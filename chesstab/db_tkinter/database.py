@@ -1,5 +1,5 @@
-# chessdb.py
-# Copyright 2008 Roger Marsh
+# database.py
+# Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
 """Chess database using Berkeley DB.
@@ -10,34 +10,22 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-# pylint will give import-error message if bsddb3 is not installed.
-# It is reasonable to not install Python package 'bsddb3'.
-# The importlib module is used to import chessdb if needed.
-from bsddb3.db import (
-    DB_CREATE,
-    DB_RECOVER,
-    DB_INIT_MPOOL,
-    DB_INIT_LOCK,
-    DB_INIT_LOG,
-    DB_INIT_TXN,
-    DB_PRIVATE,
-)
-
-from solentware_base import bsddb3_database
+from solentware_base import db_tkinter_database
 
 from ..core.filespec import (
     FileSpec,
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
     DB_ENVIRONMENT_MAXLOCKS,
+    DB_ENVIRONMENT_MAXOBJECTS,
 )
 from ..basecore import database
 
 
-class ChessDatabase(database.Database, bsddb3_database.Database):
-    """Provide access to a database of games of chess."""
+class Database(database.Database, db_tkinter_database.Database):
+    """Provide access to a database of games of chess via tkinter."""
 
-    _deferred_update_process = "chesstab.db.chessdbdu"
+    _deferred_update_process = "chesstab.db_tkinter.database_du"
 
     def __init__(
         self,
@@ -59,23 +47,26 @@ class ChessDatabase(database.Database, bsddb3_database.Database):
 
         environment = {
             "flags": (
-                DB_CREATE
-                | DB_RECOVER
-                | DB_INIT_MPOOL
-                | DB_INIT_LOCK
-                | DB_INIT_LOG
-                | DB_INIT_TXN
-                | DB_PRIVATE
+                "-create",
+                "-recover",
+                "-txn",
+                "-private",
+                "-system_mem",
             ),
             "gbytes": DB_ENVIRONMENT_GIGABYTES,
             "bytes": DB_ENVIRONMENT_BYTES,
             "maxlocks": DB_ENVIRONMENT_MAXLOCKS,
+            "maxobjects": DB_ENVIRONMENT_MAXOBJECTS,
         }
 
         super().__init__(
-            dbnames, folder=DBfile, environment=environment, **kargs
+            dbnames,
+            folder=DBfile,
+            environment=environment,
+            use_specification_items=use_specification_items,
+            **kargs,
         )
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file, self.dbenv.get_lg_dir().decode())
+        return (self.database_file, self._get_log_dir_name())

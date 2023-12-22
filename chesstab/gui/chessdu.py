@@ -60,14 +60,15 @@ _DATABASE_UPDATE_FACTOR = 5
 class _Reporter:
     """Helper class to keep 'LogText' API for adding text to log.
 
-    Not used in dptcompatdu module but is used in chessdptdu module.
+    Not used in dptcompatdu module but is used in dpt.database_du module.
 
     """
 
-    def __init__(self, append_text, append_text_only):
+    def __init__(self, append_text, append_text_only, empty):
         """Note the timestamp plus text, and text only, append methods."""
         self.append_text = append_text
         self.append_text_only = append_text_only
+        self.empty = empty
 
 
 class IncreaseDataProcess:
@@ -409,6 +410,7 @@ class DeferredUpdateProcess:
             reporter=_Reporter(
                 self._report_to_log,
                 self._report_to_log_text_only,
+                self.report_queue.empty,
             ),
             quit_event=self.quit_event,
             increases=self.increases,
@@ -480,6 +482,7 @@ class DeferredUpdateEstimateProcess:
                     _Reporter(
                         self._report_to_log,
                         self._report_to_log_text_only,
+                        self.report_queue.empty,
                     ),
                     self.increases,
                 )
@@ -745,22 +748,26 @@ class DeferredUpdateEstimateProcess:
         return self.estimate_data
 
 
-class ChessDeferredUpdate(Bindings):
+class DeferredUpdate(Bindings):
     """Connect a chess database with User Interface for deferred update."""
 
     def __init__(
         self,
-        deferred_update_method=None,
+        deferred_update_module=None,
         database_class=None,
         home_directory=None,
         pgnfiles=None,
         sample=5000,
     ):
-        """Create the database and ChessUI objects.
+        """Create the database and User Interface objects.
 
         deferred_update_method - the method to do the import
         database_class - access the database with an instance of this class
-        sample - estimate size of import from first 'sample' games in PGN file
+        sample - estimate import size from first 'sample' games in PGN file.
+
+        The deferred update module for each database engine will have one or
+        more methods to do tasks as the target method of a multiprocessing
+        Process: so these methods must have the same name in each module.
 
         """
         super().__init__()
@@ -770,7 +777,7 @@ class ChessDeferredUpdate(Bindings):
         self.increases = multiprocessing.Array("i", [0, 0, 0, 0])
         self.home_directory = home_directory
         self.pgnfiles = pgnfiles
-        self.dumethod = deferred_update_method
+        self.deferred_update_module = deferred_update_module
         self.sample = sample
         self._import_done = False
         self._import_job = None
@@ -904,7 +911,6 @@ class ChessDeferredUpdate(Bindings):
         )
         self.quit_thread.start()
         self._add_queued_reports_to_log()
-        self.root.mainloop()
 
     def _database_looks_like_dpt(self):
         """Return True if database attribute signature looks like DPT.
@@ -918,7 +924,7 @@ class ChessDeferredUpdate(Bindings):
         # An alternative implementation of this difference calls a method
         # add_import_buttons() rather than add the buttons if the test
         # here returns True.  Two versions of add_import_buttons() are
-        # defined in classes ..dpt.chessdptdu.ChessDatabase and
+        # defined in classes ..dpt.database_du.Database and
         # ..shared.dptcompatdu.DptCompatdu and the class hierarchy does
         # the test implemented here.  At present that implementation fails
         # because module pickling errors occur for the import action if
@@ -1095,7 +1101,7 @@ class ChessDeferredUpdate(Bindings):
         self.quit_event.clear()
         self.deferred_update = DeferredUpdateProcess(
             self.database,
-            self.dumethod,
+            self.deferred_update_module.database_du,
             self.report_queue,
             self.quit_event,
             self.increases,

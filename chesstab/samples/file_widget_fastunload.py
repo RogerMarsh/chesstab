@@ -21,13 +21,13 @@ import tkinter.filedialog
 
 import dptdb.dptapi
 
-from ..dpt.chessdpt import ChessDatabase
+from ..dpt.database import Database
 
 
 def file_fastunload(dbpath, outputdir):
     """Open database, fast unload Games file, and close database."""
     print(time.ctime())
-    cdb = ChessDatabase(dbpath, allowcreate=True)
+    cdb = Database(dbpath, allowcreate=True)
     cdb.open_database()
     for table in cdb.table.values():
         # Unload accepts positional arguments only.

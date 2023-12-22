@@ -37,37 +37,37 @@ APPLICATION_NAME = "ChessTab"
 ERROR_LOG = "ErrorLog"
 
 # berkeleydb interface module name
-_BERKELEYDBCHESS = __name__ + ".berkeleydb.chessberkeleydb"
+_BERKELEYDBCHESS = __name__ + ".berkeleydb.database"
 
 # bsddb3 interface module name
-_DBCHESS = __name__ + ".db.chessdb"
+_DBCHESS = __name__ + ".db.database"
 
 # DPT interface module name
-_DPTCHESS = __name__ + ".dpt.chessdpt"
+_DPTCHESS = __name__ + ".dpt.database"
 
 # sqlite3 interface module name
-_SQLITE3CHESS = __name__ + ".sqlite.chesssqlite3"
+_SQLITE3CHESS = __name__ + ".sqlite.database"
 
 # apsw interface module name
-_APSWCHESS = __name__ + ".apsw.chessapsw"
+_APSWCHESS = __name__ + ".apsw.database"
 
 # unqlite interface module name
-_UNQLITECHESS = __name__ + ".unqlite.chessunqlite"
+_UNQLITECHESS = __name__ + ".unqlite.database"
 
 # vedis interface module name
-_VEDISCHESS = __name__ + ".vedis.chessvedis"
+_VEDISCHESS = __name__ + ".vedis.database"
 
 # dbm.gnu interface module name
-_GNUCHESS = __name__ + ".gnu.chessgnu"
+_GNUCHESS = __name__ + ".gnu.database"
 
 # dbm.ndbm interface module name
-_NDBMCHESS = __name__ + ".ndbm.chessndbm"
+_NDBMCHESS = __name__ + ".ndbm.database"
 
 # tkinter.tcl Berkeley DB interface module name
-_DB_TCLCHESS = __name__ + ".db_tkinter.chessdbtkinter"
+_DB_TCLCHESS = __name__ + ".db_tkinter.database"
 
 # lmdb interface module name
-_LMDBCHESS = __name__ + ".lmdb.chesslmdb"
+_LMDBCHESS = __name__ + ".lmdb.database"
 
 # Map database module names to application module
 APPLICATION_DATABASE_MODULE = {

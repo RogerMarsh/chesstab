@@ -2,11 +2,11 @@
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import PGN file with lmdb.chessdbdu to database."""
+"""Import PGN file with lmdb.database_du to database."""
 
 
 if __name__ == "__main__":
     from .file_widget import FileWidget
-    from ..lmdb.chesslmdbdu import ChessDatabase
+    from ..lmdb.database_du import Database
 
-    FileWidget(ChessDatabase, "db")
+    FileWidget(Database, "db")

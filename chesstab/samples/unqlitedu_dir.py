@@ -2,11 +2,11 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import directory of PGN files with unqlite.chessunqlitedu to database."""
+"""Import directory of PGN files with unqlite.database_du to database."""
 
 
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
-    from ..unqlite.chessunqlitedu import chess_database_du
+    from ..unqlite.database_du import database_du
 
-    DirectoryWidget(chess_database_du, "unqlite")
+    DirectoryWidget(database_du, "unqlite")

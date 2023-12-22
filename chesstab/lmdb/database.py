@@ -1,4 +1,4 @@
-# chesslmdb.py
+# database.py
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -10,10 +10,10 @@ from ..core.filespec import FileSpec
 from ..basecore import database
 
 
-class ChessDatabase(database.Database, lmdb_database.Database):
-    """Provide access to a database of games of chess."""
+class Database(database.Database, lmdb_database.Database):
+    """Provide access to a lmdb database of games of chess."""
 
-    _deferred_update_process = "chesstab.lmdb.chesslmdbdu"
+    _deferred_update_process = "chesstab.lmdb.database_du"
 
     def __init__(
         self,
@@ -32,7 +32,13 @@ class ChessDatabase(database.Database, lmdb_database.Database):
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )
-        super().__init__(dbnames, folder=DBfile, **kargs)
+
+        super().__init__(
+            dbnames,
+            folder=DBfile,
+            use_specification_items=use_specification_items,
+            **kargs,
+        )
 
         # Allow space for lots of chess engine analysis.
         self._set_map_blocks_above_used_pages(200)

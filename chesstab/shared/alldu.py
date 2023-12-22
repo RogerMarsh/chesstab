@@ -18,10 +18,10 @@ from ..core.chessrecord import ChessDBrecordGameImport
 from .. import ERROR_LOG, APPLICATION_NAME
 
 
-# This function is not absorbed in chess_du_import because the database
+# This function is not absorbed in du_import because the database
 # has to be open for DPT backup, but not in the mode used to do an
 # import.
-def chess_du_backup_before_import(
+def du_backup_before_task(
     cdb,
     file=None,
     reporter=None,
@@ -42,10 +42,10 @@ def chess_du_backup_before_import(
             reporter.append_text("Backup completed.")
 
 
-# This function is not absorbed in chess_du_import because in DPT the
+# This function is not absorbed in du_import because in DPT the
 # absence of 'file full' conditions has to be confirmed before deleting
 # the backups.
-def chess_du_delete_backup_after_import(
+def du_backup_before_task(
     cdb,
     file=None,
     reporter=None,
@@ -65,24 +65,50 @@ def chess_du_delete_backup_after_import(
         reporter.append_text_only("")
 
 
-def chess_du_import(
+def du_import(
     cdb,
     pgnpaths,
+    indexing=True,
     file=None,
     reporter=None,
     quit_event=None,
     increases=None,
 ):
-    """Import games from pgnpaths into open database cdb."""
+    """Import games from pgnpaths into open database cdb.
+
+    cdb         Database instance which does the deferred updates.
+    pgnpaths    List of file names containing PGN game scores to be imported.
+    indexing    True means do import within set_defer_update block,
+                False means do import within start_transaction block.
+                Not passed to importer instance's <import> method because
+                the commit() and start_transaction() calls at segment
+                boundaries in deferred update mode do the right thing with
+                the current database engine choices.
+    file        name of table in database to be updated.
+    reporter    None or an object with append_text and append_text_only
+                methods taking a str argument.
+    quit_event  passed to the importer instance's <import> method.
+                None or an Event instance.
+    increases   <obsolete>? <for DPT only> <pre-import table size increases>
+                intention is increase data and index sizes during import,
+                especially if it is possible to recover from Table D full
+                conditions simply by increasing the index size and repeating
+                the import without adding any records (and re-applying any
+                left over deferred index updates).
+                Increase during import is allowed only if no recordsets,
+                cursors, and so forth, are open on the table (DPT file)
+                being updated.
+
+    """
     importer = ChessDBrecordGameImport()
     for key in cdb.table.keys():
         if key == file:
-            if increases is None:
-                counts = [0, 0]
-            else:
-                counts = [increases[0], increases[1]]
-            cdb.increase_database_record_capacity(files={key: counts})
-            _chess_du_report_increases(reporter, key, counts)
+            #if increases is None:
+            #    counts = [0, 0]
+            #else:
+            #    counts = [increases[0], increases[1]]
+            #cdb.increase_database_record_capacity(files={key: counts})
+            #_du_report_increases(reporter, key, counts)
             break
     else:
         if reporter is not None:
@@ -94,7 +120,13 @@ def chess_du_import(
             )
             reporter.append_text_only("")
         return
-    cdb.set_defer_update()
+    if reporter is not None:
+        reporter.append_text_only("")
+        reporter.append_text("Import started.")
+    if indexing:
+        cdb.set_defer_update()
+    else:
+        cdb.start_transaction()
     try:
         for pgnfile in pgnpaths:
             with open(pgnfile, "r", encoding="iso-8859-1") as source:
@@ -110,23 +142,127 @@ def chess_du_import(
         if reporter is not None:
             reporter.append_text("Finishing import: please wait.")
             reporter.append_text_only("")
-        cdb.do_final_segment_deferred_updates()
+        if indexing:
+            cdb.do_final_segment_deferred_updates()
     except Exception as exc:
         _report_exception(cdb, reporter, exc)
         raise
-    cdb.unset_defer_update()
+
+    # DPT database engine needs the test for empty queue because all the
+    # deferred index updates are applied in the Close() method called when
+    # closing the file on completion of the task (well after exit from
+    # du_import), in particular the C++ code in the dptapi extension, so the
+    # queued reports have to be processed before entering that code to avoid
+    # an unresponsive GUI; and no indication of progress.
+    # The other database engines do not cause the GUI to become unresponsive
+    # in the absence of the test for an empty queue.
+    if indexing:
+        dsize = _pre_unset_defer_update_reports(cdb, file, reporter)
+        cdb.unset_defer_update()
+        _post_unset_defer_update_reports(cdb, file, reporter, dsize)
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+    else:
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+        cdb.commit()
 
 
-def chess_du(cdb, *args, file=None, **kwargs):
-    """Open database, delegate to chess_du_import, and close database."""
-    chess_du_backup_before_import(cdb, file=file, **kwargs)
+# DPT database engine specific.
+# Maybe will have to go into solentwre_base, but do not want the reporter
+# code there.
+# Non-DPT code has get_database_table_sizes() return {}.
+# Problem is DPT does things in unset_defer_update which need before and
+# after reports, while other engines do different things which do not
+# need reports at all.
+def _pre_unset_defer_update_reports(database, file, reporter):
+    """Generate reports relevant to database engine before completion."""
+    if reporter is None:
+        return None
+    for name, sizes in database.get_database_table_sizes(
+        files=set((file,))
+    ).items():
+        reporter.append_text(
+            "".join(("Data import for ", name, " completed."))
+        )
+        dsize = sizes["DSIZE"]
+        reporter.append_text_only(
+            "Data area size after import: " + str(sizes["BSIZE"])
+        )
+        reporter.append_text_only(
+            "".join(
+                (
+                    "Data pages used in import: ",
+                    str(sizes["BHIGHPG"] - database.table[name].table_b_pages_used),
+                )
+            )
+        )
+        reporter.append_text_only(
+            "Index area size before import: " + str(dsize)
+        )
+        reporter.append_text_only("")
+        return dsize
+
+
+# DPT database engine specific.
+# Maybe will have to go into solentwre_base, but do not want the reporter
+# code there.
+# Non-DPT code has get_database_table_sizes() return {}.
+# Problem is DPT does things in unset_defer_update which need before and
+# after reports, while other engines do different things which do not
+# need reports at all.
+def _post_unset_defer_update_reports(database, file, reporter, dsize):
+    """Generate reports relevant to database engine after completion."""
+    if reporter is None:
+        return
+    for name, sizes in database.get_database_table_sizes(
+        files=set((file,))
+    ).items():
+        reporter.append_text(
+            "".join(("Index size status for ", name, "."))
+        )
+        new_dsize = sizes["DSIZE"]
+        reporter.append_text_only(
+            "Index area size: " + str(new_dsize)
+        )
+        reporter.append_text_only(
+            "".join(
+                (
+                    "Index area size increase: ",
+                    str(new_dsize - dsize),
+                )
+            )
+        )
+        reporter.append_text_only(
+            "".join(
+                (
+                    "Index area free: ",
+                    str(new_dsize - sizes["DPGSUSED"]),
+                )
+            )
+        )
+        reporter.append_text_only("")
+        reporter.append_text(
+            "".join(("Applying Index update for ", name, ": please wait."))
+        )
+        reporter.append_text_only("")
+
+
+def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
+    """Open database, delegate to du_import, and close database."""
+    #du_backup_before_task(cdb, file=file, **kwargs)
     cdb.open_database()
-    chess_du_import(cdb, *args, file=file, **kwargs)
+    du_import(cdb, *args, reporter=reporter, file=file, **kwargs)
     cdb.close_database()
-    chess_du_delete_backup_after_import(cdb, file=file, **kwargs)
+    if reporter is not None:
+        reporter.append_text("Import finished.")
+        reporter.append_text_only("")
+    #du_delete_backup_after_task(cdb, file=file, **kwargs)
 
 
-def _chess_du_report_increases(reporter, file, size_increases):
+def _du_report_increases(reporter, file, size_increases):
     """Report size increases for file if any and there is a reporter.
 
     All elements of size_increases will be 0 (zero) if explicit increase

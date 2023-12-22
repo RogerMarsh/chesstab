@@ -1092,8 +1092,8 @@ re_disambiguate_error = re.compile(DISAMBIGUATE_FORMAT.join(("^", "$")))
 re_disambiguate_non_move = re.compile(UNAMBIGUOUS_FORMAT.join(("^", "$")))
 re_possible_move = re.compile(POSSIBLE_MOVE.join(("(^", "$)")))
 
-# for runtime "from <db|dpt>results import ChessDatabase" and similar
-_ChessDB = "ChessDatabase"
+# for runtime "from <db|dpt>results import Database" and similar
+_ChessDB = "Database"
 _FullPositionDS = "FullPositionDS"
 _AnalysisDS = "AnalysisDS"
 

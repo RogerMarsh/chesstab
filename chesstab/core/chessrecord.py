@@ -182,7 +182,7 @@ class ChessDBrecordGame(Record):
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
 
-        The keys for the secondary databases in a ChessDatabase instance are
+        The keys for the secondary databases in a Database instance are
         embedded in, or derived from, the PGN string for the game.  All
         except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a
@@ -571,7 +571,7 @@ class ChessDBrecordGameUpdate(Record):
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
 
-        The keys for the secondary databases in a ChessDatabase instance are
+        The keys for the secondary databases in a Database instance are
         embedded in, or derived from, the PGN string for the game.  All
         except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a
@@ -637,7 +637,6 @@ class ChessDBrecordGameImport(Record):
         if reporter is not None:
             reporter.append_text_only("")
             reporter.append_text("Extracting games from " + sourcename)
-        ddup = database.deferred_update_points
         db_segment_size = SegmentSize.db_segment_size
         value = self.value
         count = 0
@@ -654,7 +653,9 @@ class ChessDBrecordGameImport(Record):
             value.collected_game = collected_game
             self.put_record(self.database, GAMES_FILE_DEF)
             count += 1
-            if self.key.recno % db_segment_size in ddup:
+            if count % db_segment_size == 0:
+                database.commit()
+                database.start_transaction()
                 if reporter is not None:
                     reporter.append_text(
                         "".join(
@@ -668,7 +669,6 @@ class ChessDBrecordGameImport(Record):
                             )
                         )
                     )
-                database.deferred_update_housekeeping()
         if reporter is not None and value.collected_game is not None:
             reporter.append_text(
                 "".join(
@@ -850,7 +850,7 @@ class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
 
-        The keys for the secondary databases in a ChessDatabase instance are
+        The keys for the secondary databases in a Database instance are
         embedded in, or derived from, the PGN string for the game.  All
         except the positions are held in self.value.collected_game.pgn_tags.
         Multiple position keys can arise becuse all repetitions of a

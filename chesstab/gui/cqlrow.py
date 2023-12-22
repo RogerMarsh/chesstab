@@ -124,7 +124,7 @@ def chess_db_row_cql(chessui):
 
     chessui is a chess_ui.ChessUI instance.
 
-    The returned function takes a ChessDatabase instance as it's argument.
+    The returned function takes a Database instance as it's argument.
     """
 
     def make_selection(database=None):

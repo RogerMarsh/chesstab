@@ -7,6 +7,6 @@
 
 if __name__ == "__main__":
     from .file_widget_fastload import FileWidget
-    from .chessdptfastload import ChessDatabase
+    from .chessdptfastload import Database
 
-    FileWidget(ChessDatabase, "dpt fastload")
+    FileWidget(Database, "dpt fastload")

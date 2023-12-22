@@ -2,11 +2,11 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import PGN file with gnu.chessgnudu to database."""
+"""Import PGN file with gnu.database_du to database."""
 
 
 if __name__ == "__main__":
     from .file_widget import FileWidget
-    from ..gnu.chessgnudu import ChessDatabase
+    from ..gnu.database_du import Database
 
-    FileWidget(ChessDatabase, "dbm.gnu")
+    FileWidget(Database, "dbm.gnu")

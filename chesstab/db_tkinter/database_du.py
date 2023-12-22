@@ -1,4 +1,4 @@
-# chessdbtkinterdu.py
+# database_du.py
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -9,27 +9,29 @@ This module uses the tcl interface via tkinter.
 
 from solentware_base import db_tkinterdu_database
 
-from ..shared.dbdu import Dbdu
-from ..shared.alldu import chess_du, Alldu
+from ..shared import dbdu
+from ..shared import alldu
 
 
-class ChessdbtkinterduError(Exception):
-    """Exception class for chessdbdu module."""
+class DbtkinterDatabaseduError(Exception):
+    """Exception class for db_tkinter.database_du module."""
 
 
-def chess_database_du(dbpath, *args, **kwargs):
+def database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
-    chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
+    alldu.do_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
 
 
-class ChessDatabase(Alldu, Dbdu, db_tkinterdu_database.Database):
+class Database(alldu.Alldu, dbdu.Dbdu, db_tkinterdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):
-        """Delegate with ChessdbtkinterduError as exception class."""
+        """Delegate with DbtkinterDatabaseduError as exception class."""
         super().__init__(
             DBfile,
-            ChessdbtkinterduError,
+            DbtkinterDatabaseduError,
             ("-create", "-recover", "-txn", "-private", "-system_mem"),
-            **kargs
+            **kargs,
         )

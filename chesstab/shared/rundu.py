@@ -67,13 +67,14 @@ def rundu(
 
     engine_module_name and database_module_name must be absolute path
     names: 'chesstab.gui.chessdb' as engine_module_name and
-    'chesstab.apsw.chessapswdu' as database_module_name for example.
+    'chesstab.apsw.database_du' as database_module_name for example.
 
     A directory containing the chesstab package must be on sys.path.
 
     """
     database_module = importlib.import_module(database_module_name)
     if sys.platform.startswith("openbsd"):
+
         # The default user class is limited to 512Mb memory but imports need
         # ~550Mb at Python3.6 for sqlite3.
         # Processes running for users in some login classes are allowed to
@@ -84,6 +85,7 @@ def rundu(
         try:
             b" " * 1000000000
         except MemoryError:
+
             soft, hard = resource.getrlimit(resource.RLIMIT_DATA)
             try:
                 resource.setrlimit(
@@ -104,13 +106,14 @@ def rundu(
                     "Exception in rundu while setting resource limit"
                 ) from exc_a
 
+    deferred_update = chessdu.DeferredUpdate(
+        deferred_update_module=database_module,
+        database_class=database_module.Database,
+        home_directory=home_directory,
+        pgnfiles=pgnfiles,
+    )
     try:
-        chessdu.ChessDeferredUpdate(
-            deferred_update_method=database_module.chess_database_du,
-            database_class=database_module.ChessDatabase,
-            home_directory=home_directory,
-            pgnfiles=pgnfiles,
-        )
+        deferred_update.root.mainloop()
     except Exception as error:
         try:
             write_error_to_log(home_directory)

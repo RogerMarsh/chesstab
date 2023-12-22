@@ -6,7 +6,7 @@
 
 This module contains FileWidget, the code common to the original *du_file
 modules; and file_du, a cut-down version of the chess_*du functions in the
-engine specific chess*du modules (db.chessdbdu for example).
+engine specific chess*du modules (db.database_du for example).
 """
 
 import tkinter

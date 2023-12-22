@@ -20,7 +20,7 @@ import tkinter.messagebox
 # systems.
 # Wine counts as a Microsft Windows system.
 # It is reasonable to not install 'dptdb.dptapi'.
-# The importlib module is used to import chessdptdu if needed.
+# The importlib module is used to import database_du if needed.
 from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
 
 from solentware_base import dptfastload_database
@@ -36,7 +36,7 @@ from ..core.filespec import (
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
 )
-from ..shared.alldu import chess_du_import
+from ..shared.alldu import du_import
 
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
 # the 8192 byte page are used for the bitmap.
@@ -54,13 +54,13 @@ def chess_dptfastload(
     dbpath, pgnpaths, file_records=None, reporter=None, quit_event=None
 ):
     """Open database, import games and close database."""
-    cdb = ChessDatabase(dbpath, allowcreate=True)
+    cdb = Database(dbpath, allowcreate=True)
     cdb.open_database(files=file_records)
 
     # Intend to start a process, via multiprocessing, to do the database
     # update.  That process will do the reporting, not the one running
     # this method.
-    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+    du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
 
     cdb.close_database_contexts(files=file_records)
     cdb.open_database_contexts(files=file_records)
@@ -74,7 +74,7 @@ def chess_dptfastload(
     return status
 
 
-class ChessDatabase(dptfastload_database.Database):
+class Database(dptfastload_database.Database):
     """Provide fast load deferred methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
@@ -174,7 +174,7 @@ class ChessDatabase(dptfastload_database.Database):
             (counts[1] * self.table[GAMES_FILE_DEF].btod_factor) // brecppg,
         )
 
-    def _get_database_table_sizes(self, files=None):
+    def _get_table_sizes_and_increases(self, files=None):
         """Return Table B and D size and usage in pages for files."""
         if files is None:
             files = dict()
@@ -407,7 +407,7 @@ class ChessDatabase(dptfastload_database.Database):
         }
         append_text("Current file size and free space:")
         free = dict()
-        sizes, increases = self._get_database_table_sizes(
+        sizes, increases = self._get_table_sizes_and_increases(
             files=self._notional_record_counts
         )
         for filename, bdsize in sizes.items():

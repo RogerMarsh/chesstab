@@ -1,5 +1,5 @@
-# chessberkeleydb.py
-# Copyright 2021 Roger Marsh
+# database.py
+# Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
 """Chess database using Berkeley DB.
@@ -10,10 +10,10 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-# pylint will give import-error message if berkeleydb is not installed.
-# It is reasonable to not install Python package 'berkeleydb'.
-# The importlib module is used to import chessberkeleydb if needed.
-from berkeleydb.db import (
+# pylint will give import-error message if bsddb3 is not installed.
+# It is reasonable to not install Python package 'bsddb3'.
+# The importlib module is used to import database if needed.
+from bsddb3.db import (
     DB_CREATE,
     DB_RECOVER,
     DB_INIT_MPOOL,
@@ -23,7 +23,7 @@ from berkeleydb.db import (
     DB_PRIVATE,
 )
 
-from solentware_base import berkeleydb_database
+from solentware_base import bsddb3_database
 
 from ..core.filespec import (
     FileSpec,
@@ -34,10 +34,10 @@ from ..core.filespec import (
 from ..basecore import database
 
 
-class ChessDatabase(database.Database, berkeleydb_database.Database):
-    """Provide access to a database of games of chess."""
+class Database(database.Database, bsddb3_database.Database):
+    """Provide access to a database of games of chess via bsddb3."""
 
-    _deferred_update_process = "chesstab.berkeleydb.chessberkeleydbdu"
+    _deferred_update_process = "chesstab.db.database_du"
 
     def __init__(
         self,
@@ -73,7 +73,11 @@ class ChessDatabase(database.Database, berkeleydb_database.Database):
         }
 
         super().__init__(
-            dbnames, folder=DBfile, environment=environment, **kargs
+            dbnames,
+            folder=DBfile,
+            environment=environment,
+            use_specification_items=use_specification_items,
+            **kargs,
         )
 
     def _delete_database_names(self):

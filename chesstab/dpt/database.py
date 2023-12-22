@@ -1,4 +1,4 @@
-# chessdpt.py
+# database.py
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -11,18 +11,18 @@ import tkinter.messagebox
 # systems.
 # Wine counts as a Microsft Windows system.
 # It is reasonable to not install 'dptdb.dptapi'.
-# The importlib module is used to import chessdpt if needed.
+# The importlib module is used to import database if needed.
 from dptdb.dptapi import (
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
 )
 
 from .. import APPLICATION_NAME
-from . import chessdptnofistat
+from . import dptnofistat
 
 
-class ChessDatabase(chessdptnofistat.ChessDatabase):
-    """Provide access to a database of games of chess.
+class Database(dptnofistat.Database):
+    """Provide access to a DPT database of games of chess.
 
     The open_database() method is extended in a number of ways, all but
     one with a new name.  These methods take the FISTAT flags into

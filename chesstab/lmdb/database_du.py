@@ -1,4 +1,4 @@
-# chesslmdbdu.py
+# database_du.py
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -6,25 +6,27 @@
 
 from solentware_base import lmdbdu_database
 
-from ..shared.litedu import Litedu
-from ..shared.alldu import chess_du, Alldu
+from ..shared import litedu
+from ..shared import alldu
 
 
-class ChesslmdbduError(Exception):
-    """Exception class for chesslmdbdu module."""
+class LmdbDatabaseduError(Exception):
+    """Exception class for lmdb.database_du module."""
 
 
-def chess_database_du(dbpath, *args, **kwargs):
+def database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
-    chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
+    alldu.do_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
 
 
-class ChessDatabase(Alldu, Litedu, lmdbdu_database.Database):
+class Database(alldu.Alldu, litedu.Litedu, lmdbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):
-        """Delegate with ChesslmdbduError as exception class."""
-        super().__init__(DBfile, ChesslmdbduError, **kargs)
+        """Delegate with LmdbDatabaseduError as exception class."""
+        super().__init__(DBfile, LmdbDatabaseduError, **kargs)
 
         # Assume DEFAULT_MAP_PAGES * 100 is enough for adding 64000 normal
         # sized games: the largest segment size holds 64000 games and a

@@ -1,4 +1,4 @@
-# chessberkeleydbdu.py
+# database_du.py
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -11,27 +11,29 @@ import berkeleydb.db
 
 from solentware_base import berkeleydbdu_database
 
-from ..shared.dbdu import Dbdu
-from ..shared.alldu import chess_du, Alldu
+from ..shared import dbdu
+from ..shared import alldu
 
 
-class ChessberkeleydbduError(Exception):
-    """Exception class for chessberkeleydbdu module."""
+class BerkeleydbDatabaseduError(Exception):
+    """Exception class for berkeleydb.database_du module."""
 
 
-def chess_database_du(dbpath, *args, **kwargs):
+def database_du(dbpath, *args, **kwargs):
     """Open database, import games and close database."""
-    chess_du(ChessDatabase(dbpath, allowcreate=True), *args, **kwargs)
+    alldu.do_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
 
 
-class ChessDatabase(Alldu, Dbdu, berkeleydbdu_database.Database):
+class Database(alldu.Alldu, dbdu.Dbdu, berkeleydbdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 
     def __init__(self, DBfile, **kargs):
-        """Delegate with ChessberkeleydbduError as exception class."""
+        """Delegate with BerkeleydbDatabaseduError as exception class."""
         super().__init__(
             DBfile,
-            ChessberkeleydbduError,
+            BerkeleydbDatabaseduError,
             (
                 berkeleydb.db.DB_CREATE
                 | berkeleydb.db.DB_RECOVER

@@ -2,7 +2,7 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import directory of PGN files with ndbm.chessndbmdu to database.
+"""Import directory of PGN files with ndbm.database_du to database.
 
 The default segment size, 4000 bytes, leads to a
 'HASH: Out of overflow pages.  Increase page size'
@@ -17,6 +17,6 @@ too.
 
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
-    from ..ndbm.chessndbmdu import chess_database_du
+    from ..ndbm.database_du import database_du
 
-    DirectoryWidget(chess_database_du, "dbm.ndbm")
+    DirectoryWidget(database_du, "dbm.ndbm")

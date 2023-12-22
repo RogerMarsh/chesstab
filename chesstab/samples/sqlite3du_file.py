@@ -2,11 +2,11 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import PGN file with sqlite.chesssqlite3du to database."""
+"""Import PGN file with sqlite.database_du to database."""
 
 
 if __name__ == "__main__":
     from .file_widget import FileWidget
-    from ..sqlite.chesssqlite3du import ChessDatabase
+    from ..sqlite.database_du import Database
 
-    FileWidget(ChessDatabase, "sqlite3")
+    FileWidget(Database, "sqlite3")

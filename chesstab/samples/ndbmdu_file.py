@@ -2,11 +2,11 @@
 # Copyright 2015 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Import PGN file with ndbm.chessndbmdu to database."""
+"""Import PGN file with ndbm.database_du to database."""
 
 
 if __name__ == "__main__":
     from .file_widget import FileWidget
-    from ..ndbm.chessndbmdu import ChessDatabase
+    from ..ndbm.database_du import Database
 
-    FileWidget(ChessDatabase, "dbm.ndbm")
+    FileWidget(Database, "dbm.ndbm")
