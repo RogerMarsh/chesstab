@@ -35,7 +35,7 @@ dependencies = [
     "chessql==2.1.3.dev0",
     "solentware-grid==2.2.dev0",
     "pgn-read==2.4.dev0",
-    "solentware-misc==1.6",
+    "solentware-misc==1.7.dev0",
     "uci-net==1.2.7",
 ]
 

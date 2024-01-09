@@ -16,23 +16,7 @@ rule.
 
 import tkinter
 
-# To support workaround for:
-# _tkinter.TclError: window id "<number>" doesn't exist in this application
-# which occurs on 64-bit Windows 7 Home Edition running 64-bit Python 3.4.3
-# but not on 32-bit Windows XP.
-# Not yet known if 64-bit OSes in general are affected.
-# The problem code is: widget.winfo_pathname(widget.winfo_id())
-import sys
-import os
-
-_WIN32_PLATFORM = sys.platform == "win32"
-del sys
-
-_amd64 = (
-    os.getenv("PROCESSOR_ARCHITECTURE") == "AMD64"
-    or os.getenv("PROCESSOR_ARCHITEW6432") == "AMD64"
-)
-del os
+from solentware_misc.workarounds import workarounds
 
 
 class DisplayItemsError(Exception):
@@ -205,40 +189,24 @@ class DisplayItems:
         """Give focus to widget and return (lose focus, gain focus) widgets."""
         stack = self.stack
         losefocus = stack[-1]
-
-        # win32 amd64 workaround. See comment at top of module.
-        # Code in except clause is semantically closer to try clause than
-        # a str(widget) version.
         try:
             gain = widget.winfo_pathname(widget.winfo_id())
-        except tkinter.TclError:
-            if not _WIN32_PLATFORM or not _amd64:
-                raise
-            gain = ".".join((widget.winfo_parent(), widget.winfo_name()))
-
+        except tkinter.TclError as exc:
+            gain = workarounds.winfo_pathname(widget, exc)
         for item in stack:
             top_widget = item.get_top_widget()
-
-            # win32 amd64 workaround. See comment at top of module.
-            # Code in except clause is semantically closer to try clause than
-            # a str(widget) version.
             try:
                 if gain.startswith(
                     top_widget.winfo_pathname(top_widget.winfo_id())
                 ):
                     gainfocus = item
                     break
-            except tkinter.TclError:
-                if not _WIN32_PLATFORM or not _amd64:
-                    raise
+            except tkinter.TclError as exc:
                 if gain.startswith(
-                    ".".join(
-                        (top_widget.winfo_parent(), top_widget.winfo_name())
-                    )
+                    workarounds.winfo_pathname(top_widget, exc)
                 ):
                     gainfocus = item
                     break
-
         else:
             gainfocus = losefocus
         self.stack[-1].ui.set_toolbarframe_disabled()
