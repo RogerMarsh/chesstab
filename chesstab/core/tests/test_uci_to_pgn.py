@@ -121,7 +121,7 @@ class Generate_pgn_for_uci_illegal_moves(unittest.TestCase):
     def test_generate_pgn_for_uci_illegal_moves_01(self):
         self.assertRaisesRegex(
             AttributeError,
-            "'list' object has no attribute 'split'",
+            "'list' object has no attribute 'split'$",
             generate_pgn_for_uci_moves_in_position,
             *([], self.fen),
         )
