@@ -19,6 +19,8 @@ main display (that includes widgets displaying text).
 
 """
 
+import tkinter
+
 from solentware_grid.core.dataclient import DataNotify
 
 from solentware_bind.gui.bindings import Bindings
@@ -26,6 +28,7 @@ from solentware_bind.gui.bindings import Bindings
 from .game import Game
 from .gameedit import GameEdit
 from ..core.chessrecord import ChessDBrecordGameUpdate
+from ..core import constants
 from .constants import STATUS_SEVEN_TAG_ROSTER_PLAYERS
 from .eventspec import EventSpec
 from .display import Display
@@ -81,7 +84,7 @@ class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
     pgn_score_name = "game"
-    pgn_score_source = "Editor"
+    pgn_score_source = ""
     pgn_score_tags = STATUS_SEVEN_TAG_ROSTER_PLAYERS
     pgn_score_updater = ChessDBrecordGameUpdate
 
@@ -232,7 +235,7 @@ class GameDisplay(_GameDisplay, Game, DataNotify):
         # original.value.set_game_source(self.sourceobject.value.gamesource)
         # original.value.set_game_source('Copy, possibly edited')
         if original_value.is_error_comment_present():
-            original_value.set_game_source("Editor")
+            original_value.set_game_source("")
 
     def _create_primary_activity_popup(self):
         """Delegate then add close item entry and return popup menu."""
@@ -251,8 +254,19 @@ class GameDisplayInsert(InsertPGN, _GameDisplay, GameEdit, DataNotify):
     """Display a chess game from a database allowing insert.
 
     GameEdit provides the widget and _GameDisplay the database interface.
-
     """
+
+    # This method forced by addition of second list element in Game record
+    # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
+    # in classes in chessrecord module.
+    def _construct_record_value(self):
+        """Return record value for Game record."""
+        return repr(
+            [
+                repr(self.score.get("1.0", tkinter.END)),
+                {constants.FILE: "", constants.GAME: ""},
+            ]
+        )
 
 
 class GameDisplayEdit(EditPGN, GameDisplayInsert):
@@ -272,7 +286,7 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
         # original.value.set_game_source(self.sourceobject.value.gamesource)
         # original.value.set_game_source('Copy, possibly edited')
         if original_value.is_error_comment_present():
-            original_value.set_game_source("Editor")
+            original_value.set_game_source("")
 
     # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and
@@ -281,3 +295,21 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
     def _set_properties_on_grids(self, newkey):
         """Set properties of widgets for newkey on all grids."""
         self.ui.set_properties_on_all_game_grids(newkey)
+
+    # This method forced by addition of second list element in Game record
+    # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
+    # in classes in chessrecord module.
+    # Nowhere to put this in common with GameDbEdit.
+    def _construct_record_value(self):
+        """Return record value for Game record."""
+        reference = self.sourceobject.value.reference
+        if reference[constants.FILE]:
+            game_number = ""
+        else:
+            game_number = reference[constants.GAME]
+        return repr(
+            [
+                repr(self.get_score_error_escapes_removed()),
+                {constants.FILE: "", constants.GAME: game_number},
+            ]
+        )

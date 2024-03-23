@@ -84,7 +84,9 @@ class CQLStatement(Statement):
         # Support using where.Where or where_dpt.Where depending on database
         # engine being used.
         # This attribute should not be used for anything else.
-        self.__database = None
+        # pylint unused-private-member report W0238.
+        # Commented because vaguely similar querystatement module does use it.
+        # self.__database = None
         # self.root_filter_node = None
 
     @property
@@ -111,7 +113,9 @@ class CQLStatement(Statement):
 
     def set_database(self, database=None):
         """Set Database instance to which ChessQL query is applied."""
-        self.__database = database
+        # pylint unused-private-member report W0238.
+        # Commented because vaguely similar querystatement module does use it.
+        # self.__database = database
 
     def get_name_text(self):
         """Return name text."""

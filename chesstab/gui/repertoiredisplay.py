@@ -20,6 +20,8 @@ text).
 
 """
 
+import tkinter
+
 from solentware_grid.core.dataclient import DataNotify
 
 from solentware_bind.gui.bindings import Bindings
@@ -83,7 +85,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
     pgn_score_name = "repertoire"
-    pgn_score_source = "No opening name"
+    pgn_score_source = ""
     pgn_score_tags = (TAG_OPENING,)
     pgn_score_updater = ChessDBrecordRepertoireUpdate
 
@@ -222,7 +224,7 @@ class RepertoireDisplay(
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
         # original.value.set_game_source(self.sourceobject.value.gamesource)
-        original_value.set_game_source("No opening name")
+        original_value.set_game_source("")
 
     def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
@@ -244,8 +246,14 @@ class RepertoireDisplayInsert(
 
     RepertoireEdit provides the widget and _RepertoireDisplay the database
     interface.
-
     """
+
+    # This method forced by addition of second list element in Game record
+    # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
+    # in classes in chessrecord module.
+    def _construct_record_value(self):
+        """Return record value for Repertoire record."""
+        return repr(self.score.get("1.0", tkinter.END))
 
 
 class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
@@ -263,7 +271,7 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
         # original.value.set_game_source(self.sourceobject.value.gamesource)
-        original_value.set_game_source("No opening name")
+        original_value.set_game_source("")
 
     # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and
@@ -274,3 +282,10 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
     def set_properties_on_game_grids(self, newkey):
         """Set grid row properties of row for newkey record."""
         self.ui.base_repertoires.set_properties(newkey)
+
+    # This method forced by addition of second list element in Game record
+    # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
+    # in classes in chessrecord module.
+    def _construct_record_value(self):
+        """Return record value for Repertoire record."""
+        return repr(self.get_score_error_escapes_removed())

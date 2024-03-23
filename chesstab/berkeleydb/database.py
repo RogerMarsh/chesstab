@@ -10,9 +10,9 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-# pylint will give import-error message if berkeleydb is not installed.
-# It is reasonable to not install Python package 'berkeleydb'.
-# The importlib module is used to import database if needed.
+# pylint gives import-error message, E0401, if berkeleydb is not installed.
+# It is reasonable to not install berkeleydb.
+# The importlib module is used elsewhere to import berkeleydb if needed.
 from berkeleydb.db import (
     DB_CREATE,
     DB_RECOVER,

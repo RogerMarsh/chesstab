@@ -70,7 +70,7 @@ from .displayitems import DisplayItems
 from ..core.chessrecord import ChessDBrecordAnalysis
 from .querygrid import QueryGrid
 from .queryrow import chess_db_row_query
-from .score import ScoreNoGameException
+from .score import ScoreNoGameException, ScoreNoInitialPositionException
 
 
 class ChessUIError(Exception):
@@ -1596,7 +1596,10 @@ class ChessUI(Bindings):
                     if item.current is None:
                         try:
                             position = item.fen_tag_tuple_square_piece_map()
-                        except ScoreNoGameException:
+                        except (
+                            ScoreNoGameException,
+                            ScoreNoInitialPositionException,
+                        ):
                             continue
                     else:
                         position = item.tagpositionmap[item.current]

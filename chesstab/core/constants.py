@@ -31,6 +31,19 @@ from chessql.core.constants import (
     BLACK_PIECE_NAMES,
 )
 
+# Supported encodings of PGN files.
+# The PGN standard at 4.1 specifies the use of iso-8859-1 encoding.
+# The ascii encoding gets treated as utf-8.  All others get treated as
+# iso-8859-1 so utf-16, for example, will probably produce a complete mess
+# at best; while others with single-byte encoding will not produce the
+# intended character to an unknown extent.
+ENCODINGS = ("utf-8", "iso-8859-1")
+
+# File name and game number within file for a PGN file.
+# Equivalent to PGN Tag Names for a game's position in the file.
+FILE = "file"
+GAME = "game"
+
 # Composite piece map (CQL) to actual pieces (PGN).
 MAP_CQL_PIECE_TO_PIECES = {
     ANY_WHITE_PIECE_NAME: WHITE_PIECE_NAMES,

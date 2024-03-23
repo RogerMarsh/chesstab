@@ -12,6 +12,4 @@ if __name__ == "__main__":
     class Database(database_du.Database):
         """Customise Berkeley DB database for backup before import."""
 
-        _take_backup_before_deferred_update = True
-
     FileWidget(Database, "berkeleydb")

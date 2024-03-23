@@ -42,11 +42,16 @@ REPERTOIRE_FILE_DEF = "repertoire"
 ANALYSIS_FILE_DEF = "analysis"
 SELECTION_FILE_DEF = "selection"
 ENGINE_FILE_DEF = "engine"
+IDENTITY_FILE_DEF = "identity"
 
 # Names used to refer to field descriptions
 # DPT fields or Berkeley DB secondary databases
+
+# games file fields.
 GAME_FIELD_DEF = "Game"
-SOURCE_FIELD_DEF = "source"
+PGN_ERROR_FIELD_DEF = "pgnerror"
+PGNFILE_FIELD_DEF = "pgnfile"
+# NUMBER_FIELD_DEF = "number"
 EVENT_FIELD_DEF = "Event"
 SITE_FIELD_DEF = "Site"
 DATE_FIELD_DEF = "Date"
@@ -58,23 +63,40 @@ POSITIONS_FIELD_DEF = "positions"
 PIECESQUAREMOVE_FIELD_DEF = "piecesquaremove"
 PIECEMOVE_FIELD_DEF = "piecemove"
 SQUAREMOVE_FIELD_DEF = "squaremove"
-PARTIAL_FIELD_DEF = "Partial"
+IMPORT_FIELD_DEF = "import"
 PARTIALPOSITION_FIELD_DEF = "partialposition"
+PGN_DATE_FIELD_DEF = "pgndate"
+
+# partial file fields.
+PARTIAL_FIELD_DEF = "Partial"
 PARTIALPOSITION_NAME_FIELD_DEF = "partialpositionname"
 NEWGAMES_FIELD_DEF = "newgames"
+
+# repertoire file fields.
 REPERTOIRE_FIELD_DEF = "Repertoire"
 OPENING_FIELD_DEF = "Opening"
 OPENING_ERROR_FIELD_DEF = "openingerror"
-PGN_DATE_FIELD_DEF = "pgndate"
+
+# analysis file fields.
 ANALYSIS_FIELD_DEF = "Analysis"
 VARIATION_FIELD_DEF = "variation"
 ENGINE_FIELD_DEF = "engine"
+
+# selection file fields.
 SELECTION_FIELD_DEF = "rulename"
 RULE_FIELD_DEF = "rule"
+
+# engine file fields.
+# (Note 'ENGINE_FIELD_DEF' already taken by analysis file)
 PROGRAM_FIELD_DEF = "program"
 COMMAND_FIELD_DEF = "command"
 
-# Non-standard field names. Standard is x_FIELD_DEF.title()
+# identity file fields.
+IDENTITY_FIELD_DEF = IDENTITY_FILE_DEF
+IDENTITY_TYPE_FIELD_DEF = "identitytype"
+
+# Non-standard field names. Standard is x_FIELD_DEF.title().
+# These are used as values in 'SECONDARY', and keys in 'FIELDS', dicts.
 _PIECESQUAREMOVE_FIELD_NAME = "PieceSquareMove"
 _PIECEMOVE_FIELD_NAME = "PieceMove"
 _SQUAREMOVE_FIELD_NAME = "SquareMove"
@@ -167,7 +189,9 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     PRIMARY: field_name(GAME_FIELD_DEF),
                     DPT_PRIMARY_FIELD_LENGTH: 200,
                     SECONDARY: {
-                        SOURCE_FIELD_DEF: SOURCE_FIELD_DEF.title(),
+                        PGN_ERROR_FIELD_DEF: PGN_ERROR_FIELD_DEF.title(),
+                        PGNFILE_FIELD_DEF: None,
+                        # NUMBER_FIELD_DEF: None,
                         EVENT_FIELD_DEF: None,
                         SITE_FIELD_DEF: None,
                         DATE_FIELD_DEF: None,
@@ -181,10 +205,13 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                         SQUAREMOVE_FIELD_DEF: _SQUAREMOVE_FIELD_NAME,
                         PARTIALPOSITION_FIELD_DEF: _PARTIALPOSITION_FIELD_NAME,
                         PGN_DATE_FIELD_DEF: _PGN_DATE_FIELD_NAME,
+                        IMPORT_FIELD_DEF: None,
                     },
                     FIELDS: {
                         field_name(GAME_FIELD_DEF): None,
-                        SOURCE_FIELD_DEF.title(): {INV: True, ORD: True},
+                        PGN_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
+                        field_name(PGNFILE_FIELD_DEF): {INV: True, ORD: True},
+                        # field_name(NUMBER_FIELD_DEF): {INV: True, ORD: True},
                         WHITE_FIELD_DEF: {INV: True, ORD: True},
                         BLACK_FIELD_DEF: {INV: True, ORD: True},
                         EVENT_FIELD_DEF: {INV: True, ORD: True},
@@ -210,6 +237,7 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                         },  # , ACCESS_METHOD:HASH},
                         _PARTIALPOSITION_FIELD_NAME: {INV: True, ORD: True},
                         _PGN_DATE_FIELD_NAME: {INV: True, ORD: True},
+                        field_name(IMPORT_FIELD_DEF): {INV: True, ORD: True},
                     },
                 },
                 PARTIAL_FILE_DEF: {
@@ -321,6 +349,29 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
                     FIELDS: {
                         field_name(PROGRAM_FIELD_DEF): None,
                         COMMAND_FIELD_DEF.title(): {INV: True, ORD: True},
+                    },
+                },
+                IDENTITY_FILE_DEF: {
+                    DDNAME: "IDENTITY",
+                    FILE: dptdsn(IDENTITY_FILE_DEF),
+                    FILEDESC: {
+                        BRECPPG: 80,
+                        FILEORG: RRN,
+                    },
+                    BTOD_FACTOR: 2.0,
+                    BTOD_CONSTANT: 50,
+                    DEFAULT_RECORDS: 10,
+                    DEFAULT_INCREASE_FACTOR: 0.01,
+                    PRIMARY: field_name(IDENTITY_FIELD_DEF),
+                    SECONDARY: {
+                        IDENTITY_TYPE_FIELD_DEF: None,
+                    },
+                    FIELDS: {
+                        field_name(IDENTITY_FIELD_DEF): None,
+                        field_name(IDENTITY_TYPE_FIELD_DEF): {
+                            INV: True,
+                            ORD: True,
+                        },
                     },
                 },
             }

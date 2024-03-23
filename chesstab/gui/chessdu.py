@@ -10,7 +10,6 @@ import tkinter
 import tkinter.font
 import tkinter.messagebox
 import queue
-import time
 import multiprocessing
 import multiprocessing.dummy
 
@@ -18,20 +17,21 @@ from solentware_misc.gui.logtextbase import LogTextBase
 
 from solentware_bind.gui.bindings import Bindings
 
-from pgn_read.core.parser import PGN
+from pgn_read.core.tagpair_parser import PGNTagPair, GameCount
 
 from solentware_base.core.constants import (
     BRECPPG,
     DEFAULT_RECORDS,
 )
 
-from ..core.pgn import GameUpdateEstimate
+from ..core import constants
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
 )
 from ..core.filespec import (
     GAMES_FILE_DEF,
+    PGNFILE_FIELD_DEF,
     BTOD_FACTOR,
 )
 
@@ -477,207 +477,182 @@ class DeferredUpdateEstimateProcess:
             if not self._estimate_games_in_import():
                 return None
             if self._allow_time():
-                self.database.report_plans_for_estimate(
-                    self._get_pgn_file_estimates(),
-                    _Reporter(
-                        self._report_to_log,
-                        self._report_to_log_text_only,
-                        self.report_queue.empty,
-                    ),
-                    self.increases,
-                )
                 self.quit_event.set()
                 return True
-            self._report_to_log("Unable to estimate time to do import.")
+            self._report_to_log("Unable to verify import request.")
             self._report_to_log_text_only("")
             return False
         finally:
             self.database.close_database()
 
     def _estimate_games_in_import(self):
-        """Estimate import size from the first sample games in import files."""
+        """Estimate import size from file sizes reported by operating system.
+
+        Method name is from earlier version which processed the first games
+        found, default 5000, and assumed rest of games look similar.
+
+        The total size is a byte count which is assumed to be not much
+        larger than the character count because the PGN standard expects
+        iso-8859-1 encoding.  Many files will be ascii or utf-8 encoding
+        where the later will introduce some multi-byte characters.
+
+        """
+        reader = PGNTagPair(game_class=GameCount)
         self.estimate_data = False
-        text_file_size = sum(os.path.getsize(pp) for pp in self.pgnfiles)
-        reader = PGN(game_class=GameUpdateEstimate)
-        errorcount = 0
-        totallen = 0
-        totalerrorlen = 0
-        totalgamelen = 0
+        total_byte_size = 0
+        total_char_size = 0
+        total_error_byte_size = 0
+        file_ok_count = 0
         gamecount = 0
-        positioncount = 0
-        piecesquaremovecount = 0
-        piecemovecount = 0
-        estimate = False
-        time_start = time.monotonic()
         for pgnfile in self.pgnfiles:
-            if gamecount + errorcount >= self.sample:
-                estimate = True
-                break
-            with open(pgnfile, "r", encoding="iso-8859-1") as source:
-                for rcg in reader.read_games(source):
-                    if self.quit_event.is_set():
-                        self._report_to_log_text_only("")
-                        self._report_to_log(
-                            " ".join(
-                                (
-                                    "Estimating task stopped when",
-                                    str(gamecount),
-                                    "games and",
-                                    str(errorcount),
-                                    "games with errors found.",
+            filebytes = os.path.getsize(pgnfile)
+            for encoding in constants.ENCODINGS:
+                filechars = []
+                with open(pgnfile, mode="r", encoding=encoding) as source:
+                    try:
+                        while True:
+                            chars = source.read(1024 * 1000)
+                            filechars.append(len(chars))
+                            if not chars:
+                                file_ok_count += 1
+                                break
+                    except UnicodeDecodeError:
+                        continue
+                    total_char_size += sum(filechars)
+                    total_byte_size += filebytes
+                with open(pgnfile, mode="r", encoding=encoding) as source:
+                    for _ in reader.read_games(source):
+                        if self.quit_event.is_set():
+                            self._report_to_log_text_only("")
+                            self._report_to_log(
+                                " ".join(
+                                    (
+                                        "Estimating task stopped when",
+                                        str(gamecount),
+                                        "games found.",
+                                    )
                                 )
                             )
-                        )
-                        return False
-                    if gamecount + errorcount >= self.sample:
-                        estimate = True
-                        break
-                    if len(rcg.pgn_text):
-                        rawtokenlen = rcg.end_char - rcg.start_char
-                    else:
-                        rawtokenlen = 0
-                    if rcg.state is not None:
-                        errorcount += 1
-                        totalerrorlen += rawtokenlen
-                    else:
+                            return False
                         gamecount += 1
-                        totalgamelen += rawtokenlen
-                        positioncount += len(rcg.positionkeys)
-                        piecesquaremovecount += len(rcg.piecesquaremovekeys)
-                        piecemovecount += len(rcg.piecemovekeys)
-                    totallen += rawtokenlen
-        time_end = time.monotonic()
-        if estimate:
-            try:
-                scale = float(text_file_size) // totallen
-            except ZeroDivisionError:
-                scale = 0
-        else:
-            scale = 1
-        try:
-            bytes_per_game = totalgamelen // gamecount
-        except ZeroDivisionError:
-            bytes_per_game = 0
-        try:
-            bytes_per_error = totalerrorlen // errorcount
-        except ZeroDivisionError:
-            bytes_per_error = 0
-        try:
-            positions_per_game = positioncount // gamecount
-        except ZeroDivisionError:
-            positions_per_game = 0
-        try:
-            pieces_per_game = piecesquaremovecount // gamecount
-        except ZeroDivisionError:
-            pieces_per_game = 0
-        try:
-            piecetypes_per_game = piecemovecount // gamecount
-        except ZeroDivisionError:
-            piecetypes_per_game = 0
-
-        self.estimate_data = (
-            int(gamecount * scale),
-            bytes_per_game,
-            positions_per_game,
-            pieces_per_game,
-            piecetypes_per_game,
-            int(errorcount * scale),
-            bytes_per_error,
-            estimate,
-            gamecount,
-            errorcount,
-            (time_end - time_start) / (gamecount + errorcount),
-        )
-        if estimate:
-            self._report_to_log_text_only("")
-            self._report_to_log(
-                " ".join(("Estimated Games:", str(self.estimate_data[0])))
-            )
-            self._report_to_log_text_only(
-                " ".join(("Estimated Errors:", str(self.estimate_data[5]))),
-            )
-            self._report_to_log_text_only(
-                " ".join(("Sample Games:", str(gamecount)))
-            )
-            self._report_to_log_text_only(
-                " ".join(("Sample Errors:", str(errorcount)))
-            )
-        else:
-            self._report_to_log_text_only("")
-            self._report_to_log(
-                "The import is small so all games are counted."
-            )
-            self._report_to_log_text_only(
-                " ".join(("Games in import:", str(gamecount)))
-            )
-            self._report_to_log_text_only(
-                " ".join(("Errors in import:", str(errorcount))),
-            )
-        self._report_to_log_text_only(
-            " ".join(("Bytes per game:", str(bytes_per_game)))
-        )
-        self._report_to_log_text_only(
-            " ".join(("Bytes per error:", str(bytes_per_error))),
-        )
-        self._report_to_log_text_only(
-            " ".join(("Positions per game:", str(positions_per_game))),
-        )
-
-        # positions_per_game == 0 if there are no valid games.
-        ppp = "Not a number"
-        for count, text in (
-            (pieces_per_game, "Pieces per position:"),
-            (piecetypes_per_game, "Piece types per position:"),
-        ):
-            if positions_per_game:
-                ppp = str(count // positions_per_game)
-            self._report_to_log_text_only(" ".join((text, ppp)))
-        self._report_to_log_text_only("")
-
-        # Check if import can proceed
-        if gamecount + errorcount == 0:
-            self._report_to_log(
-                "No games, or games with errors, found in import."
-            )
-            return False
-        if errorcount == 0:
-            if estimate:
-                self._report_to_log("No games with errors in sample.")
-                self._report_to_log_text_only(
+                if filechars:
+                    break
+            else:
+                total_error_byte_size += filebytes
+                self._report_to_log_text_only("")
+                self._report_to_log(
                     " ".join(
                         (
-                            "It is estimated no games with",
-                            "errors exist in import.",
+                            "Unable to process",
+                            pgnfile,
+                            "as a",
+                            " or ".join(constants.ENCODINGS),
+                            "encoded file.",
                         )
-                    ),
+                    )
                 )
-                self._report_to_log_text_only(
-                    "Any found in import will be indexed only as errors.",
-                )
-            else:
-                self._report_to_log("No games with errors in import.")
+        if not total_error_byte_size:
             self._report_to_log_text_only("")
-        elif estimate:
-            self._report_to_log("Games with errors have been found in sample.")
+            self._report_to_log(
+                "".join(
+                    (
+                        "Import will proceed: all files ",
+                        "can be processed.",
+                    )
+                )
+            )
+        self._report_to_log_text_only(
+            " ".join(
+                (
+                    format(total_byte_size, ","),
+                    "bytes will be processed.",
+                )
+            )
+        )
+        self._report_to_log_text_only(
+            " ".join(
+                (
+                    format(total_char_size, ","),
+                    "characters will be decoded from these bytes.",
+                )
+            )
+        )
+        if total_error_byte_size:
             self._report_to_log_text_only(
                 " ".join(
                     (
-                        "The sample is the first",
-                        str(self.sample),
-                        "games in import.",
+                        format(total_error_byte_size, ","),
+                        "bytes will not be processed.",
                     )
-                ),
+                )
             )
-            self._report_to_log_text_only(
-                "All found in import will be indexed only as errors.",
-            )
+
+        # Check if import can proceed.
+        if total_error_byte_size:
             self._report_to_log_text_only("")
-        else:
-            self._report_to_log("Games with errors have been found in sample.")
-            self._report_to_log_text_only(
-                "All found in import will be indexed only as errors.",
+            self._report_to_log(
+                "".join(
+                    (
+                        "Import will not proceed: at least one file ",
+                        "cannot be processed.",
+                    )
+                )
             )
-            self._report_to_log_text_only("")
+            return False
+        self._report_to_log_text_only(
+            " ".join(
+                (
+                    format(file_ok_count, ","),
+                    "file" if file_ok_count == 1 else "files",
+                    "will be processed.",
+                )
+            )
+        )
+        self._report_to_log_text_only(
+            " ".join(
+                (
+                    format(gamecount, ","),
+                    "game" if gamecount == 1 else "games",
+                    "found in",
+                    format(len(self.pgnfiles), ","),
+                    "file." if len(self.pgnfiles) == 1 else "files.",
+                )
+            )
+        )
+        self._report_to_log_text_only(
+            "(It is not known yet if movetext errors exist)"
+        )
+        database = self.database
+        database.start_read_only_transaction()
+        try:
+            for pgnfile in self.pgnfiles:
+                file_games = database.recordlist_key(
+                    GAMES_FILE_DEF,
+                    PGNFILE_FIELD_DEF,
+                    key=database.encode_record_selector(
+                        os.path.basename(pgnfile)
+                    ),
+                )
+                file_count = file_games.count_records()
+                file_games.close()
+                if file_count:
+                    self._report_to_log_text_only(
+                        " ".join(
+                            (
+                                format(file_count, ","),
+                                "game" if file_count == 1 else "games",
+                                "from a file named",
+                                os.path.basename(pgnfile),
+                                "already on database.",
+                            )
+                        )
+                    )
+                    self._report_to_log_text_only(
+                        "(Only missing game numbers will be copied)"
+                    )
+        finally:
+            database.end_read_only_transaction()
+        self.estimate_data = True
         return True
 
     def _allow_time(self):
@@ -688,59 +663,8 @@ class DeferredUpdateEstimateProcess:
         """
         if not self.estimate_data:
             return False
-        seconds = (
-            (self.estimate_data[0] + self.estimate_data[5])
-            * self.estimate_data[10]
-            * _DATABASE_UPDATE_FACTOR
-        )
-        minutes, seconds = divmod(round(seconds), 60)
-        hours, minutes = divmod(minutes, 60)
-        days, hours = divmod(hours, 24)
-        duration = []
-        if days:
-            duration.append(str(days))
-            duration.append("days")
-            if hours:
-                duration.append(str(hours))
-                duration.append("hours")
-        elif hours:
-            duration.append(str(hours))
-            duration.append("hours")
-            if minutes:
-                duration.append(str(minutes))
-                duration.append("minutes")
-        elif minutes:
-            duration.append(str(minutes))
-            duration.append("minutes")
-            if seconds:
-                duration.append(str(seconds))
-                duration.append("seconds")
-        elif seconds > 1:
-            duration.append(str(seconds))
-            duration.append("seconds")
-        else:
-            duration.append(str(1))
-            duration.append("second")
-        self._report_to_log(
-            "".join(
-                (
-                    "The estimate is the time taken to process the sample ",
-                    "scaled up to the estimated number of games then ",
-                    "multiplied by ",
-                    str(_DATABASE_UPDATE_FACTOR),
-                    ".  Expect the import to take longer if the database ",
-                    "already contains games: the effect is worse for smaller "
-                    "imports.  Progress reports are made if the import is ",
-                    "large enough.",
-                )
-            )
-        )
         self._report_to_log_text_only("")
-        self._report_to_log(
-            "".join(
-                ("The import is expected to take ", " ".join(duration), ".")
-            )
-        )
+        self._report_to_log("Ready to start import.")
         return True
 
     def _get_pgn_file_estimates(self):
@@ -885,11 +809,14 @@ class DeferredUpdate(Bindings):
         self._report_to_log(
             "".join(("Importing to database ", home_directory, "."))
         )
-        self._report_to_log_text_only(
-            "All times quoted assume no other applications running.",
-        )
         self._report_to_log_text_only("")
-        self._report_to_log("Estimating number of games in import.")
+        self._report_to_log("Determining size of import.")
+        self._report_to_log_text_only(
+            "This takes about four minutes per million games."
+        )
+        self._report_to_log_text_only(
+            "(The import will take several hours per million games)"
+        )
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
         )

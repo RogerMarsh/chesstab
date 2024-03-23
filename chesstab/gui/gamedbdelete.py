@@ -4,6 +4,8 @@
 
 """Customise delete toplevel to delete chess game record."""
 
+import ast
+
 from solentware_grid.gui.datadelete import DataDelete
 
 from pgn_read.core.parser import PGN
@@ -65,7 +67,9 @@ class GameDbDelete(DeletePGNToplevel, DataDelete):
         self._set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+            PGN(game_class=view.gameclass).read_games(
+                ast.literal_eval(object_.get_srvalue()[0])
+            )
         )
         view.set_and_tag_item_text()
 

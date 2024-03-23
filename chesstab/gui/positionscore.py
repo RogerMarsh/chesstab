@@ -11,6 +11,7 @@ PositionScore
 """
 
 import tkinter
+import ast
 
 from solentware_bind.gui.bindings import Bindings
 
@@ -141,7 +142,9 @@ class PositionScore(Bindings):
         if text:
             self._clear_tag_maps()
             self.collected_game = next(
-                PGN(game_class=GameDisplayMoves).read_games(text)
+                PGN(game_class=GameDisplayMoves).read_games(
+                    ast.literal_eval(text[0])
+                )
             )
             self._context = context
             try:

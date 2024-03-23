@@ -7,11 +7,11 @@
 import os
 import tkinter.messagebox
 
-# pylint will always give import-error message on non-Microsoft Windows
-# systems.
+# pylint always gives import-error message, E0401, on non-Microsoft Windows
+# systems; or if dptdb is not installed.
 # Wine counts as a Microsft Windows system.
-# It is reasonable to not install 'dptdb.dptapi'.
-# The importlib module is used to import database if needed.
+# It is reasonable to not install dptdb.
+# The importlib module is used elsewhere to import dptdb if needed.
 from dptdb.dptapi import (
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,

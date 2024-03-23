@@ -7,9 +7,6 @@
 # from sqlite3 import IntegrityError
 
 from solentware_base import sqlite3_database
-from solentware_base.core.constants import (
-    FILEDESC,
-)
 
 from ..core.filespec import FileSpec
 from ..basecore import database

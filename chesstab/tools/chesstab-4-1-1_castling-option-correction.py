@@ -51,7 +51,7 @@ from ..core.chessrecord import ChessDBrecordGameUpdate, ChessDBrecordAnalysis
 from ..core.filespec import (
     FileSpec,
     POSITIONS_FIELD_DEF,
-    SOURCE_FIELD_DEF,
+    PGN_ERROR_FIELD_DEF,
     PIECESQUAREMOVE_FIELD_DEF,
     PIECEMOVE_FIELD_DEF,
     SQUAREMOVE_FIELD_DEF,
@@ -4652,7 +4652,7 @@ class ChessDBvaluePGNUpdate131(PGNUpdate131, ChessDBvaluePGN131):
                 tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
             ]
         else:
-            index[SOURCE_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
         return v
 
     def set_game_source(self, source):

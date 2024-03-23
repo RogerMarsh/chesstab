@@ -4,6 +4,8 @@
 
 """Chess game exporters."""
 
+import ast
+
 from pgn_read.core.parser import PGN
 
 from . import chessrecord, filespec
@@ -22,6 +24,7 @@ def export_all_games_text(database, filename):
     """Export games in database to text file in internal record format."""
     if filename is None:
         return True
+    literal_eval = ast.literal_eval
     instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
     database.start_read_only_transaction()
@@ -34,7 +37,7 @@ def export_all_games_text(database, filename):
                 current_record = cursor.first()
                 while current_record:
                     instance.load_record(current_record)
-                    gamesout.write(instance.get_srvalue())
+                    gamesout.write(literal_eval(instance.get_srvalue()[0]))
                     gamesout.write("\n")
                     current_record = cursor.next()
         finally:
@@ -884,6 +887,7 @@ def export_selected_games_text(grid, filename):
     """
     if filename is None:
         return True
+    literal_eval = ast.literal_eval
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
@@ -900,7 +904,7 @@ def export_selected_games_text(grid, filename):
                         filespec.GAMES_FILE_DEF, bookmark[0 if primary else 1]
                     )
                 )
-                games.append(instance.get_srvalue())
+                games.append(literal_eval(instance.get_srvalue()[0]))
         elif grid.partial:
             cursor = grid.get_cursor()
             try:
@@ -920,7 +924,7 @@ def export_selected_games_text(grid, filename):
                             current_record[0 if primary else 1],
                         )
                     )
-                    games.append(instance.get_srvalue())
+                    games.append(literal_eval(instance.get_srvalue()[0]))
                     current_record = cursor.next()
             finally:
                 cursor.close()
@@ -937,7 +941,7 @@ def export_selected_games_text(grid, filename):
                             current_record[0 if primary else 1],
                         )
                     )
-                    games.append(instance.get_srvalue())
+                    games.append(literal_eval(instance.get_srvalue()[0]))
                     current_record = cursor.next()
             finally:
                 cursor.close()

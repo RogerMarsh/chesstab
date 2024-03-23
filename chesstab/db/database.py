@@ -10,9 +10,9 @@ because tracking down problems in the chess logic using IDLE can be easier
 in the *nix environment.
 """
 
-# pylint will give import-error message if bsddb3 is not installed.
-# It is reasonable to not install Python package 'bsddb3'.
-# The importlib module is used to import database if needed.
+# pylint gives import-error message, E0401, if bsddb3 is not installed.
+# It is reasonable to not install bsddb3.
+# The importlib module is used elsewhere to import bsddb3 if needed.
 from bsddb3.db import (
     DB_CREATE,
     DB_RECOVER,

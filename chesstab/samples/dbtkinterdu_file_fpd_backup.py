@@ -15,6 +15,4 @@ if __name__ == "__main__":
     class Database(database_du.Database):
         """Customise Berkeley DB database for one file per database."""
 
-        _take_backup_before_deferred_update = True
-
     FileWidget(Database, "db_tcl", file_per_database=True)

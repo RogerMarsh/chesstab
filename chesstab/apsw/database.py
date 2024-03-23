@@ -7,9 +7,6 @@
 # from apsw import ConstraintError
 
 from solentware_base import apsw_database
-from solentware_base.core.constants import (
-    FILEDESC,
-)
 
 from ..core.filespec import FileSpec
 from ..basecore import database

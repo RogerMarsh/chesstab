@@ -2,7 +2,7 @@
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Symas LMMD."""
+"""Update chess database indicies from PGN in stages for Symas LMDB."""
 
 from solentware_base import lmdbdu_database
 
@@ -40,6 +40,4 @@ class Database(alldu.Alldu, litedu.Litedu, lmdbdu_database.Database):
         become full, a convenient point for commit and database resize.
 
         """
-        self.commit()
         self._set_map_size_above_used_pages_between_transactions(100)
-        self.start_transaction()

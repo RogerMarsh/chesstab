@@ -2,7 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for dbm.ndbm."""
+"""Update chess database indicies from PGN in stages on dbm.ndbm."""
 
 from solentware_base import ndbmdu_database
 

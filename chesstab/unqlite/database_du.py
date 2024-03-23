@@ -2,7 +2,7 @@
 # Copyright 2019 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for unqlite."""
+"""Update chess database indicies from PGN in stages on unqlite."""
 
 from solentware_base import unqlitedu_database
 

@@ -39,6 +39,7 @@ import queue
 import multiprocessing
 
 from solentware_base import modulequery
+from solentware_base.core.filespec import FileSpecError
 
 from solentware_grid.core.dataclient import DataSource
 
@@ -64,7 +65,7 @@ from .. import (
 from ..core.filespec import (
     FileSpec,
     GAMES_FILE_DEF,
-    SOURCE_FIELD_DEF,
+    PGN_ERROR_FIELD_DEF,
     EVENT_FIELD_DEF,
     SITE_FIELD_DEF,
     DATE_FIELD_DEF,
@@ -302,7 +303,7 @@ class Chess(Bindings):
                 ),
                 (
                     EventSpec.menu_select_error,
-                    self._create_options_index_callback(SOURCE_FIELD_DEF),
+                    self._create_options_index_callback(PGN_ERROR_FIELD_DEF),
                 ),
             ):
                 menu2.add_command(
@@ -983,8 +984,9 @@ class Chess(Bindings):
             )
             self._close_database_and_hide_widgets()
             self.opendatabase = None
+            if isinstance(exc, FileSpecError):
+                return
             # pylint message broad-except.
-            # Can keep going for some exceptions.
             raise ChessError(
                 " database in ".join(("Unable to open", APPLICATION_NAME))
             ) from exc

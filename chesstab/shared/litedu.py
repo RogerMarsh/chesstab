@@ -2,22 +2,20 @@
 # Copyright 2022 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Provide PGN import estimating and backup for non-DPT interface modules.
+"""Provide PGN import estimating for non-DPT interface modules.
 
-These other modules, except Symas LMMD, take space as needed so methods
+These other modules, except Symas LMDB, take space as needed so methods
 which 'do nothing' are provided.
 
-For Symas LMMD it is possible to set an arbitrarly large size and then
+For Symas LMDB it is possible to set an arbitrarly large size and then
 reclaim any unused space by setting an arbitrarly low size.  The size
 determines how large the database can get before giving a 'full' error.
 
 """
-from solentware_base.core.archivedu import Archivedu
-
 from .alldu import get_filespec
 
 
-class Litedu(Archivedu):
+class Litedu:
     """Provide methods for compatibility with DPT interface.
 
     The methods have their DPT-specific code removed.

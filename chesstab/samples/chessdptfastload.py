@@ -88,11 +88,6 @@ class Database(dptfastload_database.Database):
     # all slots in a page being used.
     deferred_update_points = frozenset(_DEFERRED_UPDATE_POINTS)
 
-    # Override
-    # dptfastload_database.Database._take_backup_before_deferred_update
-    # while DPT archive() and delete_archive() methods absent.
-    _take_backup_before_deferred_update = False
-
     def __init__(
         self,
         databasefolder,

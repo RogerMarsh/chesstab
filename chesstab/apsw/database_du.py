@@ -2,7 +2,7 @@
 # Copyright 2011 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Sqlite 3.
+"""Update chess database indicies from PGN in stages on Sqlite 3.
 
 This module uses the apsw interface.
 """

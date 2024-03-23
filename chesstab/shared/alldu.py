@@ -13,59 +13,12 @@ import datetime
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import FILEDESC
 
-from ..core.filespec import FileSpec
-from ..core.chessrecord import ChessDBrecordGameImport
+from ..core import filespec
+from ..core import chessrecord
 from .. import ERROR_LOG, APPLICATION_NAME
 
 
-# This function is not absorbed in du_import because the database
-# has to be open for DPT backup, but not in the mode used to do an
-# import.
-def du_backup_before_task(
-    cdb,
-    file=None,
-    reporter=None,
-    **kwargs,
-):
-    """Backup database cdb before import."""
-    del kwargs
-    if cdb.take_backup_before_deferred_update:
-        if reporter is not None:
-            reporter.append_text_only("")
-            reporter.append_text("Make backup before import.")
-        try:
-            cdb.archive(name=file)
-        except Exception as exc:
-            _report_exception(cdb, reporter, exc)
-            raise
-        if reporter is not None:
-            reporter.append_text("Backup completed.")
-
-
-# This function is not absorbed in du_import because in DPT the
-# absence of 'file full' conditions has to be confirmed before deleting
-# the backups.
-def du_backup_before_task(
-    cdb,
-    file=None,
-    reporter=None,
-    **kwargs,
-):
-    """Delete backup of database cdb after import."""
-    del kwargs
-    if cdb.take_backup_before_deferred_update:
-        if reporter is not None:
-            reporter.append_text("Delete backup for import.")
-        cdb.delete_archive(name=file)
-        if reporter is not None:
-            reporter.append_text("Backup deleted.")
-            reporter.append_text_only("")
-    if reporter is not None:
-        reporter.append_text("Import finished.")
-        reporter.append_text_only("")
-
-
-def du_import(
+def du_extract(
     cdb,
     pgnpaths,
     indexing=True,
@@ -75,6 +28,9 @@ def du_import(
     increases=None,
 ):
     """Import games from pgnpaths into open database cdb.
+
+    Return True if import is completed, or False if import fails or is
+    interrupted before it is completed.
 
     cdb         Database instance which does the deferred updates.
     pgnpaths    List of file names containing PGN game scores to be imported.
@@ -100,7 +56,8 @@ def du_import(
                 being updated.
 
     """
-    importer = ChessDBrecordGameImport()
+    del increases
+    importer = chessrecord.ChessDBrecordGameStore()
     for key in cdb.table.keys():
         if key == file:
             # if increases is None:
@@ -119,7 +76,7 @@ def du_import(
                 )
             )
             reporter.append_text_only("")
-        return
+        return False
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Import started.")
@@ -129,7 +86,31 @@ def du_import(
         cdb.start_transaction()
     try:
         for pgnfile in pgnpaths:
-            with open(pgnfile, "r", encoding="iso-8859-1") as source:
+            if reporter is not None:
+                reporter.append_text_only("")
+                reporter.append_text(
+                    "Check file encoding is utf-8 or iso-8859-1."
+                )
+            encoding = _try_file_encoding(pgnfile)
+            if encoding is None:
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Unable to read ",
+                                os.path.basename(pgnfile),
+                                " as utf-8 or iso-8859-1 ",
+                                "encoding.",
+                            )
+                        )
+                    )
+                cdb.backout()
+                return False
+            if reporter is not None:
+                reporter.append_text_only("")
+                reporter.append_text("".join(("Encoding is ", encoding, ".")))
+            with open(pgnfile, mode="r", encoding=encoding) as source:
                 if not importer.import_pgn(
                     cdb,
                     source,
@@ -138,28 +119,53 @@ def du_import(
                     quit_event=quit_event,
                 ):
                     cdb.backout()
-                    return
+                    return False
         if reporter is not None:
-            reporter.append_text("Finishing import: please wait.")
+            reporter.append_text("Finishing extract: please wait.")
             reporter.append_text_only("")
         if indexing:
             cdb.do_final_segment_deferred_updates()
     except Exception as exc:
         _report_exception(cdb, reporter, exc)
         raise
+    # Put games just stored on database on indexing queues.
+    file_games = cdb.recordlist_key(
+        filespec.GAMES_FILE_DEF,
+        filespec.IMPORT_FIELD_DEF,
+        key=cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
+    )
+    for index in (
+        filespec.POSITIONS_FIELD_DEF,
+        filespec.PIECESQUAREMOVE_FIELD_DEF,
+    ):
+        key = cdb.encode_record_selector(index)
+        index_games = cdb.recordlist_key(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            key=key,
+        )
+        index_games |= file_games
+        cdb.file_records_under(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            index_games,
+            key,
+        )
+        index_games.close()
+    file_games.close()
 
     # DPT database engine needs the test for empty queue because all the
     # deferred index updates are applied in the Close() method called when
     # closing the file on completion of the task (well after exit from
-    # du_import), in particular the C++ code in the dptapi extension, so the
-    # queued reports have to be processed before entering that code to avoid
-    # an unresponsive GUI; and no indication of progress.
+    # do_deferred_update), in particular the C++ code in the dptapi extension,
+    # so the queued reports have to be processed before entering that code to
+    # avoid an unresponsive GUI; and no indication of progress.
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_defer_update_reports(cdb, file, reporter)
+        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_defer_update_reports(cdb, file, reporter, dsize)
+        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -168,6 +174,416 @@ def du_import(
             while not reporter.empty():
                 pass
         cdb.commit()
+    return True
+
+
+def du_index_pgn_tags(
+    cdb,
+    indexing=True,
+    file=None,
+    reporter=None,
+    quit_event=None,
+    increases=None,
+):
+    """Index games not yet indexed by PGN Tags in open database cdb.
+
+    Return True if indexing is completed, or False if indexing fails or is
+    interrupted before it is completed.
+
+    cdb         Database instance which does the deferred updates.
+    indexing    True means do import within set_defer_update block,
+                False means do import within start_transaction block.
+                Not passed to importer instance's <import> method because
+                the commit() and start_transaction() calls at segment
+                boundaries in deferred update mode do the right thing with
+                the current database engine choices.
+    file        name of table in database to be updated.
+    reporter    None or an object with append_text and append_text_only
+                methods taking a str argument.
+    quit_event  passed to the importer instance's <import> method.
+                None or an Event instance.
+    increases   <obsolete>? <for DPT only> <pre-import table size increases>
+                intention is increase data and index sizes during import,
+                especially if it is possible to recover from Table D full
+                conditions simply by increasing the index size and repeating
+                the import without adding any records (and re-applying any
+                left over deferred index updates).
+                Increase during import is allowed only if no recordsets,
+                cursors, and so forth, are open on the table (DPT file)
+                being updated.
+
+    """
+    del increases
+    importer = chessrecord.ChessDBrecordGamePGNTags()
+    for key in cdb.table.keys():
+        if key == file:
+            break
+    else:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text(
+                repr(file).join(
+                    ("Unable to index PGN Tags '", "': not found in database.")
+                )
+            )
+            reporter.append_text_only("")
+        return False
+
+    if indexing:
+        cdb.set_defer_update()
+    else:
+        cdb.start_transaction()
+    index_games = cdb.recordlist_key(
+        filespec.GAMES_FILE_DEF,
+        filespec.IMPORT_FIELD_DEF,
+        key=cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
+    )
+    index_games_count = index_games.count_records()
+    if index_games_count == 0:
+        if reporter is not None:
+            reporter.append_text(
+                "No games need indexing by PGN tags in Seven Tag Roster."
+            )
+            reporter.append_text_only("")
+        cdb.backout()
+        return True
+    if reporter is not None:
+        reporter.append_text("Index PGN Tags started.")
+        reporter.append_text(
+            "".join(
+                (
+                    str(index_games_count),
+                    " game needs" if index_games_count == 1 else " games need",
+                    " indexing by PGN tags in Seven Tag Roster.",
+                )
+            )
+        )
+        reporter.append_text_only(
+            " ".join(
+                (
+                    "This takes about thiteen minutes per million",
+                    "games indexed.",
+                )
+            )
+        )
+    if not importer.index_pgn_tags(
+        cdb,
+        index_games,
+        reporter=reporter,
+        quit_event=quit_event,
+    ):
+        cdb.backout()
+        return False
+    if reporter is not None:
+        reporter.append_text_only("")
+        reporter.append_text("Finishing PGN tag indexing: please wait.")
+        reporter.append_text_only("")
+    # if indexing:
+    #    cdb.do_final_segment_deferred_updates(write_ebm=False)
+
+    # DPT database engine needs the test for empty queue because all the
+    # deferred index updates are applied in the Close() method called when
+    # closing the file on completion of the task (well after exit from
+    # do_deferred_update), in particular the C++ code in the dptapi extension,
+    # so the queued reports have to be processed before entering that code to
+    # avoid an unresponsive GUI; and no indication of progress.
+    # The other database engines do not cause the GUI to become unresponsive
+    # in the absence of the test for an empty queue.
+    if indexing:
+        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        cdb.unset_defer_update()
+        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+    else:
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+        cdb.commit()
+    return True
+
+
+def du_index_positions(
+    cdb,
+    indexing=True,
+    file=None,
+    reporter=None,
+    quit_event=None,
+    increases=None,
+):
+    """Index games not yet indexed by positions in open database cdb.
+
+    Return True if indexing is completed, or False if indexing fails or is
+    interrupted before it is completed.
+
+    cdb         Database instance which does the deferred updates.
+    indexing    True means do import within set_defer_update block,
+                False means do import within start_transaction block.
+                Not passed to importer instance's <import> method because
+                the commit() and start_transaction() calls at segment
+                boundaries in deferred update mode do the right thing with
+                the current database engine choices.
+    file        name of table in database to be updated.
+    reporter    None or an object with append_text and append_text_only
+                methods taking a str argument.
+    quit_event  passed to the importer instance's <import> method.
+                None or an Event instance.
+    increases   <obsolete>? <for DPT only> <pre-import table size increases>
+                intention is increase data and index sizes during import,
+                especially if it is possible to recover from Table D full
+                conditions simply by increasing the index size and repeating
+                the import without adding any records (and re-applying any
+                left over deferred index updates).
+                Increase during import is allowed only if no recordsets,
+                cursors, and so forth, are open on the table (DPT file)
+                being updated.
+
+    """
+    del increases
+    importer = chessrecord.ChessDBrecordGameTransposition()
+    for key in cdb.table.keys():
+        if key == file:
+            break
+    else:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text(
+                repr(file).join(
+                    (
+                        "Unable to index positions '",
+                        "': not found in database.",
+                    )
+                )
+            )
+            reporter.append_text_only("")
+        return False
+
+    if indexing:
+        cdb.set_defer_update()
+    else:
+        cdb.start_transaction()
+    index_games = cdb.recordlist_key(
+        filespec.GAMES_FILE_DEF,
+        filespec.IMPORT_FIELD_DEF,
+        key=cdb.encode_record_selector(filespec.POSITIONS_FIELD_DEF),
+    )
+    index_games_count = index_games.count_records()
+    if index_games_count == 0:
+        if reporter is not None:
+            reporter.append_text("No games need indexing by positions.")
+        cdb.backout()
+        return True
+    if reporter is not None:
+        reporter.append_text("Index positions started.")
+        reporter.append_text(
+            "".join(
+                (
+                    str(index_games_count),
+                    " game needs" if index_games_count == 1 else " games need",
+                    " indexing by positions.",
+                )
+            )
+        )
+        reporter.append_text_only(
+            " ".join(
+                (
+                    "This takes several hours (>3) per million",
+                    "games indexed.",
+                )
+            )
+        )
+    if not importer.index_positions(
+        cdb,
+        index_games,
+        reporter=reporter,
+        quit_event=quit_event,
+    ):
+        cdb.backout()
+        return False
+    if reporter is not None:
+        reporter.append_text_only("")
+        reporter.append_text("Finishing position indexing: please wait.")
+        reporter.append_text_only("")
+    # if indexing:
+    #    cdb.do_final_segment_deferred_updates(write_ebm=False)
+
+    # DPT database engine needs the test for empty queue because all the
+    # deferred index updates are applied in the Close() method called when
+    # closing the file on completion of the task (well after exit from
+    # do_deferred_update), in particular the C++ code in the dptapi extension,
+    # so the queued reports have to be processed before entering that code to
+    # avoid an unresponsive GUI; and no indication of progress.
+    # The other database engines do not cause the GUI to become unresponsive
+    # in the absence of the test for an empty queue.
+    if indexing:
+        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        cdb.unset_defer_update()
+        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+    else:
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+        cdb.commit()
+    return True
+
+
+def du_index_piece_locations(
+    cdb,
+    indexing=True,
+    file=None,
+    reporter=None,
+    quit_event=None,
+    increases=None,
+):
+    """Index games not yet indexed by piece locations in open database cdb.
+
+    Return True if indexing is completed, or False if indexing fails or is
+    interrupted before it is completed.
+
+    cdb         Database instance which does the deferred updates.
+    indexing    True means do import within set_defer_update block,
+                False means do import within start_transaction block.
+                Not passed to importer instance's <import> method because
+                the commit() and start_transaction() calls at segment
+                boundaries in deferred update mode do the right thing with
+                the current database engine choices.
+    file        name of table in database to be updated.
+    reporter    None or an object with append_text and append_text_only
+                methods taking a str argument.
+    quit_event  passed to the importer instance's <import> method.
+                None or an Event instance.
+    increases   <obsolete>? <for DPT only> <pre-import table size increases>
+                intention is increase data and index sizes during import,
+                especially if it is possible to recover from Table D full
+                conditions simply by increasing the index size and repeating
+                the import without adding any records (and re-applying any
+                left over deferred index updates).
+                Increase during import is allowed only if no recordsets,
+                cursors, and so forth, are open on the table (DPT file)
+                being updated.
+
+    """
+    del increases
+    importer = chessrecord.ChessDBrecordGamePieceLocation()
+    for key in cdb.table.keys():
+        if key == file:
+            break
+    else:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text(
+                repr(file).join(
+                    (
+                        "Unable to index piece locations '",
+                        "': not found in database.",
+                    )
+                )
+            )
+            reporter.append_text_only("")
+        return False
+
+    if indexing:
+        cdb.set_defer_update()
+    else:
+        cdb.start_transaction()
+    index_games = cdb.recordlist_key(
+        filespec.GAMES_FILE_DEF,
+        filespec.IMPORT_FIELD_DEF,
+        key=cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+    )
+    index_games_count = index_games.count_records()
+    if index_games_count == 0:
+        if reporter is not None:
+            reporter.append_text("No games need indexing by positions.")
+        cdb.backout()
+        return True
+    if reporter is not None:
+        reporter.append_text("Index piece locations started.")
+        reporter.append_text(
+            "".join(
+                (
+                    str(index_games_count),
+                    " game needs" if index_games_count == 1 else " games need",
+                    " indexing by piece locations.",
+                )
+            )
+        )
+        reporter.append_text_only(
+            " ".join(
+                (
+                    "This takes many hours (>10) per million",
+                    "games indexed.",
+                )
+            )
+        )
+    if not importer.index_piece_locations(
+        cdb,
+        index_games,
+        reporter=reporter,
+        quit_event=quit_event,
+    ):
+        cdb.backout()
+        return False
+    if reporter is not None:
+        reporter.append_text_only("")
+        reporter.append_text("Finishing piece location indexing: please wait.")
+        reporter.append_text_only("")
+    # if indexing:
+    #    cdb.do_final_segment_deferred_updates(write_ebm=False)
+
+    # DPT database engine needs the test for empty queue because all the
+    # deferred index updates are applied in the Close() method called when
+    # closing the file on completion of the task (well after exit from
+    # do_deferred_update), in particular the C++ code in the dptapi extension,
+    # so the queued reports have to be processed before entering that code to
+    # avoid an unresponsive GUI; and no indication of progress.
+    # The other database engines do not cause the GUI to become unresponsive
+    # in the absence of the test for an empty queue.
+    if indexing:
+        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        cdb.unset_defer_update()
+        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+    else:
+        if reporter is not None:
+            while not reporter.empty():
+                pass
+        cdb.commit()
+    return True
+
+
+def _try_file_encoding(pgnpath):
+    """Return encoding able to read pgnpath or None.
+
+    The PGN specification assumes iso-8859-1 encoding but try utf-8
+    encoding first.
+
+    The iso-8859-1 will read anything at the expense of possibly making
+    a mess of encoded non-ASCII characters if the utf-8 encoding fails
+    to read pgnpath.
+
+    The time taken to read the entire file just to determine the encoding
+    is either small compared with the time to process the PGN content or
+    just small.  The extra read implied by this function is affordable.
+
+    """
+    encoding = None
+    for try_encoding in ("utf-8", "iso-8859-1"):
+        with open(pgnpath, mode="r", encoding=try_encoding) as pgntext:
+            try:
+                while True:
+                    if not pgntext.read(1024 * 1000):
+                        encoding = try_encoding
+                        break
+            except UnicodeDecodeError:
+                pass
+    return encoding
 
 
 # DPT database engine specific.
@@ -177,7 +593,7 @@ def du_import(
 # Problem is DPT does things in unset_defer_update which need before and
 # after reports, while other engines do different things which do not
 # need reports at all.
-def _pre_unset_defer_update_reports(database, file, reporter):
+def _pre_unset_file_records_under_reports(database, file, reporter):
     """Generate reports relevant to database engine before completion."""
     if reporter is None:
         return None
@@ -216,7 +632,7 @@ def _pre_unset_defer_update_reports(database, file, reporter):
 # Problem is DPT does things in unset_defer_update which need before and
 # after reports, while other engines do different things which do not
 # need reports at all.
-def _post_unset_defer_update_reports(database, file, reporter, dsize):
+def _post_unset_file_records_under_reports(database, file, reporter, dsize):
     """Generate reports relevant to database engine after completion."""
     if reporter is None:
         return
@@ -250,15 +666,36 @@ def _post_unset_defer_update_reports(database, file, reporter, dsize):
 
 
 def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
-    """Open database, delegate to du_import, and close database."""
-    # du_backup_before_task(cdb, file=file, **kwargs)
+    """Open database, extract and index games, and close database."""
     cdb.open_database()
-    du_import(cdb, *args, reporter=reporter, file=file, **kwargs)
-    cdb.close_database()
+    try:
+        if not du_extract(cdb, *args, reporter=reporter, file=file, **kwargs):
+            if reporter is not None:
+                reporter.append_text("Import not completed.")
+                reporter.append_text_only("")
+            return
+        if not du_index_pgn_tags(cdb, reporter=reporter, file=file, **kwargs):
+            if reporter is not None:
+                reporter.append_text("Import not completed.")
+                reporter.append_text_only("")
+            return
+        if not du_index_positions(cdb, reporter=reporter, file=file, **kwargs):
+            if reporter is not None:
+                reporter.append_text("Import not completed.")
+                reporter.append_text_only("")
+            return
+        if not du_index_piece_locations(
+            cdb, reporter=reporter, file=file, **kwargs
+        ):
+            if reporter is not None:
+                reporter.append_text("Import not completed.")
+                reporter.append_text_only("")
+            return
+    finally:
+        cdb.close_database()
     if reporter is not None:
         reporter.append_text("Import finished.")
         reporter.append_text_only("")
-    # du_delete_backup_after_task(cdb, file=file, **kwargs)
 
 
 def _du_report_increases(reporter, file, size_increases):
@@ -317,7 +754,7 @@ def _report_exception(cdb, reporter, exception):
                     )
                 )
             )
-    except Exception:
+    except OSError:
         errorlog_written = False
     if reporter is not None:
         reporter.append_text("An exception has occured during import:")
@@ -355,7 +792,7 @@ def get_filespec(**kargs):
 
     The FILEDESCs are deleted if allowcreate is False, the default.
     """
-    names = FileSpec(**kargs)
+    names = filespec.FileSpec(**kargs)
     if not kargs.get("allowcreate", False):
         for table_name in names:
             if FILEDESC in names[table_name]:

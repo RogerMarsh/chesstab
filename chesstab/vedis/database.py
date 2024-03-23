@@ -5,9 +5,6 @@
 """Chess database using vedis."""
 
 from solentware_base import vedis_database
-from solentware_base.core.constants import (
-    FILEDESC,
-)
 
 from ..core.filespec import FileSpec
 from ..basecore import database

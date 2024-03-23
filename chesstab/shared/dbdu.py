@@ -20,9 +20,6 @@ from .litedu import Litedu
 class Dbdu(Litedu):
     """Provide deferred update methods shared by the Berkeley DB interfaces.
 
-    The methods provided by Litedu are shared with engines other than
-    Berkeley DB.
-
     The whole database can be put in a single file, or each table (called a
     database in Berkeley DB terminology) in the database can be put in a
     file of it's own.

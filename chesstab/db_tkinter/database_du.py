@@ -2,7 +2,7 @@
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB.
+"""Update chess database indicies from PGN in stages on Berkeley DB.
 
 This module uses the tcl interface via tkinter.
 """

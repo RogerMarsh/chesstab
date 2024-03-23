@@ -21,22 +21,15 @@ from ..core.filespec import GAMES_FILE_DEF
 
 def file_du(database, dbpath, pgnpath, **kwargs):
     """Open database, import games and close database."""
-    # The name argument in the archive() and delete_archive() calls is
-    # needed if 'file_per_database=True' is in **kwargs, it is ignored
-    # otherwise.
     cdb = database(dbpath, allowcreate=True, **kwargs)
     importer = ChessDBrecordGameImport()
     cdb.open_database()
-    if cdb.take_backup_before_deferred_update:
-        cdb.archive(name=GAMES_FILE_DEF)
     cdb.set_defer_update()
     s = open(pgnpath, "r", encoding="iso-8859-1")
     importer.import_pgn(cdb, s, os.path.basename(pgnpath))
     s.close()
     cdb.do_final_segment_deferred_updates()
     cdb.unset_defer_update()
-    if cdb.take_backup_before_deferred_update:
-        cdb.delete_archive(name=GAMES_FILE_DEF)
     cdb.close_database()
 
 

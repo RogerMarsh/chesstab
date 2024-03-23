@@ -193,7 +193,7 @@ class ShowPGN(ShowText, ScorePGN):
                 message=psn.join(("Add ", " to database abandonned.")),
             )
             return None
-        updater = self._game_updater(repr(self.score.get("1.0", tkinter.END)))
+        updater = self._game_updater(self._construct_record_value())
         if not updater.value.collected_game.is_pgn_valid():
             msg = [
                 "Please re-confirm request to insert ",
@@ -482,8 +482,7 @@ class EditPGN(EditText):
         # is it better to use DataClient directly?
         # Then original would not be used. Instead DataSource.new_row
         # gets record keyed by sourceobject and update is used to edit this.
-        text = self.get_score_error_escapes_removed()
-        updater = self._game_updater(repr(text))
+        updater = self._game_updater(self._construct_record_value())
         editor = RecordEdit(updater, original)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)

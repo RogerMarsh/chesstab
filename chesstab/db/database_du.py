@@ -2,11 +2,14 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB.
+"""Update chess database indicies from PGN in stages on Berkeley DB.
 
 This module uses the bsddb3 interface.
 """
 
+# pylint gives import-error message, E0401, if bsddb3 is not installed.
+# It is reasonable to not install bsddb3.
+# The importlib module is used elsewhere to import bsddb3 if needed.
 import bsddb3.db
 
 from solentware_base import bsddb3du_database

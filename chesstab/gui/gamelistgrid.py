@@ -5,6 +5,7 @@
 """Grids for listing details of games on chess database."""
 
 import tkinter
+import ast
 
 from solentware_grid.datagrid import DataGrid
 
@@ -17,7 +18,7 @@ from ..core import export_game
 from .display import Display
 from ..shared.cql_gamelist_query import CQLGameListQuery
 from ..shared.allgrid import AllGrid
-from ..core.constants import UNKNOWN_RESULT
+from ..core.constants import UNKNOWN_RESULT, FILE, GAME
 from .score import ScoreMapToBoardException
 
 
@@ -87,7 +88,7 @@ class GameListGrid(
         game.set_position_analysis_data_source()
         game.collected_game = next(
             PGN(game_class=game.gameclass).read_games(
-                sourceobject.get_srvalue()
+                ast.literal_eval(sourceobject.get_srvalue()[0])
             )
         )
         return game
@@ -123,7 +124,7 @@ class GameListGrid(
         game.set_position_analysis_data_source()
         game.collected_game = next(
             PGN(game_class=game.gameclass).read_games(
-                sourceobject.get_srvalue()
+                ast.literal_eval(sourceobject.get_srvalue()[0])
             )
         )
         return game
@@ -198,7 +199,12 @@ class GameListGrid(
         """Create insert dialogue."""
         newobject = ChessDBrecordGameUpdate()
         instance = self.datasource.new_row()
-        instance.srvalue = repr(EMPTY_SEVEN_TAG_ROSTER + UNKNOWN_RESULT)
+        instance.srvalue = repr(
+            [
+                repr(EMPTY_SEVEN_TAG_ROSTER + UNKNOWN_RESULT),
+                {FILE: "", GAME: ""},
+            ]
+        )
         self.create_edit_dialog(
             instance, newobject, None, False, modal, title="New Game"
         )

@@ -5,9 +5,6 @@
 """Chess database using dbm.gnu."""
 
 from solentware_base import gnu_database
-from solentware_base.core.constants import (
-    FILEDESC,
-)
 
 from ..core.filespec import FileSpec
 from ..basecore import database

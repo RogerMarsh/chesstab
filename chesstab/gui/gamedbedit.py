@@ -4,11 +4,14 @@
 
 """Customise edit toplevel to edit or insert chess game record."""
 
+import ast
+
 from solentware_grid.gui.dataedit import DataEdit
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
+from ..core import constants
 from .gametoplevel import GameToplevel, GameToplevelEdit
 from .toplevelpgn import EditPGNToplevel
 from .constants import EMPTY_SEVEN_TAG_ROSTER
@@ -44,7 +47,7 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
 
     pgn_score_name = "Game"
     pgn_score_tags = EMPTY_SEVEN_TAG_ROSTER
-    pgn_score_source = "Editor"
+    pgn_score_source = ""
 
     def __init__(
         self,
@@ -89,7 +92,9 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
         self._set_default_source_for_object(object_)
         view.set_position_analysis_data_source()
         view.collected_game = next(
-            PGN(game_class=view.gameclass).read_games(object_.get_srvalue())
+            PGN(game_class=view.gameclass).read_games(
+                ast.literal_eval(object_.get_srvalue()[0])
+            )
         )
         view.set_and_tag_item_text()
 
@@ -150,3 +155,21 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
         """Mark partial position records for recalculation and return key."""
         self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
         super().edit(commit=commit)
+
+    # This method forced by addition of second list element in Game record
+    # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
+    # in classes in chessrecord module.
+    # Nowhere to put this in common with GameDisplayEdit.
+    def _construct_record_value(self):
+        """Return record value for Game record."""
+        reference = self.oldobject.value.reference
+        if reference[constants.FILE]:
+            game_number = ""
+        else:
+            game_number = reference[constants.GAME]
+        return repr(
+            [
+                repr(self.newview.get_score_error_escapes_removed()),
+                {constants.FILE: "", constants.GAME: game_number},
+            ]
+        )

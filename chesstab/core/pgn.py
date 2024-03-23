@@ -32,6 +32,11 @@ from .constants import (
     REPERTOIRE_TAG_ORDER,
     REPERTOIRE_GAME_TAGS,
     MOVE_NUMBER_KEYS,
+    START_COMMENT,
+    ERROR_START_COMMENT,
+    ESCAPE_END_COMMENT,
+    HIDE_END_COMMENT,
+    END_COMMENT,
 )
 
 MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
@@ -586,6 +591,180 @@ class GameUpdate(Game):
             + delta_after[3]
             + delta_after[2]
         )
+
+
+class GameUpdatePosition(Game):
+    """Prepare position index after each token has been processed."""
+
+    def __init__(self):
+        """Delegate then prepare to collect positions."""
+        super().__init__()
+        self.positionkeys = []
+
+    def modify_board_state(self, position_delta):
+        """Delegate then modify board state and add index entries."""
+        super().modify_board_state(position_delta)
+        pieces = [""] * 64
+        bits = []
+        for piece in self._piece_placement_data.values():
+            piece_name = piece.name
+            piece_square = piece.square
+            pieces[piece_square.number] = piece_name
+            bits.append(piece_square.bit)
+        delta_after = position_delta[1]
+        self.positionkeys.append(
+            sum(bits).to_bytes(8, "big").decode("iso-8859-1")
+            + "".join(pieces)
+            + delta_after[1]
+            + delta_after[3]
+            + delta_after[2]
+        )
+
+    def pgn_error_notification(self):
+        """Insert error '{' before movetext token which causes PGN error."""
+        if self._movetext_offset is not None:
+            self._text.append(START_COMMENT + ERROR_START_COMMENT)
+
+    def pgn_error_recovery(self):
+        """Insert error '}' before token which ends the scope of a PGN error.
+
+        This token will be a ')' or one of the game termination markers.
+
+        """
+        if self._movetext_offset is not None:
+            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
+
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
+
+
+class GameUpdatePieceLocation(Game):
+    """Prepare piece location indicies after each token has been processed."""
+
+    def __init__(self):
+        """Delegate then prepare to collect piece locations."""
+        super().__init__()
+        self.piecesquaremovekeys = []
+        self.piecemovekeys = []
+        self.squaremovekeys = []
+        self.halfmovenumber = None
+        self.variationnumber = None
+        self.currentvariation = None
+        self._variation = None
+
+    # Replaces self.set_position_fen(self, fen=None)
+    def set_initial_board_state(self, position_delta):
+        """Initialize PGN score parser with Forsyth Edwards Notation position.
+
+        fen defaults to the starting position for a game of chess.
+
+        """
+        super().set_initial_board_state(position_delta)
+        if self._active_color == FEN_WHITE_ACTIVE:
+            self.halfmovenumber = [(self._fullmove_number - 1) * 2]
+        else:
+            self.halfmovenumber = [self._fullmove_number * 2 - 1]
+        self.variationnumber = [0]
+        self._variation = "".join(
+            _convert_integer_to_length_hex(i) for i in self.variationnumber
+        )
+
+    def reset_board_state(self, position_delta):
+        """Delegate then append variation number to fit ravstack level."""
+        super().reset_board_state(position_delta)
+        if len(self._ravstack) > len(self.variationnumber):
+            self.variationnumber.append(0)
+
+    # Why '[len(self._ravstack)-1]' rather than '[-1]'?  The '[len()]' version
+    # came from PGNUpdate in chesstab, without the -1 adjustment, and seems to
+    # work.
+    def set_board_state(self, position_delta):
+        """Delegate then increment variation number.
+
+        Both numeric and string variation numbers are kept in step in case
+        there is another variation at this level.  For example:
+        '... Ba7 ) ( Nf4 ...'.
+        """
+        super().set_board_state(position_delta)
+        self.variationnumber[len(self._ravstack) - 1] += 1
+        self._variation = "".join(
+            _convert_integer_to_length_hex(i) for i in self.variationnumber
+        )
+
+    def modify_board_state(self, position_delta):
+        """Delegate then modify board state and add index entries."""
+        super().modify_board_state(position_delta)
+        if len(self._ravstack) != len(self.halfmovenumber):
+            while len(self._ravstack) < len(self.halfmovenumber):
+                self.halfmovenumber.pop()
+                self.variationnumber.pop()
+            while len(self._ravstack) > len(self.halfmovenumber):
+                self.halfmovenumber.append(self.halfmovenumber[-1])
+                self.variationnumber.append(0)
+            self._variation = "".join(
+                _convert_integer_to_length_hex(i) for i in self.variationnumber
+            )
+        self.halfmovenumber[-1] += 1
+        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
+        piecesquaremovekeys = self.piecesquaremovekeys
+        piecemovekeys = self.piecemovekeys
+        squaremovekeys = self.squaremovekeys
+        pieces = [""] * 64
+        bits = []
+        mnv = movenumber + self._variation
+        for piece in self._piece_placement_data.values():
+            piece_name = piece.name
+            piece_square = piece.square
+            square_name = piece_square.name
+            pieces[piece_square.number] = piece_name
+            bits.append(piece_square.bit)
+
+            # piecesquaremovekeys.append(mnv + piece_name + square_name)
+            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
+
+            # If 'square piece' is better order than 'piece square'
+            piecesquaremovekeys.append(mnv + square_name + piece_name)
+            squaremovekeys.append(
+                (
+                    mnv
+                    + square_name
+                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                )
+            )
+        for piece_name in "".join(pieces):
+            piecemovekeys.append(mnv + piece_name)
+        # delta_after = position_delta[1]
+
+    def pgn_error_notification(self):
+        """Insert error '{' before movetext token which causes PGN error."""
+        if self._movetext_offset is not None:
+            self._text.append(START_COMMENT + ERROR_START_COMMENT)
+
+    def pgn_error_recovery(self):
+        """Insert error '}' before token which ends the scope of a PGN error.
+
+        This token will be a ')' or one of the game termination markers.
+
+        """
+        if self._movetext_offset is not None:
+            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
+
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
 class GameUpdateEstimate(GameUpdate):

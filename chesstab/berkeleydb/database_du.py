@@ -2,11 +2,14 @@
 # Copyright 2021 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess database update using custom deferred update for Berkeley DB.
+"""Update chess database indicies from PGN in stages on Berkeley DB.
 
 This module uses the berkeleydb interface.
 """
 
+# pylint gives import-error message, E0401, if berkeleydb is not installed.
+# It is reasonable to not install berkeleydb.
+# The importlib module is used elsewhere to import berkeleydb if needed.
 import berkeleydb.db
 
 from solentware_base import berkeleydbdu_database

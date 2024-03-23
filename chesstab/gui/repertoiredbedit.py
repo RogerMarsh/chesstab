@@ -48,7 +48,7 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
 
     pgn_score_name = "Repertoire"
     pgn_score_tags = EMPTY_REPERTOIRE_GAME
-    pgn_score_source = "No opening name"
+    pgn_score_source = ""
 
     def __init__(
         self,
@@ -160,3 +160,7 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
             if oldv.collected_game == newv.collected_game:
                 newv.gamesource = oldv.gamesource
         return super().dialog_ok()
+
+    def _construct_record_value(self):
+        """Return record value for Repertoire record."""
+        return repr(self.newview.get_score_error_escapes_removed())

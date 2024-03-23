@@ -5,7 +5,6 @@
 """Chess games database using DPT database via dptdb.dptapi."""
 
 from solentware_base import dpt_database
-from solentware_base.core.constants import FILEDESC
 
 from ..core.filespec import FileSpec
 from ..basecore import database

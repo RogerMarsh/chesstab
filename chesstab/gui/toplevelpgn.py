@@ -112,8 +112,7 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
         This method extends the version in EditText superclass.
 
         """
-        text = self.newview.get_score_error_escapes_removed()
-        self.newobject.value.load(repr(text))
+        self.newobject.value.load(self._construct_record_value())
         if not self.newobject.value.collected_game.is_pgn_valid():
             msg = [
                 "Please re-confirm request to edit ",
