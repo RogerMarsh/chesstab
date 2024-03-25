@@ -179,6 +179,7 @@ def du_extract(
 
 def du_index_pgn_tags(
     cdb,
+    pgnpaths,
     indexing=True,
     file=None,
     reporter=None,
@@ -191,6 +192,8 @@ def du_index_pgn_tags(
     interrupted before it is completed.
 
     cdb         Database instance which does the deferred updates.
+    pgnpaths    List of file names containing imported PGN game scores.
+                The basenames are used as keys for games with errors.
     indexing    True means do import within set_defer_update block,
                 False means do import within start_transaction block.
                 Not passed to importer instance's <import> method because
@@ -247,6 +250,29 @@ def du_index_pgn_tags(
             reporter.append_text_only("")
         cdb.backout()
         return True
+    error_games = _get_error_games(cdb, pgnpaths)
+    if error_games.count_records():
+        index_games.remove_recordset(error_games)
+        index_games_count = index_games.count_records()
+        if index_games_count == 0:
+            cdb.unfile_records_under(
+                filespec.GAMES_FILE_DEF,
+                filespec.IMPORT_FIELD_DEF,
+                cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
+            )
+            if reporter is not None:
+                reporter.append_text(
+                    "No games need indexing by PGN tags in Seven Tag Roster."
+                )
+                reporter.append_text_only("")
+            cdb.commit()
+            return True
+        cdb.file_records_under(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            index_games,
+            cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
+        )
     if reporter is not None:
         reporter.append_text("Index PGN Tags started.")
         reporter.append_text(
@@ -306,6 +332,7 @@ def du_index_pgn_tags(
 
 def du_index_positions(
     cdb,
+    pgnpaths,
     indexing=True,
     file=None,
     reporter=None,
@@ -318,6 +345,8 @@ def du_index_positions(
     interrupted before it is completed.
 
     cdb         Database instance which does the deferred updates.
+    pgnpaths    List of file names containing imported PGN game scores.
+                The basenames are used as keys for games with errors.
     indexing    True means do import within set_defer_update block,
                 False means do import within start_transaction block.
                 Not passed to importer instance's <import> method because
@@ -374,6 +403,29 @@ def du_index_positions(
             reporter.append_text("No games need indexing by positions.")
         cdb.backout()
         return True
+    error_games = _get_error_games(cdb, pgnpaths)
+    if error_games.count_records():
+        index_games.remove_recordset(error_games)
+        index_games_count = index_games.count_records()
+        if index_games_count == 0:
+            cdb.unfile_records_under(
+                filespec.GAMES_FILE_DEF,
+                filespec.IMPORT_FIELD_DEF,
+                cdb.encode_record_selector(filespec.POSITIONS_FIELD_DEF),
+            )
+            if reporter is not None:
+                reporter.append_text(
+                    "No games need indexing by positions."
+                )
+                reporter.append_text_only("")
+            cdb.commit()
+            return True
+        cdb.file_records_under(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            index_games,
+            cdb.encode_record_selector(filespec.POSITIONS_FIELD_DEF),
+        )
     if reporter is not None:
         reporter.append_text("Index positions started.")
         reporter.append_text(
@@ -433,6 +485,7 @@ def du_index_positions(
 
 def du_index_piece_locations(
     cdb,
+    pgnpaths,
     indexing=True,
     file=None,
     reporter=None,
@@ -445,6 +498,8 @@ def du_index_piece_locations(
     interrupted before it is completed.
 
     cdb         Database instance which does the deferred updates.
+    pgnpaths    List of file names containing imported PGN game scores.
+                The basenames are used as keys for games with errors.
     indexing    True means do import within set_defer_update block,
                 False means do import within start_transaction block.
                 Not passed to importer instance's <import> method because
@@ -498,9 +553,32 @@ def du_index_piece_locations(
     index_games_count = index_games.count_records()
     if index_games_count == 0:
         if reporter is not None:
-            reporter.append_text("No games need indexing by positions.")
+            reporter.append_text("No games need indexing by piece locations.")
         cdb.backout()
         return True
+    error_games = _get_error_games(cdb, pgnpaths)
+    if error_games.count_records():
+        index_games.remove_recordset(error_games)
+        index_games_count = index_games.count_records()
+        if index_games_count == 0:
+            cdb.unfile_records_under(
+                filespec.GAMES_FILE_DEF,
+                filespec.IMPORT_FIELD_DEF,
+                cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+            )
+            if reporter is not None:
+                reporter.append_text(
+                    "No games need indexing by piece locations."
+                )
+                reporter.append_text_only("")
+            cdb.commit()
+            return True
+        cdb.file_records_under(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            index_games,
+            cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+        )
     if reporter is not None:
         reporter.append_text("Index piece locations started.")
         reporter.append_text(
@@ -674,18 +752,22 @@ def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
                 reporter.append_text("Import not completed.")
                 reporter.append_text_only("")
             return
-        if not du_index_pgn_tags(cdb, reporter=reporter, file=file, **kwargs):
+        if not du_index_pgn_tags(
+            cdb, *args, reporter=reporter, file=file, **kwargs
+        ):
             if reporter is not None:
                 reporter.append_text("Import not completed.")
                 reporter.append_text_only("")
             return
-        if not du_index_positions(cdb, reporter=reporter, file=file, **kwargs):
+        if not du_index_positions(
+            cdb, *args, reporter=reporter, file=file, **kwargs
+        ):
             if reporter is not None:
                 reporter.append_text("Import not completed.")
                 reporter.append_text_only("")
             return
         if not du_index_piece_locations(
-            cdb, reporter=reporter, file=file, **kwargs
+            cdb, *args, reporter=reporter, file=file, **kwargs
         ):
             if reporter is not None:
                 reporter.append_text("Import not completed.")
@@ -798,6 +880,18 @@ def get_filespec(**kargs):
             if FILEDESC in names[table_name]:
                 del names[table_name][FILEDESC]
     return names
+
+
+def _get_error_games(database, pgnpaths):
+    """Return recordlist of error records for paths in pgnpaths."""
+    trimmed = database.recordlist_nil(filespec.GAMES_FILE_DEF)
+    for name in pgnpaths:
+        trimmed |= database.recordlist_key(
+            filespec.GAMES_FILE_DEF,
+            filespec.PGN_ERROR_FIELD_DEF,
+            key=database.encode_record_selector(os.path.basename(name)),
+        )
+    return trimmed
 
 
 class Alldu:

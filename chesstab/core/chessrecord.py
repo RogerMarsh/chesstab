@@ -62,6 +62,7 @@ from .filespec import (
     PIECESQUAREMOVE_FIELD_DEF,
     PIECEMOVE_FIELD_DEF,
     SQUAREMOVE_FIELD_DEF,
+    GAME_FIELD_DEF,
     GAMES_FILE_DEF,
     REPERTOIRE_FILE_DEF,
     PGN_DATE_FIELD_DEF,
@@ -929,6 +930,21 @@ class ChessDBrecordGameImport(Record):
                     )
                 old_segment = current_segment
             value.set_game_source(None)
+            if not value.collected_game.is_tag_roster_valid():
+                # Re-index as an error.
+                new_instance = self.__class__(
+                    keyclass=self.key.__class__,
+                    valueclass=self.value.__class__,
+                )
+                new_instance.load_record(current_record)
+                new_instance.set_database(database)
+                new_instance.value.set_game_source(value.reference[FILE])
+                new_instance.value.collected_game.pgn_tags.clear()
+                self.srkey = None
+                self.edit_record(
+                    database, GAMES_FILE_DEF, GAME_FIELD_DEF, new_instance
+                )
+                continue
             database.index_instance(GAMES_FILE_DEF, self)
         return True
 
@@ -1010,6 +1026,22 @@ class ChessDBrecordGameImport(Record):
                     )
                 old_segment = current_segment
             value.set_game_source(None)
+            if value.collected_game._error_list:
+                # Re-index as an error.
+                new_instance = self.__class__(
+                    keyclass=self.key.__class__,
+                    valueclass=self.value.__class__,
+                )
+                new_instance.load_record(current_record)
+                new_instance.set_database(database)
+                new_instance.value.set_game_source(value.reference[FILE])
+                new_instance.value.collected_game.pgn_tags.clear()
+                new_instance.value.collected_game.positionkeys.clear()
+                self.srkey = None
+                self.edit_record(
+                    database, GAMES_FILE_DEF, GAME_FIELD_DEF, new_instance
+                )
+                continue
             database.index_instance(GAMES_FILE_DEF, self)
         return True
 
@@ -1126,26 +1158,11 @@ class ChessDBvaluePGNStore(PGNMoveText, ValueList):
 
     def pack_detail(self, index):
         """Delegate then add position and piece loaction detail to index."""
+        index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
         if self.do_full_indexing():
-            index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
-            # index[NUMBER_FIELD_DEF] = [self.reference[GAME]]
-            index[IMPORT_FIELD_DEF] = [
-                IMPORT_FIELD_DEF,
-                # POSITIONS_FIELD_DEF,
-                # PIECESQUAREMOVE_FIELD_DEF,
-                # PIECEMOVE_FIELD_DEF,
-                # SQUAREMOVE_FIELD_DEF,
-                # PGN_DATE_FIELD_DEF,
-                # EVENT_FIELD_DEF,
-                # SITE_FIELD_DEF,
-                # DATE_FIELD_DEF,
-                # ROUND_FIELD_DEF,
-                # WHITE_FIELD_DEF,
-                # BLACK_FIELD_DEF,
-                # RESULT_FIELD_DEF,
-            ]
+            index[IMPORT_FIELD_DEF] = [IMPORT_FIELD_DEF]
         else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def set_game_source(self, source):
         """Set game source.
@@ -1166,7 +1183,7 @@ class ChessDBvaluePGNStore(PGNMoveText, ValueList):
         method is_pgn_valid() is not used to decide what indexing to do.
 
         """
-        return self.gamesource is None
+        return self.collected_game.is_pgn_valid()
 
 
 class ChessDBrecordGameStore(ChessDBrecordGameImport):
@@ -1379,7 +1396,6 @@ class ChessDBvaluePGNTags(PGNMoveText, ValueList):
             #    IMPORT_FIELD_DEF,
             # ]
         else:
-            print("error")
             index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
 
     def set_game_source(self, source):
