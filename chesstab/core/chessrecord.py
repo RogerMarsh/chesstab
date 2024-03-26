@@ -792,9 +792,24 @@ class ChessDBrecordGameImport(Record):
                                 )
                             )
                     continue
-            value.set_game_source(
-                sourcename if not collected_game.is_pgn_valid() else None
-            )
+            # Do a full parse of the game score if an error is found, to
+            # consume the rest of game and wrap it in a '{ ... }' comment,
+            # so later display of the stored record will succeed.
+            # Later import stages, which do the full parse so the position
+            # and piece location indicies can be generated, will ignore
+            # this record.
+            # Attribute collected_game is re-bound so note anything needed
+            # from the original object.
+            game_offset = collected_game.game_offset
+            if collected_game.state is None:
+                value.set_game_source(None)
+            else:
+                value.set_game_source(sourcename)
+                collected_game = next(
+                    ChessDBvaluePGNIdentity().read_games(
+                        "".join(collected_game.pgn_text)
+                    )
+                )
             copy_number += 1
             self.key.recno = None
             value.collected_game = collected_game
@@ -810,7 +825,7 @@ class ChessDBrecordGameImport(Record):
                                 "Game ",
                                 format(game_number, ","),
                                 " to character ",
-                                format(collected_game.game_offset, ","),
+                                format(game_offset, ","),
                                 " in PGN is record ",
                                 format(self.key.recno, ","),
                             )
@@ -834,7 +849,7 @@ class ChessDBrecordGameImport(Record):
                         (
                             format(copy_number, ","),
                             " games, to character ",
-                            format(collected_game.game_offset, ","),
+                            format(game_offset, ","),
                             " in PGN, read from ",
                             sourcename,
                         )
