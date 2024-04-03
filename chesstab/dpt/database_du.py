@@ -51,6 +51,15 @@ class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
             with open(self.parms, "w", encoding="iso-8859-1") as parms:
                 parms.write("MAXBUF=10000 " + os.linesep)
 
+    def edit_instance(self, dbset, instance):
+        """Edit an instance is available in deferred update mode.
+
+        ChessTab is not using the deferred update OpenContext methods
+        and is using edit_instance in the deferred_update path.
+
+        """
+        super(dptdu_database.Database, self).edit_instance(dbset, instance)
+
     def _dptfileclass(self):
         return DPTFile
 
@@ -70,3 +79,12 @@ class DPTFile(dptdu_database.DPTFile):
     # dptdu_database.DPTFile class.
     def _open_context(self, dbenv, context_specification):
         return dbenv.OpenContext(context_specification)
+
+    def edit_instance(self, instance):
+        """Edit an existing instance on database.
+
+        ChessTab is not using the deferred update OpenContext methods
+        and is using edit_instance in the deferred_update path.
+
+        """
+        super(dptdu_database.DPTFile, self).edit_instance(instance)

@@ -54,6 +54,10 @@ from .constants import (
     SPECIAL_TAG_DATE,
     FILE,
     GAME,
+    WHITE_WIN,
+    BLACK_WIN,
+    DRAW,
+    UNKNOWN_RESULT,
 )
 from .cqlstatement import CQLStatement
 from .filespec import (
@@ -87,6 +91,9 @@ from .querystatement import QueryStatement, re_normalize_player_name
 from .engine import Engine
 
 PLAYER_NAME_TAGS = frozenset((TAG_WHITE, TAG_BLACK))
+GAME_TERMINATION_MARKERS = frozenset(
+    (WHITE_WIN, BLACK_WIN, DRAW, UNKNOWN_RESULT)
+)
 
 
 class ChessRecordError(Exception):
@@ -461,49 +468,6 @@ class ChessDBrecordGamePosition(Record):
         raise ChessRecordError
 
 
-# An alternative is to put this in .core.pgn as 'class _Game(Game) and base
-# the other classes on _Game rather than Game.  Done here because the only
-# place errors which need hiding should occur is when importing games to, or
-# updating games on, the database.
-# The conditions have changed because these methods are in GameUpdatePosition
-# and GameUpdatePieceLocation now too.
-class _GameUpdate(GameUpdate):
-    """Override the PGN error notification and recovery methods.
-
-    Errors detected in PGN movetext are hidden by wrapping all tokens to end
-    of variation, which may be rest of game if error is in main line, in a
-    comment which starts and ends with a presumed unlikely character sequence.
-    The '}' in any '{}' comments which happen to get wrapped a changed to a
-    distinct presumed unlikely character sequence so the wrapped '}' tokens do
-    not terminate the wrapping comment.
-
-    """
-
-    def pgn_error_notification(self):
-        """Insert error '{' before movetext token which causes PGN error."""
-        if self._movetext_offset is not None:
-            self._text.append(START_COMMENT + ERROR_START_COMMENT)
-
-    def pgn_error_recovery(self):
-        """Insert error '}' before token which ends the scope of a PGN error.
-
-        This token will be a ')' or one of the game termination markers.
-
-        """
-        if self._movetext_offset is not None:
-            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
-
-    def pgn_mark_comment_in_error(self, comment):
-        """Return comment with '}' replaced by a presumed unlikely sequence.
-
-        One possibility is to wrap the error in a '{...}' comment.  The '}'
-        token in any wrapped commment would end the comment wrapping the error
-        prematurely, so replace with HIDE_END_COMMENT.
-
-        """
-        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
-
-
 class ChessDBvaluePGNIdentity(ChessDBvaluePGN):
     """Chess game data with position, piece location, and PGN Tag, indexes."""
 
@@ -519,7 +483,7 @@ class ChessDBvaluePGNIdentity(ChessDBvaluePGN):
     # Implication of original is encode_move_number not supported and load in
     # ChessDBvaluePGN superclass is used.
 
-    def __init__(self, game_class=_GameUpdate):
+    def __init__(self, game_class=GameUpdate):
         """Extend with game source and move number encoder placeholders."""
         super().__init__(game_class=game_class)
         self.gamesource = None
@@ -600,9 +564,52 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGNIdentity):
             index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
             index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
             index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
-            index[PGN_DATE_FIELD_DEF] = [
-                game.pgn_tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
-            ]
+            try:
+                index[PGN_DATE_FIELD_DEF] = [
+                    game.pgn_tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
+                ]
+            except KeyError:
+                index[PGN_DATE_FIELD_DEF] = []
+
+
+class ChessDBvaluePGNDelete(ChessDBvaluePGNUpdate):
+    """Chess game data with position, piece location, and PGN Tag, indexes."""
+
+    def pack_detail(self, index):
+        """Delegate then add position and piece location detail to index."""
+        super().pack_detail(index)
+        game = self.collected_game
+        if game._errors_hidden_in_comments or not game.is_tag_roster_valid():
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return self.collected_game.is_tag_roster_valid()
+
+
+class ChessDBvaluePGNEdit(ChessDBvaluePGNUpdate):
+    """Chess game data with position, piece location, and PGN Tag, indexes."""
+
+    def pack_detail(self, index):
+        """Delegate then add position and piece location detail to index."""
+        super().pack_detail(index)
+        game = self.collected_game
+        if game._errors_hidden_in_comments or not game.is_tag_roster_valid():
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return self.collected_game.is_tag_roster_valid()
 
 
 class ChessDBrecordGameUpdate(Record):
@@ -612,9 +619,11 @@ class ChessDBrecordGameUpdate(Record):
 
     """
 
-    def __init__(self):
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNUpdate
+    ):
         """Extend with move number encode and decode methods."""
-        super().__init__(ChessDBkeyGame, ChessDBvaluePGNUpdate)
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
 
     def clone(self):
         """Return copy of ChessDBrecordGameUpdate instance.
@@ -801,14 +810,28 @@ class ChessDBrecordGameImport(Record):
             # Attribute collected_game is re-bound so note anything needed
             # from the original object.
             game_offset = collected_game.game_offset
-            if collected_game.state is None:
+            if collected_game.is_tag_roster_valid():
                 value.set_game_source(None)
             else:
                 value.set_game_source(sourcename)
-                collected_game = next(
-                    ChessDBvaluePGNIdentity().read_games(
-                        "".join(collected_game.pgn_text)
+                pgn_text = [
+                    value.pgn_mark_comment_in_error(text)
+                    for text in collected_game.pgn_text
+                ]
+                pgn_text.insert(
+                    len(collected_game.pgn_tags),
+                    START_COMMENT + ERROR_START_COMMENT,
+                )
+                if pgn_text[-1].strip() not in GAME_TERMINATION_MARKERS:
+                    pgn_text.append(ESCAPE_END_COMMENT + END_COMMENT)
+                    pgn_text.append(
+                        "\n{'*' added to mitigate effect of earlier error}"
                     )
+                    pgn_text.append(" *")
+                else:
+                    pgn_text.insert(-1, ESCAPE_END_COMMENT + END_COMMENT)
+                collected_game = next(
+                    ChessDBvaluePGNIdentity().read_games("".join(pgn_text))
                 )
             copy_number += 1
             self.key.recno = None
@@ -1041,15 +1064,43 @@ class ChessDBrecordGameImport(Record):
                     )
                 old_segment = current_segment
             value.set_game_source(None)
-            if value.collected_game._error_list:
+            # Earlier import stages verified the syntax of movetext but did
+            # not verify the movetext represented legal moves on the board.
+            # The absence of movetext is fine, as is movetext which is just
+            # comments or other stuff which does not signify a move to be
+            # applied to the board.
+            # If movetext which signifies a move to be applied to the board
+            # is present, the first such element must signify a legal move.
+            # Problems occur later when displaying games if this is not so.
+            if value.collected_game.state is not None:
                 # Re-index as an error.
+                pgn_text = [
+                    value.pgn_mark_comment_in_error(text)
+                    for text in value.collected_game.pgn_text
+                ]
+                pgn_text.insert(
+                    len(value.collected_game.pgn_tags),
+                    START_COMMENT + ERROR_START_COMMENT,
+                )
+                if pgn_text[-1].strip() not in GAME_TERMINATION_MARKERS:
+                    pgn_text.append(ESCAPE_END_COMMENT + END_COMMENT)
+                    pgn_text.append(
+                        "\n{'*' added to mitigate effect of earlier error}"
+                    )
+                    pgn_text.append(" *")
+                else:
+                    pgn_text.insert(-1, ESCAPE_END_COMMENT + END_COMMENT)
                 new_instance = self.__class__(
                     keyclass=self.key.__class__,
-                    valueclass=self.value.__class__,
+                    valueclass=ChessDBvaluePGNIdentity,
                 )
                 new_instance.load_record(current_record)
                 new_instance.set_database(database)
                 new_instance.value.set_game_source(value.reference[FILE])
+                collected_game = next(
+                    new_instance.value.read_games("".join(pgn_text))
+                )
+                new_instance.value.collected_game = collected_game
                 new_instance.value.collected_game.pgn_tags.clear()
                 new_instance.value.collected_game.positionkeys.clear()
                 self.srkey = None
@@ -1152,6 +1203,14 @@ class ChessDBvaluePGNStore(PGNMoveText, ValueList):
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 
+    def is_pgn_valid(self):
+        """Return True if the tags in the game are valid.
+
+        Override because the tag values matter rather than their existence.
+
+        """
+        return self.is_tag_roster_valid()
+
     def load(self, value):
         """Get game from value."""
         super().load(value)
@@ -1199,6 +1258,17 @@ class ChessDBvaluePGNStore(PGNMoveText, ValueList):
 
         """
         return self.collected_game.is_pgn_valid()
+
+    # Copied from core.pgn._Game class.
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
 class ChessDBrecordGameStore(ChessDBrecordGameImport):
@@ -1276,6 +1346,17 @@ class ChessDBvaluePosition(PGN, ValueList):
 
         """
         return self.gamesource is None
+
+    # Copied from core.pgn._Game class.
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
 class ChessDBrecordGameTransposition(ChessDBrecordGameImport):
@@ -1381,6 +1462,14 @@ class ChessDBvaluePGNTags(PGNMoveText, ValueList):
     )
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
+
+    def is_pgn_valid(self):
+        """Return True if the tags in the game are valid.
+
+        Override because the tag values matter rather than their existence.
+
+        """
+        return self.is_tag_roster_valid()
 
     def load(self, value):
         """Get game from value."""
@@ -1544,6 +1633,10 @@ class ChessDBvalueRepertoireTags(ChessDBvalueRepertoire):
 class ChessDBvalueRepertoireUpdate(ChessDBvalueRepertoire):
     """Repertoire data using custom non-standard tags in PGN format."""
 
+    # Some code, which should no longer be shared between repertoire and
+    # game classes, expects value classes to have a reference attribute.
+    reference = None
+
     def __init__(self):
         """Extend with game source and move number encoder placeholders."""
         super().__init__(game_class=GameRepertoireUpdate)
@@ -1614,13 +1707,23 @@ class ChessDBrecordRepertoireTags(ChessDBrecordGameTags):
 class ChessDBrecordRepertoireUpdate(ChessDBrecordGameUpdate):
     """Repertoire record customized for editing repertoire records."""
 
-    def __init__(self):
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvalueRepertoireUpdate
+    ):
         """Extend with move number encode and decode methods."""
         # Skip the immediate superclass __init__ to fix key and value classes
         # pylint bad-super-call message given.
         # pylint super-with-arguments message given.
+        # Before introduction of reference to PGN file and game number within
+        # file it was reasonable to have Repertoire inherit from Game but
+        # that is not reasonable now.  The first actual problem which needs
+        # fixing is having to ignore the valueclass argument which may pass
+        # in a class relevant to games but wrong for repertoires.  The
+        # problem arises from all supported database engines but Symas LMDB
+        # supporting zero length bytestring keys.
+        valueclass = ChessDBvalueRepertoireUpdate
         super(ChessDBrecordGameUpdate, self).__init__(
-            ChessDBkeyGame, ChessDBvalueRepertoireUpdate
+            keyclass=keyclass, valueclass=valueclass
         )
 
     def get_keys(self, datasource=None, partial=None):

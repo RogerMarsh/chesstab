@@ -161,6 +161,9 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
                 newv.gamesource = oldv.gamesource
         return super().dialog_ok()
 
-    def _construct_record_value(self):
+    def _construct_record_value(self, reference=None):
         """Return record value for Repertoire record."""
+        # reference argument exists for compatibility with game classes
+        # which had the PGN source file reference added early 2024.
+        del reference
         return repr(self.newview.get_score_error_escapes_removed())

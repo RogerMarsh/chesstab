@@ -112,7 +112,9 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
         This method extends the version in EditText superclass.
 
         """
-        self.newobject.value.load(self._construct_record_value())
+        self.newobject.value.load(
+            self._construct_record_value(self.newobject.value.reference)
+        )
         if not self.newobject.value.collected_game.is_pgn_valid():
             msg = [
                 "Please re-confirm request to edit ",
@@ -122,6 +124,20 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
             if not self.newobject.value.collected_game.is_movetext_valid():
                 msg.extend(["\n\nErrors exist in the Movetext."])
             if not self.newobject.value.collected_game.is_tag_roster_valid():
+                # Get repertoire distiguished first, then figure how to
+                # implement in existing subclasses.
+                # Prevent lmdb exceptions for zero length keys.
+                if self.pgn_score_name.lower() == "repertoire":
+                    msg = [
+                        "Cannot insert repertoire because either ",
+                        'Opening or Result is not given.',
+                    ]
+                    tkinter.messagebox.showinfo(
+                        parent=self.ui.get_toplevel(),
+                        title="".join(("Edit ", self.pgn_score_name)),
+                        message="".join(msg),
+                    )
+                    return False
                 msg.extend(
                     [
                         "\n\nEither a mandatory Tag Pair is missing,",

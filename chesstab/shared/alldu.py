@@ -414,9 +414,7 @@ def du_index_positions(
                 cdb.encode_record_selector(filespec.POSITIONS_FIELD_DEF),
             )
             if reporter is not None:
-                reporter.append_text(
-                    "No games need indexing by positions."
-                )
+                reporter.append_text("No games need indexing by positions.")
                 reporter.append_text_only("")
             cdb.commit()
             return True

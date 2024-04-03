@@ -160,16 +160,19 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
     # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
     # in classes in chessrecord module.
     # Nowhere to put this in common with GameDisplayEdit.
-    def _construct_record_value(self):
+    def _construct_record_value(self, reference):
         """Return record value for Game record."""
-        reference = self.oldobject.value.reference
-        if reference[constants.FILE]:
+        # Record value becomes {"file": repr(""), "game": ""} because the
+        # "file" value cannot be "" when used as a key in a LMDB database.
+        # When "file" is a file name the "game" values will be 1, 2, 3,
+        # and so forth.
+        if reference[constants.GAME]:
             game_number = ""
         else:
             game_number = reference[constants.GAME]
         return repr(
             [
                 repr(self.newview.get_score_error_escapes_removed()),
-                {constants.FILE: "", constants.GAME: game_number},
+                {constants.FILE: repr(""), constants.GAME: game_number},
             ]
         )

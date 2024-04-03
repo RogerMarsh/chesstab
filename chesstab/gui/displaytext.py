@@ -44,6 +44,7 @@ import tkinter.messagebox
 
 from .eventspec import EventSpec
 from .score import NonTagBind
+from ..core.chessrecord import ChessDBvaluePGNEdit
 
 
 # ShowText because DisplayText fits CQLDisplay (and *Query*), but there is
@@ -211,7 +212,7 @@ class ShowText:
     # Both _game_updater and pgn_score_updater need more generic names.
     def _game_updater(self, text):
         """Make and return a chess record containing a single PGN score."""
-        updater = self.pgn_score_updater()
+        updater = self.pgn_score_updater(valueclass=ChessDBvaluePGNEdit)
         updater.value.load(text)
         return updater
 

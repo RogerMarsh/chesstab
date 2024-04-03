@@ -80,6 +80,49 @@ class GameDisplayMoves(GameIndicateCheck):
         self.moves.append((self._text[-1], self._ravstack[-1][-1]))
 
 
+class _Game(Game):
+    """Override the PGN error notification and recovery methods.
+
+    Errors detected in PGN movetext are hidden by wrapping all tokens to end
+    of variation, which may be rest of game if error is in main line, in a
+    comment which starts and ends with a presumed unlikely character sequence.
+    The '}' in any '{}' comments which happen to get wrapped a changed to a
+    distinct presumed unlikely character sequence so the wrapped '}' tokens do
+    not terminate the wrapping comment.
+
+    """
+
+    def __init__(self):
+        """Delegate then set '_errors_hidden_in_comments' to None."""
+        super().__init__()
+        self._errors_hidden_in_comments = None
+
+    def pgn_error_notification(self):
+        """Insert error '{' before movetext token which causes PGN error."""
+        if self._movetext_offset is not None:
+            self._text.append(START_COMMENT + ERROR_START_COMMENT)
+            self._errors_hidden_in_comments = True
+
+    def pgn_error_recovery(self):
+        """Insert error '}' before token which ends the scope of a PGN error.
+
+        This token will be a ')' or one of the game termination markers.
+
+        """
+        if self._movetext_offset is not None:
+            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
+
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
+
+
 class GameMove(Game):
     """Generate data structures to verify moves returned from Chess Engines.
 
@@ -483,7 +526,7 @@ class GameRepertoireTags(GameTags):
         return True
 
 
-class GameUpdate(Game):
+class GameUpdate(_Game):
     """Prepare indicies after each token has been processed."""
 
     # self.positions, and the three similar, renamed to self.positionkeys.
@@ -593,7 +636,7 @@ class GameUpdate(Game):
         )
 
 
-class GameUpdatePosition(Game):
+class GameUpdatePosition(_Game):
     """Prepare position index after each token has been processed."""
 
     def __init__(self):
@@ -620,32 +663,8 @@ class GameUpdatePosition(Game):
             + delta_after[2]
         )
 
-    def pgn_error_notification(self):
-        """Insert error '{' before movetext token which causes PGN error."""
-        if self._movetext_offset is not None:
-            self._text.append(START_COMMENT + ERROR_START_COMMENT)
 
-    def pgn_error_recovery(self):
-        """Insert error '}' before token which ends the scope of a PGN error.
-
-        This token will be a ')' or one of the game termination markers.
-
-        """
-        if self._movetext_offset is not None:
-            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
-
-    def pgn_mark_comment_in_error(self, comment):
-        """Return comment with '}' replaced by a presumed unlikely sequence.
-
-        One possibility is to wrap the error in a '{...}' comment.  The '}'
-        token in any wrapped commment would end the comment wrapping the error
-        prematurely, so replace with HIDE_END_COMMENT.
-
-        """
-        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
-
-
-class GameUpdatePieceLocation(Game):
+class GameUpdatePieceLocation(_Game):
     """Prepare piece location indicies after each token has been processed."""
 
     def __init__(self):
@@ -741,30 +760,6 @@ class GameUpdatePieceLocation(Game):
         for piece_name in "".join(pieces):
             piecemovekeys.append(mnv + piece_name)
         # delta_after = position_delta[1]
-
-    def pgn_error_notification(self):
-        """Insert error '{' before movetext token which causes PGN error."""
-        if self._movetext_offset is not None:
-            self._text.append(START_COMMENT + ERROR_START_COMMENT)
-
-    def pgn_error_recovery(self):
-        """Insert error '}' before token which ends the scope of a PGN error.
-
-        This token will be a ')' or one of the game termination markers.
-
-        """
-        if self._movetext_offset is not None:
-            self._text.append(ESCAPE_END_COMMENT + END_COMMENT)
-
-    def pgn_mark_comment_in_error(self, comment):
-        """Return comment with '}' replaced by a presumed unlikely sequence.
-
-        One possibility is to wrap the error in a '{...}' comment.  The '}'
-        token in any wrapped commment would end the comment wrapping the error
-        prematurely, so replace with HIDE_END_COMMENT.
-
-        """
-        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
 
 
 class GameUpdateEstimate(GameUpdate):

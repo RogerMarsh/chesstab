@@ -49,6 +49,7 @@ from solentware_grid.gui.datadelete import RecordDelete
 from .score import NonTagBind, ScoreNoGameException
 from .scorepgn import ScorePGN
 from .displaytext import ShowText, DisplayText, EditText, InsertText
+from ..core.chessrecord import ChessDBvaluePGNDelete
 
 
 # ShowPGN because DisplayPGN fits GameDisplay (and *Repertoire*)
@@ -203,6 +204,20 @@ class ShowPGN(ShowText, ScorePGN):
             if not updater.value.collected_game.is_movetext_valid():
                 msg.extend(["\n\nErrors exist in the Movetext."])
             if not updater.value.collected_game.is_tag_roster_valid():
+                # Get repertoire distiguished first, then figure how to
+                # implement in existing subclasses.
+                # Prevent lmdb exceptions for zero length keys.
+                if psn.lower() == "repertoire":
+                    msg = [
+                        "Cannot insert repertoire because either ",
+                        'Opening or Result is not given.',
+                    ]
+                    tkinter.messagebox.showinfo(
+                        parent=self.ui.get_toplevel(),
+                        title=title,
+                        message="".join(msg),
+                    )
+                    return None
                 msg.extend(
                     [
                         "\n\nEither a mandatory Tag Pair is missing,",
@@ -222,6 +237,9 @@ class ShowPGN(ShowText, ScorePGN):
         updater.set_database(editor.get_data_source().dbhome)
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         updater.key.recno = None
+        print()
+        for ccc in self.__class__.mro():
+            print(ccc)
         editor.put()
         tags = updater.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
@@ -473,7 +491,7 @@ class EditPGN(EditText):
             message=psn.join(("Confirm request to edit ", ".")),
         ):
             return
-        original = self.pgn_score_updater()
+        original = self.pgn_score_updater(valueclass=ChessDBvaluePGNDelete)
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )
@@ -495,6 +513,20 @@ class EditPGN(EditText):
             if not updater.value.collected_game.is_movetext_valid():
                 msg.extend(["\n\nErrors exist in the Movetext."])
             if not updater.value.collected_game.is_tag_roster_valid():
+                # Get repertoire distiguished first, then figure how to
+                # implement in existing subclasses.
+                # Prevent lmdb exceptions for zero length keys.
+                if psn.lower() == "repertoire":
+                    msg = [
+                        "Cannot edit repertoire because either ",
+                        'Opening or Result is not given.',
+                    ]
+                    tkinter.messagebox.showinfo(
+                        parent=self.ui.get_toplevel(),
+                        title=title,
+                        message="".join(msg),
+                    )
+                    return
                 msg.extend(
                     [
                         "\n\nEither a mandatory Tag Pair is missing,",

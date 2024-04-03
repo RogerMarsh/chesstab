@@ -11,7 +11,11 @@ from solentware_grid.datagrid import DataGrid
 
 from pgn_read.core.parser import PGN
 
-from ..core.chessrecord import ChessDBrecordGameUpdate
+from ..core.chessrecord import (
+    ChessDBrecordGameUpdate,
+    ChessDBvaluePGNDelete,
+    ChessDBvaluePGNEdit,
+)
 from .gamedisplay import GameDisplay, GameDisplayEdit
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 from ..core import export_game
@@ -156,7 +160,7 @@ class GameListGrid(
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
-        oldobject = ChessDBrecordGameUpdate()
+        oldobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNDelete)
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
         )
@@ -172,8 +176,8 @@ class GameListGrid(
         try:
             self.create_edit_dialog(
                 self.objects[key],
-                ChessDBrecordGameUpdate(),
-                ChessDBrecordGameUpdate(),
+                ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNEdit),
+                ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNDelete),
                 False,
                 modal,
                 title="Edit Game",
@@ -197,7 +201,7 @@ class GameListGrid(
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
-        newobject = ChessDBrecordGameUpdate()
+        newobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNEdit)
         instance = self.datasource.new_row()
         instance.srvalue = repr(
             [

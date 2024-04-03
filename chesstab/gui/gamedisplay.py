@@ -302,14 +302,18 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
     # Nowhere to put this in common with GameDbEdit.
     def _construct_record_value(self):
         """Return record value for Game record."""
+        # Record value becomes {"file": repr(""), "game": ""} because the
+        # "file" value cannot be "" when used as a key in a LMDB database.
+        # When "file" is a file name the "game" values will be 1, 2, 3,
+        # and so forth.
         reference = self.sourceobject.value.reference
-        if reference[constants.FILE]:
+        if reference[constants.GAME]:
             game_number = ""
         else:
             game_number = reference[constants.GAME]
         return repr(
             [
                 repr(self.get_score_error_escapes_removed()),
-                {constants.FILE: "", constants.GAME: game_number},
+                {constants.FILE: repr(""), constants.GAME: game_number},
             ]
         )
