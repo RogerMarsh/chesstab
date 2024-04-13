@@ -5,6 +5,7 @@
 """Customise delete toplevel to delete chess game record."""
 
 import ast
+import tkinter
 
 from solentware_grid.gui.datadelete import DataDelete
 
@@ -13,6 +14,7 @@ from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
 
 from .gametoplevel import GameToplevel
 from .toplevelpgn import DeletePGNToplevel
+from ..core import utilities
 
 
 class GameDbDelete(DeletePGNToplevel, DataDelete):
@@ -46,6 +48,22 @@ class GameDbDelete(DeletePGNToplevel, DataDelete):
             title="",
         )
         self._initialize()
+        if utilities.is_game_import_in_progress_txn(
+            self.ui.database, self.object
+        ):
+            tkinter.messagebox.showinfo(
+                parent=parent,
+                title="Game import not complete",
+                message="".join(
+                    (
+                        "The selected game is displayed but attempts ",
+                        "to delete the game will be ",
+                        "rejected because some stages of importing this ",
+                        "game have not been completed.",
+                    )
+                ),
+            )
+            self.blockchange = True
 
     @property
     def ui_base_table(self):

@@ -71,6 +71,7 @@ from ..core.chessrecord import ChessDBrecordAnalysis
 from .querygrid import QueryGrid
 from .queryrow import chess_db_row_query
 from .score import ScoreNoGameException, ScoreNoInitialPositionException
+from ..core import utilities
 
 
 class ChessUIError(Exception):
@@ -397,6 +398,22 @@ class ChessUI(Bindings):
 
     def add_game_to_display(self, item):
         """Add game item to GUI."""
+        if utilities.is_game_import_in_progress_txn(
+            item.ui.database, item.sourceobject
+        ):
+            tkinter.messagebox.showinfo(
+                parent=self.get_toplevel(),
+                title="Game import not complete",
+                message="".join(
+                    (
+                        "The selected game will be displayed but attempts ",
+                        "to delete, or save edits to, the game will be ",
+                        "rejected because some stages of importing this ",
+                        "game have not been completed.",
+                    )
+                ),
+            )
+            item.blockchange = True
         self.game_items.add_item_to_display(item)
         if self.game_items.contains_one_item():
             # Call may not be necessary.

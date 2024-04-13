@@ -5,6 +5,7 @@
 """Customise edit toplevel to edit or insert chess game record."""
 
 import ast
+import tkinter
 
 from solentware_grid.gui.dataedit import DataEdit
 
@@ -15,6 +16,7 @@ from ..core import constants
 from .gametoplevel import GameToplevel, GameToplevelEdit
 from .toplevelpgn import EditPGNToplevel
 from .constants import EMPTY_SEVEN_TAG_ROSTER
+from ..core import utilities
 
 
 class GameDbEdit(EditPGNToplevel, DataEdit):
@@ -71,6 +73,22 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
             else showinitial,
         )
         self._initialize()
+        if utilities.is_game_import_in_progress_txn(
+            self.ui.database, self.newobject
+        ):
+            tkinter.messagebox.showinfo(
+                parent=parent,
+                title="Game import not complete",
+                message="".join(
+                    (
+                        "The selected game is displayed but attempts ",
+                        "to save edits to the game will be ",
+                        "rejected because some stages of importing this ",
+                        "game have not been completed.",
+                    )
+                ),
+            )
+            self.blockchange = True
 
     @property
     def ui_base_table(self):
