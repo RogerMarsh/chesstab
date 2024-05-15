@@ -37,15 +37,15 @@ class ChessDBrowPosition(
     header_specification = [
         {
             WIDGET: tkinter.Label,
-            WIDGET_CONFIGURE: dict(
-                text="Transposition",
-                anchor=tkinter.W,
-                padx=0,
-                pady=1,
-                font="TkDefaultFont",
-            ),
-            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="move"),
+            WIDGET_CONFIGURE: {
+                "text": "Transposition",
+                "anchor": tkinter.W,
+                "padx": 0,
+                "pady": 1,
+                "font": "TkDefaultFont",
+            },
+            GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
+            GRID_COLUMNCONFIGURE: {"weight": 1, "uniform": "move"},
             ROW: 0,
         },
     ]
@@ -64,14 +64,14 @@ class ChessDBrowPosition(
         self.row_specification = [
             {
                 WIDGET: tkinter.Text,
-                WIDGET_CONFIGURE: dict(
-                    height=0,
-                    relief=tkinter.FLAT,
-                    font=constants.LISTS_OF_GAMES_FONT,
-                    wrap=tkinter.NONE,
-                    borderwidth=2,  # fill cell to row height from labels
-                ),
-                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                WIDGET_CONFIGURE: {
+                    "height": 0,
+                    "relief": tkinter.FLAT,
+                    "font": constants.LISTS_OF_GAMES_FONT,
+                    "wrap": tkinter.NONE,
+                    "borderwidth": 2,  # fill cell to row height from labels
+                },
+                GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
                 ROW: 0,
             },
         ]

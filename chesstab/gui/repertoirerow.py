@@ -36,28 +36,28 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
     header_specification = [
         {
             WIDGET: tkinter.Label,
-            WIDGET_CONFIGURE: dict(
-                text=TAG_OPENING,
-                anchor=tkinter.W,
-                padx=0,
-                pady=1,
-                font="TkDefaultFont",
-            ),
-            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="player"),
+            WIDGET_CONFIGURE: {
+                "text": TAG_OPENING,
+                "anchor": tkinter.W,
+                "padx": 0,
+                "pady": 1,
+                "font": "TkDefaultFont",
+            },
+            GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
+            GRID_COLUMNCONFIGURE: {"weight": 1, "uniform": "player"},
             ROW: 0,
         },
         {
             WIDGET: tkinter.Label,
-            WIDGET_CONFIGURE: dict(
-                text=TAG_RESULT,
-                anchor=tkinter.W,
-                padx=0,
-                pady=1,
-                font="TkDefaultFont",
-            ),
-            GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
-            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="result"),
+            WIDGET_CONFIGURE: {
+                "text": TAG_RESULT,
+                "anchor": tkinter.W,
+                "padx": 0,
+                "pady": 1,
+                "font": "TkDefaultFont",
+            },
+            GRID_CONFIGURE: {"column": 1, "sticky": tkinter.EW},
+            GRID_COLUMNCONFIGURE: {"weight": 1, "uniform": "result"},
             ROW: 0,
         },
     ]
@@ -75,24 +75,24 @@ class ChessDBrowRepertoire(AllRow, ChessDBrecordRepertoireTags, DataRow):
         self.row_specification = [
             {
                 WIDGET: tkinter.Label,
-                WIDGET_CONFIGURE: dict(
-                    anchor=tkinter.W,
-                    font=constants.LISTS_OF_GAMES_FONT,
-                    pady=1,
-                    padx=0,
-                ),
-                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                WIDGET_CONFIGURE: {
+                    "anchor": tkinter.W,
+                    "font": constants.LISTS_OF_GAMES_FONT,
+                    "pady": 1,
+                    "padx": 0,
+                },
+                GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
                 ROW: 0,
             },
             {
                 WIDGET: tkinter.Label,
-                WIDGET_CONFIGURE: dict(
-                    anchor=tkinter.W,
-                    font=constants.LISTS_OF_GAMES_FONT,
-                    pady=1,
-                    padx=0,
-                ),
-                GRID_CONFIGURE: dict(column=1, sticky=tkinter.EW),
+                WIDGET_CONFIGURE: {
+                    "anchor": tkinter.W,
+                    "font": constants.LISTS_OF_GAMES_FONT,
+                    "pady": 1,
+                    "padx": 0,
+                },
+                GRID_CONFIGURE: {"column": 1, "sticky": tkinter.EW},
                 ROW: 0,
             },
         ]

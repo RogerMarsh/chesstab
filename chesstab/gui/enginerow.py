@@ -33,15 +33,15 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
     header_specification = [
         {
             WIDGET: tkinter.Label,
-            WIDGET_CONFIGURE: dict(
-                text="Description",
-                anchor=tkinter.W,
-                padx=0,
-                pady=1,
-                font="TkDefaultFont",
-            ),
-            GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
-            GRID_COLUMNCONFIGURE: dict(weight=1, uniform="pp"),
+            WIDGET_CONFIGURE: {
+                "text": "Description",
+                "anchor": tkinter.W,
+                "padx": 0,
+                "pady": 1,
+                "font": "TkDefaultFont",
+            },
+            GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
+            GRID_COLUMNCONFIGURE: {"weight": 1, "uniform": "pp"},
             ROW: 0,
         },
     ]
@@ -59,13 +59,13 @@ class ChessDBrowEngine(AllRow, ChessDBrecordEngine, DataRow):
         self.row_specification = [
             {
                 WIDGET: tkinter.Label,
-                WIDGET_CONFIGURE: dict(
-                    anchor=tkinter.W,
-                    font=constants.LISTS_OF_GAMES_FONT,
-                    pady=1,
-                    padx=0,
-                ),
-                GRID_CONFIGURE: dict(column=0, sticky=tkinter.EW),
+                WIDGET_CONFIGURE: {
+                    "anchor": tkinter.W,
+                    "font": constants.LISTS_OF_GAMES_FONT,
+                    "pady": 1,
+                    "padx": 0,
+                },
+                GRID_CONFIGURE: {"column": 0, "sticky": tkinter.EW},
                 ROW: 0,
             },
         ]

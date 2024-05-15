@@ -767,7 +767,7 @@ class DeferredUpdate(Bindings):
 
         self.report = LogTextBase(
             master=self.root,
-            cnf=dict(wrap=tkinter.WORD, undo=tkinter.FALSE),
+            cnf={"wrap": tkinter.WORD, "undo": tkinter.FALSE},
         )
         self.report.focus_set()
         if self._database_looks_like_dpt():

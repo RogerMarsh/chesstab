@@ -75,7 +75,7 @@ class _ColourScheme(Bindings):
             self.wildpiecesfont = tkinter.font.nametofont(
                 constants.WILDPIECES_ON_BOARD_FONT
             ).copy()
-        self.chooser = tkinter.Toplevel(cnf=dict(height=height, width=700))
+        self.chooser = tkinter.Toplevel(cnf={"height": height, "width": 700})
         self.chooser.wm_resizable(False, False)
         self.chooser.wm_title(title)
         self.chooser.pack_propagate(False)
@@ -229,7 +229,7 @@ class _ColourScheme(Bindings):
         tkinter.Label(master=font_frame, text="Pieces").grid_configure(
             row=0, column=0
         )
-        fontfr = tkinter.Frame(master=font_frame, cnf=dict(padx=5))
+        fontfr = tkinter.Frame(master=font_frame, cnf={"padx": 5})
         boardfr = tkinter.Frame(master=fontfr)
         self.b_families = tkinter.Listbox(boardfr)
         scrollfont = tkinter.Scrollbar(boardfr)
@@ -280,7 +280,7 @@ class _ColourScheme(Bindings):
         tkinter.Label(master=font_frame, text="Score").grid_configure(
             row=0, column=1
         )
-        fontfr = tkinter.Frame(master=font_frame, cnf=dict(padx=5))
+        fontfr = tkinter.Frame(master=font_frame, cnf={"padx": 5})
         scorefr = tkinter.Frame(master=fontfr)
         self.s_families = tkinter.Listbox(scorefr)
         scrollfont = tkinter.Scrollbar(scorefr)

@@ -4332,6 +4332,7 @@ class GameEdit(Game):
             r_q = widget.tag_prevrange(
                 NAVIGATE_TOKEN, r_q[0], START_SCORE_MARK
             )
+        return None
 
     def _find_choice_prior_move_variation_main_move(self, tag_names):
         """Return arguments for _insert_rav derived from RAV tag in tag_names.

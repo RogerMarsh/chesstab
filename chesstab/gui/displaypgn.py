@@ -210,7 +210,7 @@ class ShowPGN(ShowText, ScorePGN):
                 if psn.lower() == "repertoire":
                     msg = [
                         "Cannot insert repertoire because either ",
-                        'Opening or Result is not given.',
+                        "Opening or Result is not given.",
                     ]
                     tkinter.messagebox.showinfo(
                         parent=self.ui.get_toplevel(),
@@ -519,7 +519,7 @@ class EditPGN(EditText):
                 if psn.lower() == "repertoire":
                     msg = [
                         "Cannot edit repertoire because either ",
-                        'Opening or Result is not given.',
+                        "Opening or Result is not given.",
                     ]
                     tkinter.messagebox.showinfo(
                         parent=self.ui.get_toplevel(),

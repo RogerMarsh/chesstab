@@ -119,10 +119,10 @@ class ChessDBvaluePGN(PGN, ValueList):
 
     # collected_game is not in the attributes dict() because it is
     # calculated from the value of pgntext.
-    attributes = dict(
-        reference=None,  # dict of PGN file name and game number within file.
-        pgntext=None,  # (repr() of )PGN text of game.
-    )
+    attributes = {
+        "reference": None,  # dict of PGN file name and game number in file.
+        "pgntext": None,  # repr() of PGN text of game.
+    }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 
@@ -579,7 +579,7 @@ class ChessDBvaluePGNDelete(ChessDBvaluePGNUpdate):
         """Delegate then add position and piece location detail to index."""
         super().pack_detail(index)
         game = self.collected_game
-        if game._errors_hidden_in_comments or not game.is_tag_roster_valid():
+        if game.errors_hidden_in_comments or not game.is_tag_roster_valid():
             index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
@@ -599,7 +599,7 @@ class ChessDBvaluePGNEdit(ChessDBvaluePGNUpdate):
         """Delegate then add position and piece location detail to index."""
         super().pack_detail(index)
         game = self.collected_game
-        if game._errors_hidden_in_comments or not game.is_tag_roster_valid():
+        if game.errors_hidden_in_comments or not game.is_tag_roster_valid():
             index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
@@ -1196,10 +1196,10 @@ class ChessDBrecordGameImport(Record):
 class ChessDBvaluePGNStore(PGNMoveText, ValueList):
     """Chess game data with references to indicies to be applied."""
 
-    attributes = dict(
-        reference=None,  # dict of PGN file name and game number within file.
-        pgntext=None,  # (repr() of )PGN text of game.
-    )
+    attributes = {
+        "reference": None,  # dict of PGN file name and game number in file.
+        "pgntext": None,  # repr() of PGN text of game.
+    }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 
@@ -1288,10 +1288,10 @@ class ChessDBrecordGameStore(ChessDBrecordGameImport):
 class ChessDBvaluePosition(PGN, ValueList):
     """Chess game data with references to indicies to be applied."""
 
-    attributes = dict(
-        reference=None,  # dict of PGN file name and game number within file.
-        pgntext=None,  # (repr() of )PGN text of game.
-    )
+    attributes = {
+        "reference": None,  # dict of PGN file name and game number in file.
+        "pgntext": None,  # repr() of PGN text of game.
+    }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 
@@ -1376,10 +1376,10 @@ class ChessDBrecordGameTransposition(ChessDBrecordGameImport):
 class ChessDBvaluePieceLocation(PGN, ValueList):
     """Chess game data with references to indicies to be applied."""
 
-    attributes = dict(
-        reference=None,  # dict of PGN file name and game number within file.
-        pgntext=None,  # (repr() of )PGN text of game.
-    )
+    attributes = {
+        "reference": None,  # dict of PGN file name and game number in file.
+        "pgntext": None,  # repr() of PGN text of game.
+    }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 
@@ -1456,10 +1456,10 @@ class ChessDBrecordGamePieceLocation(ChessDBrecordGameImport):
 class ChessDBvaluePGNTags(PGNMoveText, ValueList):
     """Chess game data with references to indicies to be applied."""
 
-    attributes = dict(
-        reference=None,  # dict of PGN file name and game number within file.
-        pgntext=None,  # (repr() of )PGN text of game.
-    )
+    attributes = {
+        "reference": None,  # dict of PGN file name and game number in file.
+        "pgntext": None,  # repr() of PGN text of game.
+    }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
 

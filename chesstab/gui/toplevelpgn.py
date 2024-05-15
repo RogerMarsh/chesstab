@@ -130,7 +130,7 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
                 if self.pgn_score_name.lower() == "repertoire":
                     msg = [
                         "Cannot insert repertoire because either ",
-                        'Opening or Result is not given.',
+                        "Opening or Result is not given.",
                     ]
                     tkinter.messagebox.showinfo(
                         parent=self.ui.get_toplevel(),

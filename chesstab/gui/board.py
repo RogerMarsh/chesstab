@@ -210,7 +210,7 @@ class Board(Bindings):
         except (AttributeError, tkinter.TclError):
             self.font = self.boardfont.copy()
         self.container = tkinter.Frame(
-            master=master, cnf=dict(width=0, height=0)
+            master=master, cnf={"width": 0, "height": 0}
         )
         self.bind(
             self.container,
@@ -219,7 +219,7 @@ class Board(Bindings):
         )
         self.board = tkinter.Frame(
             master=self.container,
-            cnf=dict(borderwidth=boardborder, relief=tkinter.SUNKEN),
+            cnf={"borderwidth": boardborder, "relief": tkinter.SUNKEN},
         )
         board = self.board
         boardsquares = self.boardsquares

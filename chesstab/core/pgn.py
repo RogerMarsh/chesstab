@@ -93,15 +93,15 @@ class _Game(Game):
     """
 
     def __init__(self):
-        """Delegate then set '_errors_hidden_in_comments' to None."""
+        """Delegate then set 'errors_hidden_in_comments' to None."""
         super().__init__()
-        self._errors_hidden_in_comments = None
+        self.errors_hidden_in_comments = None
 
     def pgn_error_notification(self):
         """Insert error '{' before movetext token which causes PGN error."""
         if self._movetext_offset is not None:
             self._text.append(START_COMMENT + ERROR_START_COMMENT)
-            self._errors_hidden_in_comments = True
+            self.errors_hidden_in_comments = True
 
     def pgn_error_recovery(self):
         """Insert error '}' before token which ends the scope of a PGN error.

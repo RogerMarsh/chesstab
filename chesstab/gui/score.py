@@ -1054,6 +1054,7 @@ class Score(SharedTextScore, BlankText):
             tpr = widget.tag_prevrange(BUILD_TAG, start_search)
             if not tpr:
                 return None
+        return None
 
     def _get_position_tag_of_index(self, index):
         """Return Tk tag name if index is in a position tag."""
