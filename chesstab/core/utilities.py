@@ -20,15 +20,18 @@ from ..core import filespec
 def is_game_import_in_progress(database, game):
     """Return True if some stages of game import to database are not done.
 
-    database    Database instance containg the game.
+    database    Database instance containing the game.
     game        Record of game extracted from database.
 
     """
+    if database is None:
+        return False
     return bool(
         (
             database.recordlist_record_number(
                 filespec.GAMES_FILE_DEF, key=game.key.recno
-            ) & database.recordlist_all(
+            )
+            & database.recordlist_all(
                 filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
             )
         ).count_records()
@@ -38,10 +41,12 @@ def is_game_import_in_progress(database, game):
 def is_game_import_in_progress_txn(database, game):
     """Return return value of is_game_import_in_progress() call.
 
-    database    Database instance containg the game.
+    database    Database instance containing the game.
     game        Record of game extracted from database.
 
     """
+    if database is None:
+        return False
     database.start_read_only_transaction()
     try:
         return is_game_import_in_progress(database, game)
