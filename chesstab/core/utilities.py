@@ -26,6 +26,8 @@ def is_game_import_in_progress(database, game):
     """
     if database is None:
         return False
+    if game is None:
+        return False
     return bool(
         (
             database.recordlist_record_number(
@@ -46,6 +48,8 @@ def is_game_import_in_progress_txn(database, game):
 
     """
     if database is None:
+        return False
+    if game is None:
         return False
     database.start_read_only_transaction()
     try:
