@@ -237,9 +237,6 @@ class ShowPGN(ShowText, ScorePGN):
         updater.set_database(editor.get_data_source().dbhome)
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         updater.key.recno = None
-        print()
-        for ccc in self.__class__.mro():
-            print(ccc)
         editor.put()
         tags = updater.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(

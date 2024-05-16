@@ -33,6 +33,7 @@ import tkinter
 
 from pgn_read.core.constants import (
     TAG_FEN,
+    TAG_SETUP,
 )
 from pgn_read.core.parser import PGN
 from pgn_read.core.game import generate_fen_for_position
@@ -345,6 +346,14 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         sga = self.get_analysis
         self.game_analysis_in_progress = True
         for value in self.tagpositionmap.values():
+            # Only known case is for Game Termination Marker in a game
+            # being entered via 'Game | New Game' menu option.
+            # It is not clear how to set things so this case behaves like
+            # editing a game from the database: where this test is not
+            # needed.
+            if value is None:
+                continue
+
             analysis = sga(*value)
             analysis.variations.clear()
 
@@ -448,10 +457,22 @@ class Game(Score, EventBinding, AnalysisEventBinding):
                     "".join(
                         (
                             START_TAG,
+                            TAG_SETUP,
+                            '"1',
+                            END_TAG.join('"\n'),
+                        )
+                    ),
+                )
+                new_text.insert(
+                    0,
+                    "".join(
+                        (
+                            START_TAG,
                             TAG_FEN,
                             '"',
                             analysis.position,
-                            END_TAG.join('"\n'),
+                            '"',
+                            END_TAG,
                         )
                     ),
                 )
