@@ -247,12 +247,12 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         self._see_current_move()
 
     def _analyse_position(self, *position):
-        analysis = self.get_analysis(*position)
-        self._refresh_analysis_widget_from_database(analysis)
+        """Return True if position has been queued for engine analysis."""
         if self.game_analysis_in_progress:
             if not self.ui.uci.uci.is_positions_pending_empty():
                 return
             self.game_analysis_in_progress = False
+        analysis = self.get_analysis(*position)
         analysis.variations.clear()
 
         # Avoid "OSError: [WinError 535] Pipe connected"  at Python3.3 running
@@ -286,7 +286,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             position = self.fen_tag_tuple_square_piece_map()
         else:
             position = self.tagpositionmap[self.current]
-        self._analyse_position(*position)
+        self._refresh_analysis_widget_from_database(
+            self.get_analysis(*position)
+        )
 
     def set_and_tag_item_text(self, reset_undo=False):
         """Display the game as board and moves.
@@ -337,11 +339,27 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             self.score.edit_reset()
         self.board.set_board(self.fen_tag_square_piece_map())
         self.score.tag_add(MOVETEXT_INDENT_TAG, "1.0", tkinter.END)
-        self._analyse_position(*self.fen_tag_tuple_square_piece_map())
+        self._refresh_analysis_widget_from_database(
+            self.get_analysis(*self.fen_tag_tuple_square_piece_map())
+        )
 
-    def _analyse_game(self):
+    def _analyse_game(self, event=None):
         """Analyse all positions in game using all active engines."""
+        del event
         uci = self.ui.uci.uci
+        if not uci.uci_drivers_index:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=EventSpec.analyse_game[1],
+                message="No Chess Engines running",
+            )
+            return
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            parent=self.ui.get_toplevel(),
+            title=EventSpec.analyse_game[1],
+            message="Please confirm 'analyse all' request",
+        ):
+            return
         sas = self.analysis.score
         sga = self.get_analysis
         self.game_analysis_in_progress = True
@@ -376,6 +394,35 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             #        raise
             #    break
             uci.ui_analysis_queue.put((sas, analysis))
+
+    def _analyse_game_position(self, event=None):
+        """Analyse game position associated with current token."""
+        del event
+        uci = self.ui.uci.uci
+        if not uci.uci_drivers_index:
+            message = "No Chess Engines running"
+        elif self.current not in self.tagpositionmap:
+            message = "Current position not mapped"
+        elif self.tagpositionmap[self.current] is None:
+            message = "Current position is None"
+        elif not self.ui.uci.uci.is_positions_pending_empty():
+            message = "".join(
+                (
+                    "Current position not queued for analysis : ",
+                    "try again when queue is empty",
+                )
+            )
+        else:
+            self._analyse_position(*self.tagpositionmap[self.current])
+            message = None
+        if message is not None:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=EventSpec.analyse_game_position[1],
+                message=message,
+            )
+        # Prevent some other binding moving cursor up one line as well.
+        return "break"
 
     def hide_game_analysis(self):
         """Hide the widgets which show analysis from chess engines."""
@@ -590,6 +637,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     def _set_primary_activity_bindings(self, switch=True):
         """Delegate then set board pointer move navigation bindings."""
         super()._set_primary_activity_bindings(switch=switch)
+        self.set_event_bindings_score(
+            self._get_engine_analysis_events(), switch=switch
+        )
         if self.score is self.takefocus_widget:
             self.set_board_pointer_move_bindings(switch=switch)
         else:
@@ -724,11 +774,18 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         popup = super()._create_primary_activity_popup()
         self._set_popup_bindings(
             popup,
-            ((EventSpec.analyse_game, self._analyse_game),),
+            self._get_engine_analysis_events(),
             index=self.export_popup_label,
         )
         self._create_widget_navigation_submenu_for_popup(popup)
         return popup
+
+    def _get_engine_analysis_events(self):
+        """Return tuple of engine analysis keypresses and callbacks."""
+        return (
+            (EventSpec.analyse_game, self._analyse_game),
+            (EventSpec.analyse_game_position, self._analyse_game_position),
+        )
 
     def _create_select_move_popup(self):
         """Delegate then add navigation submenu and return popup menu."""

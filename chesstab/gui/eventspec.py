@@ -189,7 +189,12 @@ class EventSpec:
 
     # Game widget analyse events.
     # Inherited by Repertoire, GameEdit, and RepertoireEdit, widgets.
-    analyse_game = ("<Alt-KeyPress-a>", "Analyse", "Alt a")
+    analyse_game = ("<Control-KeyPress-g>", "Analyse Game", "Ctrl g")
+    analyse_game_position = (
+        "<Control-KeyPress-p>",
+        "Analyse Position",
+        "Ctrl p",
+    )
 
     # GameEdit widget editing events.
     # Inherited by RepertoireEdit widget.
