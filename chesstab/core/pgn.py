@@ -8,6 +8,7 @@ Game* classes replace PGN* classes in ChessTab version 4.3.
 
 """
 from pgn_read.core.game import Game, GameIndicateCheck
+from pgn_read.core.movetext_parser import PGNMoveText, MoveText
 from pgn_read.core.squares import Squares
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
@@ -798,3 +799,23 @@ def _convert_integer_to_length_hex(integer):
     except IndexError:
         base16 = hex(integer)
         return str(len(base16) - 2) + base16[2:]
+
+
+class GameMoveText(MoveText):
+    """Customize methods of MoveText."""
+
+    def is_pgn_valid(self):
+        """Return True if the tags in the game are valid.
+
+        Override because the tag values matter rather than their existence.
+
+        """
+        return self.is_tag_roster_valid()
+
+
+class GamePGNMoveText(PGNMoveText):
+    """Customize game_class argument of PGNMoveText."""
+
+    def __init__(self, game_class=GameMoveText):
+        """Delegate to superclass with game_class argument."""
+        super().__init__(game_class=game_class)

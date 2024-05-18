@@ -23,7 +23,6 @@ from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import SECONDARY
 
 from pgn_read.core.parser import PGN
-from pgn_read.core.movetext_parser import PGNMoveText
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     TAG_DATE,
@@ -40,6 +39,7 @@ from .pgn import (
     GameUpdate,
     GameUpdatePosition,
     GameUpdatePieceLocation,
+    GamePGNMoveText,
 )
 from .constants import (
     START_RAV,
@@ -1193,7 +1193,7 @@ class ChessDBrecordGameImport(Record):
         return True
 
 
-class ChessDBvaluePGNStore(PGNMoveText, ValueList):
+class ChessDBvaluePGNStore(GamePGNMoveText, ValueList):
     """Chess game data with references to indicies to be applied."""
 
     attributes = {
@@ -1202,14 +1202,6 @@ class ChessDBvaluePGNStore(PGNMoveText, ValueList):
     }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
-
-    def is_pgn_valid(self):
-        """Return True if the tags in the game are valid.
-
-        Override because the tag values matter rather than their existence.
-
-        """
-        return self.is_tag_roster_valid()
 
     def load(self, value):
         """Get game from value."""
@@ -1453,7 +1445,7 @@ class ChessDBrecordGamePieceLocation(ChessDBrecordGameImport):
         super().__init__(keyclass=keyclass, valueclass=valueclass)
 
 
-class ChessDBvaluePGNTags(PGNMoveText, ValueList):
+class ChessDBvaluePGNTags(GamePGNMoveText, ValueList):
     """Chess game data with references to indicies to be applied."""
 
     attributes = {
@@ -1462,14 +1454,6 @@ class ChessDBvaluePGNTags(PGNMoveText, ValueList):
     }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
-
-    def is_pgn_valid(self):
-        """Return True if the tags in the game are valid.
-
-        Override because the tag values matter rather than their existence.
-
-        """
-        return self.is_tag_roster_valid()
 
     def load(self, value):
         """Get game from value."""
