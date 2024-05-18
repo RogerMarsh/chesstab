@@ -42,4 +42,7 @@ class Database(database.Database, ndbm_database.Database):
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file + ".db",)
+        return (
+            self.database_file + ".db",
+            self.database_file + ".db.commit",
+        )

@@ -123,8 +123,13 @@ class Database:
                 os.remove(pathname)
         try:
             os.rmdir(self.home_directory)
-        except FileNotFoundError:
-            pass
+        except FileNotFoundError as exc:
+            message = str(exc)
+        except OSError as exc:
+            if message:
+                message = "\n\n".join((str(exc), message))
+            else:
+                message = str(exc)
         return message
 
     def get_archive_names(self, file=None):

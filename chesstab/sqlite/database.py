@@ -43,5 +43,15 @@ class Database(database.Database, sqlite3_database.Database):
         )
 
     def _delete_database_names(self):
-        """Override and return tuple of filenames to delete."""
-        return (self.database_file,)
+        """Override and return tuple of filenames to delete.
+
+        A *-lock file was not seen while updating a test database, but
+        one was seen while trying apsw so include that here too just in
+        case sqlite3 gets to delete a database handled by apsw.
+
+        """
+        return (
+            self.database_file,
+            self.database_file + "-lock",
+            self.database_file + "-journal",
+        )

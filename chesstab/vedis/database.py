@@ -42,4 +42,8 @@ class Database(database.Database, vedis_database.Database):
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file,)
+        return (
+            self.database_file,
+            self.database_file + "-lock",
+            self.database_file + "_vedis_journal",
+        )

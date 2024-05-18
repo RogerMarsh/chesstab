@@ -82,4 +82,8 @@ class Database(database.Database, berkeleydb_database.Database):
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file, self.dbenv.get_lg_dir().decode())
+        return (
+            self.database_file,
+            self.dbenv.get_lg_dir(),
+            self.database_file + "-lock",
+        )

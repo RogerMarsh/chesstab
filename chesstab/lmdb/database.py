@@ -45,7 +45,7 @@ class Database(database.Database, lmdb_database.Database):
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file,)
+        return (self.database_file, self.database_file + "-lock")
 
     def checkpoint_before_close_dbenv(self):
         """Override.  Hijack method to set map size to file size.

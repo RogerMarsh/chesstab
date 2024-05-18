@@ -69,4 +69,8 @@ class Database(database.Database, db_tkinter_database.Database):
 
     def _delete_database_names(self):
         """Override and return tuple of filenames to delete."""
-        return (self.database_file, self._get_log_dir_name())
+        return (
+            self.database_file,
+            self._get_log_dir_name(),
+            self.database_file + "-lock",
+        )
