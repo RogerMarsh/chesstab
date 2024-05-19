@@ -56,6 +56,8 @@ from ..core.filespec import (
 # position searches, due to extra index updates.
 _DATABASE_UPDATE_FACTOR = 5
 
+_GAMECOUNT_REPORT_INTERVAL = 1000000
+
 
 class _Reporter:
     """Helper class to keep 'LogText' API for adding text to log.
@@ -535,6 +537,15 @@ class DeferredUpdateEstimateProcess:
                             )
                             return False
                         gamecount += 1
+                        if not gamecount % _GAMECOUNT_REPORT_INTERVAL:
+                            self._report_to_log(
+                                " ".join(
+                                    (
+                                        str(gamecount),
+                                        "games found. Scan continues ...",
+                                    )
+                                )
+                            )
                 if filechars:
                     break
             else:
@@ -551,8 +562,9 @@ class DeferredUpdateEstimateProcess:
                         )
                     )
                 )
-        if not total_error_byte_size:
+        if gamecount >= _GAMECOUNT_REPORT_INTERVAL:
             self._report_to_log_text_only("")
+        if not total_error_byte_size:
             self._report_to_log(
                 "".join(
                     (
@@ -810,13 +822,34 @@ class DeferredUpdate(Bindings):
             "".join(("Importing to database ", home_directory, "."))
         )
         self._report_to_log_text_only("")
-        self._report_to_log("Determining size of import.")
         self._report_to_log_text_only(
-            "This takes about four minutes per million games."
+            "Count games takes many seconds per million games."
         )
         self._report_to_log_text_only(
-            "(The import will take several hours per million games)"
+            "Extract games takes a few minutes per million games."
         )
+        self._report_to_log_text_only(
+            "Index PGN tags takes several minutes per million games."
+        )
+        self._report_to_log_text_only(
+            "Index positions takes a few hours per million games."
+        )
+        self._report_to_log_text_only(
+            "Index piece locations takes several hours per million games."
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log_text_only(
+            "Indexing slows down as more games are imported."
+        )
+        self._report_to_log_text_only(
+            "Position indexing is affected first, then piece location."
+        )
+        self._report_to_log_text_only(
+            "Piece location indexing takes over half the time."
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log("Count games.")
+        self._report_to_log_text_only("")
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
         )

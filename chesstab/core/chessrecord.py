@@ -762,23 +762,7 @@ class ChessDBrecordGameImport(Record):
         if reporter is not None:
             reporter.append_text_only("")
             reporter.append_text("Extract started.")
-            if file_game_numbers:
-                reporter.append_text_only(
-                    " ".join(
-                        (
-                            "This takes about eleven minutes per million",
-                            "games ignored.",
-                        )
-                    )
-                )
-            reporter.append_text_only(
-                " ".join(
-                    (
-                        "This takes about thirteen minutes per million",
-                        "games extracted.",
-                    )
-                )
-            )
+            reporter.append_text_only("")
         for collected_game in value.read_games(source):
             if quit_event and quit_event.is_set():
                 if reporter is not None:

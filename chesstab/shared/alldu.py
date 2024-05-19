@@ -284,14 +284,7 @@ def du_index_pgn_tags(
                 )
             )
         )
-        reporter.append_text_only(
-            " ".join(
-                (
-                    "This takes about thiteen minutes per million",
-                    "games indexed.",
-                )
-            )
-        )
+        reporter.append_text_only("")
     if not importer.index_pgn_tags(
         cdb,
         index_games,
@@ -435,14 +428,7 @@ def du_index_positions(
                 )
             )
         )
-        reporter.append_text_only(
-            " ".join(
-                (
-                    "This takes several hours (>3) per million",
-                    "games indexed.",
-                )
-            )
-        )
+        reporter.append_text_only("")
     if not importer.index_positions(
         cdb,
         index_games,
@@ -588,14 +574,7 @@ def du_index_piece_locations(
                 )
             )
         )
-        reporter.append_text_only(
-            " ".join(
-                (
-                    "This takes many hours (>10) per million",
-                    "games indexed.",
-                )
-            )
-        )
+        reporter.append_text_only("")
     if not importer.index_piece_locations(
         cdb,
         index_games,
