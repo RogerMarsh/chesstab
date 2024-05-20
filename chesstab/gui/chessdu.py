@@ -9,6 +9,7 @@ import datetime
 import tkinter
 import tkinter.font
 import tkinter.messagebox
+import tkinter.filedialog
 import queue
 import multiprocessing
 import multiprocessing.dummy
@@ -1120,9 +1121,34 @@ class DeferredUpdate(Bindings):
                 ),
             )
             return
-        if tkinter.messagebox.askyesno(
+        askyesnocancel = tkinter.messagebox.askyesnocancel(
             parent=self.root,
             title="Dismiss",
-            message="Do you want to dismiss the import log?",
-        ):
-            self.root.destroy()
+            message="Do you want to save the import log before dismissing?",
+        )
+        if askyesnocancel is None:
+            return
+        if askyesnocancel:
+            extn = "txt"
+            datatype = "Import Log"
+            filename = tkinter.filedialog.asksaveasfilename(
+                parent=self.root,
+                title="Save Log before Dismiss",
+                defaultextension="".join((".", extn)),
+                filetypes=((datatype, ".".join(("*", extn))),),
+            )
+            if not filename:
+                tkinter.messagebox.showinfo(
+                    parent=self.root,
+                    title="Dismiss",
+                    message="Log not saved to file and not dismissed",
+                )
+                return
+            with open(filename, mode="w", encoding="utf-8") as file:
+                file.write(self.report.get("1.0", tkinter.END))
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Dismiss",
+                message=" ".join(("Log saved to", filename)),
+            )
+        self.root.destroy()
