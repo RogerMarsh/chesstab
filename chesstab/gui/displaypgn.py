@@ -50,6 +50,7 @@ from .score import NonTagBind, ScoreNoGameException
 from .scorepgn import ScorePGN
 from .displaytext import ShowText, DisplayText, EditText, InsertText
 from ..core.chessrecord import ChessDBvaluePGNDelete
+from ..core import constants
 
 
 # ShowPGN because DisplayPGN fits GameDisplay (and *Repertoire*)
@@ -194,7 +195,14 @@ class ShowPGN(ShowText, ScorePGN):
                 message=psn.join(("Add ", " to database abandonned.")),
             )
             return None
-        updater = self._game_updater(self._construct_record_value())
+        updater = self._game_updater(
+            repr(
+                [
+                    repr(self.score.get("1.0", tkinter.END)),
+                    {constants.FILE: "", constants.GAME: ""},
+                ]
+            )
+        )
         if not updater.value.collected_game.is_pgn_valid():
             msg = [
                 "Please re-confirm request to insert ",
