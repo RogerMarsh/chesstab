@@ -145,12 +145,6 @@ class ChessDBvaluePGN(PGN, ValueList):
         # pylint attribute-defined-outside-init W0201 occurs because
         # self.pgntext is set by Value.load() or Value._empty() methods
         # which are driven by the attributes dict(), a class attribute.
-        # The last token is the Game Termination Marker.  If the previous
-        # token is a NAG there must be whitespace between these tokens,
-        # '$3 1/2-1/2' or similar: '$31/2-1/2' is seen as '$31 /2-1/2' by
-        # the parser, neither intended nor valid.
-        if self.collected_game.pgn_text[-2].startswith("$"):
-            self.collected_game.pgn_text[-2] += " "
         self.pgntext = repr("".join(self.collected_game.pgn_text))
         value = super().pack()
         self.pack_detail(value[1])
@@ -802,12 +796,6 @@ class ChessDBrecordGameImport(Record):
             game_offset = collected_game.game_offset
             if collected_game.is_tag_roster_valid():
                 value.set_game_source(None)
-                # The last token is the Game Termination Marker.  If the
-                # previous token is a NAG there must be whitespace between
-                # these tokens, '$3 1/2-1/2' or similar: '$31/2-1/2' is seen
-                # as '$31 /2-1/2' by the parser, neither intended nor valid.
-                if collected_game.pgn_text[-2].startswith("$"):
-                    collected_game.pgn_text[-2] += " "
             else:
                 value.set_game_source(sourcename)
                 pgn_text = [
