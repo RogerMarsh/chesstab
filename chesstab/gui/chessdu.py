@@ -531,7 +531,7 @@ class DeferredUpdateEstimateProcess:
                                 " ".join(
                                     (
                                         "Estimating task stopped when",
-                                        str(gamecount),
+                                        format(gamecount, ","),
                                         "games found.",
                                     )
                                 )
@@ -542,7 +542,7 @@ class DeferredUpdateEstimateProcess:
                             self._report_to_log(
                                 " ".join(
                                     (
-                                        str(gamecount),
+                                        format(gamecount, ","),
                                         "games found. Scan continues ...",
                                     )
                                 )
@@ -833,7 +833,7 @@ class DeferredUpdate(Bindings):
             "Index PGN tags takes several minutes per million games."
         )
         self._report_to_log_text_only(
-            "Index positions takes a few hours per million games."
+            "Index positions takes several hours per million games."
         )
         self._report_to_log_text_only(
             "Index piece locations takes several hours per million games."
@@ -843,10 +843,10 @@ class DeferredUpdate(Bindings):
             "Indexing slows down as more games are imported."
         )
         self._report_to_log_text_only(
-            "Position indexing is affected first, then piece location."
+            "Piece location and position indexing take over 95% of time."
         )
         self._report_to_log_text_only(
-            "Piece location indexing takes over half the time."
+            "Ten million games into an empty database takes a few days."
         )
         self._report_to_log_text_only("")
         self._report_to_log("Count games.")
