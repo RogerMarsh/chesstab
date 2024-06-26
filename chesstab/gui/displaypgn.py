@@ -239,7 +239,7 @@ class ShowPGN(ShowText, ScorePGN):
                 message="".join(msg),
             ):
                 return None
-            updater.value.set_game_source(self.pgn_score_source)
+            updater.value.gamesource = self.pgn_score_source
         editor = RecordEdit(updater, None)
         editor.set_data_source(datasource, editor.on_data_change)
         updater.set_database(editor.get_data_source().dbhome)
@@ -545,7 +545,7 @@ class EditPGN(EditText):
                 message="".join(msg),
             ):
                 return
-            updater.value.set_game_source(self.pgn_score_source)
+            updater.value.gamesource = self.pgn_score_source
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)

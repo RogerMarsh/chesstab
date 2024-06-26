@@ -232,10 +232,10 @@ class GameDisplay(_GameDisplay, Game, DataNotify):
         """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has no
         # attribute 'gamesource'.
-        # original.value.set_game_source(self.sourceobject.value.gamesource)
-        # original.value.set_game_source('Copy, possibly edited')
+        # original.value.gamesource = self.sourceobject.value.gamesource
+        # original.value.gamesource = 'Copy, possibly edited'
         if original_value.is_error_comment_present():
-            original_value.set_game_source("")
+            original_value.gamesource = ""
 
     def _create_primary_activity_popup(self):
         """Delegate then add close item entry and return popup menu."""
@@ -283,10 +283,10 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
         """Set game source as 'Editor' if error comment in original_value."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
-        # original.value.set_game_source(self.sourceobject.value.gamesource)
-        # original.value.set_game_source('Copy, possibly edited')
+        # original.value.gamesource = self.sourceobject.value.gamesource
+        # original.value.gamesource = 'Copy, possibly edited'
         if original_value.is_error_comment_present():
-            original_value.set_game_source("")
+            original_value.gamesource = ""
 
     # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and

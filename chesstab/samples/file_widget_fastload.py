@@ -44,7 +44,7 @@ from dptdb.dptapi import FLOAD_DEFAULT
 
 from solentware_base.core.segmentsize import SegmentSize
 
-from ..core.chessrecord import ChessDBrecordGameImport
+from ..core.chessrecord import ChessDBrecordGameStore
 
 _RECORD_SEPARATOR = b"\xff\xff"
 _SEGMENT_COUNT_UNKNOWN = b"\xff\xff"
@@ -69,7 +69,7 @@ def file_du(database, dbpath, pgnpath, **kwargs):
     cdb.open_database()
     cdb.close_database()
     table = cdb.table
-    importer = ChessDBrecordGameImport()
+    importer = ChessDBrecordGameStore()
     fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
     fldb.set_defer_update()
     with open(pgnpath, "r", encoding="iso-8859-1") as pgn_file:

@@ -24,6 +24,13 @@ def database_du(dbpath, *args, **kwargs):
     )
 
 
+def database_reload_du(dbpath, *args, **kwargs):
+    """Open database, import games, reload indicies, and close database."""
+    alldu.do_reload_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
+
+
 class Database(alldu.Alldu, dbdu.Dbdu, db_tkinterdu_database.Database):
     """Provide custom deferred update for a database of games of chess."""
 

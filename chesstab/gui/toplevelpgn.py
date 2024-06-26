@@ -151,5 +151,5 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
                 message="".join(msg),
             ):
                 return False
-            self.newobject.value.set_game_source(self.pgn_score_source)
+            self.newobject.value.gamesource = self.pgn_score_source
         return super().dialog_ok()

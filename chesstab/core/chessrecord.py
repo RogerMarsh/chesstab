@@ -10,6 +10,7 @@ data structures from the game score for the various display and update uses.
 The ...Update classes allow editing of a, possibly incomplete, game score.
 
 """
+import os
 from ast import literal_eval
 
 from solentware_base.core.record import (
@@ -21,8 +22,10 @@ from solentware_base.core.record import (
 )
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import SECONDARY
+from solentware_base.core.merge import SortIndiciesToSequentialFiles
 
 from pgn_read.core.parser import PGN
+from pgn_read.core.movetext_parser import PGNMoveText
 from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     TAG_DATE,
@@ -39,7 +42,7 @@ from .pgn import (
     GameUpdate,
     GameUpdatePosition,
     GameUpdatePieceLocation,
-    GamePGNMoveText,
+    GameMoveText,
 )
 from .constants import (
     START_RAV,
@@ -68,6 +71,7 @@ from .filespec import (
     SQUAREMOVE_FIELD_DEF,
     GAME_FIELD_DEF,
     GAMES_FILE_DEF,
+    PARTIALPOSITION_FIELD_DEF,
     REPERTOIRE_FILE_DEF,
     PGN_DATE_FIELD_DEF,
     VARIATION_FIELD_DEF,
@@ -112,24 +116,15 @@ class ChessDBkeyGame(KeyData):
         return self.recno != other.recno
 
 
-# Changes are made to ChessDBvalueRepertoireUpdate so ChessDBvaluePGN can
-# be subclass of ValueList rather than Value.
-class ChessDBvaluePGN(PGN, ValueList):
-    """Methods common to all chess PGN data classes."""
+class _GameLoadPack(ValueList):
+    """Attributes and methods common to game value classes."""
 
-    # collected_game is not in the attributes dict() because it is
-    # calculated from the value of pgntext.
     attributes = {
         "reference": None,  # dict of PGN file name and game number in file.
         "pgntext": None,  # repr() of PGN text of game.
     }
     _attribute_order = ("pgntext", "reference")
     assert set(_attribute_order) == set(attributes)
-
-    @staticmethod
-    def encode_move_number(key):
-        """Return base 256 string for integer, left-end most significant."""
-        return key.to_bytes(2, byteorder="big")
 
     def load(self, value):
         """Get game from value."""
@@ -138,6 +133,8 @@ class ChessDBvaluePGN(PGN, ValueList):
         # __init__(), which defined self.collected_game, was removed
         # from ChessDBvalueGame when it became a subclass of ValueList
         # rather than Value.
+        # pylint no-member E1101 ignored because self.read_games is
+        # expected to be in a sibling class in hierarchy.
         self.collected_game = next(self.read_games(literal_eval(self.pgntext)))
 
     def pack(self):
@@ -145,10 +142,23 @@ class ChessDBvaluePGN(PGN, ValueList):
         # pylint attribute-defined-outside-init W0201 occurs because
         # self.pgntext is set by Value.load() or Value._empty() methods
         # which are driven by the attributes dict(), a class attribute.
+        # pylint no-member E1101 ignored because self.collected_game is
+        # expected to be in a sibling class in hierarchy.
         self.pgntext = repr("".join(self.collected_game.pgn_text))
         value = super().pack()
         self.pack_detail(value[1])
         return value
+
+
+# Changes are made to ChessDBvalueRepertoireUpdate so ChessDBvaluePGN can
+# be subclass of ValueList rather than Value.
+class ChessDBvaluePGN(PGN, _GameLoadPack):
+    """Methods common to all chess PGN data classes."""
+
+    @staticmethod
+    def encode_move_number(key):
+        """Return base 256 string for integer, left-end most significant."""
+        return key.to_bytes(2, byteorder="big")
 
     def pack_detail(self, index):
         """Fill index with detail from game's PGN Tags."""
@@ -494,18 +504,6 @@ class ChessDBvaluePGNIdentity(ChessDBvaluePGN):
         if not self.do_full_indexing():
             index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
 
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) or None and will
-        be used for indexing only if the source file has errors, indicated
-        by the do_full_indexing() method. (Full indexing can index only by
-        values derived from the PGN file content and the file name is not
-        part of that content.)
-
-        """
-        self.gamesource = source
-
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
 
@@ -700,15 +698,144 @@ class ChessDBrecordGameUpdate(Record):
         return keys
 
 
-class ChessDBrecordGameImport(Record):
-    """Chess game record customised for importing games from PGN files.
-
-    Used to import multiple records from a PGN file.
-
-    """
+class ChessDBrecordGameSequential(Record):
+    """Customise Record to index games by dump, merge, and load."""
 
     def __init__(
         self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNUpdate
+    ):
+        """Customise Record with chess database key and value classes."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
+
+    def write_index_entries_to_sequential_files(
+        self, database, index_games, reporter=None, quit_event=None
+    ):
+        """Write index entries for imported games to sequential file."""
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Writing index entries to sorted files.")
+        sorter = SortIndiciesToSequentialFiles(
+            database,
+            GAMES_FILE_DEF,
+            ignore=set(
+                (
+                    IMPORT_FIELD_DEF,
+                    PGNFILE_FIELD_DEF,
+                    PARTIALPOSITION_FIELD_DEF,
+                    PGN_ERROR_FIELD_DEF,
+                )
+            ),
+        )
+        # Not sure this is not needed yet: the sorter uses database though.
+        # self.set_database(database)
+        database.set_int_to_bytes_lookup(lookup=True)
+        cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
+        while True:
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Merge index stopped.")
+                database.set_int_to_bytes_lookup(lookup=False)
+                return False
+            current_record = cursor.next()
+            if current_record is None:
+                break
+            self.load_record(current_record)
+            try:
+                count = sorter.add_instance(self)
+                if count is not None and reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Games before ",
+                                format(count, ","),
+                                " written to sorted files.",
+                            )
+                        )
+                    )
+            except FileExistsError:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Unable to dump '",
+                                sorter.file,
+                                "' indicies because ",
+                                os.path.dirname(sorter.dump_file),
+                                " is not a directory.",
+                            )
+                        )
+                    )
+                raise
+        try:
+            sorter.write_final_segments_to_sequential_file()
+        except FileExistsError:
+            if reporter is not None:
+                reporter.append_text(
+                    "".join(
+                        (
+                            "Unable to dump '",
+                            sorter.file,
+                            "' indicies because ",
+                            os.path.dirname(sorter.dump_file),
+                            " is not a directory.",
+                        )
+                    )
+                )
+            raise
+        database.set_int_to_bytes_lookup(lookup=False)
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Writing index entries to sorted files done.")
+        return True
+
+
+class ChessDBvaluePGNStore(PGNMoveText, _GameLoadPack):
+    """Chess game data with references to indicies to be applied."""
+
+    def __init__(self, game_class=GameMoveText):
+        """Delegate to superclass with game_class argument."""
+        super().__init__(game_class=game_class)
+        self.gamesource = None
+
+    def pack_detail(self, index):
+        """Add PGN file reference and indexing flag for game to index.
+
+        Replace indexing flag by an error flag if errors are found.
+
+        """
+        index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
+        if self.do_full_indexing():
+            index[IMPORT_FIELD_DEF] = [IMPORT_FIELD_DEF]
+        else:
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return self.collected_game.is_pgn_valid()
+
+    # Copied from core.pgn._Game class.
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
+
+
+class ChessDBrecordGameStore(Record):
+    """Customise chess game record to store games from PGN files."""
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNStore
     ):
         """Customise Record with chess database key and value classes."""
         super().__init__(keyclass=keyclass, valueclass=valueclass)
@@ -795,9 +922,9 @@ class ChessDBrecordGameImport(Record):
             # from the original object.
             game_offset = collected_game.game_offset
             if collected_game.is_tag_roster_valid():
-                value.set_game_source(None)
+                value.gamesource = None
             else:
-                value.set_game_source(sourcename)
+                value.gamesource = sourcename
                 pgn_text = [
                     value.pgn_mark_comment_in_error(text)
                     for text in collected_game.pgn_text
@@ -875,100 +1002,51 @@ class ChessDBrecordGameImport(Record):
             reporter.append_text_only("")
         return True
 
-    def index_pgn_tags(
-        self, database, index_games, reporter=None, quit_event=None
+
+class ChessDBvaluePosition(PGN, _GameLoadPack):
+    """Chess game data with references to indicies to be applied."""
+
+    def __init__(self, game_class=GameUpdatePosition):
+        """Extend with game source and move number encoder placeholders."""
+        super().__init__(game_class=game_class)
+        self.gamesource = None
+
+    def pack_detail(self, index):
+        """Add position detail to index or mark as error."""
+        if self.do_full_indexing():
+            index[POSITIONS_FIELD_DEF] = self.collected_game.positionkeys
+        else:
+            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return self.gamesource is None
+
+    # Copied from core.pgn._Game class.
+    def pgn_mark_comment_in_error(self, comment):
+        """Return comment with '}' replaced by a presumed unlikely sequence.
+
+        One possibility is to wrap the error in a '{...}' comment.  The '}'
+        token in any wrapped commment would end the comment wrapping the error
+        prematurely, so replace with HIDE_END_COMMENT.
+
+        """
+        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
+
+
+class ChessDBrecordGameTransposition(Record):
+    """Customise chess game record to index games by positions."""
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePosition
     ):
-        """Update database games with PGN tag indicies."""
-        self.set_database(database)
-        db_segment_size = SegmentSize.db_segment_size
-        value = self.value
-        old_segment = None
-        cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
-        while True:
-            if quit_event and quit_event.is_set():
-                if reporter is not None:
-                    reporter.append_text_only("")
-                    reporter.append_text("Index PGN Tags stopped.")
-                return False
-            current_record = cursor.next()
-            if current_record is None:
-                # At this point do the final segement index updates.
-                # self.srindex has the indicies to update because these do
-                # not change from one record to another.
-                if self.srindex is not None and self.key.recno is not None:
-                    current_segment = self.key.recno // db_segment_size
-                    for secondary in self.srindex:
-                        assert (
-                            secondary
-                            in database.specification[GAMES_FILE_DEF][
-                                SECONDARY
-                            ]
-                        )
-                        database.sort_and_write(
-                            GAMES_FILE_DEF, secondary, current_segment
-                        )
-                        database.merge(GAMES_FILE_DEF, secondary)
-                if old_segment is not None:
-                    database.unfile_records_under(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        database.encode_record_selector(IMPORT_FIELD_DEF),
-                    )
-                break
-            self.load_record(current_record)
-            current_segment = self.key.recno // db_segment_size
-            if current_segment != old_segment:
-                if old_segment is not None:
-                    old_records = database.recordlist_record_number_range(
-                        GAMES_FILE_DEF,
-                        keystart=old_segment * db_segment_size,
-                        keyend=(old_segment + 1) * db_segment_size - 1,
-                    )
-                    not_indexed_yet = database.recordlist_key(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        key=database.encode_record_selector(IMPORT_FIELD_DEF),
-                    )
-                    not_indexed_yet.remove_recordset(old_records)
-                    database.file_records_under(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        not_indexed_yet,
-                        database.encode_record_selector(IMPORT_FIELD_DEF),
-                    )
-                    del not_indexed_yet
-                    del old_records
-                    database.commit()
-                    database.deferred_update_housekeeping()
-                    database.start_transaction()
-                    reporter.append_text(
-                        "".join(
-                            (
-                                "Games before ",
-                                format(current_segment * db_segment_size, ","),
-                                " indexed by PGN tags in Seven Tag Roster.",
-                            )
-                        )
-                    )
-                old_segment = current_segment
-            value.set_game_source(None)
-            if not value.collected_game.is_tag_roster_valid():
-                # Re-index as an error.
-                new_instance = self.__class__(
-                    keyclass=self.key.__class__,
-                    valueclass=self.value.__class__,
-                )
-                new_instance.load_record(current_record)
-                new_instance.set_database(database)
-                new_instance.value.set_game_source(value.reference[FILE])
-                new_instance.value.collected_game.pgn_tags.clear()
-                self.srkey = None
-                self.edit_record(
-                    database, GAMES_FILE_DEF, GAME_FIELD_DEF, new_instance
-                )
-                continue
-            database.index_instance(GAMES_FILE_DEF, self)
-        return True
+        """Customise Record with chess database key and value classes."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
 
     def index_positions(
         self, database, index_games, reporter=None, quit_event=None
@@ -1047,7 +1125,7 @@ class ChessDBrecordGameImport(Record):
                         )
                     )
                 old_segment = current_segment
-            value.set_game_source(None)
+            value.gamesource = None
             # Earlier import stages verified the syntax of movetext but did
             # not verify the movetext represented legal moves on the board.
             # The absence of movetext is fine, as is movetext which is just
@@ -1080,7 +1158,7 @@ class ChessDBrecordGameImport(Record):
                 )
                 new_instance.load_record(current_record)
                 new_instance.set_database(database)
-                new_instance.value.set_game_source(value.reference[FILE])
+                new_instance.value.gamesource = value.reference[FILE]
                 collected_game = next(
                     new_instance.value.read_games("".join(pgn_text))
                 )
@@ -1094,6 +1172,44 @@ class ChessDBrecordGameImport(Record):
                 continue
             database.index_instance(GAMES_FILE_DEF, self)
         return True
+
+
+class ChessDBvaluePieceLocation(PGN, _GameLoadPack):
+    """Chess game data with references to indicies to be applied."""
+
+    def __init__(self, game_class=GameUpdatePieceLocation):
+        """Extend with game source and move number encoder placeholders."""
+        super().__init__(game_class=game_class)
+        self.gamesource = None
+
+    def pack_detail(self, index):
+        """Add piece location detail to index or mark as error."""
+        if self.do_full_indexing():
+            game = self.collected_game
+            index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
+            index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
+            index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
+        else:
+            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return self.gamesource is None
+
+
+class ChessDBrecordGamePieceLocation(Record):
+    """Customise chess game record to index games by piece locations."""
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePieceLocation
+    ):
+        """Customise Record with chess database key and value classes."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
 
     def index_piece_locations(
         self, database, index_games, reporter=None, quit_event=None
@@ -1172,294 +1288,21 @@ class ChessDBrecordGameImport(Record):
                         )
                     )
                 old_segment = current_segment
-            value.set_game_source(None)
+            value.gamesource = None
             database.index_instance(GAMES_FILE_DEF, self)
         return True
 
 
-class ChessDBvaluePGNStore(GamePGNMoveText, ValueList):
+class ChessDBvaluePGNTags(PGNMoveText, _GameLoadPack):
     """Chess game data with references to indicies to be applied."""
 
-    attributes = {
-        "reference": None,  # dict of PGN file name and game number in file.
-        "pgntext": None,  # repr() of PGN text of game.
-    }
-    _attribute_order = ("pgntext", "reference")
-    assert set(_attribute_order) == set(attributes)
-
-    def load(self, value):
-        """Get game from value."""
-        super().load(value)
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # __init__(), which defined self.collected_game, was removed
-        # from ChessDBvalueGame when it became a subclass of ValueList
-        # rather than Value.
-        self.collected_game = next(self.read_games(literal_eval(self.pgntext)))
-
-    def pack(self):
-        """Return PGN text and indexes for game."""
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # self.pgntext is set by Value.load() or Value._empty() methods
-        # which are driven by the attributes dict(), a class attribute.
-        self.pgntext = repr("".join(self.collected_game.pgn_text))
-        value = super().pack()
-        self.pack_detail(value[1])
-        return value
-
-    def pack_detail(self, index):
-        """Delegate then add position and piece loaction detail to index."""
-        index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
-        if self.do_full_indexing():
-            index[IMPORT_FIELD_DEF] = [IMPORT_FIELD_DEF]
-        else:
-            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
-
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) or None and will
-        be used for indexing only if the source file has errors, indicated
-        by the do_full_indexing() method. (Full indexing can index only by
-        values derived from the PGN file content and the file name is not
-        part of that content.)
-
-        """
-        self.gamesource = source
-
-    def do_full_indexing(self):
-        """Return True if full indexing is to be done.
-
-        Detected PGN errors are wrapped in a comment starting 'Error: ' so
-        method is_pgn_valid() is not used to decide what indexing to do.
-
-        """
-        return self.collected_game.is_pgn_valid()
-
-    # Copied from core.pgn._Game class.
-    def pgn_mark_comment_in_error(self, comment):
-        """Return comment with '}' replaced by a presumed unlikely sequence.
-
-        One possibility is to wrap the error in a '{...}' comment.  The '}'
-        token in any wrapped commment would end the comment wrapping the error
-        prematurely, so replace with HIDE_END_COMMENT.
-
-        """
-        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
-
-
-class ChessDBrecordGameStore(ChessDBrecordGameImport):
-    """Chess game record customised for storing games from PGN files.
-
-    Used to import multiple records from a PGN file.
-
-    """
-
-    def __init__(
-        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNStore
-    ):
-        """Customise Record with chess database key and value classes."""
-        super().__init__(keyclass=keyclass, valueclass=valueclass)
-
-
-class ChessDBvaluePosition(PGN, ValueList):
-    """Chess game data with references to indicies to be applied."""
-
-    attributes = {
-        "reference": None,  # dict of PGN file name and game number in file.
-        "pgntext": None,  # repr() of PGN text of game.
-    }
-    _attribute_order = ("pgntext", "reference")
-    assert set(_attribute_order) == set(attributes)
-
-    def __init__(self, game_class=GameUpdatePosition):
-        """Extend with game source and move number encoder placeholders."""
+    def __init__(self, game_class=GameMoveText):
+        """Delegate to superclass with game_class argument."""
         super().__init__(game_class=game_class)
         self.gamesource = None
 
-    def load(self, value):
-        """Get game from value."""
-        super().load(value)
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # __init__(), which defined self.collected_game, was removed
-        # from ChessDBvalueGame when it became a subclass of ValueList
-        # rather than Value.
-        self.collected_game = next(self.read_games(literal_eval(self.pgntext)))
-
-    def pack(self):
-        """Return PGN text and indexes for game."""
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # self.pgntext is set by Value.load() or Value._empty() methods
-        # which are driven by the attributes dict(), a class attribute.
-        self.pgntext = repr("".join(self.collected_game.pgn_text))
-        value = super().pack()
-        self.pack_detail(value[1])
-        return value
-
     def pack_detail(self, index):
-        """Add position detail to index or mark as error."""
-        if self.do_full_indexing():
-            index[POSITIONS_FIELD_DEF] = self.collected_game.positionkeys
-        else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
-
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) or None and will
-        be used for indexing only if the source file has errors, indicated
-        by the do_full_indexing() method. (Full indexing can index only by
-        values derived from the PGN file content and the file name is not
-        part of that content.)
-
-        """
-        self.gamesource = source
-
-    def do_full_indexing(self):
-        """Return True if full indexing is to be done.
-
-        Detected PGN errors are wrapped in a comment starting 'Error: ' so
-        method is_pgn_valid() is not used to decide what indexing to do.
-
-        """
-        return self.gamesource is None
-
-    # Copied from core.pgn._Game class.
-    def pgn_mark_comment_in_error(self, comment):
-        """Return comment with '}' replaced by a presumed unlikely sequence.
-
-        One possibility is to wrap the error in a '{...}' comment.  The '}'
-        token in any wrapped commment would end the comment wrapping the error
-        prematurely, so replace with HIDE_END_COMMENT.
-
-        """
-        return comment.replace(END_COMMENT, HIDE_END_COMMENT)
-
-
-class ChessDBrecordGameTransposition(ChessDBrecordGameImport):
-    """Chess game record customised for indexing games by positions.
-
-    Used to index games on a database.
-
-    """
-
-    def __init__(
-        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePosition
-    ):
-        """Customise Record with chess database key and value classes."""
-        super().__init__(keyclass=keyclass, valueclass=valueclass)
-
-
-class ChessDBvaluePieceLocation(PGN, ValueList):
-    """Chess game data with references to indicies to be applied."""
-
-    attributes = {
-        "reference": None,  # dict of PGN file name and game number in file.
-        "pgntext": None,  # repr() of PGN text of game.
-    }
-    _attribute_order = ("pgntext", "reference")
-    assert set(_attribute_order) == set(attributes)
-
-    def __init__(self, game_class=GameUpdatePieceLocation):
-        """Extend with game source and move number encoder placeholders."""
-        super().__init__(game_class=game_class)
-        self.gamesource = None
-
-    def load(self, value):
-        """Get game from value."""
-        super().load(value)
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # __init__(), which defined self.collected_game, was removed
-        # from ChessDBvalueGame when it became a subclass of ValueList
-        # rather than Value.
-        self.collected_game = next(self.read_games(literal_eval(self.pgntext)))
-
-    def pack(self):
-        """Return PGN text and indexes for game."""
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # self.pgntext is set by Value.load() or Value._empty() methods
-        # which are driven by the attributes dict(), a class attribute.
-        self.pgntext = repr("".join(self.collected_game.pgn_text))
-        value = super().pack()
-        self.pack_detail(value[1])
-        return value
-
-    def pack_detail(self, index):
-        """Add piece location detail to index or mark as error."""
-        if self.do_full_indexing():
-            game = self.collected_game
-            index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
-            index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
-            index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
-        else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
-
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) or None and will
-        be used for indexing only if the source file has errors, indicated
-        by the do_full_indexing() method. (Full indexing can index only by
-        values derived from the PGN file content and the file name is not
-        part of that content.)
-
-        """
-        self.gamesource = source
-
-    def do_full_indexing(self):
-        """Return True if full indexing is to be done.
-
-        Detected PGN errors are wrapped in a comment starting 'Error: ' so
-        method is_pgn_valid() is not used to decide what indexing to do.
-
-        """
-        return self.gamesource is None
-
-
-class ChessDBrecordGamePieceLocation(ChessDBrecordGameImport):
-    """Chess game record customised for indexing games by piece locations.
-
-    Used to index games on a database.
-
-    """
-
-    def __init__(
-        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePieceLocation
-    ):
-        """Customise Record with chess database key and value classes."""
-        super().__init__(keyclass=keyclass, valueclass=valueclass)
-
-
-class ChessDBvaluePGNTags(GamePGNMoveText, ValueList):
-    """Chess game data with references to indicies to be applied."""
-
-    attributes = {
-        "reference": None,  # dict of PGN file name and game number in file.
-        "pgntext": None,  # repr() of PGN text of game.
-    }
-    _attribute_order = ("pgntext", "reference")
-    assert set(_attribute_order) == set(attributes)
-
-    def load(self, value):
-        """Get game from value."""
-        super().load(value)
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # __init__(), which defined self.collected_game, was removed
-        # from ChessDBvalueGame when it became a subclass of ValueList
-        # rather than Value.
-        self.collected_game = next(self.read_games(literal_eval(self.pgntext)))
-
-    def pack(self):
-        """Return PGN text and indexes for game."""
-        # pylint attribute-defined-outside-init W0201 occurs because
-        # self.pgntext is set by Value.load() or Value._empty() methods
-        # which are driven by the attributes dict(), a class attribute.
-        self.pgntext = repr("".join(self.collected_game.pgn_text))
-        value = super().pack()
-        self.pack_detail(value[1])
-        return value
-
-    def pack_detail(self, index):
-        """Delegate then add position and piece loaction detail to index."""
+        """Add PGN tags to index or mark as error."""
         if self.do_full_indexing():
             # index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
             # index[NUMBER_FIELD_DEF] = [self.reference[GAME]]
@@ -1470,18 +1313,6 @@ class ChessDBvaluePGNTags(GamePGNMoveText, ValueList):
         else:
             index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
 
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) or None and will
-        be used for indexing only if the source file has errors, indicated
-        by the do_full_indexing() method. (Full indexing can index only by
-        values derived from the PGN file content and the file name is not
-        part of that content.)
-
-        """
-        self.gamesource = source
-
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
 
@@ -1492,18 +1323,109 @@ class ChessDBvaluePGNTags(GamePGNMoveText, ValueList):
         return self.gamesource is None
 
 
-class ChessDBrecordGamePGNTags(ChessDBrecordGameImport):
-    """Chess game record customised for storing games from PGN files.
-
-    Used to import multiple records from a PGN file.
-
-    """
+class ChessDBrecordGamePGNTags(Record):
+    """Customise chess game record to index games by PGN tags."""
 
     def __init__(
         self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNTags
     ):
         """Customise Record with chess database key and value classes."""
         super().__init__(keyclass=keyclass, valueclass=valueclass)
+
+    def index_pgn_tags(
+        self, database, index_games, reporter=None, quit_event=None
+    ):
+        """Update database games with PGN tag indicies."""
+        self.set_database(database)
+        db_segment_size = SegmentSize.db_segment_size
+        value = self.value
+        old_segment = None
+        cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
+        while True:
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Index PGN Tags stopped.")
+                return False
+            current_record = cursor.next()
+            if current_record is None:
+                # At this point do the final segement index updates.
+                # self.srindex has the indicies to update because these do
+                # not change from one record to another.
+                if self.srindex is not None and self.key.recno is not None:
+                    current_segment = self.key.recno // db_segment_size
+                    for secondary in self.srindex:
+                        assert (
+                            secondary
+                            in database.specification[GAMES_FILE_DEF][
+                                SECONDARY
+                            ]
+                        )
+                        database.sort_and_write(
+                            GAMES_FILE_DEF, secondary, current_segment
+                        )
+                        database.merge(GAMES_FILE_DEF, secondary)
+                if old_segment is not None:
+                    database.unfile_records_under(
+                        GAMES_FILE_DEF,
+                        IMPORT_FIELD_DEF,
+                        database.encode_record_selector(IMPORT_FIELD_DEF),
+                    )
+                break
+            self.load_record(current_record)
+            current_segment = self.key.recno // db_segment_size
+            if current_segment != old_segment:
+                if old_segment is not None:
+                    old_records = database.recordlist_record_number_range(
+                        GAMES_FILE_DEF,
+                        keystart=old_segment * db_segment_size,
+                        keyend=(old_segment + 1) * db_segment_size - 1,
+                    )
+                    not_indexed_yet = database.recordlist_key(
+                        GAMES_FILE_DEF,
+                        IMPORT_FIELD_DEF,
+                        key=database.encode_record_selector(IMPORT_FIELD_DEF),
+                    )
+                    not_indexed_yet.remove_recordset(old_records)
+                    database.file_records_under(
+                        GAMES_FILE_DEF,
+                        IMPORT_FIELD_DEF,
+                        not_indexed_yet,
+                        database.encode_record_selector(IMPORT_FIELD_DEF),
+                    )
+                    del not_indexed_yet
+                    del old_records
+                    database.commit()
+                    database.deferred_update_housekeeping()
+                    database.start_transaction()
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Games before ",
+                                format(current_segment * db_segment_size, ","),
+                                " indexed by PGN tags in Seven Tag Roster.",
+                            )
+                        )
+                    )
+                old_segment = current_segment
+            value.gamesource = None
+            if not value.collected_game.is_tag_roster_valid():
+                # Re-index as an error.
+                new_instance = self.__class__(
+                    keyclass=self.key.__class__,
+                    valueclass=self.value.__class__,
+                )
+                new_instance.load_record(current_record)
+                new_instance.set_database(database)
+                new_instance.value.gamesource = value.reference[FILE]
+                new_instance.value.collected_game.pgn_tags.clear()
+                self.srkey = None
+                self.edit_record(
+                    database, GAMES_FILE_DEF, GAME_FIELD_DEF, new_instance
+                )
+                continue
+            database.index_instance(GAMES_FILE_DEF, self)
+        return True
 
 
 class ChessDBkeyPartial(KeyData):
@@ -1631,16 +1553,6 @@ class ChessDBvalueRepertoireUpdate(ChessDBvalueRepertoire):
     def pack_value(self):
         """Return PGN text for game."""
         return repr("".join(self.collected_game.pgn_text))
-
-    def set_game_source(self, source):
-        """Set game source.
-
-        source should be os.path.basename(<source file>) and will be used
-        for indexing only if the source file has errors, indicated by the
-        is_pgn_valid() method, and no TAG_OPENING tag value.
-
-        """
-        self.gamesource = source
 
 
 # Not quite sure what customization needed yet

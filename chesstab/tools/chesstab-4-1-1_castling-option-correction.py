@@ -4655,9 +4655,6 @@ class ChessDBvaluePGNUpdate131(PGNUpdate131, ChessDBvaluePGN131):
             index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
         return v
 
-    def set_game_source(self, source):
-        self.gamesource = source
-
     def do_full_indexing(self):
         return self.gamesource is None
 
@@ -4728,7 +4725,7 @@ class ChessDBrecordGameUpdate131(Record):
         # elif self.value.callbacktried == None:
         #    pass
         # elif not self.value.callbacktried:
-        #    self.value.set_game_source(record[0])
+        #    self.value.gamesource = record[0]
 
 
 class Main:

@@ -31,6 +31,15 @@ def database_du(dbpath, *args, **kwargs):
     )
 
 
+# Possibly cannot doe this for DPT since segments are managed internally.
+def database_reload_du(dbpath, *args, **kwargs):
+    """Open database, import games, reload indicies, and close database."""
+    # sysfolder argument defaults to DPT_SYSDU_FOLDER in dptdu_database.
+    alldu.do_reload_deferred_update(
+        Database(dbpath, allowcreate=True), *args, **kwargs
+    )
+
+
 class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
     """Provide custom deferred update for chess performance database."""
 

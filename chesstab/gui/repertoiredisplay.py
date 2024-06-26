@@ -223,8 +223,8 @@ class RepertoireDisplay(
         """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
-        # original.value.set_game_source(self.sourceobject.value.gamesource)
-        original_value.set_game_source("")
+        # original.value.gamesource = self.sourceobject.value.gamesource
+        original_value.gamesource = ""
 
     def _create_primary_activity_popup(self):
         """Delegate then add close command to popup and return popup menu."""
@@ -270,8 +270,8 @@ class RepertoireDisplayEdit(EditPGN, RepertoireDisplayInsert):
         """Set source name for original_value object."""
         # currently attracts "AttributeError: 'ChessDBvalueGameTags' has
         # no attribute 'gamesource'.
-        # original.value.set_game_source(self.sourceobject.value.gamesource)
-        original_value.set_game_source("")
+        # original.value.gamesource = self.sourceobject.value.gamesource
+        original_value.gamesource = ""
 
     # _set_properties_on_grids defined so update_game_database method can be
     # shared by repertoiredisplay.RepertoireDisplayEdit and

@@ -34,6 +34,7 @@ from ..core.filespec import (
     GAMES_FILE_DEF,
     PGNFILE_FIELD_DEF,
     BTOD_FACTOR,
+    IMPORT_FIELD_DEF,
 )
 
 # Time taken to parse a sample of a PGN file is measured.
@@ -417,6 +418,7 @@ class DeferredUpdateProcess:
             ),
             quit_event=self.quit_event,
             increases=self.increases,
+            ignore=set((IMPORT_FIELD_DEF, PGNFILE_FIELD_DEF)),
         )
 
 
@@ -677,6 +679,22 @@ class DeferredUpdateEstimateProcess:
         if not self.estimate_data:
             return False
         self._report_to_log_text_only("")
+        self._report_to_log_text_only(
+            "'Import' will be quicker for small PGN files."
+        )
+        self._report_to_log_text_only(
+            "'Merge Import' will be quicker for large PGN files."
+        )
+        self._report_to_log_text_only(
+            "(Small means 10,000 games, large means 1,000,000 games)?"
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log_text_only(
+            "Adding ten million games to an empty database:"
+        )
+        self._report_to_log_text_only("'Import' takes about 5 days.")
+        self._report_to_log_text_only("'Merge Import' takes about 2 days.")
+        self._report_to_log_text_only("")
         self._report_to_log("Ready to start import.")
         return True
 
@@ -760,6 +778,12 @@ class DeferredUpdate(Bindings):
             underline=0,
             command=self.try_command(self._do_import, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
+        tkinter.Button(
+            master=self.buttonframe,
+            text="Merge Import",
+            underline=0,
+            command=self.try_command(self._do_merge_import, self.buttonframe),
+        ).pack(side=tkinter.RIGHT, padx=12)
         if self._database_looks_like_dpt():
             tkinter.Button(
                 master=self.buttonframe,
@@ -801,6 +825,11 @@ class DeferredUpdate(Bindings):
         )
         self.bind(
             self.report,
+            "<Alt-m>",
+            function=self.try_event(self._do_merge_import),
+        )
+        self.bind(
+            self.report,
             "<Alt-d>",
             function=self.try_event(
                 self._dismiss_import_log,
@@ -823,33 +852,8 @@ class DeferredUpdate(Bindings):
             "".join(("Importing to database ", home_directory, "."))
         )
         self._report_to_log_text_only("")
-        self._report_to_log_text_only(
-            "Count games takes many seconds per million games."
-        )
-        self._report_to_log_text_only(
-            "Extract games takes a few minutes per million games."
-        )
-        self._report_to_log_text_only(
-            "Index PGN tags takes several minutes per million games."
-        )
-        self._report_to_log_text_only(
-            "Index positions takes several hours per million games."
-        )
-        self._report_to_log_text_only(
-            "Index piece locations takes several hours per million games."
-        )
-        self._report_to_log_text_only("")
-        self._report_to_log_text_only(
-            "Indexing slows down as more games are imported."
-        )
-        self._report_to_log_text_only(
-            "Piece location and position indexing take over 95% of time."
-        )
-        self._report_to_log_text_only(
-            "Ten million games into an empty database takes a few days."
-        )
-        self._report_to_log_text_only("")
         self._report_to_log("Count games.")
+        self._report_to_log_text_only("Many seconds per million games.")
         self._report_to_log_text_only("")
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
@@ -1017,18 +1021,12 @@ class DeferredUpdate(Bindings):
         )
         self.quit_thread.start()
 
-    def _do_import(self, event=None):
-        """Run import process if allowed and not already run.
-
-        event is ignored and is present for compatibility between button click
-        and keypress.
-
-        """
-        del event
+    def _import(self, method, title, task_name):
+        """Run import process with method() if allowed and not already run."""
         if not self._allow_job:
             tkinter.messagebox.showinfo(
                 parent=self.root,
-                title="Import",
+                title=title,
                 message="".join(
                     (
                         "Cannot start import because a task is in progress",
@@ -1041,7 +1039,7 @@ class DeferredUpdate(Bindings):
         if self._import_done:
             tkinter.messagebox.showinfo(
                 parent=self.root,
-                title="Import",
+                title=title,
                 message="".join(
                     (
                         "The import has been done.",
@@ -1053,16 +1051,16 @@ class DeferredUpdate(Bindings):
             return
         if not tkinter.messagebox.askokcancel(
             parent=self.root,
-            title="Import",
+            title=title,
             message="".join(("Please confirm the import is to be started.",)),
         ):
             return
         self._allow_job = False
-        self._task_name = "import"
+        self._task_name = task_name
         self.quit_event.clear()
         self.deferred_update = DeferredUpdateProcess(
             self.database,
-            self.deferred_update_module.database_du,
+            method,
             self.report_queue,
             self.quit_event,
             self.increases,
@@ -1074,6 +1072,32 @@ class DeferredUpdate(Bindings):
             target=self._deferred_update_join
         )
         self.quit_thread.start()
+
+    def _do_import(self, event=None):
+        """Run import process if allowed and not already run.
+
+        event is ignored and is present for compatibility between button click
+        and keypress.
+
+        """
+        del event
+        self._import(
+            self.deferred_update_module.database_du, "Import", "import"
+        )
+
+    def _do_merge_import(self, event=None):
+        """Run merge import process if allowed and not already run.
+
+        event is ignored and is present for compatibility between button click
+        and keypress.
+
+        """
+        del event
+        self._import(
+            self.deferred_update_module.database_reload_du,
+            "Merge Import",
+            "merge import",
+        )
 
     def _stop_task(self, event=None):
         """Stop task.

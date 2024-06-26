@@ -133,7 +133,7 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
         if object_ is None:
             object_ = self.oldobject
         if object_ is not None:
-            object_.value.set_game_source(self.pgn_score_source)
+            object_.value.gamesource = self.pgn_score_source
 
     def dialog_ok(self):
         """Extend to adjust equality comparison of old and new versions.

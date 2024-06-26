@@ -2,7 +2,7 @@
 # Copyright 2010 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Constants for Chess Query Language (CQL) parser.
+"""Constants for ChessTab.
 
 Uses pgn_read.core.constants values plus additional piece encodings for any
 piece, any white piece, and so on.

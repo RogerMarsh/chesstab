@@ -15,14 +15,14 @@ import os
 import tkinter.messagebox
 import tkinter.filedialog
 
-from ..core.chessrecord import ChessDBrecordGameImport
+from ..core.chessrecord import ChessDBrecordGameStore
 from ..core.filespec import GAMES_FILE_DEF
 
 
 def file_du(database, dbpath, pgnpath, **kwargs):
     """Open database, import games and close database."""
     cdb = database(dbpath, allowcreate=True, **kwargs)
-    importer = ChessDBrecordGameImport()
+    importer = ChessDBrecordGameStore()
     cdb.open_database()
     cdb.set_defer_update()
     s = open(pgnpath, "r", encoding="iso-8859-1")
