@@ -978,6 +978,7 @@ def load_indicies(
 
     """
     del kwargs
+    del quit_event
     for key in cdb.table.keys():
         if key == file:
             break

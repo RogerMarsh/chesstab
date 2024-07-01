@@ -1601,7 +1601,7 @@ class Chess(Bindings):
         # the dialogue supports selection of a single file only.
         gamefile = tkinter.filedialog.askopenfilenames(
             parent=self._get_toplevel(),
-            title="Select file containing games to import",
+            title="Select files containing games to import",
             initialdir="~",
             filetypes=[("Portable Game Notation (chess)", ".pgn")],
         )

@@ -61,6 +61,45 @@ _DATABASE_UPDATE_FACTOR = 5
 _GAMECOUNT_REPORT_INTERVAL = 1000000
 
 
+class _FileLogTextBase(LogTextBase):
+    """Save log text on logfile."""
+
+    def __init__(self, logfile=None, **kargs):
+        super().__init__(**kargs)
+        if logfile is None:
+            self.logfile = None
+            return
+        self.logfile = os.path.join(
+            logfile, os.path.basename(logfile) + "-log.txt"
+        )
+        with open(self.logfile, "w", encoding="utf-8") as file:
+            del file
+
+    def append_bytestring(self, *args, **kargs):
+        """Delegate then write to _logfile if requested."""
+        end = self.index(tkinter.END + "-1l")
+        super().append_bytestring(*args, **kargs)
+        self._add_to_logfile(end)
+
+    def append_text(self, *args, **kargs):
+        """Delegate then write to _logfile if requested."""
+        end = self.index(tkinter.END + "-1l")
+        super().append_text(*args, **kargs)
+        self._add_to_logfile(end)
+
+    def append_raw_text(self, *args, **kargs):
+        """Delegate then write to _logfile if requested."""
+        end = self.index(tkinter.END + "-1l")
+        super().append_raw_text(*args, **kargs)
+        self._add_to_logfile(end)
+
+    def _add_to_logfile(self, end):
+        if self.logfile is None:
+            return
+        with open(self.logfile, "a", encoding="utf-8") as file:
+            file.write(self.get(end, tkinter.END + "-1c"))
+
+
 class _Reporter:
     """Helper class to keep 'LogText' API for adding text to log.
 
@@ -634,9 +673,6 @@ class DeferredUpdateEstimateProcess:
                 )
             )
         )
-        self._report_to_log_text_only(
-            "(It is not known yet if movetext errors exist)"
-        )
         database = self.database
         database.start_read_only_transaction()
         try:
@@ -680,20 +716,24 @@ class DeferredUpdateEstimateProcess:
             return False
         self._report_to_log_text_only("")
         self._report_to_log_text_only(
-            "'Import' will be quicker for small PGN files."
+            "'Import' will be quicker for small imports."
         )
         self._report_to_log_text_only(
-            "'Merge Import' will be quicker for large PGN files."
+            "'Merge Import' will be quicker for large imports."
         )
         self._report_to_log_text_only(
-            "(Small means 10,000 games, large means 1,000,000 games)?"
+            "They take about the same time for 50,000 games."
+        )
+        self._report_to_log_text_only(
+            "'Merge Import' takes 2 days for 10,000,000 games."
+        )
+        self._report_to_log_text_only(
+            "'Import' takes 5 days for 10,000,000 games."
         )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(
-            "Adding ten million games to an empty database:"
+            "Games with PGN tag or movetext errors will not be indexed."
         )
-        self._report_to_log_text_only("'Import' takes about 5 days.")
-        self._report_to_log_text_only("'Merge Import' takes about 2 days.")
         self._report_to_log_text_only("")
         self._report_to_log("Ready to start import.")
         return True
@@ -802,9 +842,10 @@ class DeferredUpdate(Bindings):
                 ),
             ).pack(side=tkinter.RIGHT, padx=12)
 
-        self.report = LogTextBase(
+        self.report = _FileLogTextBase(
             master=self.root,
             cnf={"wrap": tkinter.WORD, "undo": tkinter.FALSE},
+            logfile=self.home_directory,
         )
         self.report.focus_set()
         if self._database_looks_like_dpt():
@@ -853,7 +894,7 @@ class DeferredUpdate(Bindings):
         )
         self._report_to_log_text_only("")
         self._report_to_log("Count games.")
-        self._report_to_log_text_only("Many seconds per million games.")
+        self._report_to_log_text_only("About 2 minutes per million games.")
         self._report_to_log_text_only("")
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
@@ -1175,4 +1216,9 @@ class DeferredUpdate(Bindings):
                 title="Dismiss",
                 message=" ".join(("Log saved to", filename)),
             )
+        if self.report.logfile is not None:
+            try:
+                os.remove(self.report.logfile)
+            except FileNotFoundError:
+                pass
         self.root.destroy()
