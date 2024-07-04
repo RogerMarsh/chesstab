@@ -1068,9 +1068,11 @@ def load_indicies(
                                 )
                             )
                         )
+                    writer.close_cursor()
                     cdb.commit()
                     cdb.deferred_update_housekeeping()
                     cdb.start_transaction()
+                    writer.make_new_cursor()
             writer.write(item)
         writer.close_cursor()
 
