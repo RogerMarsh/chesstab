@@ -978,7 +978,6 @@ def load_indicies(
 
     """
     del kwargs
-    del quit_event
     for key in cdb.table.keys():
         if key == file:
             break
@@ -1045,20 +1044,35 @@ def load_indicies(
                 )
             continue
         cdb.delete_index(file, index)
-        for count in cdb.merge_import(
-            index_directory, file, index, _MERGE_COMMIT_INTERVAL
-        ):
-            if reporter is not None:
-                reporter.append_text(
-                    "".join(
-                        (
-                            format(count, ","),
-                            " entries added to '",
-                            index,
-                            "' index.",
+        writer = cdb.merge_writer(file, index)
+        for count, item in enumerate(cdb.next_sorted_item(index_directory)):
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Merge index stopped.")
+                if reporter is not None:
+                    while not reporter.empty():
+                        pass
+                cdb.backout()
+                return False
+            if not count % _MERGE_COMMIT_INTERVAL:
+                if count:
+                    if reporter is not None:
+                        reporter.append_text(
+                            "".join(
+                                (
+                                    format(count, ","),
+                                    " entries added to '",
+                                    index,
+                                    "' index.",
+                                )
+                            )
                         )
-                    )
-                )
+                    cdb.commit()
+                    cdb.deferred_update_housekeeping()
+                    cdb.start_transaction()
+            writer.write(item)
+        writer.close_cursor()
 
     # DPT database engine needs the test for empty queue because all the
     # deferred index updates are applied in the Close() method called when
