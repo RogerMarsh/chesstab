@@ -656,6 +656,12 @@ def _dump_index(
                     )
                 )
             return False
+    if os.path.exists(os.path.join(index_directory, "-1")):
+        if reporter is not None:
+            reporter.append_text_only(
+                "Dump index not needed: load is already done."
+            )
+        return True
     dump_path = os.path.join(index_directory, index)
     if os.path.exists(dump_path):
         if reporter is not None:
@@ -948,6 +954,77 @@ def write_indicies_for_extracted_games(
     return True
 
 
+def _delete_sorted_index_directory(index_directory):
+    """Delete sorted index files in index_directory.
+
+    A "-1" file is assumed to contain sorted index entries.
+
+    """
+    index = os.path.basename(index_directory)
+    for dumpfile in os.listdir(index_directory):
+        if dumpfile.isdigit() or dumpfile == index:
+            try:
+                os.remove(os.path.join(index_directory, dumpfile))
+            except FileNotFoundError:
+                pass
+
+
+def _delete_sorted_index_files(index_directory, reporter):
+    """Delete sorted index files if basename of index_directory is not '-1'.
+
+    File '-1' is created on completion of load index.  If it exists delete
+    the sorted index files.
+
+    """
+    if os.path.basename(index_directory) == "-1":
+        if reporter is not None:
+            reporter.append_text(
+                "Cannot tell if index load is done because '-1' is an index."
+            )
+            reporter.append_text_only(
+                "Files of sorted index entries are not deleted."
+            )
+        return
+    if not os.path.exists(os.path.join(index_directory, "-1")):
+        if reporter is not None:
+            reporter.append_text(
+                "Guard file '-1' does not exist."
+            )
+            reporter.append_text_only(
+                "Files of sorted index entries are not deleted."
+            )
+        return
+    _delete_sorted_index_directory(index_directory)
+
+
+def _index_load_already_done(index_directory, reporter):
+    """Return True if file '-1' is in index_directory and is not basename.
+
+    Return False otherwise.
+
+    File '-1' is created on completion of load index, followed by deleting
+    all the sorted files of index entries.  A failure while doing these
+    deletions will leave some still existing, so do the deletion step here
+    too.
+    
+    Return False if the basename of index_directory is '-1' because that
+    implies the file '-1' contains index entries for the '-1' index.
+
+    """
+    if os.path.basename(index_directory) == "-1":
+        if reporter is not None:
+            reporter.append_text(
+                "Cannot tell if index load is done because '-1' is an index."
+            )
+        return False
+    if not os.path.exists(os.path.join(index_directory, "-1")):
+        return False
+    _delete_sorted_index_files(index_directory, None)
+    if reporter is not None:
+        reporter.append_text("Load is already done.")
+    return True
+
+
 def load_indicies(
     cdb,
     indexing=True,
@@ -1043,6 +1120,8 @@ def load_indicies(
                     )
                 )
             continue
+        if _index_load_already_done(index_directory, reporter):
+            continue
         cdb.delete_index(file, index)
         writer = cdb.merge_writer(file, index)
         for count, item in enumerate(cdb.next_sorted_item(index_directory)):
@@ -1053,6 +1132,7 @@ def load_indicies(
                 if reporter is not None:
                     while not reporter.empty():
                         pass
+                writer.close_cursor()
                 cdb.backout()
                 return False
             if not count % _MERGE_COMMIT_INTERVAL:
@@ -1075,6 +1155,13 @@ def load_indicies(
                     writer.make_new_cursor()
             writer.write(item)
         writer.close_cursor()
+        if not os.path.basename(index_directory) == "-1":
+            try:
+                with open(os.path.join(index_directory, "-1"), mode="wb"):
+                    pass
+            except FileExistsError:
+                pass
+        _delete_sorted_index_files(index_directory, reporter)
 
     # DPT database engine needs the test for empty queue because all the
     # deferred index updates are applied in the Close() method called when
@@ -1115,12 +1202,13 @@ def load_indicies(
         index_directory = os.path.join(dump_directory, index)
         if not os.path.isdir(index_directory):
             continue
-        for dumpfile in os.listdir(index_directory):
-            if dumpfile.isdigit() or dumpfile == index:
-                try:
-                    os.remove(os.path.join(index_directory, dumpfile))
-                except FileNotFoundError:
-                    pass
+        # '<index_directory>/-1' may be a guard or a file of index items.
+        _delete_sorted_index_directory(index_directory)
+        try:
+            os.remove(os.path.join(index_directory, "-1"))
+        except FileNotFoundError:
+            pass
+
         try:
             os.rmdir(index_directory)
         except FileNotFoundError:
