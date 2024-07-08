@@ -602,14 +602,14 @@ class GameUpdate(_Game):
         piecemovekeys = self.piecemovekeys
         squaremovekeys = self.squaremovekeys
         pieces = [""] * 64
-        bits = []
+        bits = 0
         mnv = movenumber + self._variation
         for piece in self._piece_placement_data.values():
             piece_name = piece.name
             piece_square = piece.square
             square_name = piece_square.name
             pieces[piece_square.number] = piece_name
-            bits.append(piece_square.bit)
+            bits += piece_square.bit
 
             # piecesquaremovekeys.append(mnv + piece_name + square_name)
             # squaremovekeys.append(mnv + mp[piece_name] + square_name)
@@ -629,7 +629,7 @@ class GameUpdate(_Game):
             piecemovekeys.append(mnv + piece_name)
         delta_after = position_delta[1]
         self.positionkeys.append(
-            sum(bits).to_bytes(8, "big").decode("iso-8859-1")
+            bits.to_bytes(8, "big").decode("iso-8859-1")
             + pieces
             + delta_after[1]
             + delta_after[3]
@@ -649,15 +649,15 @@ class GameUpdatePosition(_Game):
         """Delegate then modify board state and add index entries."""
         super().modify_board_state(position_delta)
         pieces = [""] * 64
-        bits = []
+        bits = 0
         for piece in self._piece_placement_data.values():
             piece_name = piece.name
             piece_square = piece.square
             pieces[piece_square.number] = piece_name
-            bits.append(piece_square.bit)
+            bits += piece_square.bit
         delta_after = position_delta[1]
         self.positionkeys.append(
-            sum(bits).to_bytes(8, "big").decode("iso-8859-1")
+            bits.to_bytes(8, "big").decode("iso-8859-1")
             + "".join(pieces)
             + delta_after[1]
             + delta_after[3]
@@ -737,14 +737,12 @@ class GameUpdatePieceLocation(_Game):
         piecemovekeys = self.piecemovekeys
         squaremovekeys = self.squaremovekeys
         pieces = [""] * 64
-        bits = []
         mnv = movenumber + self._variation
         for piece in self._piece_placement_data.values():
             piece_name = piece.name
             piece_square = piece.square
             square_name = piece_square.name
             pieces[piece_square.number] = piece_name
-            bits.append(piece_square.bit)
 
             # piecesquaremovekeys.append(mnv + piece_name + square_name)
             # squaremovekeys.append(mnv + mp[piece_name] + square_name)
@@ -758,7 +756,7 @@ class GameUpdatePieceLocation(_Game):
                     + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
                 )
             )
-        for piece_name in "".join(pieces):
+        for piece_name in set("".join(pieces)):
             piecemovekeys.append(mnv + piece_name)
         # delta_after = position_delta[1]
 
