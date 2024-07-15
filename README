@@ -65,6 +65,7 @@ New databases are accessed using these alternative interfaces if installed.
 * `berkeleydb`_ (replaces bsddb3 at Python 3.10)
 * `bsddb3`_
 * `dptdb`_ (Microsoft Windows only)
+* `lmdb`_
 
 Chesstab will use dptdb if installed.
 
@@ -124,7 +125,7 @@ These figures were obtained using the Enormous database from:
 
 Partial position searches are always much quicker using the `dptdb`_ database interface.
 
-When using the sqlite3, apsw, or `bsddb3`_ database interfaces, you may notice better response times on partial position searches if the `bitarray`_ module is installed.
+When using the sqlite3, apsw, `berkeleydb`_, `bsddb3`_, or `lmdb`_, database interfaces, you may notice better response times on partial position searches if the `bitarray`_ module is installed.
 
 The sqlite3 and apsw database interfaces are equivalent, but all other pairings are incompatible.
 
@@ -137,10 +138,11 @@ The sqlite3 and apsw database interfaces are equivalent, but all other pairings 
 .. _pip: https://packaging.python.org/installing
 .. _www.enpassant.dk/chess/fonteng.htm: http://enpassant.dk/chess/fonteng.htm
 .. _ftp://ftp.cis.uab.edu/pub/hyatt/pgn: ftp://ftp.cis.uab.edu/pub/hyatt/pgn
-.. _bitarray: https://pypi.python.org/pypi/bitarray
-.. _bsddb3: https://pypi.python.org/pypi/bsddb3
+.. _bitarray: https://pypi.org/project/bitarray
+.. _bsddb3: https://pypi.org/project/bsddb3
 .. _berkeleydb: https://pypi.org/project/berkeleydb
 .. _dptdb: http://solentware.co.uk/download.html
+.. _lmdb: https://pypi.python.org/pypi/project/lmdb
 .. _Berkeley DB: http://oracle.com
 .. _Universal Chess Interface: http://www.shredderchess.com/div/uci.zip
 .. _UCI entry: https://en.wikipedia.org/wiki/Universal_Chess_Interface
