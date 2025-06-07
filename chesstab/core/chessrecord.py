@@ -376,13 +376,13 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
         """
         return self.collected_game.pgn_tags.get(fieldname, None)
 
-    # def get_field_values(self, fieldname):
-    #    """Return tuple of field values for fieldname.
+    def get_field_values(self, fieldname):
+        """Return tuple of field values for fieldname.
 
-    #    Added to support Find and Where classes.
+        Added to support Find and Where classes.
 
-    #    """
-    #    return self.get_field_value(fieldname),
+        """
+        return (self.get_field_value(fieldname),)
 
     def load(self, value):
         """Get game from value.
@@ -1503,8 +1503,20 @@ class ChessDBvalueRepertoire(PGN, Value):
         self.collected_game = None
 
     def load(self, value):
-        """Get game from value."""
-        self.collected_game = next(self.read_games(literal_eval(value)))
+        """Get game from value.
+
+        If value is from a database record it will be a str and is the
+        required argument to read_games().
+
+        If value is from a user interface object it will be a list and
+        the required argument to read_games() will be
+        'literal_eval(<list>[0])'.
+
+        """
+        lev = literal_eval(value)
+        if isinstance(lev, list):
+            lev = literal_eval(lev[0])
+        self.collected_game = next(self.read_games(lev))
 
 
 # Not quite sure what customization needed yet
