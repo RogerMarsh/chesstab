@@ -241,7 +241,7 @@ class ShowPGN(ShowText, ScorePGN):
                 return None
             updater.value.gamesource = self.pgn_score_source
         editor = RecordEdit(updater, None)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         updater.key.recno = None
@@ -331,7 +331,7 @@ class DisplayPGN(DisplayText):
         )
         self.pgn_score_original_value(original.value)
         editor = RecordDelete(original)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         self.mark_partial_positions_to_be_recalculated(datasource=datasource)
         editor.delete()
         tags = original.value.collected_game.pgn_tags
@@ -507,7 +507,7 @@ class EditPGN(EditText):
         # gets record keyed by sourceobject and update is used to edit this.
         updater = self._game_updater(self._construct_record_value())
         editor = RecordEdit(updater, original)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
         if not updater.value.collected_game.is_pgn_valid():
             msg = [

@@ -80,9 +80,11 @@ class QueryStatement:
     def process_query_statement(self, text):
         """Process selection rule in text.
 
-        First attempt treats whole text as a selection rule.
-        Second attempt treats first line, of at least two, as the name of the
-        selection rule and the rest as a selection rule.
+        The characters before the first newline are the description seen
+        in lists of query records.
+
+        The characters after the first newline are the query, which may
+        spread over many lines.
 
         """
         if self.__database is None:
@@ -92,48 +94,38 @@ class QueryStatement:
         # has been called.
         self._where_error = False
 
-        for rule in (
-            ("", text.strip()),
-            [t.strip() for t in text.split(NAME_DELIMITER, 1)],
-        ):
-            if len(rule) == 1:
-                # The second element of rule is being processed and the text in
-                # rule[1] cannot be a valid selection rule because it is the
-                # text which was processed from the first element of rule.
-                # self._where_error is bound to a WhereStatementError instance.
-                return False
-
-            self.where = None
-            self.textok = ""
-            self.texterror = ""
-            self._description_string, self._query_statement_string = rule
-            wqs = self.__database.record_selector(self._query_statement_string)
-            wqs.lex()
-            wqs.parse()
-            if wqs.validate(self.__database, self.dbset):
-                self._where_error = wqs.error_information
-                continue
-            self.where = wqs
-            self.textok = self._query_statement_string
-            self.texterror = ""
-            self._where_error = False
-            for node in wqs.node.get_clauses_from_root_in_walk_order():
-                if node.field in (TAG_WHITE, TAG_BLACK):
-                    if node.condition == LIKE:
-                        continue
-                    if not isinstance(node.value, tuple):
-                        node.value = " ".join(
-                            re_normalize_player_name.findall(node.value)
-                        )
-                    else:
-                        node.value = tuple(
-                            " ".join(re_normalize_player_name.findall(nv))
-                            for nv in node.value
-                        )
-            return True
-
-        # self._where_error is not bound to a WhereStatementError instance.
-        return False
+        self.where = None
+        self.textok = ""
+        self.texterror = ""
+        self._description_string, self._query_statement_string = [
+            t.strip() for t in text.split(NAME_DELIMITER, 1)
+        ]
+        wqs = self.__database.record_selector(self._query_statement_string)
+        wqs.lex()
+        wqs.parse()
+        if wqs.validate(self.__database, self.dbset):
+            self._where_error = wqs.error_information
+            return False
+        self.where = wqs
+        self.textok = self._query_statement_string
+        self.texterror = ""
+        self._where_error = False
+        for node in wqs.node.get_clauses_from_root_in_walk_order():
+            if node.field in (TAG_WHITE, TAG_BLACK):
+                if node.condition == LIKE:
+                    continue
+                if node.value is None:
+                    continue
+                if not isinstance(node.value, tuple):
+                    node.value = " ".join(
+                        re_normalize_player_name.findall(node.value)
+                    )
+                else:
+                    node.value = tuple(
+                        " ".join(re_normalize_player_name.findall(nv))
+                        for nv in node.value
+                    )
+        return True
 
     def get_name_text(self):
         """Return name text."""

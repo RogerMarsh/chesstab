@@ -25,7 +25,7 @@ from ..basecore import database
 class Database(database.Database, db_tkinter_database.Database):
     """Provide access to a database of games of chess via tkinter."""
 
-    _deferred_update_process = "chesstab.db_tkinter.database_du"
+    _deferred_update_module_name = "chesstab.db_tkinter.database_du"
 
     def __init__(
         self,

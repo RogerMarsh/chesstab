@@ -13,7 +13,7 @@ from ..basecore import database
 class Database(database.Database, unqlite_database.Database):
     """Provide access to an unqlite database of games of chess."""
 
-    _deferred_update_process = "chesstab.unqlite.database_du"
+    _deferred_update_module_name = "chesstab.unqlite.database_du"
 
     def __init__(
         self,

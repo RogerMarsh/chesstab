@@ -69,15 +69,15 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
         """Build the user interface."""
         engines = {}
         if chessunqlite:
-            engines[
-                chessunqlite.unqlite_database.unqlite
-            ] = chessunqlite.Database
+            engines[chessunqlite.unqlite_database.unqlite] = (
+                chessunqlite.Database
+            )
         if chessvedis:
             engines[chessvedis.vedis_database.vedis] = chessvedis.Database
         if chesssqlite3:
-            engines[
-                chesssqlite3.sqlite3_database.sqlite3
-            ] = chesssqlite3.Database
+            engines[chesssqlite3.sqlite3_database.sqlite3] = (
+                chesssqlite3.Database
+            )
         if chessapsw:
             engines[chessapsw.apsw_database.apsw] = chessapsw.Database
         if chessdb:
@@ -85,25 +85,25 @@ class CreateChessTabDatabase(create_database.CreateDatabase):
         if chesslmdb:
             engines[chesslmdb.lmdb_database.lmdb] = chesslmdb.Database
         if chessberkeleydb:
-            engines[
-                chessberkeleydb.berkeleydb_database.berkeleydb
-            ] = chessberkeleydb.Database
+            engines[chessberkeleydb.berkeleydb_database.berkeleydb] = (
+                chessberkeleydb.Database
+            )
         if chessdbtkinter:
-            engines[
-                chessdbtkinter.db_tkinter_database.db_tcl
-            ] = chessdbtkinter.Database
+            engines[chessdbtkinter.db_tkinter_database.db_tcl] = (
+                chessdbtkinter.Database
+            )
         if chessdpt:
-            engines[
-                chessdpt.dptnofistat.dpt_database._dpt.dptapi
-            ] = chessdpt.Database
+            engines[chessdpt.dptnofistat.dpt_database._dpt.dptapi] = (
+                chessdpt.Database
+            )
         if chessndbm:
-            engines[
-                chessndbm.ndbm_database.ndbm_module.dbm.ndbm
-            ] = chessndbm.Database
+            engines[chessndbm.ndbm_database.ndbm_module.dbm.ndbm] = (
+                chessndbm.Database
+            )
         if chessgnu:
-            engines[
-                chessgnu.gnu_database.gnu_module.dbm.gnu
-            ] = chessgnu.Database
+            engines[chessgnu.gnu_database.gnu_module.dbm.gnu] = (
+                chessgnu.Database
+            )
         super().__init__(title="Create ChessTab Database", engines=engines)
 
 

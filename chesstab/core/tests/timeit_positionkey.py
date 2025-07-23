@@ -25,9 +25,31 @@ from pgn_read.core.constants import RANK_NAMES, FILE_NAMES
 test_game = game.Game()
 for sqr, pce in zip(
     (
-        "a8", "e8", "h8", "a7", "b7", "c7", "d7", "f7", "g7", "h7",
-        "d6", "f6", "d5", "e5", "c4", "e4", "c3", "e3", "f3", "a2",
-        "b2", "f2", "h2", "a1", "e1",
+        "a8",
+        "e8",
+        "h8",
+        "a7",
+        "b7",
+        "c7",
+        "d7",
+        "f7",
+        "g7",
+        "h7",
+        "d6",
+        "f6",
+        "d5",
+        "e5",
+        "c4",
+        "e4",
+        "c3",
+        "e3",
+        "f3",
+        "a2",
+        "b2",
+        "f2",
+        "h2",
+        "a1",
+        "e1",
     ),
     "rkrpppqpppbnPpQPNBPPPPPRK",
 ):
@@ -36,6 +58,7 @@ test_game._active_color = "w"
 
 
 def keyold():
+    """Return position key."""
     pieces = [""] * 64
     bits = []
     for piece in test_game._piece_placement_data.values():
@@ -54,6 +77,7 @@ def keyold():
 
 
 def moveset():
+    """Return piece location keys."""
     pieces = [""] * 64
     piecemovekeys = []
     for piece in test_game._piece_placement_data.values():
@@ -83,10 +107,12 @@ for one in piecenames:
 
 
 def replpair(matchobj):
+    """Return lookup for matchobj match."""
     return pairlookup[matchobj.group()]
 
 
 def keynew():
+    """Return alternative format of position key."""
     pieces = [""] * 64
     bits = []
     for piece in test_game._piece_placement_data.values():
@@ -105,6 +131,7 @@ def keynew():
 
 
 def pairwise(string):
+    """Yield pair from lookup."""
     iternext = iter(string)
     try:
         while True:
@@ -115,6 +142,7 @@ def pairwise(string):
 
 
 def xpairwise(string):
+    """Yield pair from lookup, alternative implementation."""
     for pair in zip(*[iter(string)] * 2):
         yield pairlookup["".join(pair)]
     if len(string) % 2 == 1:
@@ -122,6 +150,7 @@ def xpairwise(string):
 
 
 def keypair():
+    """Return pair version of position key."""
     pieces = [""] * 64
     bits = []
     for piece in test_game._piece_placement_data.values():
@@ -143,10 +172,12 @@ spaces = re.compile(r"\s+")
 
 
 def lenspc(matchobj):
+    """Return str representation of match in matchobj."""
     return str(len(matchobj.group()))
 
 
 def fenkey():
+    """Return FEN version of position key."""
     pieces = [" "] * 64
     for piece in test_game._piece_placement_data.values():
         pieces[piece.square.number] = piece.name
@@ -161,6 +192,7 @@ def fenkey():
 
 
 def strkey():
+    """Return str version of position key."""
     pieces = [" "] * 64
     for piece in test_game._piece_placement_data.values():
         pieces[piece.square.number] = piece.name
@@ -175,6 +207,7 @@ def strkey():
 
 
 def replkey():
+    """Return alternative version of string position key."""
     pieces = [" "] * 64
     for piece in test_game._piece_placement_data.values():
         pieces[piece.square.number] = piece.name
@@ -189,6 +222,7 @@ def replkey():
 
 
 def fen():
+    """Calculate FEN and return None."""
     rank = 0
     file = -1
     chars = []
@@ -234,10 +268,13 @@ def fen():
 
 
 def keysort():
+    """Return position key with sorted piece names."""
     pieces = sorted(test_game._piece_placement_data.values())
     return "".join(
         (
-            sum(piece.square.bit for piece in pieces).to_bytes(8, "big").decode("iso-8859-1"),
+            sum(piece.square.bit for piece in pieces)
+            .to_bytes(8, "big")
+            .decode("iso-8859-1"),
             "".join(piece.name for piece in pieces),
             "w",
             "KQkq",
@@ -247,6 +284,7 @@ def keysort():
 
 
 def keyalt():
+    """Return position key with square bits in big-endian order."""
     pieces = [""] * 64
     bits = 0
     for piece in test_game._piece_placement_data.values():
@@ -265,6 +303,7 @@ def keyalt():
 
 
 def movestr():
+    """Return piece location keys as list of prefixed strings."""
     pieces = [""] * 64
     piecemovekeys = []
     for piece in test_game._piece_placement_data.values():
@@ -275,6 +314,7 @@ def movestr():
 
 
 def movelist():
+    """Return piece location keys as list of prefixed strings (list)."""
     pieces = [""] * 64
     piecemovekeys = []
     for piece in test_game._piece_placement_data.values():
@@ -285,6 +325,7 @@ def movelist():
 
 
 def movetup():
+    """Return piece location keys as list of prefixed strings (tuple)."""
     pieces = [""] * 64
     piecemovekeys = []
     for piece in test_game._piece_placement_data.values():
@@ -295,6 +336,7 @@ def movetup():
 
 
 def moveif():
+    """Return piece location keys as list of prefixed strings (if)."""
     pieces = [""] * 64
     for piece in test_game._piece_placement_data.values():
         pieces[piece.square.number] = piece.name
@@ -305,6 +347,7 @@ def moveif():
 if __name__ == "__main__":
 
     import timeit
+
     old = keyold()
     sort = keysort()
     alt = keyalt()

@@ -15,7 +15,7 @@ from ..basecore import database
 class Database(database.Database, sqlite3_database.Database):
     """Provide access to a database of games of chess via sqlite3."""
 
-    _deferred_update_process = "chesstab.sqlite.database_du"
+    _deferred_update_module_name = "chesstab.sqlite.database_du"
 
     def __init__(
         self,

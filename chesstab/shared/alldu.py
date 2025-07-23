@@ -987,9 +987,7 @@ def _delete_sorted_index_files(index_directory, reporter):
         return
     if not os.path.exists(os.path.join(index_directory, "-1")):
         if reporter is not None:
-            reporter.append_text(
-                "Guard file '-1' does not exist."
-            )
+            reporter.append_text("Guard file '-1' does not exist.")
             reporter.append_text_only(
                 "Files of sorted index entries are not deleted."
             )
@@ -1006,7 +1004,7 @@ def _index_load_already_done(index_directory, reporter):
     all the sorted files of index entries.  A failure while doing these
     deletions will leave some still existing, so do the deletion step here
     too.
-    
+
     Return False if the basename of index_directory is '-1' because that
     implies the file '-1' contains index entries for the '-1' index.
 

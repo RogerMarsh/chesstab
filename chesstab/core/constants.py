@@ -23,13 +23,14 @@ from pgn_read.core.constants import (
     SETUP_VALUE_FEN_PRESENT,
 )
 
-from chessql.core.constants import (
-    ANY_WHITE_PIECE_NAME,
-    ANY_BLACK_PIECE_NAME,
-    EMPTY_SQUARE_NAME,
-    WHITE_PIECE_NAMES,
-    BLACK_PIECE_NAMES,
-)
+import chessql.core.constants as cqlcc
+
+ANY_WHITE_PIECE_NAME = cqlcc.PIECE_NAMES[6]
+ANY_BLACK_PIECE_NAME = cqlcc.PIECE_NAMES[-2]
+EMPTY_SQUARE_NAME = cqlcc.PIECE_NAMES[-1]
+WHITE_PIECE_NAMES = cqlcc.PIECE_NAMES[:6]
+BLACK_PIECE_NAMES = cqlcc.PIECE_NAMES[-8:-2]
+del cqlcc
 
 # Supported encodings of PGN files.
 # The PGN standard at 4.1 specifies the use of iso-8859-1 encoding.
@@ -126,6 +127,6 @@ FEN_CONTEXT = (
 
 del _piece, _square
 del FEN_WHITE_PAWN, FEN_BLACK_PAWN, BOARDSQUARES
-del ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME, EMPTY_SQUARE_NAME
-del WHITE_PIECE_NAMES, BLACK_PIECE_NAMES
+# del ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME, EMPTY_SQUARE_NAME
+# del WHITE_PIECE_NAMES, BLACK_PIECE_NAMES
 del TAG_FEN, TAG_SETUP, SETUP_VALUE_FEN_PRESENT

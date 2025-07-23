@@ -15,7 +15,7 @@ from ..basecore import database
 class Database(database.Database, apsw_database.Database):
     """Provide access to a database of games of chess via apsw."""
 
-    _deferred_update_process = "chesstab.apsw.database_du"
+    _deferred_update_module_name = "chesstab.apsw.database_du"
 
     def __init__(
         self,

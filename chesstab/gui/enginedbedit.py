@@ -56,9 +56,11 @@ class EngineDbEdit(EditText, DataEdit):
             oldobject=oldobject,
             newview=EngineToplevelEdit(master=parent, ui=ui),
             title="",
-            oldview=EngineToplevel(master=parent, ui=ui)
-            if showinitial
-            else showinitial,
+            oldview=(
+                EngineToplevel(master=parent, ui=ui)
+                if showinitial
+                else showinitial
+            ),
         )
         self._initialize()
 

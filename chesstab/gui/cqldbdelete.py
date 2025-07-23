@@ -81,7 +81,7 @@ class CQLDbDelete(DeleteText, DataDelete):
     @staticmethod
     def _set_item(view, object_):
         """Populate view with the CQL query extracted from object_."""
-        view.cql_statement.process_statement(object_.get_srvalue())
+        view.cql_statement.prepare_cql_statement(object_.get_srvalue())
         view.set_and_tag_item_text()
 
     def dialog_ok(self):

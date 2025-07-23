@@ -15,22 +15,16 @@ import importlib
 import os
 import datetime
 import traceback
+import resource
 
-if sys.platform.startswith("openbsd"):
-    import resource
-
-# pylint wrong-import-position C0413 can be avoided by moving the guarded
-# 'import resource' below this import.  However 'resource' is in the Python
-# distribution and it's import belongs where it is.
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
 )
-
-# pylint wrong-import-position C0413 can be avoided by moving the guarded
-# 'import resource' below this import.  However 'resource' is in the Python
-# distribution and it's import belongs where it is.
 from ..gui import chessdu
+
+if not sys.platform.startswith("openbsd"):
+    del resource
 
 
 class RunduError(Exception):

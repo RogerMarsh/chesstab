@@ -52,9 +52,11 @@ class QueryDbEdit(EditText, DataEdit):
             oldobject=oldobject,
             newview=QueryToplevelEdit(master=parent, ui=ui),
             title="",
-            oldview=QueryToplevel(master=parent, ui=ui)
-            if showinitial
-            else showinitial,
+            oldview=(
+                QueryToplevel(master=parent, ui=ui)
+                if showinitial
+                else showinitial
+            ),
         )
         if ui is not None:
             nqs = self.newview.query_statement

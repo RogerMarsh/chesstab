@@ -37,7 +37,7 @@ from ..basecore import database
 class Database(database.Database, bsddb3_database.Database):
     """Provide access to a database of games of chess via bsddb3."""
 
-    _deferred_update_process = "chesstab.db.database_du"
+    _deferred_update_module_name = "chesstab.db.database_du"
 
     def __init__(
         self,

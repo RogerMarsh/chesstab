@@ -21,7 +21,6 @@ from solentware_base.core.record import (
     Record,
 )
 from solentware_base.core.segmentsize import SegmentSize
-from solentware_base.core.constants import SECONDARY
 from solentware_base.core.merge import SortIndiciesToSequentialFiles
 
 from pgn_read.core.parser import PGN
@@ -1072,12 +1071,6 @@ class ChessDBrecordGameTransposition(Record):
                 if self.srindex is not None and self.key.recno is not None:
                     current_segment = self.key.recno // db_segment_size
                     for secondary in self.srindex:
-                        assert (
-                            secondary
-                            in database.specification[GAMES_FILE_DEF][
-                                SECONDARY
-                            ]
-                        )
                         database.sort_and_write(
                             GAMES_FILE_DEF, secondary, current_segment
                         )
@@ -1235,12 +1228,6 @@ class ChessDBrecordGamePieceLocation(Record):
                 if self.srindex is not None and self.key.recno is not None:
                     current_segment = self.key.recno // db_segment_size
                     for secondary in self.srindex:
-                        assert (
-                            secondary
-                            in database.specification[GAMES_FILE_DEF][
-                                SECONDARY
-                            ]
-                        )
                         database.sort_and_write(
                             GAMES_FILE_DEF, secondary, current_segment
                         )
@@ -1355,12 +1342,6 @@ class ChessDBrecordGamePGNTags(Record):
                 if self.srindex is not None and self.key.recno is not None:
                     current_segment = self.key.recno // db_segment_size
                     for secondary in self.srindex:
-                        assert (
-                            secondary
-                            in database.specification[GAMES_FILE_DEF][
-                                SECONDARY
-                            ]
-                        )
                         database.sort_and_write(
                             GAMES_FILE_DEF, secondary, current_segment
                         )
@@ -1449,7 +1430,7 @@ class ChessDBvaluePartial(CQLStatement, Value):
 
     def load(self, value):
         """Set partial position from value."""
-        self.process_statement(literal_eval(value))
+        self.load_statement(literal_eval(value))
 
     def pack_value(self):
         """Return partial position value."""

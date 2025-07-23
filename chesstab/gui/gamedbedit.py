@@ -68,9 +68,11 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
             oldobject=oldobject,
             newview=GameToplevelEdit(master=parent, ui=ui),
             title="",
-            oldview=GameToplevel(master=parent, ui=ui)
-            if showinitial
-            else showinitial,
+            oldview=(
+                GameToplevel(master=parent, ui=ui)
+                if showinitial
+                else showinitial
+            ),
         )
         self._initialize()
         if utilities.is_game_import_in_progress_txn(

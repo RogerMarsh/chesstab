@@ -2,31 +2,14 @@
 # Copyright 2016 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess Query Language (CQL) statement parser.
+"""Chess Query Language (CQL) statement parser and evaluator.
 
-Thes extracts from http://www.gadycosteff.com/cql/doc/operation.html for cql5.1
-briefly describe CQL and how the cql.exe program operates.
+See http://www.gadycosteff.com/ for a description of the latest version.
 
-A CQL statement has three parts:
+A limited CQL evaluator is provided internally.
 
-    The word cql
-    The cql parameters: a sequence of cql parameters enclosed in parentheses
-    The cql body: a sequence of filters
-
-CQL successively reads each game in its input PGN file. For each such game, CQL
-plays through each move in the game.
-
-Every time CQL reaches a position, it sets the current position to that
-position. Then CQL tries to match each of its filters against that position.
-If all the filters in the CQL file match the position, then CQL is said to have
-matched the position.
-
-When CQL has finished trying to match all the positions in the game against its
-filters, then if any of the positions matched, CQL will output the game to the
-output file. The output file can be specified either by default (in which case
-its name is the name of the CQL file with -out appended); or as a parameter in
-to the cql arguments in the CQL file itself; or on the command line.
-
+The CQL program can be run to evaluate statements and return a list of
+games which match the query statement.
 
 The earlier partial position scheme implemented a sequence of piece designator
 filters in CQL terms.  The equivalent of piece designator was limited to the
@@ -37,57 +20,85 @@ does not matter whether the square is occupied because either white piece or
 black piece or empty square matches.
 
 """
+import os
+import re
 
-from chessql.core.statement import Statement, ErrorInformation
+from . import cqlcontainer
+from . import filespec
 
-# from chessql.core.constants import PIECE_DESIGNATOR_FILTER
-# from chessql.core.piecedesignator import PieceDesignator
-
-from .cqlnode import CQLNode, FSNode
-from .constants import NAME_DELIMITER
-
-_ROTATE45_VALIDATION_TABLE = str.maketrans("12345678", "xxxxxxxx")
+# Search for start of CQL statement for internal evaluator.
+_title_re = re.compile("^[^\n]*")
 
 
 class CQLStatementError(Exception):
     """Exception class for cqlstatement module."""
 
 
-class CQLStatement(Statement):
-    """CQL statement parser.
+class CQLStatement:
+    """CQL statement parser and evaluator.
 
-    Parse text for a CQL statement.
-
+    The command and opendatabase arguments allow for evaluation by the CQL
+    program or internally.
     """
 
-    create_node = CQLNode
+    # Keyword arguments for compatibility with existing chesstab code.
+    def __init__(
+        self, command=None, opendatabase=None, query_container_class=None
+    ):
+        """Delegate then initialize description and database name.
 
-    def __init__(self):
-        """Delegate then initialize description and database name."""
-        # Error handling is slightly different to .querystatement module.
-        # The error information object is held directly here while it is held
-        # in the Where instance used to calculate the query there.
-        # This module processes instructions used to generate Where instances.
+        query_container_class is ignored if opendatabase is None but
+        should be the class which will evaluate CQL queries otherwise.
+
+        """
         super().__init__()
         self._description_string = ""
+        self._statement_string = ""
 
-        # Not sure this is needed or wanted.
-        # See datasource argument to _get_games_matching_filters().
-        # dbset not used until a QueryStatement instance evaluates query.
-        # self._dbset = None
-
-        # _dbset and __database are passed to QueryStatement instances which
-        # evaluate the query: not used directly in this class.
-
+        # File searched for matching records.
         self._dbset = None
 
-        # Support using where.Where or where_dpt.Where depending on database
-        # engine being used.
-        # This attribute should not be used for anything else.
-        # pylint unused-private-member report W0238.
-        # Commented because vaguely similar querystatement module does use it.
-        # self.__database = None
-        # self.root_filter_node = None
+        # For setup of internal or external evaluation of CQL statement.
+        self._query_container_class = None
+        self._query_container = None
+
+        # For internal evaluation of CQL statement.
+        self._query_evaluator = None
+
+        # For evaluation of CQL statement by CQL program.
+        self._command = None
+        self._recordset = None
+        self._home_directory = None
+        self._database_file = None
+
+        # For evaluation of CQL statement by CQL program.
+        self._command = command
+
+        if opendatabase is not None:
+            self._recordset = opendatabase.recordlist_nil(
+                filespec.GAMES_FILE_DEF
+            )
+            self._home_directory = opendatabase.home_directory
+            self._database_file = opendatabase.database_file
+            self._query_container_class = query_container_class
+        else:
+            self._query_container_class = cqlcontainer.CQLContainer
+            self._database_file = None
+
+    @property
+    def query_container_class(self):
+        """Return query container class."""
+        return self._query_container_class
+
+    @property
+    def query_container(self):
+        """Return query container."""
+        return self._query_container
+
+    @property
+    def query_evaluator(self):
+        """Return query evaluator."""
+        return self._query_evaluator
 
     @property
     def dbset(self):
@@ -96,6 +107,7 @@ class CQLStatement(Statement):
 
     @dbset.setter
     def dbset(self, value):
+        """Set database filename."""
         if self._dbset is None:
             self._dbset = value
         elif self._dbset != value:
@@ -111,6 +123,39 @@ class CQLStatement(Statement):
                 )
             )
 
+    @property
+    def pgn_filename(self):
+        """Return pgn filename for pattern engine command."""
+        name = os.path.basename(self._database_file)
+        return os.path.join(
+            self._home_directory,
+            ".".join(("-".join((name, name)), "pgn")),
+        )
+
+    @property
+    def cql_filename(self):
+        """Return CQL query filename for pattern engine command."""
+        name = os.path.basename(self._database_file)
+        return os.path.join(
+            self._home_directory,
+            ".".join(("-".join((name, name)), "cql")),
+        )
+
+    @property
+    def recordset(self):
+        """Return self._recordset."""
+        return self._recordset
+
+    @property
+    def cql_error(self):
+        """Return the error information for the CQL statement."""
+        return None
+
+    def is_statement(self):
+        """Return True if the statement has no errors."""
+        return not self.cql_error
+
+    # Called from chessrecord.ChessDBrecordPartial.load_value().
     def set_database(self, database=None):
         """Set Database instance to which ChessQL query is applied."""
         # pylint unused-private-member report W0238.
@@ -121,80 +166,50 @@ class CQLStatement(Statement):
         """Return name text."""
         return self._description_string
 
+    def get_statement_text(self):
+        """Return statement text including leading newline delimiter."""
+        return self._statement_string
+
+    def get_statement_text_display(self):
+        """Return statement text excluding leading newline delimiter."""
+        return self._statement_string.split("\n", 1)[-1]
+
     def get_name_statement_text(self):
         """Return name and statement text."""
-        return NAME_DELIMITER.join(
-            (
-                self._description_string,
-                self.get_statement_text(),
-            )
-        )
+        return self._description_string + self.get_statement_text()
 
-    def process_statement(self, text):
-        """Lex and parse the ChessQL statement.
+    def _split_statement(self, text):
+        """Split text into description and statement strings.
 
-        Two attempts to process the text are done.  The first treats the whole
-        text as a ChessQL statement.  If it fails the second attempt treats
-        the first line of text as the query's name and the rest as a ChessQL
-        statement.
-
-        Thus the query's name cannot be a valid CQL version 6 filter or
-        sequence of filters.
+        Leading and trailing whitespace has been stripped from the value
+        passed as text argument.
 
         """
         self._description_string = ""
-        super().process_statement(text.strip())
-        if self.cql_error:
-            rule = [t.strip() for t in text.split(NAME_DELIMITER, 1)]
-            if len(rule) == 1:
-                # The text cannot have an initial name component because text
-                # equals rule[0] and there is no point in processing the text
-                # again without the non-existent name component.
-                # Assume initialization needed if text == ''.
-                if text == "":
-                    self._statement_string = ""
-                    self._reset_state()
-                    self._error_information = False
-                return
+        title = _title_re.search(text)
+        title_end = title.end() if title else 0
+        self._description_string = text[:title_end]
+        self._statement_string = text[title_end:]
+        return title_end
 
-            self._description_string = rule[0]
-            super().process_statement(rule[1])
+    def load_statement(self, text):
+        """Split text into description and statement strings for grids."""
+        self._split_statement(text)
 
-        # As it was in chessql.core.statement module, where it did not reject
-        # any statements (possibly because rotate45 was never tried seriously)
-        # before evaluation code transferred to ChessTab.
-        # return self._rotate45_specific_squares(self.cql_filters, [])
+    @property
+    def database_file(self):
+        """Return database file."""
+        return self._database_file
 
-        # self.cql_parameters and self.cql_filters contain a node tree for a
-        # valid Chess QL statement.
-        if self.cql_filters is None:
-            return
-        transformation = self.cql_filters.transform_piece_designators(
-            FSNode(self.cql_filters)
-        )
-        if transformation:
-            self.cql_error = transformation
-        return
+    def prepare_cql_statement(self, text):
+        """Verify CQL statement but do not evaluate."""
+        self._query_container = self._query_container_class()
+        self._query_container.prepare_statement(self, text)
+        if self._query_container.message is not None:
+            raise CQLStatementError(self._query_container.message)
 
-    def _rotate45_specific_squares(self, filter_, rotate45stack):
-        if filter_.name == "rotate45":
-            rotate45stack.append(None)
-        for node in filter_.children:
-            if rotate45stack and node.name == "piecedesignator":
-                # if {c for c in node.leaf}.intersection('12345678'))
-                if node.leaf != node.leaf.translate(
-                    _ROTATE45_VALIDATION_TABLE
-                ):
-                    self._error_information = ErrorInformation(
-                        self._statement_string.strip()
-                    )
-                    self._error_information.description = (
-                        "rotate45 on specific squares"
-                    )
-                    return self._error_information
-            r45ss = self._rotate45_specific_squares(node, rotate45stack)
-            if r45ss:
-                return r45ss
-        if filter_.name == "rotate45":
-            rotate45stack.pop()
-        return None
+    # At time of writing the implementation is same as load_statement but
+    # it is correct these are different methods.
+    def split_statement(self, text):
+        """Split text into title and query text."""
+        return self._split_statement(text)

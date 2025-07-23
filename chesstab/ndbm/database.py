@@ -13,7 +13,7 @@ from ..basecore import database
 class Database(database.Database, ndbm_database.Database):
     """Provide access to a dbm.ndbm database of games of chess."""
 
-    _deferred_update_process = "chesstab.ndbm.database_du"
+    _deferred_update_module_name = "chesstab.ndbm.database_du"
 
     def __init__(
         self,

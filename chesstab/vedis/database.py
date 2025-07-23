@@ -13,7 +13,7 @@ from ..basecore import database
 class Database(database.Database, vedis_database.Database):
     """Provide access to a vedis database of games of chess."""
 
-    _deferred_update_process = "chesstab.vedis.database_du"
+    _deferred_update_module_name = "chesstab.vedis.database_du"
 
     def __init__(
         self,

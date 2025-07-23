@@ -181,13 +181,6 @@ class EngineGrid(EngineListGrid):
             ((EventSpec.engine_grid_run, self.run_engine),)
         )
 
-    def on_partial_change(self, instance):
-        """Delegate to superclass if database is open otherwise do nothing."""
-        # may turn out to be just to catch datasource is None
-        if self.get_data_source() is None:
-            return
-        super().on_data_change(instance)
-
     def set_selection_text(self):
         """Set status bar to display selection rule name."""
 

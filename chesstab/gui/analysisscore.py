@@ -397,9 +397,9 @@ class AnalysisScore(Score):
             local_map,
         ) = self.owned_by_game.generate_popup_navigation_maps()
         del local_map[EventSpec.scoresheet_to_analysis]
-        local_map[
-            EventSpec.analysis_to_scoresheet
-        ] = self.owned_by_game.current_item
+        local_map[EventSpec.analysis_to_scoresheet] = (
+            self.owned_by_game.current_item
+        )
         local_map.update(navigation_map)
         self._add_cascade_menu_to_popup(
             "Navigation",

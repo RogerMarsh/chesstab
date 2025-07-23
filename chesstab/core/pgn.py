@@ -26,8 +26,6 @@ from pgn_read.core.constants import (
     FEN_WHITE_ACTIVE,
 )
 
-from chessql.core.constants import ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME
-
 from .constants import (
     TAG_OPENING,
     REPERTOIRE_TAG_ORDER,
@@ -38,6 +36,8 @@ from .constants import (
     ESCAPE_END_COMMENT,
     HIDE_END_COMMENT,
     END_COMMENT,
+    ANY_WHITE_PIECE_NAME,
+    ANY_BLACK_PIECE_NAME,
 )
 
 MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
@@ -560,6 +560,34 @@ class GameUpdate(_Game):
         self._variation = "".join(
             _convert_integer_to_length_hex(i) for i in self.variationnumber
         )
+        # Partial positions seems to need the initial position indexed so
+        # CQL queries are evaluated correctly.
+        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
+        piecesquaremovekeys = self.piecesquaremovekeys
+        piecemovekeys = self.piecemovekeys
+        squaremovekeys = self.squaremovekeys
+        pieces = [""] * 64
+        mnv = movenumber + self._variation
+        for piece in self._piece_placement_data.values():
+            piece_name = piece.name
+            piece_square = piece.square
+            square_name = piece_square.name
+            pieces[piece_square.number] = piece_name
+
+            # piecesquaremovekeys.append(mnv + piece_name + square_name)
+            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
+
+            # If 'square piece' is better order than 'piece square'
+            piecesquaremovekeys.append(mnv + square_name + piece_name)
+            squaremovekeys.append(
+                (
+                    mnv
+                    + square_name
+                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                )
+            )
+        for piece_name in set("".join(pieces)):
+            piecemovekeys.append(mnv + piece_name)
 
     def reset_board_state(self, position_delta):
         """Delegate then append variation number to fit ravstack level."""
@@ -695,6 +723,34 @@ class GameUpdatePieceLocation(_Game):
         self._variation = "".join(
             _convert_integer_to_length_hex(i) for i in self.variationnumber
         )
+        # Partial positions seems to need the initial position indexed so
+        # CQL queries are evaluated correctly.
+        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
+        piecesquaremovekeys = self.piecesquaremovekeys
+        piecemovekeys = self.piecemovekeys
+        squaremovekeys = self.squaremovekeys
+        pieces = [""] * 64
+        mnv = movenumber + self._variation
+        for piece in self._piece_placement_data.values():
+            piece_name = piece.name
+            piece_square = piece.square
+            square_name = piece_square.name
+            pieces[piece_square.number] = piece_name
+
+            # piecesquaremovekeys.append(mnv + piece_name + square_name)
+            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
+
+            # If 'square piece' is better order than 'piece square'
+            piecesquaremovekeys.append(mnv + square_name + piece_name)
+            squaremovekeys.append(
+                (
+                    mnv
+                    + square_name
+                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                )
+            )
+        for piece_name in set("".join(pieces)):
+            piecemovekeys.append(mnv + piece_name)
 
     def reset_board_state(self, position_delta):
         """Delegate then append variation number to fit ravstack level."""

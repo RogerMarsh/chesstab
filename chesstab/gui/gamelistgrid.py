@@ -7,7 +7,7 @@
 import tkinter
 import ast
 
-from solentware_grid.datagrid import DataGrid
+from solentware_grid.datagrid import DataGrid, DataGridReadOnly
 
 from pgn_read.core.parser import PGN
 
@@ -26,6 +26,10 @@ from ..core.constants import UNKNOWN_RESULT, FILE, GAME
 from .score import ScoreMapToBoardException
 
 
+class GameListGridError(Exception):
+    """Raise exception in gamelistgrid module."""
+
+
 class _BookmarkStatusText:
     """Isolate set_selection_text call.
 
@@ -41,11 +45,17 @@ class _BookmarkStatusText:
         self.set_selection_text()
 
 
-class GameListGrid(
+# The original GameListGrid class, which had DataGrid as one of it's base
+# classes, is replaced by GameListGrid(_GameListGridBase, DataGrid) and
+# GameListGridReadOnly(_GameListGridBase, DataGridReadOnly) with all the
+# methods moved to _GameListGridBase except make_display_widget() and
+# make_edit_widget().
+# Those which suffered a pylint 'no-member' report after being moved have
+# that report disabled.
+class _GameListGridBase(
     AllGrid,
     CQLGameListQuery,
     _BookmarkStatusText,
-    DataGrid,
     Display,
 ):
     """A DataGrid for lists of chess games.
@@ -81,24 +91,19 @@ class GameListGrid(
         return game
 
     def make_display_widget(self, sourceobject):
-        """Return a GameDisplay for sourceobject."""
-        game = GameDisplay(
-            master=self.ui.view_games_pw,
-            ui=self.ui,
-            items_manager=self.ui.game_items,
-            itemgrid=self.ui.game_games,
-            sourceobject=sourceobject,
-        )
-        game.set_position_analysis_data_source()
-        game.collected_game = next(
-            PGN(game_class=game.gameclass).read_games(
-                ast.literal_eval(sourceobject.get_srvalue()[0])
+        """Subclass must override and return a GameDisplay instance."""
+        raise GameListGridError(
+            "".join(
+                (
+                    "Use a subclass which overrides this method and ",
+                    "returns a GameDisplay instance",
+                )
             )
         )
-        return game
 
     def _edit_selected_item(self, key):
         """Create display and return a GameDisplayEdit for selected game."""
+        # pylint: disable=no-member
         selected = self.get_visible_record(key)
         if selected is None:
             return None
@@ -117,24 +122,19 @@ class GameListGrid(
         return game
 
     def make_edit_widget(self, sourceobject):
-        """Return a GameDisplayEdit for sourceobject."""
-        game = GameDisplayEdit(
-            master=self.ui.view_games_pw,
-            ui=self.ui,
-            items_manager=self.ui.game_items,
-            itemgrid=self.ui.game_games,
-            sourceobject=sourceobject,
-        )
-        game.set_position_analysis_data_source()
-        game.collected_game = next(
-            PGN(game_class=game.gameclass).read_games(
-                ast.literal_eval(sourceobject.get_srvalue()[0])
+        """Subclass must override and return a GameDisplayEdit instance."""
+        raise GameListGridError(
+            "".join(
+                (
+                    "Use a subclass which overrides this method and ",
+                    "returns a GameDisplayEdit instance",
+                )
             )
         )
-        return game
 
     def set_properties(self, key, dodefaultaction=True):
         """Return True if properties for game key set or False."""
+        # pylint: disable=no-member
         if super().set_properties(key, dodefaultaction=False):
             return True
         if self.ui.game_items.object_display_count(key):
@@ -147,6 +147,7 @@ class GameListGrid(
 
     def set_row(self, key, dodefaultaction=True, **kargs):
         """Return row widget for game key or None."""
+        # pylint: disable=no-member
         row = super().set_row(key, dodefaultaction=False, **kargs)
         if row is not None:
             return row
@@ -160,6 +161,7 @@ class GameListGrid(
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
+        # pylint: disable=no-member
         oldobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNDelete)
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
@@ -173,6 +175,7 @@ class GameListGrid(
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
+        # pylint: disable=no-member
         try:
             self.create_edit_dialog(
                 self.objects[key],
@@ -187,6 +190,7 @@ class GameListGrid(
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
+        # pylint: disable=no-member
         try:
             self.create_edit_dialog(
                 self.objects[key],
@@ -201,6 +205,7 @@ class GameListGrid(
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
+        # pylint: disable=no-member
         newobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNEdit)
         instance = self.datasource.new_row()
         instance.srvalue = repr(
@@ -215,6 +220,7 @@ class GameListGrid(
 
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
+        # pylint: disable=no-member
         oldobject = ChessDBrecordGameUpdate()
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
@@ -246,11 +252,13 @@ class GameListGrid(
 
     def bookmark_down(self):
         """Extend to show selection summary in status bar."""
+        # pylint: disable=no-member
         super().bookmark_down()
         self._set_selection_text_bookmark()
 
     def bookmark_up(self):
         """Extend to show selection summary in status bar."""
+        # pylint: disable=no-member
         super().bookmark_up()
         self._set_selection_text_bookmark()
 
@@ -327,8 +335,59 @@ class GameListGrid(
 
     def _score_map_exception_dialogue(self, exception_instance, title):
         """Display dialogue to report problem displaying game."""
+        # pylint: disable=no-member
         tkinter.messagebox.showinfo(
             parent=self.get_frame(),
             title=title,
             message=str(exception_instance),
         )
+
+
+class GameListGrid(_GameListGridBase, DataGrid):
+    """A DataGrid for lists of chess games.
+
+    Subclasses provide navigation and extra methods appropriate to list use.
+
+    """
+
+    def make_display_widget(self, sourceobject):
+        """Return a GameDisplay for sourceobject."""
+        game = GameDisplay(
+            master=self.ui.view_games_pw,
+            ui=self.ui,
+            items_manager=self.ui.game_items,
+            itemgrid=self.ui.game_games,
+            sourceobject=sourceobject,
+        )
+        game.set_position_analysis_data_source()
+        game.collected_game = next(
+            PGN(game_class=game.gameclass).read_games(
+                ast.literal_eval(sourceobject.get_srvalue()[0])
+            )
+        )
+        return game
+
+    def make_edit_widget(self, sourceobject):
+        """Return a GameDisplayEdit for sourceobject."""
+        game = GameDisplayEdit(
+            master=self.ui.view_games_pw,
+            ui=self.ui,
+            items_manager=self.ui.game_items,
+            itemgrid=self.ui.game_games,
+            sourceobject=sourceobject,
+        )
+        game.set_position_analysis_data_source()
+        game.collected_game = next(
+            PGN(game_class=game.gameclass).read_games(
+                ast.literal_eval(sourceobject.get_srvalue()[0])
+            )
+        )
+        return game
+
+
+class GameListGridReadOnly(_GameListGridBase, DataGridReadOnly):
+    """A DataGridReadOnly for lists of chess games.
+
+    Subclasses provide navigation and extra methods appropriate to list use.
+
+    """

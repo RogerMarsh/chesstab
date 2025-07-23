@@ -5182,16 +5182,20 @@ class Main:
             self._bindings.bind(
                 entry,
                 "<Alt-KeyPress-F4>",
-                function=""
-                if not active
-                else self.report_games_with_inconsistent_castling_options,
+                function=(
+                    ""
+                    if not active
+                    else self.report_games_with_inconsistent_castling_options
+                ),
             )
             self._bindings.bind(
                 entry,
                 "<KeyPress-Return>",
-                function=""
-                if not active
-                else self.report_games_with_inconsistent_castling_options,
+                function=(
+                    ""
+                    if not active
+                    else self.report_games_with_inconsistent_castling_options
+                ),
             )
             self._bindings.bind(
                 entry,

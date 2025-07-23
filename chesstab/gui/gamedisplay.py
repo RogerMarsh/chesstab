@@ -7,7 +7,7 @@
 These four classes display PGN text for games in the main window: they are
 used in the gamelistgrid module.
 
-The _GameDisplay class provides attributes and behaviour shared by the
+The GameDisplayBase class provides attributes and behaviour shared by the
 GameDisplay, GameDisplayInsert, and GameDisplayEdit, classes.  It also provides
 properties to support implementation of behaviour shared with the CQL*,
 Repertoire*, and Query*, classes.
@@ -35,7 +35,9 @@ from .display import Display
 from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
 
 
-class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
+class GameDisplayBase(
+    ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify
+):
     """Extend and link PGN game text to database.
 
     sourceobject - link to database.
@@ -76,7 +78,7 @@ class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
         EventSpec.tab_traverse_forward,
     )
 
-    # These exist so the insert_game_database methods in _GameDisplay and
+    # These exist so the insert_game_database methods in GameDisplayBase and
     # repertoiredisplay._RepertoireDisplay, and delete_game_database in
     # GameDisplay and repertoiredisplay.RepertoireDisplay, can be modified and
     # replaced by single copies in the displaypgn.ShowPGN class.
@@ -105,15 +107,15 @@ class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
         return self.ui.game_items
 
     # Defined so _cycle_item and give_focus_to_widget methods can be shared by
-    # gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay
+    # gamedisplay.GameDisplayBase and repertoiredisplay._RepertoireDisplay
     # classes.
     @property
     def ui_configure_item_list_grid(self):
         """Return method to configure game grid widget."""
         return self.ui.configure_game_grid
 
-    # ui_base_table and mark_partial_positions_to_be_recalculated defined
-    # so insert_game_database method can be shared by gamedisplay._GameDisplay
+    # ui_base_table and mark_partial_positions_to_be_recalculated defined so
+    # insert_game_database method can be shared by gamedisplay.GameDisplayBase
     # and repertoiredisplay._RepertoireDisplay classes.
     # See class attributes pgn_score_name and pgn_score_source too.
 
@@ -204,7 +206,7 @@ class _GameDisplay(ShowPGN, DisplayPGN, Game, Display, Bindings, DataNotify):
         return navigation_map, local_map
 
 
-class GameDisplay(_GameDisplay, Game, DataNotify):
+class GameDisplay(GameDisplayBase, Game, DataNotify):
     """Display a chess game from a database allowing delete and insert."""
 
     # Notes here because GameDisplay instances used extensively to diagnose
@@ -250,10 +252,10 @@ class GameDisplay(_GameDisplay, Game, DataNotify):
         return popup
 
 
-class GameDisplayInsert(InsertPGN, _GameDisplay, GameEdit, DataNotify):
+class GameDisplayInsert(InsertPGN, GameDisplayBase, GameEdit, DataNotify):
     """Display a chess game from a database allowing insert.
 
-    GameEdit provides the widget and _GameDisplay the database interface.
+    GameEdit provides the widget and GameDisplayBase the database interface.
     """
 
     # This method forced by addition of second list element in Game record

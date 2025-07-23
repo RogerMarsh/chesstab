@@ -67,9 +67,11 @@ class RepertoireDbEdit(EditPGNToplevel, DataEdit):
             oldobject=oldobject,
             newview=RepertoireToplevelEdit(master=parent, ui=ui),
             title="",
-            oldview=RepertoireToplevel(master=parent, ui=ui)
-            if showinitial
-            else showinitial,
+            oldview=(
+                RepertoireToplevel(master=parent, ui=ui)
+                if showinitial
+                else showinitial
+            ),
         )
         self._initialize()
 

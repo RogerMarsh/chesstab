@@ -29,11 +29,11 @@ The DisplayText class is populated with the methods identical in CQLDisplay
 and QueryDisplay, which were then removed from those two classes.
 
 The InsertText class is populated with the methods identical in
-CQLDisplayInsert and QueryDisplayInsert, which were then removed from those
+CQLInsert and QueryDisplayInsert, which were then removed from those
 two classes.
 
 The EditText class is populated with the methods identical in
-CQLDisplayEdit and QueryDisplayEdit, which were then removed from those two
+CQLUpdate and QueryDisplayEdit, which were then removed from those two
 classes.  It probably should be a subclass of InsertText, but this depends on
 successful choice of method resolution order in the classes in cqldisplay and
 querydisplay modules.

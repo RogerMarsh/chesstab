@@ -58,7 +58,6 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         """
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
-        self.score.delete("1.0", tkinter.END)
         self._map_initial_query_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self._bind_for_primary_activity()
@@ -73,19 +72,19 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
 
     def get_name_query_statement_text(self):
         """Return text from query statement Text widget."""
-        text = self.score.get("1.0", tkinter.END).strip()
-        return text
+        return self.get_newline_delimited_title_and_text()
 
     def _map_initial_query_statement(self):
         """Convert tokens to text and show in query statement Text widget."""
         # No mapping of tokens to text in widget (yet).
-        self.score.insert(
-            tkinter.INSERT,
-            self.query_statement.get_name_query_statement_text(),
+        self._populate_query_widget(
+            self.query_statement.get_name_text(),
+            self.query_statement.get_query_statement_text(),
         )
 
-    def refresh_game_list(self):
+    def refresh_game_list(self, ignore_sourceobject=False):
         """Display games matching game selection rule, empty on errors."""
+        del ignore_sourceobject
         grid = self.itemgrid
         if grid is None:
             return

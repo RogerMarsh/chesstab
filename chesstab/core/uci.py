@@ -372,8 +372,7 @@ class UCI:
                 )
                 if depth >= self._go_depth and multipv >= mpv:
                     return False
-                if mpv < multipv:
-                    multipv = mpv
+                multipv = min(multipv, mpv)
 
         # Put commands to do analysis on engine command queue.
         # If analysis already exists do not reduce depth; multipv is already
@@ -578,7 +577,7 @@ class UCI:
                     erc.value.scale.update(eng_a.scale)
                     erc.value.variations.update(eng_a.variations)
                     inserter = RecordEdit(erc, rec)
-                    inserter.set_data_source(asd, inserter.on_data_change)
+                    inserter.set_data_source(source=asd)
                     inserter.edit()
                     break
             else:
@@ -588,7 +587,7 @@ class UCI:
                     erc.value.scale.update(eng_a.scale)
                     erc.value.variations.update(eng_a.variations)
                     inserter = RecordEdit(erc, rec)
-                    inserter.set_data_source(asd, inserter.on_data_change)
+                    inserter.set_data_source(source=asd)
                     inserter.edit()
                 else:
                     value = self.analysis_record.value
@@ -597,7 +596,7 @@ class UCI:
                     value.position = eng_a.position
                     value.variations = eng_a.variations
                     inserter = RecordEdit(self.analysis_record, None)
-                    inserter.set_data_source(asd, None)
+                    inserter.set_data_source(source=asd)
                     self.analysis_record.set_database(
                         inserter.get_data_source().dbhome
                     )

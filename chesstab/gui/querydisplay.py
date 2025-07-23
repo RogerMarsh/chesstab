@@ -85,7 +85,6 @@ class _QueryDisplay(
             self.set_data_source(self.ui.base_selections.get_data_source())
         self.sourceobject = sourceobject
         self.insertonly = sourceobject is None
-        self.recalculate_after_edit = sourceobject
 
     @property
     def ui_displayed_items(self):
@@ -276,7 +275,7 @@ class _QueryDisplay(
             )
             return
         editor = RecordEdit(updater, None)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
         updater.key.recno = None  # 0
         editor.put()
@@ -390,12 +389,12 @@ class _QueryDisplay(
             )
         try:
             self.query_statement.process_query_statement(
-                self.score.get("1.0", tkinter.END)
+                self.get_newline_delimited_title_and_text()
             )
         except WhereError as exc:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title=" ".join(("Game Selection Rule Error")),
+                title="Game Selection Rule Error",
                 message=str(exc),
             )
             return "break"
@@ -507,7 +506,7 @@ class QueryDisplay(_QueryDisplay, Query, DataNotify):
                 )
                 return
         editor = RecordDelete(self.sourceobject)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         editor.delete()
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
@@ -694,7 +693,7 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
             )
             return
         editor = RecordEdit(updater, original)
-        editor.set_data_source(datasource, editor.on_data_change)
+        editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno

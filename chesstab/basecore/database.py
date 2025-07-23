@@ -19,13 +19,9 @@ from .. import APPLICATION_NAME, ERROR_LOG
 class Database:
     """Define methods which are common to all database engine interfaces."""
 
-    def use_deferred_update_process(self):
-        """Return path to deferred update module.
-
-        **kargs - soak up any arguments other database engines need.
-
-        """
-        return self._deferred_update_process
+    def deferred_update_module_name(self):
+        """Return name of deferred update module."""
+        return self._deferred_update_module_name
 
     def open_database(self, files=None):
         """Return True to fit behaviour of dpt version of this method."""

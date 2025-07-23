@@ -455,13 +455,6 @@ class QueryGrid(QueryListGrid):
             )
         )
 
-    def on_partial_change(self, instance):
-        # may turn out to be just to catch datasource is None
-        """Refresh query grid after database update for instance."""
-        if self.get_data_source() is None:
-            return
-        super().on_data_change(instance)
-
     def set_selection_text(self):
         """Set status bar to display selection rule name."""
         if self.selection:

@@ -97,7 +97,7 @@ class EngineText(SharedTextEngineText, BlankText):
         """Extract chess engine definition from Text widget."""
         engine = Engine()
         if engine.extract_engine_definition(
-            self.score.get("1.0", tkinter.END).strip()
+            self.get_newline_delimited_title_and_text()
         ):
             return engine.__dict__
         return {}
@@ -110,8 +110,9 @@ class EngineText(SharedTextEngineText, BlankText):
 
         """
         # No mapping of tokens to text in widget (yet).
-        self.score.insert(
-            tkinter.INSERT, self.definition.get_name_engine_command_text()
+        self._populate_query_widget(
+            self.definition.get_name_text(),
+            self.definition.get_engine_command_text(),
         )
 
     def run_engine(self, event=None):

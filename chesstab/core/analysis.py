@@ -73,11 +73,11 @@ class Analysis:
                 (
                     move_played,
                     " ;Move played",
-                    " by white"
-                    if to_move == FEN_WHITE_ACTIVE
-                    else " by black"
-                    if to_move == FEN_BLACK_ACTIVE
-                    else "",
+                    (
+                        " by white"
+                        if to_move == FEN_WHITE_ACTIVE
+                        else " by black" if to_move == FEN_BLACK_ACTIVE else ""
+                    ),
                     "\n",
                 )
             )
@@ -149,11 +149,15 @@ class Analysis:
                         "".join(
                             (
                                 "First variation",
-                                ", white to move"
-                                if to_move == FEN_WHITE_ACTIVE
-                                else ", black to move"
-                                if to_move == FEN_BLACK_ACTIVE
-                                else "",
+                                (
+                                    ", white to move"
+                                    if to_move == FEN_WHITE_ACTIVE
+                                    else (
+                                        ", black to move"
+                                        if to_move == FEN_BLACK_ACTIVE
+                                        else ""
+                                    )
+                                ),
                             )
                         ).join(_EOL_COMMENT_CONTEXT),
                     )

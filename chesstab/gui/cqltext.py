@@ -38,23 +38,36 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
     itemgrid is the ui reference to the DataGrid from which the record was
     selected.
 
+    opendatabase and evaluate are arguments for CQLStatement() call.
+
     Subclasses are responsible for providing a geometry manager.
 
     Attribute _most_recent_bindings is set to indicate the initial set of
     event bindings.  Instances will override this as required.
-
     """
 
     def __init__(
-        self, panel, ui=None, items_manager=None, itemgrid=None, **ka
+        self,
+        panel,
+        ui=None,
+        items_manager=None,
+        itemgrid=None,
+        opendatabase=None,
+        query_container_class=None,
+        **ka,
     ):
         """Create widgets to display ChessQL statement."""
         super().__init__(panel, items_manager=items_manager, **ka)
         self.ui = ui
         self.itemgrid = itemgrid
+        self.score.tag_configure(self.ERROR_TAG, background=self.ERROR_COLOR)
+        self.score.tag_configure(self.CURSOR_TAG, background=self.CURSOR_COLOR)
 
         # Selection rule parser instance to process text.
-        self.cql_statement = CQLStatement()
+        self.cql_statement = CQLStatement(
+            opendatabase=opendatabase,
+            query_container_class=query_container_class,
+        )
         # Not sure this is needed or wanted.
         # self.cql_statement.dbset = ui.base_games.datasource.dbset
 
@@ -68,7 +81,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         """
         if not self._is_text_editable:
             self.score.configure(state=tkinter.NORMAL)
-        self.score.delete("1.0", tkinter.END)
         self._map_cql_statement()
         if self._most_recent_bindings != NonTagBind.NO_EDITABLE_TAGS:
             self._bind_for_primary_activity()
@@ -83,14 +95,14 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
 
     def get_name_cql_statement_text(self):
         """Return text from CQL statement Text widget."""
-        text = self.score.get("1.0", tkinter.END).strip()
-        return text
+        return self.get_newline_delimited_title_and_text()
 
     def _map_cql_statement(self):
         """Convert tokens to text and show in CQL statement Text widget."""
         # No mapping of tokens to text in widget (yet).
-        self.score.insert(
-            tkinter.INSERT, self.cql_statement.get_name_statement_text()
+        self._populate_query_widget(
+            self.cql_statement.get_name_text(),
+            self.cql_statement.get_statement_text_display(),
         )
 
     def _get_partial_key_cql_statement(self):
@@ -102,24 +114,33 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
 
         return False
 
-    def refresh_game_list(self):
+    def refresh_game_list(self, ignore_sourceobject=False):
         """Display games with position matching selected ChessQL statement."""
         grid = self.itemgrid
+        # Should this complain also if the grid is not visible?
+        # Which can be fixed by the 'Position | Show' menu option.
         if grid is None:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title="ChessQL Statement",
+                message="No grid to display list of games",
+            )
             return
         if grid.get_database() is None:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title="ChessQL Statement",
+                message="No database open from which to select games",
+            )
             return
         cqls = self.cql_statement
         if cqls.cql_error:
             grid.datasource.get_cql_statement_games(None, None)
         else:
             try:
-                if self._is_text_editable:
-                    grid.datasource.get_cql_statement_games(cqls, None)
-                else:
-                    grid.datasource.get_cql_statement_games(
-                        cqls, self.recalculate_after_edit
-                    )
+                grid.datasource.get_cql_statement_games(
+                    cqls, None if ignore_sourceobject else self.sourceobject
+                )
             except AttributeError as exc:
                 if str(exc) == "'NoneType' object has no attribute 'answer'":
                     msg = "".join(
@@ -179,3 +200,58 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                     )
                 ),
             )
+
+    def _tag_match_text(self, match_, tag):
+        """Add match_.text in self.score to tag.
+
+        The tag will have an associated colour, often pointing to errors.
+
+        """
+        if match_ is None:
+            return
+        # The span for match is converted to Tk 'line.column' form, taking
+        # account of lines before those tagged TEXT_DATA.
+        # The first line of query, line 4, starts with an elided character.
+        tag_ranges = self.score.tag_ranges(self.TEXT_DATA)
+        if not tag_ranges or len(tag_ranges) > 2:
+            return
+        start, end = match_.span()
+        nl_count = (
+            match_.string[:end].count("\n")
+            + int(self.score.index(tag_ranges[0]).split(".", maxsplit=1)[0])
+            - 1
+        )
+        nl_pos = match_.string[:end].rfind("\n")
+        tag_start = ".".join(
+            (str(nl_count), str(start - nl_pos - (0 if nl_count == 4 else 1)))
+        )
+        tag_end = self.score.index(tag_start) + "+" + str(end - start) + "c"
+
+        self.score.tag_add(tag, tag_start, tag_end)
+
+    def _report_statement_error(self, statement, error):
+        """Display dialogue reporting error in statement."""
+        msg = "".join(
+            (
+                "Unable to process ChessQL statement: ",
+                "the reported problem is:\n\n",
+                str(error),
+            )
+        )
+        match_ = statement.query_container.cursor.match_
+        if match_ is None:
+            msg += "\n\nPerhaps 'cql()' should be on new line after title"
+        self._tag_match_text(match_, self.CURSOR_TAG)
+        self._tag_match_text(
+            statement.query_container.current_token, self.ERROR_TAG
+        )
+        tkinter.messagebox.showinfo(
+            parent=self.ui.get_toplevel(),
+            title="ChessQL Statement",
+            message=msg,
+        )
+
+    def _clear_statement_tags(self):
+        """Cleat tags highlighting error in statement."""
+        self.score.tag_remove(self.ERROR_TAG, "1.0", tkinter.END)
+        self.score.tag_remove(self.CURSOR_TAG, "1.0", tkinter.END)

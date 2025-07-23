@@ -771,6 +771,7 @@ class EventSpec:
         12,
     )
     menu_tools_toggle__analysis_fen = ("", "Toggle Analysis Fen", "", 7)
+    menu_tools_toggle_entry_area_names = ("", "Toggle Entry Area Names", "", 7)
     menu_tools_toggle_single_view = ("", "Toggle Single View", "", 14)
     menu_engines_position_queues = ("", "Position Queues", "", 0)
     menu_engines_show_engines = ("", "Show Engines", "", 5)
