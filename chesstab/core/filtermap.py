@@ -15,19 +15,27 @@ import chessql.core.querycontainer
 import chessql.core.tokenmap
 
 from .cql import symbol
+from .cql import and_
 from .cql import braces
 from .cql import container
 from .cql import cqlparameters
+from .cql import not_
+from .cql import or_
+from .cql import parentheses
 from .cql import piecedesignator
-from .cql import pin
 from .cql import ray
-from .cql import directions
-from .cql import parameters
-from .cql import transforms
 
 
 class FilterNotImplemented(symbol.Symbol):
     """Evaluator for filters which are not implemented."""
+
+    def evaluate_symbol(self, cqlfinder, movenumber, cache, constraint=None):
+        """Do nothing.
+
+        The None return causes an AttributeError exception later which is
+        caught and reported as such rather than explained as a 'filter not
+        implemented' condition.
+        """
 
 
 filter_map = {
@@ -37,9 +45,9 @@ filter_map = {
     filters.AfterNE: FilterNotImplemented,
     filters.All: FilterNotImplemented,
     filters.Ancestor: FilterNotImplemented,
-    filters.And: FilterNotImplemented,
-    filters.AnyDirection: directions.AnyDirection,
-    filters.AnyDirectionParameter: parameters.AnyDirectionParameter,
+    filters.And: and_.And,
+    filters.AnyDirection: FilterNotImplemented,
+    filters.AnyDirectionParameter: FilterNotImplemented,
     filters.AnyKing: piecedesignator.PieceDesignator,
     filters.AnyPiece: piecedesignator.PieceDesignator,
     filters.AnySquare: piecedesignator.PieceDesignator,
@@ -106,15 +114,15 @@ filter_map = {
     filters.Date: FilterNotImplemented,
     filters.Depth: FilterNotImplemented,
     filters.Descendant: FilterNotImplemented,
-    filters.Diagonal: directions.Diagonal,
-    filters.DiagonalParameter: parameters.DiagonalParameter,
+    filters.Diagonal: FilterNotImplemented,
+    filters.DiagonalParameter: FilterNotImplemented,
     filters.Dictionary: FilterNotImplemented,
     filters.Distance: FilterNotImplemented,
     filters.Divide: FilterNotImplemented,
     filters.Documentation: FilterNotImplemented,
     filters.DoubledPawns: FilterNotImplemented,
-    filters.Down: directions.Down,
-    filters.DownParameter: parameters.DownParameter,
+    filters.Down: FilterNotImplemented,
+    filters.DownParameter: FilterNotImplemented,
     filters.ECO: FilterNotImplemented,
     filters.Echo: FilterNotImplemented,
     filters.Element: FilterNotImplemented,
@@ -141,15 +149,15 @@ filter_map = {
     filters.Find: FilterNotImplemented,
     filters.FindBackward: FilterNotImplemented,
     filters.FirstMatch: FilterNotImplemented,
-    filters.Flip: transforms.Flip,
-    filters.FlipColor: transforms.FlipColor,
-    filters.FlipHorizontal: transforms.FlipHorizontal,
-    filters.FlipVertical: transforms.FlipVertical,
+    filters.Flip: FilterNotImplemented,
+    filters.FlipColor: FilterNotImplemented,
+    filters.FlipHorizontal: FilterNotImplemented,
+    filters.FlipVertical: FilterNotImplemented,
     filters.Focus: FilterNotImplemented,
     filters.FocusCapture: FilterNotImplemented,
     filters.From: FilterNotImplemented,
-    filters.FromDefaultPinParameter: parameters.FromParameter,
-    filters.FromParameter: parameters.FromParameter,
+    filters.FromDefaultPinParameter: FilterNotImplemented,
+    filters.FromParameter: FilterNotImplemented,
     filters.Function: FilterNotImplemented,
     filters.FunctionBodyLeft: FilterNotImplemented,
     filters.FunctionBodyRight: FilterNotImplemented,
@@ -197,8 +205,8 @@ filter_map = {
     chessql.core.hhdb.HHdbSearch: FilterNotImplemented,
     chessql.core.hhdb.HHdbStipulation: FilterNotImplemented,
     chessql.core.hhdb.HHdbAward: FilterNotImplemented,
-    filters.Horizontal: directions.Horizontal,
-    filters.HorizontalParameter: parameters.HorizontalParameter,
+    filters.Horizontal: FilterNotImplemented,
+    filters.HorizontalParameter: FilterNotImplemented,
     filters.IdealMate: FilterNotImplemented,
     filters.IdealStaleMate: FilterNotImplemented,
     filters.If: FilterNotImplemented,
@@ -221,8 +229,8 @@ filter_map = {
     filters.LT: FilterNotImplemented,
     filters.LastGameNumber: FilterNotImplemented,
     filters.LastPosition: FilterNotImplemented,
-    filters.Left: directions.Left,
-    filters.LeftParameter: parameters.LeftParameter,
+    filters.Left: FilterNotImplemented,
+    filters.LeftParameter: FilterNotImplemented,
     filters.Legal: FilterNotImplemented,
     filters.LegalParameter: FilterNotImplemented,
     filters.Light: FilterNotImplemented,
@@ -234,8 +242,8 @@ filter_map = {
     filters.Local: FilterNotImplemented,
     filters.Loop: FilterNotImplemented,
     filters.LowerCase: FilterNotImplemented,
-    filters.MainDiagonal: directions.MainDiagonal,
-    filters.MainDiagonalParameter: parameters.MainDiagonalParameter,
+    filters.MainDiagonal: FilterNotImplemented,
+    filters.MainDiagonalParameter: FilterNotImplemented,
     filters.MainLine: FilterNotImplemented,
     filters.MakeSquareParentheses: FilterNotImplemented,
     filters.MakeSquareString: FilterNotImplemented,
@@ -256,26 +264,26 @@ filter_map = {
     filters.MoveParameterImpliesSet: FilterNotImplemented,
     filters.NE: FilterNotImplemented,
     filters.NestBan: FilterNotImplemented,
-    filters.NoTransform: transforms.NoTransform,
-    filters.Northeast: directions.Northeast,
-    filters.NortheastParameter: parameters.NortheastParameter,
-    filters.Northwest: directions.Northwest,
-    filters.NorthwestParameter: parameters.NorthwestParameter,
-    filters.Not: FilterNotImplemented,
+    filters.NoTransform: FilterNotImplemented,
+    filters.Northeast: FilterNotImplemented,
+    filters.NortheastParameter: FilterNotImplemented,
+    filters.Northwest: FilterNotImplemented,
+    filters.NorthwestParameter: FilterNotImplemented,
+    filters.Not: not_.Not,
     filters.Null: FilterNotImplemented,
     filters.NullMove: FilterNotImplemented,
     filters.OO: FilterNotImplemented,
     filters.OOO: FilterNotImplemented,
     filters.OOOParameter: FilterNotImplemented,
     filters.OOParameter: FilterNotImplemented,
-    filters.OffDiagonal: directions.OffDiagonal,
-    filters.OffDiagonalParameter: parameters.OffDiagonalParameter,
-    filters.Or: FilterNotImplemented,
+    filters.OffDiagonal: FilterNotImplemented,
+    filters.OffDiagonalParameter: FilterNotImplemented,
+    filters.Or: or_.Or,
     filters.OriginalComment: FilterNotImplemented,
-    filters.Orthogonal: directions.Orthogonal,
-    filters.OrthogonalParameter: parameters.OrthogonalParameter,
+    filters.Orthogonal: FilterNotImplemented,
+    filters.OrthogonalParameter: FilterNotImplemented,
     filters.Parent: FilterNotImplemented,
-    filters.ParenthesisLeft: FilterNotImplemented,
+    filters.ParenthesisLeft: parentheses.Parentheses,
     filters.ParenthesisRight: FilterNotImplemented,
     filters.ParenthesizedArgumentsEnd: FilterNotImplemented,
     filters.PassedPawns: FilterNotImplemented,
@@ -293,7 +301,7 @@ filter_map = {
     filters.PieceName: FilterNotImplemented,
     filters.PiecePath: FilterNotImplemented,
     filters.PieceVariable: FilterNotImplemented,
-    filters.Pin: pin.Pin,
+    filters.Pin: FilterNotImplemented,
     filters.Player: FilterNotImplemented,
     filters.Plus: FilterNotImplemented,
     filters.PlusRepeat: FilterNotImplemented,
@@ -325,26 +333,26 @@ filter_map = {
     filters.RepeatZeroOrOne: FilterNotImplemented,
     filters.Result: FilterNotImplemented,
     filters.ResultArgument: FilterNotImplemented,
-    filters.ReverseColor: transforms.ReverseColor,
-    filters.Right: directions.Right,
+    filters.ReverseColor: FilterNotImplemented,
+    filters.Right: FilterNotImplemented,
     filters.RightCompoundPlace: FilterNotImplemented,
-    filters.RightParameter: parameters.RightParameter,
-    filters.Rotate45: transforms.Rotate45,
-    filters.Rotate90: transforms.Rotate90,
+    filters.RightParameter: FilterNotImplemented,
+    filters.Rotate45: FilterNotImplemented,
+    filters.Rotate90: FilterNotImplemented,
     filters.Secondary: FilterNotImplemented,
     filters.SecondaryParameter: FilterNotImplemented,
     filters.SetTag: FilterNotImplemented,
-    filters.Shift: transforms.Shift,
-    filters.ShiftHorizontal: transforms.ShiftHorizontal,
-    filters.ShiftVertical: transforms.ShiftVertical,
+    filters.Shift: FilterNotImplemented,
+    filters.ShiftHorizontal: FilterNotImplemented,
+    filters.ShiftVertical: FilterNotImplemented,
     filters.SideToMove: FilterNotImplemented,
     filters.SingleColor: FilterNotImplemented,
     filters.Site: FilterNotImplemented,
     filters.Sort: FilterNotImplemented,
-    filters.Southeast: directions.Southeast,
-    filters.SoutheastParameter: parameters.SoutheastParameter,
-    filters.Southwest: directions.Southwest,
-    filters.SouthwestParameter: parameters.SouthwestParameter,
+    filters.Southeast: FilterNotImplemented,
+    filters.SoutheastParameter: FilterNotImplemented,
+    filters.Southwest: FilterNotImplemented,
+    filters.SouthwestParameter: FilterNotImplemented,
     filters.Sqrt: FilterNotImplemented,
     filters.Square: FilterNotImplemented,
     filters.SquareAll: FilterNotImplemented,
@@ -363,12 +371,12 @@ filter_map = {
     filters.TargetParenthesisLeft: FilterNotImplemented,
     filters.Terminal: FilterNotImplemented,
     filters.Then: FilterNotImplemented,
-    filters.Through: parameters.Through,
-    filters.ThroughDefaultPinParameter: parameters.Through,
+    filters.Through: FilterNotImplemented,
+    filters.ThroughDefaultPinParameter: FilterNotImplemented,
     filters.Title: FilterNotImplemented,
     filters.To: FilterNotImplemented,
-    filters.ToDefaultPinParameter: parameters.ToParameter,
-    filters.ToParameter: parameters.ToParameter,
+    filters.ToDefaultPinParameter: FilterNotImplemented,
+    filters.ToParameter: FilterNotImplemented,
     filters.TransformFilterType: FilterNotImplemented,
     filters.True_: FilterNotImplemented,
     filters.Try: FilterNotImplemented,
@@ -382,14 +390,14 @@ filter_map = {
     filters.UniversalPieceVariable: FilterNotImplemented,
     filters.UniversalSquareIterator: FilterNotImplemented,
     filters.UniversalSquareVariable: FilterNotImplemented,
-    filters.Up: directions.Up,
-    filters.UpParameter: parameters.UpParameter,
+    filters.Up: FilterNotImplemented,
+    filters.UpParameter: FilterNotImplemented,
     filters.UpperCase: FilterNotImplemented,
     filters.Variable: FilterNotImplemented,
     filters.Variation: FilterNotImplemented,
     filters.Verbose: FilterNotImplemented,
-    filters.Vertical: directions.Vertical,
-    filters.VerticalParameter: parameters.VerticalParameter,
+    filters.Vertical: FilterNotImplemented,
+    filters.VerticalParameter: FilterNotImplemented,
     filters.VirtualMainLine: FilterNotImplemented,
     filters.WTM: FilterNotImplemented,
     filters.While: FilterNotImplemented,
@@ -402,17 +410,17 @@ filter_map = {
     filters.Year: FilterNotImplemented,
 }
 
+del and_
 del braces
 del filters
 del chessql
 del symbol
 del container
 del cqlparameters
+del not_
+del or_
+del parentheses
 del piecedesignator
-del pin
 del ray
-del directions
-del parameters
-del transforms
 # And 'del' any more imported like piecedesignator, likely a lot if there
 # is one per entry in filter_map.
