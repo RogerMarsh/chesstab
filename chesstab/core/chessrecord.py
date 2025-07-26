@@ -143,7 +143,7 @@ class _GameLoadPack(ValueList):
         # which are driven by the attributes dict(), a class attribute.
         # pylint no-member E1101 ignored because self.collected_game is
         # expected to be in a sibling class in hierarchy.
-        self.pgntext = repr("".join(self.collected_game.pgn_text))
+        self.pgntext = repr(" ".join(self.collected_game.pgn_text))
         value = super().pack()
         self.pack_detail(value[1])
         return value
