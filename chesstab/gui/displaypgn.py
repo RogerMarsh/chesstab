@@ -199,7 +199,7 @@ class ShowPGN(ShowText, ScorePGN):
             repr(
                 [
                     repr(self.score.get("1.0", tkinter.END)),
-                    {constants.FILE: "", constants.GAME: ""},
+                    {constants.FILE: "/", constants.GAME: ""},
                 ]
             )
         )
@@ -325,7 +325,7 @@ class DisplayPGN(DisplayText):
             message=psn.join(("Confirm request to delete ", " from database")),
         ):
             return
-        original = self.pgn_score_updater()
+        original = self.pgn_score_updater(valueclass=ChessDBvaluePGNDelete)
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )

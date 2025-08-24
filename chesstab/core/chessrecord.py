@@ -501,7 +501,7 @@ class ChessDBvaluePGNIdentity(ChessDBvaluePGN):
         """Delegate then add as error if indexing not done."""
         super().pack_detail(index)
         if not self.do_full_indexing():
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
@@ -575,18 +575,16 @@ class ChessDBvaluePGNDelete(ChessDBvaluePGNUpdate):
     def pack_detail(self, index):
         """Delegate then add position and piece location detail to index."""
         super().pack_detail(index)
-        game = self.collected_game
-        if game.errors_hidden_in_comments or not game.is_tag_roster_valid():
-            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
+        index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
 
-        Detected PGN errors are wrapped in a comment starting 'Error: ' so
-        method is_pgn_valid() is not used to decide what indexing to do.
+        Game is being deleted so full indexing is always done to remove
+        all index references.
 
         """
-        return self.collected_game.is_tag_roster_valid()
+        return True
 
 
 class ChessDBvaluePGNEdit(ChessDBvaluePGNUpdate):
@@ -1015,7 +1013,7 @@ class ChessDBvaluePosition(PGN, _GameLoadPack):
         if self.do_full_indexing():
             index[POSITIONS_FIELD_DEF] = self.collected_game.positionkeys
         else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
@@ -1183,7 +1181,7 @@ class ChessDBvaluePieceLocation(PGN, _GameLoadPack):
             index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
             index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
         else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
@@ -1298,7 +1296,7 @@ class ChessDBvaluePGNTags(PGNMoveText, _GameLoadPack):
             #    IMPORT_FIELD_DEF,
             # ]
         else:
-            index[PGN_ERROR_FIELD_DEF] = [self.gamesource]
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
         """Return True if full indexing is to be done.
@@ -1540,7 +1538,7 @@ class ChessDBvalueRepertoireUpdate(ChessDBvalueRepertoire):
         elif tags[TAG_OPENING]:
             index[TAG_OPENING] = [tags[TAG_OPENING]]
         else:
-            index[TAG_OPENING] = [self.gamesource]
+            index[TAG_OPENING] = ["/"]
         return value
 
     def pack_value(self):

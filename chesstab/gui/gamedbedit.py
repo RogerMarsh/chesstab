@@ -182,7 +182,7 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
     # Nowhere to put this in common with GameDisplayEdit.
     def _construct_record_value(self, reference):
         """Return record value for Game record."""
-        # Record value becomes {"file": repr(""), "game": ""} because the
+        # Record value becomes {"file": "/", "game": ""} because the
         # "file" value cannot be "" when used as a key in a LMDB database.
         # When "file" is a file name the "game" values will be 1, 2, 3,
         # and so forth.
@@ -193,6 +193,6 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
         return repr(
             [
                 repr(self.newview.get_score_error_escapes_removed()),
-                {constants.FILE: repr(""), constants.GAME: game_number},
+                {constants.FILE: "/", constants.GAME: game_number},
             ]
         )
