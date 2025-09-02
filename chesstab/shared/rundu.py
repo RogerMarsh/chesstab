@@ -15,7 +15,12 @@ import importlib
 import os
 import datetime
 import traceback
-import resource
+
+# Module resource is unix-only.  It is used if OS is OpenBSD.
+try:
+    import resource
+except ModuleNotFoundError:
+    pass
 
 from .. import (
     ERROR_LOG,
@@ -24,7 +29,10 @@ from .. import (
 from ..gui import chessdu
 
 if not sys.platform.startswith("openbsd"):
-    del resource
+    try:
+        del resource
+    except NameError:
+        pass
 
 
 class RunduError(Exception):

@@ -12,13 +12,14 @@ import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import RecordEdit
 
-import chessql.core.basenode
+from ..cql import queryevaluator
+from ..cql import runcql
+from ..core import chessrecord
+from ..core import filespec
+from . import cqldisplaybase
 
-from ..core.chessrecord import ChessDBrecordPartial
-from .cqldisplaybase import CQLDisplayBase
 
-
-class CQLDisplay(CQLDisplayBase):
+class CQLDisplay(cqldisplaybase.CQLDisplayBase):
     """Extend and link ChessQL statement to database.
 
     sourceobject - link to database.
@@ -34,11 +35,12 @@ class CQLDisplay(CQLDisplayBase):
     def _insert_item_database(self, event=None):
         """Add ChessQL statement to database."""
         del event
+        title = "Insert ChessQL Statement"
         if self.ui.partial_items.active_item is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Insert ChessQL Statement",
-                message="No active ChessQL statement to insert into database.",
+                title=title,
+                message="No active CQL statement to insert into database.",
             )
             return
 
@@ -47,8 +49,8 @@ class CQLDisplay(CQLDisplayBase):
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Insert ChessQL Statement",
-                message="Cannot add ChessQL statement:\n\nNo database open.",
+                title=title,
+                message="Cannot add CQL statement\n\nNo database open",
             )
             return
 
@@ -56,90 +58,106 @@ class CQLDisplay(CQLDisplayBase):
         if datasource is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Insert ChessQL Statement",
+                title=title,
                 message="".join(
                     (
-                        "Cannot add ChessQL statement:\n\n",
-                        "Partial position list hidden.",
+                        "Cannot add CQL statement\n\n",
+                        "Partial position list hidden",
                     )
                 ),
             )
             return
-        updater = ChessDBrecordPartial()
-        self._clear_statement_tags()
-        try:
-            updater.value.prepare_cql_statement(
-                self.get_name_cql_statement_text()
+        # Ignore self.cql_statement except for getting statement text
+        # because ChessDBvaluePartial(CQLStatement, ...) will lead to a
+        # database update.
+        self.cql_statement.split_statement(
+            "\n".join(
+                (
+                    self.get_tagged_text(self.TITLE_DATA),
+                    self.get_tagged_text(self.TEXT_DATA),
+                )
             )
-        except chessql.core.basenode.NodeError as exc:
-            self._report_statement_error(updater.value, exc)
-            return
-        title = "Insert ChessQL Statement"
-        tname = title.replace("Insert ", "").replace("S", "s")
-        if not updater.value.get_name_text():
+        )
+        if not self.cql_statement.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title=title,
                 message="".join(
                     (
                         "The '",
-                        tname,
+                        "CQL statement",
                         " has no name.\n\nPlease enter it's ",
                         "name as the first line of text.'",
                     )
                 ),
             )
             return
-        message = [
-            "".join(
-                (
-                    "Confirm request to add ",
-                    tname,
-                    " named:\n\n",
-                    updater.value.get_name_text(),
-                    "\n\nto database.\n\n",
-                )
+        # The ChessDBvaluePartial with default __init__ arguments is not
+        # appropriate here.
+        updater = chessrecord.ChessDBrecordPartial()
+        updater.value.dbset = filespec.GAMES_FILE_DEF
+        updater.value.set_database(database=self.ui.database)
+        try:
+            updater.value.prepare_cql_statement(
+                self.get_name_cql_statement_text()
             )
-        ]
-        if not updater.value.cql_error:
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+        except queryevaluator.CQLStatementError as exc:
+            tag_ranges = self.score.tag_ranges(self.TEXT_DATA)
+            evaluator = updater.value.query_container.evaluator
+            if evaluator.error_location is not None:
+                start = self.score.index(evaluator.error_location)
+                if not tag_ranges or len(tag_ranges) > 2:
+                    self.score.tag_add(self.ERROR_TAG, start)
+                else:
+                    self.score.tag_add(
+                        self.ERROR_TAG,
+                        start,
+                        start + str(evaluator.error_length).join("+c"),
+                    )
+            tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message="".join(message),
-            ):
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title=title,
-                    message=tname.join(("Add ", " to database abandonned.")),
-                )
-                return
-        else:
-            message.append(updater.value.cql_error.get_error_report())
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent=self.ui.get_toplevel(),
-                title=title,
-                message="".join(message),
-            ):
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title=title,
-                    message=tname.join(("Add ", " to database abandonned.")),
-                )
-                return
-        editor = RecordEdit(updater, None)
-        editor.set_data_source(source=datasource)
-        updater.set_database(editor.get_data_source().dbhome)
-        updater.key.recno = None  # 0
-        editor.put()
-        tkinter.messagebox.showinfo(
+                message=str(exc),
+            )
+            return
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
             message="".join(
                 (
-                    tname,
-                    ' "',
+                    "Confirm request to add CQL statement named:\n\n",
                     updater.value.get_name_text(),
-                    '" added to database.',
+                    "\n\nto database\n\n",
                 )
             ),
+        ):
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="Add CQL statement to database abandonned",
+            )
+            return
+        editor = RecordEdit(updater, None)
+        editor.set_data_source(source=datasource)
+        updater.set_database(editor.get_data_source().dbhome)
+        updater.key.recno = None  # 0
+        datasource.dbhome.mark_cql_statements_evaluated(
+            allexceptkey=updater.key.recno
         )
+        datasource.dbhome.mark_all_games_not_evaluated()
+        editor.put()
+        if datasource.dbhome.valid_cql_statements_exist():
+            runcql.make_runcql(datasource.dbhome, self.ui, True)
+            self.refresh_game_list(key_recno=updater.key.recno)
+        else:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="".join(
+                    (
+                        'CQL statement "',
+                        updater.value.get_name_text(),
+                        '" added to database',
+                    )
+                ),
+            )

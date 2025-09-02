@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chesstab"
-version = "8.1.dev2"
+version = "8.1.dev8"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
@@ -28,8 +28,7 @@ classifiers = [
 license = {file = "LICENCE"}
 readme = "README"
 dependencies = [
-    "solentware-base==5.2.2",
-    "chessql==3.0.1",
+    "solentware-base==5.2.3.dev3",
     "solentware-grid==3.0.1",
     "pgn-read==2.4",
     "solentware-misc==1.7.1",
@@ -44,9 +43,9 @@ Repository = "https://github.com/RogerMarsh/chesstab.git"
 [tool.setuptools]
 packages = [
     "chesstab",
-    "chesstab.core",
-    "chesstab.core.cql",
     "chesstab.basecore",
+    "chesstab.core",
+    "chesstab.cql",
     "chesstab.gui",
     "chesstab.help_",
     "chesstab.lmdb",

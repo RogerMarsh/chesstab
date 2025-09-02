@@ -147,7 +147,7 @@ class ShowPGN(ShowText, ScorePGN):
     # The insert_game_database method, coerced into sameness from the methods
     # in gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay with
     # class attibutes pgn_score_name, pgn_score_source, pgn_score_tags,
-    # and method mark_partial_positions_to_be_recalculated, and property
+    # and method mark_cql_statements_evaluated, and property
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
 
@@ -243,22 +243,33 @@ class ShowPGN(ShowText, ScorePGN):
         editor = RecordEdit(updater, None)
         editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
-        self.mark_partial_positions_to_be_recalculated(datasource=datasource)
+        self.mark_games_evaluated(datasource=datasource)
+        self.mark_all_cql_statements_not_evaluated(datasource=datasource)
         updater.key.recno = None
         editor.put()
-        tags = updater.value.collected_game.pgn_tags
-        tkinter.messagebox.showinfo(
-            parent=self.ui.get_toplevel(),
-            title=title,
-            message="".join(
-                (
-                    psn.title(),
-                    ' "',
-                    "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
-                    '" added to database.',
+        if self.valid_cql_statements_exist(datasource=datasource):
+            self.run_cql_evaluator(datasource=datasource, ui=self.ui)
+            if self.ui.partial_items.count_items_in_stack():
+                active_item = self.ui.partial_items.active_item
+                active_item.refresh_game_list(
+                    key_recno=active_item.sourceobject.key.recno
                 )
-            ),
-        )
+        else:
+            tags = updater.value.collected_game.pgn_tags
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="".join(
+                    (
+                        psn.title(),
+                        ' "',
+                        "  ".join(
+                            [tags.get(k, "") for k in self.pgn_score_tags]
+                        ),
+                        '" added to database.',
+                    )
+                ),
+            )
         return True
 
 
@@ -332,8 +343,15 @@ class DisplayPGN(DisplayText):
         self.pgn_score_original_value(original.value)
         editor = RecordDelete(original)
         editor.set_data_source(source=datasource)
-        self.mark_partial_positions_to_be_recalculated(datasource=datasource)
+        self.mark_games_evaluated(datasource=datasource, allexcept=original)
+        self.mark_all_cql_statements_not_evaluated(datasource=datasource)
+        self.remove_game_key_from_all_cql_query_match_lists(
+            datasource=datasource, gamekey=self.sourceobject.key.recno
+        )
         editor.delete()
+        self.clear_games_and_cql_queries_pending_evaluation(
+            datasource=datasource
+        )
         tags = original.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
@@ -548,22 +566,33 @@ class EditPGN(EditText):
             updater.value.gamesource = self.pgn_score_source
         original.set_database(editor.get_data_source().dbhome)
         updater.key.recno = original.key.recno
-        self.mark_partial_positions_to_be_recalculated(datasource=datasource)
+        self.mark_games_evaluated(datasource=datasource, allexcept=updater)
+        self.mark_all_cql_statements_not_evaluated(datasource=datasource)
         editor.edit()
         if self is self.ui_displayed_items.active_item:
             newkey = self.ui_displayed_items.adjust_edited_item(updater)
             if newkey:
                 self._set_properties_on_grids(newkey)
-        tags = original.value.collected_game.pgn_tags
-        tkinter.messagebox.showinfo(
-            parent=self.ui.get_toplevel(),
-            title=title,
-            message="".join(
-                (
-                    psn.title(),
-                    ' "',
-                    "  ".join([tags.get(k, "") for k in self.pgn_score_tags]),
-                    '" amended on database.',
+        if self.valid_cql_statements_exist(datasource=datasource):
+            self.run_cql_evaluator(datasource=datasource, ui=self.ui)
+            if self.ui.partial_items.count_items_in_stack():
+                active_item = self.ui.partial_items.active_item
+                active_item.refresh_game_list(
+                    key_recno=active_item.sourceobject.key.recno
                 )
-            ),
-        )
+        else:
+            tags = original.value.collected_game.pgn_tags
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="".join(
+                    (
+                        psn.title(),
+                        ' "',
+                        "  ".join(
+                            [tags.get(k, "") for k in self.pgn_score_tags]
+                        ),
+                        '" amended on database.',
+                    )
+                ),
+            )

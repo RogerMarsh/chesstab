@@ -21,16 +21,22 @@ from pgn_read.core.constants import (
     TAG_FEN,
     TAG_SETUP,
     SETUP_VALUE_FEN_PRESENT,
+    SEVEN_TAG_ROSTER_DEFAULTS,
+    SEVEN_TAG_ROSTER,
 )
 
-import chessql.core.constants as cqlcc
+# These constants should match values from chessql.constants PIECE_NAMES.
+# It is not imported because nothing else is taken from chessql at present,
+# and the order in PIECE_NAMES changed at some point.
+ANY_WHITE_PIECE_NAME = "A"
+ANY_BLACK_PIECE_NAME = "a"
+EMPTY_SQUARE_NAME = "_"
+WHITE_PIECE_NAMES = "QBRNKP"
+BLACK_PIECE_NAMES = "qbrnkp"
 
-ANY_WHITE_PIECE_NAME = cqlcc.PIECE_NAMES[6]
-ANY_BLACK_PIECE_NAME = cqlcc.PIECE_NAMES[-2]
-EMPTY_SQUARE_NAME = cqlcc.PIECE_NAMES[-1]
-WHITE_PIECE_NAMES = cqlcc.PIECE_NAMES[:6]
-BLACK_PIECE_NAMES = cqlcc.PIECE_NAMES[-8:-2]
-del cqlcc
+ALWAYS_MATCH = "".join(
+    (ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME, EMPTY_SQUARE_NAME, ".")
+)
 
 # Supported encodings of PGN files.
 # The PGN standard at 4.1 specifies the use of iso-8859-1 encoding.
@@ -130,3 +136,33 @@ del FEN_WHITE_PAWN, FEN_BLACK_PAWN, BOARDSQUARES
 # del ANY_WHITE_PIECE_NAME, ANY_BLACK_PIECE_NAME, EMPTY_SQUARE_NAME
 # del WHITE_PIECE_NAMES, BLACK_PIECE_NAMES
 del TAG_FEN, TAG_SETUP, SETUP_VALUE_FEN_PRESENT
+
+NULL_GAME_TEXT = "\n".join(
+    (
+        " ".join(
+            [
+                " ".join(
+                    (
+                        t,
+                        SEVEN_TAG_ROSTER_DEFAULTS.get(
+                            t, DEFAULT_TAG_VALUE
+                        ).join('""'),
+                    )
+                ).join("[]")
+                for t in SEVEN_TAG_ROSTER
+                if t != TAG_RESULT
+            ]
+        ),
+        " ".join(
+            (
+                TAG_RESULT,
+                SEVEN_TAG_ROSTER_DEFAULTS.get(
+                    TAG_RESULT, DEFAULT_TAG_VALUE
+                ).join('""'),
+            )
+        ).join("[]"),
+        DEFAULT_TAG_RESULT_VALUE,
+        "",
+    )
+)
+del SEVEN_TAG_ROSTER_DEFAULTS, SEVEN_TAG_ROSTER

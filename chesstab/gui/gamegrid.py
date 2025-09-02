@@ -851,14 +851,14 @@ class PartialPositionGames(
     GameGridBasePartial,
     GameListGrid,
 ):
-    """Customized GameListGrid for list of games matching a partial position.
+    """Customized GameListGrid for list of games matching a CQL query.
 
     The grid is populated by a ChessQueryLanguageDS instance from the dpt.cqlds
     or basecore.cqlds modules.
     """
 
     def __init__(self, ui):
-        """Extend with partial position grid definition and bindings.
+        """Extend with CQL query grid definition and bindings.
 
         ui - container for user interface widgets and methods.
 

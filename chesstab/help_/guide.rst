@@ -34,7 +34,7 @@ Start the program.
 
 Open a game window using 'Game | New Game' and click with the pointer over the board or the adjacent empty PGN-like score.  Clicking on the analysis below the board has no effect at this point.
 
-The 'Tools' menu allows the appearance of the game window to be changed.  All game, repertoire, and partial position windows are affected by changes.
+The 'Tools' menu allows the appearance of the game window to be changed.  All game, repertoire, and CQL query windows are affected by changes.
 
 Type some moves.  'e4e5nf3nc6lb5' for example (lower case el is a short cut for 'shift-B' for bishop).
 
@@ -70,11 +70,11 @@ Left click on one of the smaller boards or game scores to make that game get the
 
 This is a convenient place to stop the detailed description: otherwise everything would get described.
 
-The Position and Repertoire menus work a lot like the Game menu.
+The CQL Query and Repertoire menus work a lot like the Game menu.
 
-The Selection menu allows the top list, of all games in the database, to be sorted and filtered by values of the `PGN Seven Tag Roster`_.
+The Select menu allows the top list, of all games in the database, to be sorted and filtered by values of the `PGN Seven Tag Roster`_.
 
-The Selection menu also allows selection rules to be stored on the database and used to choose the list of games displayed.  The rule "White eq Body, Any" is similar to "Select | Index | White" and giving "Body, Any" as the Filter; but "White eq Body, Any or Black eq Body, Any" selects all games played by "Body, Any".
+The Select menu also allows selection rules to be stored on the database and used to choose the list of games displayed.  The rule "White eq Body, Any" is similar to "Select | Index | White" and giving "Body, Any" as the Filter; but "White eq Body, Any or Black eq Body, Any" selects all games played by "Body, Any".
 
 
 Top-level Navigation
@@ -150,14 +150,14 @@ Repertoires
 Repertoires are like games except they are associated with different lists of games; and the PGN Tag technique is used to name them but not the ones defined by the PGN standard.
 
 
-ChessQL statements
-==================
+CQL statements
+==============
 
-ChessQL statements can be stored by using the 'Position | Partial' menu item.  The editor is the simplest available.  But navigation is as close as possible to the way used in games and repertoires.
+CQL statements can be stored by using the 'CQL | Query' menu item.  The editor is the simplest available.  But navigation is as close as possible to the way used in games and repertoires.
 
-ChessQL statements use the syntax of `CQL version 5.1`_ but ChessTab does not emulate the behaviour of CQL.  It is simply a much better way of expressing partial position searches than used previously in ChessTab.  CQL's piece designators are sufficient to replace the old partial positions; and currently only piece designators are implemented and other CQL constructs are ignored.
+An installed version of `CQL`_ is used to evaluate the query.
 
-All ChessQL statements must start cql(...), and an example simplest one that does anything is 'cql() Pd5' meaning find all games containing a position with a white pawn on d5.
+All CQL statements must start cql(...), and an example simplest one that does anything is 'cql() Pd5' meaning find all games containing a position with a white pawn on d5.
 
 
 Selection Rules
@@ -198,4 +198,4 @@ The interface is intended to get positions analyzed, not play games against an e
 .. _`Reduced Export Format`: http://www6.chessclub/help/PGN-spec
 .. _`UCI`: http://www.shredderchess.com/div/uci.zip
 .. _`PGN Seven Tag Roster`: http://www6.chessclub/help/PGN-spec
-.. _`CQL version 5.1`: http://www.gadycosteff.com/
+.. _`CQL`: http://www.gadycosteff.com/

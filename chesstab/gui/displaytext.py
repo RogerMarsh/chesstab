@@ -200,7 +200,7 @@ class ShowText:
     # The insert_game_database method, coerced into sameness from the methods
     # in gamedisplay._GameDisplay and repertoiredisplay._RepertoireDisplay with
     # class attibutes pgn_score_name, pgn_score_source, pgn_score_tags,
-    # and method mark_partial_positions_to_be_recalculated, and property
+    # and method mark_all_cql_statements_for_evaluation, and property
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
 

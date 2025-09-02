@@ -33,6 +33,7 @@ from .constants import STATUS_SEVEN_TAG_ROSTER_PLAYERS
 from .eventspec import EventSpec
 from .display import Display
 from .displaypgn import ShowPGN, InsertPGN, EditPGN, DisplayPGN
+from ..cql import runcql
 
 
 class GameDisplayBase(
@@ -82,7 +83,7 @@ class GameDisplayBase(
     # repertoiredisplay._RepertoireDisplay, and delete_game_database in
     # GameDisplay and repertoiredisplay.RepertoireDisplay, can be modified and
     # replaced by single copies in the displaypgn.ShowPGN class.
-    # See mark_partial_positions_to_be_recalculated() method too.
+    # See mark_all_cql_statements_for_evaluation() method too.
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
     pgn_score_name = "game"
@@ -114,7 +115,7 @@ class GameDisplayBase(
         """Return method to configure game grid widget."""
         return self.ui.configure_game_grid
 
-    # ui_base_table and mark_partial_positions_to_be_recalculated defined so
+    # ui_base_table and mark_all_cql_statements_for_evaluation defined so
     # insert_game_database method can be shared by gamedisplay.GameDisplayBase
     # and repertoiredisplay._RepertoireDisplay classes.
     # See class attributes pgn_score_name and pgn_score_source too.
@@ -130,9 +131,86 @@ class GameDisplayBase(
         return self.ui.games_and_repertoires_in_toplevels
 
     @staticmethod
-    def mark_partial_positions_to_be_recalculated(datasource=None):
-        """Mark ChessQL statements, in datasource, to be recalculated."""
-        datasource.dbhome.mark_partial_positions_to_be_recalculated()
+    def mark_games_evaluated(datasource=None, allexcept=None, commit=True):
+        """Delegate to database specific method of same name.
+
+        If commit evaluates False caller is responsible for transactions.
+
+        The method of same name in repertoiredisplay.RepertoireDisplay
+        does nothing.
+
+        """
+        datasource.dbhome.mark_games_evaluated(
+            allexceptkey=(
+                allexcept.key.recno if allexcept is not None else None
+            ),
+            commit=commit,
+        )
+
+    @staticmethod
+    def mark_all_cql_statements_not_evaluated(datasource=None, commit=True):
+        """Delegate to database specific method of same name.
+
+        If commit evaluates False caller is responsible for transactions.
+
+        The method of same name in repertoiredisplay.RepertoireDisplay
+        does nothing.
+
+        """
+        datasource.dbhome.mark_all_cql_statements_not_evaluated(commit=commit)
+
+    @staticmethod
+    def clear_games_and_cql_queries_pending_evaluation(
+        datasource=None, commit=True
+    ):
+        """Delegate to database specific method of same name.
+
+        If commit evaluates False caller is responsible for transactions.
+
+        The method of same name in repertoiredisplay.RepertoireDisplay
+        does nothing.
+
+        """
+        datasource.dbhome.clear_games_and_cql_queries_pending_evaluation(
+            commit=commit
+        )
+
+    @staticmethod
+    def remove_game_key_from_all_cql_query_match_lists(
+        datasource=None, gamekey=None
+    ):
+        """Delegate to database specific method of same name quoting key.
+
+        Do not call this method when a transaction is active.
+
+        The method of same name in repertoiredisplay.RepertoireDisplay
+        does nothing.
+
+        """
+        datasource.dbhome.remove_game_key_from_all_cql_query_match_lists(
+            gamekey
+        )
+
+    @staticmethod
+    def run_cql_evaluator(datasource=None, ui=None):
+        """Create and run a RunCQL instance to evaluate a game and queries.
+
+        It is assumed this method is called to decide on adding a game to
+        an existing list of games matching a CQL query.
+
+        Do not call this method when a transaction is active.
+
+        """
+        runcql.make_runcql(datasource.dbhome, ui, False)
+
+    @staticmethod
+    def valid_cql_statements_exist(datasource=None):
+        """Return response of database specific method of same name.
+
+        Do not call this method when a transaction is active.
+
+        """
+        return datasource.dbhome.valid_cql_statements_exist()
 
     def _get_navigation_events(self):
         """Return event description tuple for navigation from game."""
@@ -306,8 +384,8 @@ class GameDisplayEdit(EditPGN, GameDisplayInsert):
     # Nowhere to put this in common with GameDbEdit.
     def _construct_record_value(self):
         """Return record value for Game record."""
-        # Record value becomes {"file": "/", "game": ""} because the
-        # "file" value cannot be "" when used as a key in a LMDB database.
+        # Record value becomes {"file": "/", "game": ""} because the "file"
+        # value cannot be length zero when used as a key in a LMDB database.
         # When "file" is a file name the "game" values will be 1, 2, 3,
         # and so forth.
         reference = self.sourceobject.value.reference

@@ -21,7 +21,10 @@ The *_txn version of each exists in case the test is done within an existing
 transaction.
 
 """
+import ast
+
 from ..core import filespec
+from ..core import constants
 
 
 def is_game_import_in_progress(database, game):
@@ -97,6 +100,46 @@ def is_import_in_progress_txn(database):
         database.end_read_only_transaction()
 
 
+def get_pgn_filename_of_an_import_in_progress(database):
+    """Return file name of first game with incomplete import.
+
+    database    Database instance containing the game.
+
+    """
+    if database is None:
+        return False
+    not_done = database.recordlist_all(
+        filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
+    )
+    try:
+        reference = not_done.recordset.first()
+        if reference is None:
+            return None
+        name = ast.literal_eval(
+            database.get_primary_record(
+                filespec.GAMES_FILE_DEF, key=reference[1]
+            )[1]
+        )[1][constants.FILE]
+        return name
+    finally:
+        not_done.close()
+
+
+def get_pgn_filename_of_an_import_in_progress_txn(database):
+    """Return file name of first game with incomplete import.
+
+    database    Database instance containing the game.
+
+    """
+    if database is None:
+        return False
+    database.start_read_only_transaction()
+    try:
+        return get_pgn_filename_of_an_import_in_progress(database)
+    finally:
+        database.end_read_only_transaction()
+
+
 # Written before conventional meaning of filespec.GAME_FIELD_DEF added.
 # See is_import_without_index_reload_in_progress.
 def is_import_without_index_reload_in_progress(database):
@@ -109,7 +152,7 @@ def is_import_without_index_reload_in_progress(database):
         return False
     for index in (
         filespec.POSITIONS_FIELD_DEF,
-        filespec.PIECESQUAREMOVE_FIELD_DEF,
+        filespec.PIECESQUARE_FIELD_DEF,
     ):
         index_games = database.recordlist_key(
             filespec.GAMES_FILE_DEF,

@@ -151,7 +151,7 @@ class CQL(CQLText, EventBinding):
         return popup
 
     def _export_partial(self, event=None):
-        """Export displayed partial position definition."""
+        """Export displayed CQL query definition."""
         del event
         export_chessql.export_single_position(
             self.score.get("1.0", tkinter.END),

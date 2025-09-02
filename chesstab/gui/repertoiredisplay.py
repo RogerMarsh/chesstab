@@ -81,7 +81,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
     # gamedisplay._GameDisplay, and delete_game_database in RepertoireDisplay
     # and gameedisplay.GameDisplay, can be modified and replaced by single
     # copies in the displaypgn.ShowPGN class.
-    # See mark_partial_positions_to_be_recalculated() method too.
+    # See mark_all_cql_statements_for_evaluation() method too.
     # The names need to be more generic to make sense in cql, engine, and
     # query, context.
     pgn_score_name = "repertoire"
@@ -113,7 +113,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
         """Return function to configure repertoire grid to fit text."""
         return self.ui.configure_repertoire_grid
 
-    # ui_base_table and mark_partial_positions_to_be_recalculated defined
+    # ui_base_table and mark_all_cql_statements_for_evaluation defined
     # so insert_game_database method can be shared by gamedisplay._GameDisplay
     # and repertoiredisplay._RepertoireDisplay classes.
     # See class attributes pgn_score_name and pgn_score_source too.
@@ -128,8 +128,54 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
         """Return the User Interface objects in Toplevels."""
         return self.ui.games_and_repertoires_in_toplevels
 
-    def mark_partial_positions_to_be_recalculated(self, datasource=None):
-        """Do nothing.  Exists for compatibility with game display."""
+    @staticmethod
+    def mark_games_evaluated(datasource=None, allexcept=None, commit=True):
+        """Do nothing.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+        """
+
+    @staticmethod
+    def mark_all_cql_statements_not_evaluated(datasource=None, commit=True):
+        """Do nothing.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+        """
+
+    @staticmethod
+    def clear_games_and_cql_queries_pending_evaluation(
+        datasource=None, commit=True
+    ):
+        """Do nothing.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+        """
+
+    @staticmethod
+    def remove_game_key_from_all_cql_query_match_lists(
+        datasource=None, gamekey=None
+    ):
+        """Do nothing.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+        """
+
+    @staticmethod
+    def run_cql_evaluator(datasource=None, ui=True):
+        """Do nothing.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+        """
+
+    @staticmethod
+    def valid_cql_statements_exist(datasource=None):
+        """Return False.
+
+        Exists for compatibility with gamedisplay.GameDisplay.
+
+        """
+        del datasource
+        return False
 
     def _get_navigation_events(self):
         """Return event description tuple for navigation from repertoire."""

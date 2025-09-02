@@ -82,9 +82,14 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
             self.query_statement.get_query_statement_text(),
         )
 
-    def refresh_game_list(self, ignore_sourceobject=False):
-        """Display games matching game selection rule, empty on errors."""
-        del ignore_sourceobject
+    def refresh_game_list(self, key_recno=None):
+        """Display games matching game selection rule, empty on errors.
+
+        key_recno argument is not used.  It is present for compatibility
+        with the cqltext.CQLText.refresh_game_list method.
+
+        """
+        del key_recno
         grid = self.itemgrid
         if grid is None:
             return

@@ -14,6 +14,6 @@ if __name__ == "__main__":
 
     from solentware_base.tools import ui_base_3_to_4
 
-    from ..core.filespec import FileSpec
+    from ..core.filespec import make_filespec
 
-    ui_base_3_to_4.UIBase_3_to_4(FileSpec()).root.mainloop()
+    ui_base_3_to_4.UIBase_3_to_4(make_filespec()).root.mainloop()

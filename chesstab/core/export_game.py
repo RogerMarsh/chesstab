@@ -1101,3 +1101,140 @@ def export_single_game_text(collected_game, filename):
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(internal_format.get_text_of_game())
         gamesout.write("\n")
+
+
+def export_all_games_for_cql_scan(database, filename):
+    """Export all database games in a PGN inport format for CQL scan.
+
+    A dummy game with no moves, '*' as result, and just the PGN Seven Tag
+    Roster tags with the value representing unknown, is output in place
+    of any game with errors.
+
+    """
+    if filename is None:
+        return True
+    literal_eval = ast.literal_eval
+    instance = chessrecord.ChessDBrecordGameText()
+    instance.set_database(database)
+    all_games_output = None
+    database.start_read_only_transaction()
+    valid_games = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
+    valid_games.remove_recordset(
+        database.recordlist_all(
+            filespec.GAMES_FILE_DEF, filespec.PGN_ERROR_FIELD_DEF
+        )
+    )
+    try:
+        cursor = database.database_cursor(
+            filespec.GAMES_FILE_DEF,
+            filespec.GAMES_FILE_DEF,
+            recordset=valid_games,
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    tokens = []
+                    for token in text_format_tokens.finditer(
+                        literal_eval(instance.get_srvalue()[0])
+                    ):
+                        groups = token.groups()
+                        if (
+                            groups[9] is not None  # Escaped.
+                            and tokens
+                            and tokens[-1] != "\n"
+                        ):
+                            if tokens[-1] == " ":
+                                tokens[-1] = "\n"
+                            else:
+                                tokens.append("\n")
+                        tokens.append(token.group())
+                        if (
+                            groups[0] is not None  # Tag Pair.
+                            or groups[3] is not None  # EOL Comment.
+                            or groups[9] is not None  # Escaped.
+                        ):
+                            tokens.append("\n")
+                        elif (
+                            groups[11] is None  # Check.
+                            and groups[12] is None  # Traditional.
+                        ):
+                            tokens.append(" ")
+                    gamesout.write("".join(tokens))
+                    gamesout.write("\n")
+                    if all_games_output is None:
+                        all_games_output = True
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
+    finally:
+        database.end_read_only_transaction()
+    return all_games_output
+
+
+def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
+    """Export up to limit recordset games in recordmap in PGN format.
+
+    A PGN import format accepted by CQL program is used.  The game numbers
+    in the PGN file are mapped to the source record number and the map is
+    placed in recordmap.
+
+    """
+    literal_eval = ast.literal_eval
+    database = recordset.dbhome
+    instance = chessrecord.ChessDBrecordGameText()
+    instance.set_database(database)
+    record_map = {}
+    if commit:
+        database.start_read_only_transaction()
+    try:
+        cursor = database.database_cursor(
+            filespec.GAMES_FILE_DEF,
+            filespec.GAMES_FILE_DEF,
+            recordset=recordset,
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    record_number = current_record[0]
+                    record_map[len(record_map) + 1] = record_number
+                    tokens = []
+                    for token in text_format_tokens.finditer(
+                        literal_eval(instance.get_srvalue()[0])
+                    ):
+                        groups = token.groups()
+                        if (
+                            groups[9] is not None  # Escaped.
+                            and tokens
+                            and tokens[-1] != "\n"
+                        ):
+                            if tokens[-1] == " ":
+                                tokens[-1] = "\n"
+                            else:
+                                tokens.append("\n")
+                        tokens.append(token.group())
+                        if (
+                            groups[0] is not None  # Tag Pair.
+                            or groups[3] is not None  # EOL Comment.
+                            or groups[9] is not None  # Escaped.
+                        ):
+                            tokens.append("\n")
+                        elif (
+                            groups[11] is None  # Check.
+                            and groups[12] is None  # Traditional.
+                        ):
+                            tokens.append(" ")
+                    gamesout.write("".join(tokens))
+                    gamesout.write("\n")
+                    if len(record_map) > limit:
+                        break
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
+    finally:
+        if commit:
+            database.end_read_only_transaction()
+    return record_map

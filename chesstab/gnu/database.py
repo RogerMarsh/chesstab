@@ -6,7 +6,7 @@
 
 from solentware_base import gnu_database
 
-from ..core.filespec import FileSpec
+from ..core import filespec
 from ..basecore import database
 
 
@@ -28,7 +28,7 @@ class Database(database.Database, gnu_database.Database):
         Arguments are passed through to superclass __init__.
 
         """
-        names = FileSpec(
+        names = filespec.make_filespec(
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )

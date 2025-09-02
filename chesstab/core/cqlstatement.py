@@ -23,15 +23,11 @@ black piece or empty square matches.
 import os
 import re
 
-from . import cqlcontainer
-from . import filespec
+from ..cql import querycontainer
+from ..cql.queryevaluator import CQLStatementError
 
 # Search for start of CQL statement for internal evaluator.
 _title_re = re.compile("^[^\n]*")
-
-
-class CQLStatementError(Exception):
-    """Exception class for cqlstatement module."""
 
 
 class CQLStatement:
@@ -41,64 +37,24 @@ class CQLStatement:
     program or internally.
     """
 
-    # Keyword arguments for compatibility with existing chesstab code.
-    def __init__(
-        self, command=None, opendatabase=None, query_container_class=None
-    ):
-        """Delegate then initialize description and database name.
-
-        query_container_class is ignored if opendatabase is None but
-        should be the class which will evaluate CQL queries otherwise.
-
-        """
+    def __init__(self):
+        """Delegate then initialize description and database name."""
         super().__init__()
         self._description_string = ""
         self._statement_string = ""
 
-        # File searched for matching records.
-        self._dbset = None
-
         # For setup of internal or external evaluation of CQL statement.
-        self._query_container_class = None
         self._query_container = None
 
-        # For internal evaluation of CQL statement.
-        self._query_evaluator = None
-
         # For evaluation of CQL statement by CQL program.
-        self._command = None
         self._recordset = None
-        self._home_directory = None
-        self._database_file = None
-
-        # For evaluation of CQL statement by CQL program.
-        self._command = command
-
-        if opendatabase is not None:
-            self._recordset = opendatabase.recordlist_nil(
-                filespec.GAMES_FILE_DEF
-            )
-            self._home_directory = opendatabase.home_directory
-            self._database_file = opendatabase.database_file
-            self._query_container_class = query_container_class
-        else:
-            self._query_container_class = cqlcontainer.CQLContainer
-            self._database_file = None
-
-    @property
-    def query_container_class(self):
-        """Return query container class."""
-        return self._query_container_class
+        self._opendatabase = None
+        self._dbset = None
 
     @property
     def query_container(self):
         """Return query container."""
         return self._query_container
-
-    @property
-    def query_evaluator(self):
-        """Return query evaluator."""
-        return self._query_evaluator
 
     @property
     def dbset(self):
@@ -126,18 +82,18 @@ class CQLStatement:
     @property
     def pgn_filename(self):
         """Return pgn filename for pattern engine command."""
-        name = os.path.basename(self._database_file)
+        name = os.path.basename(self._opendatabase.database_file)
         return os.path.join(
-            self._home_directory,
+            self._opendatabase.home_directory,
             ".".join(("-".join((name, name)), "pgn")),
         )
 
     @property
     def cql_filename(self):
         """Return CQL query filename for pattern engine command."""
-        name = os.path.basename(self._database_file)
+        name = os.path.basename(self._opendatabase.database_file)
         return os.path.join(
-            self._home_directory,
+            self._opendatabase.home_directory,
             ".".join(("-".join((name, name)), "cql")),
         )
 
@@ -155,12 +111,9 @@ class CQLStatement:
         """Return True if the statement has no errors."""
         return not self.cql_error
 
-    # Called from chessrecord.ChessDBrecordPartial.load_value().
     def set_database(self, database=None):
         """Set Database instance to which ChessQL query is applied."""
-        # pylint unused-private-member report W0238.
-        # Commented because vaguely similar querystatement module does use it.
-        # self.__database = database
+        self._opendatabase = database
 
     def get_name_text(self):
         """Return name text."""
@@ -199,12 +152,14 @@ class CQLStatement:
     @property
     def database_file(self):
         """Return database file."""
-        return self._database_file
+        return self._opendatabase.database_file
 
     def prepare_cql_statement(self, text):
         """Verify CQL statement but do not evaluate."""
-        self._query_container = self._query_container_class()
-        self._query_container.prepare_statement(self, text)
+        self._query_container = querycontainer.QueryContainer()
+        self._recordset = self._opendatabase.recordlist_nil(self._dbset)
+        if text:  # Assume text "" means an insert new action.
+            self._query_container.prepare_statement(self, text)
         if self._query_container.message is not None:
             raise CQLStatementError(self._query_container.message)
 

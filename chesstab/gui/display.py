@@ -59,28 +59,28 @@ class Display:
         return self.ui.set_focus_game_grid(event=event)
 
     def set_focus_partial_game_grid(self, event=None):
-        """Give widget displaying list of games for partial position focus."""
+        """Give widget displaying list of games for CQL query focus."""
         if not self.ui.partial_games.is_visible():
             return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partial_game_grid(event=event)
 
     def set_focus_partial_grid(self, event=None):
-        """Give widget displaying list of partial positions the focus."""
+        """Give widget displaying list of CQL queries the focus."""
         if not self.ui.base_partials.is_visible():
             return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partial_grid(event=event)
 
     def set_focus_partialpanel_item(self, event=None):
-        """Give partial position at top of stack the focus."""
+        """Give CQL query at top of stack the focus."""
         if self.ui.partial_items.active_item is None:
             return None
         self.bind_for_widget_navigation()
         return self.ui.set_focus_partialpanel_item(event=event)
 
     def _set_focus_partialpanel_item_command(self):
-        """Give partial position at top of stack the focus."""
+        """Give CQL query at top of stack the focus."""
         item = self.ui.partial_items.active_item
         if item is None:
             return None

@@ -83,35 +83,26 @@ class CQLDelete(CQLDisplay, CQL, DataNotify):
             message="Confirm request to delete ChessQL statement.",
         ):
             return
-        statement = self.cql_statement
-
-        # Consider changing this since the call no longer ever returns None.
-        if statement.is_statement() is not None:
-            value = self.sourceobject.value
-            if (
-                statement.get_name_text() != value.get_name_text()
-                or statement.is_statement() != value.is_statement()
-                or statement.get_statement_text() != value.get_statement_text()
-            ):
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="Delete ChessQL Statement",
-                    message="\n".join(
-                        (
-                            "Cannot delete ChessQL statement.",
-                            " ".join(
-                                (
-                                    "ChessQL statement on display is not",
-                                    "same as rule from record.",
-                                )
-                            ),
-                        )
-                    ),
+        self.cql_statement.split_statement(
+            "\n".join(
+                (
+                    self.get_tagged_text(self.TITLE_DATA),
+                    self.get_tagged_text(self.TEXT_DATA),
                 )
-                return
+            )
+        )
         editor = RecordDelete(self.sourceobject)
         editor.set_data_source(source=datasource)
+        datasource.dbhome.mark_cql_statements_evaluated(
+            allexceptkey=self.sourceobject.key.recno
+        )
+        datasource.dbhome.mark_all_games_not_evaluated()
+        datasource.dbhome.remove_cql_query_match_list_for_query_key(
+            querykey=self.sourceobject.key.recno
+        )
         editor.delete()
+        datasource.dbhome.clear_games_and_cql_queries_pending_evaluation()
+        self.refresh_game_list()
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
             title="Delete ChessQL Statement",

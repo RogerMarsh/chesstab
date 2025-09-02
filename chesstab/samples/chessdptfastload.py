@@ -30,8 +30,8 @@ from solentware_base.core.constants import (
     TABLE_B_SIZE,
 )
 
-from ..dpt.filespec import FileSpec
 from ..core.filespec import (
+    make_filespec,
     GAMES_FILE_DEF,
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
@@ -103,7 +103,7 @@ class Database(dptfastload_database.Database):
         Other arguments are passed through to superclass __init__.
 
         """
-        ddnames = FileSpec(
+        ddnames = make_filespec(
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )

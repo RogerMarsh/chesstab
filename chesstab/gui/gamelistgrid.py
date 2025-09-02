@@ -211,7 +211,7 @@ class _GameListGridBase(
         instance.srvalue = repr(
             [
                 repr(EMPTY_SEVEN_TAG_ROSTER + UNKNOWN_RESULT),
-                {FILE: "", GAME: ""},
+                {FILE: "/", GAME: ""},
             ]
         )
         self.create_edit_dialog(

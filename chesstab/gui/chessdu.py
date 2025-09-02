@@ -54,8 +54,8 @@ from ..core.filespec import (
 # needs more memory to do so.  A default build of OpenBSD 5.9 restricts user
 # processes to 0.5Gb.  The situation is not known for OS X or any Linux
 # distribution.
-# Factor changed from 3 to 5 when CQL5.1 syntax introduced to implement partial
-# position searches, due to extra index updates.
+# Factor changed from 3 to 5 when CQL5.1 syntax introduced to implement CQL
+# query searches, due to extra index updates.
 _DATABASE_UPDATE_FACTOR = 5
 
 _GAMECOUNT_REPORT_INTERVAL = 1000000

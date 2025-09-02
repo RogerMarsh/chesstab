@@ -26,7 +26,7 @@ from bsddb3.db import (
 from solentware_base import bsddb3_database
 
 from ..core.filespec import (
-    FileSpec,
+    make_filespec,
     DB_ENVIRONMENT_GIGABYTES,
     DB_ENVIRONMENT_BYTES,
     DB_ENVIRONMENT_MAXLOCKS,
@@ -52,7 +52,7 @@ class Database(database.Database, bsddb3_database.Database):
         Arguments are passed through to superclass __init__.
 
         """
-        dbnames = FileSpec(
+        dbnames = make_filespec(
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )

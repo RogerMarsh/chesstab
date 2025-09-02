@@ -26,7 +26,7 @@ from solentware_base.core.merge import SortIndiciesToSequentialFiles
 from pgn_read.core.parser import PGN
 from pgn_read.core.movetext_parser import PGNMoveText
 from pgn_read.core.constants import (
-    SEVEN_TAG_ROSTER,
+    # SEVEN_TAG_ROSTER,
     TAG_DATE,
     TAG_WHITE,
     TAG_BLACK,
@@ -65,17 +65,16 @@ from .cqlstatement import CQLStatement
 from .filespec import (
     POSITIONS_FIELD_DEF,
     PGN_ERROR_FIELD_DEF,
-    PIECESQUAREMOVE_FIELD_DEF,
-    PIECEMOVE_FIELD_DEF,
-    SQUAREMOVE_FIELD_DEF,
+    PIECESQUARE_FIELD_DEF,
     GAME_FIELD_DEF,
     GAMES_FILE_DEF,
-    PARTIALPOSITION_FIELD_DEF,
+    CQL_QUERY_FIELD_DEF,
+    CQL_EVALUATE_FIELD_DEF,
     REPERTOIRE_FILE_DEF,
     PGN_DATE_FIELD_DEF,
     VARIATION_FIELD_DEF,
     ENGINE_FIELD_DEF,
-    PARTIALPOSITION_NAME_FIELD_DEF,
+    CQL_NAME_FIELD_DEF,
     RULE_FIELD_DEF,
     COMMAND_FIELD_DEF,
     PGNFILE_FIELD_DEF,
@@ -88,6 +87,7 @@ from .filespec import (
     # WHITE_FIELD_DEF,
     # BLACK_FIELD_DEF,
     # RESULT_FIELD_DEF,
+    PGN_TAG_NAMES,
 )
 from .analysis import Analysis
 from .querystatement import QueryStatement, re_normalize_player_name
@@ -167,7 +167,7 @@ class ChessDBvaluePGN(PGN, _GameLoadPack):
 
 def _pack_tags_into_index(tags, index):
     """Fill index with detail from game's PGN Tags."""
-    for field in tags:
+    for field in PGN_TAG_NAMES.intersection(tags):
         if field in PLAYER_NAME_TAGS:
             # PGN specification states colon is used to separate player
             # names in consultation games.
@@ -176,7 +176,7 @@ def _pack_tags_into_index(tags, index):
                 for tf in tags[field].split(":")
             ]
 
-        elif field in SEVEN_TAG_ROSTER:
+        else:
             index[field] = [tags[field]]
     if TAG_DATE in tags:
         index[PGN_DATE_FIELD_DEF] = [tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)]
@@ -534,9 +534,7 @@ class ChessDBvaluePGNIndex(ChessDBvaluePGNIdentity):
             index[IMPORT_FIELD_DEF] = [
                 IMPORT_FIELD_DEF,
                 # POSITIONS_FIELD_DEF,
-                # PIECESQUAREMOVE_FIELD_DEF,
-                # PIECEMOVE_FIELD_DEF,
-                # SQUAREMOVE_FIELD_DEF,
+                # PIECESQUARE_FIELD_DEF,
                 # PGN_DATE_FIELD_DEF,
                 # EVENT_FIELD_DEF,
                 # SITE_FIELD_DEF,
@@ -558,9 +556,7 @@ class ChessDBvaluePGNUpdate(ChessDBvaluePGNIdentity):
             game = self.collected_game
             _pack_tags_into_index(game.pgn_tags, index)
             index[POSITIONS_FIELD_DEF] = game.positionkeys
-            index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
-            index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
-            index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
+            index[PIECESQUARE_FIELD_DEF] = game.piecesquarekeys
             try:
                 index[PGN_DATE_FIELD_DEF] = [
                     game.pgn_tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
@@ -718,7 +714,8 @@ class ChessDBrecordGameSequential(Record):
                 (
                     IMPORT_FIELD_DEF,
                     PGNFILE_FIELD_DEF,
-                    PARTIALPOSITION_FIELD_DEF,
+                    CQL_QUERY_FIELD_DEF,
+                    CQL_EVALUATE_FIELD_DEF,
                     PGN_ERROR_FIELD_DEF,
                 )
             ),
@@ -1174,12 +1171,10 @@ class ChessDBvaluePieceLocation(PGN, _GameLoadPack):
         self.gamesource = None
 
     def pack_detail(self, index):
-        """Add piece location detail to index or mark as error."""
+        """Add piece square detail to index or mark as error."""
         if self.do_full_indexing():
             game = self.collected_game
-            index[PIECESQUAREMOVE_FIELD_DEF] = game.piecesquaremovekeys
-            index[PIECEMOVE_FIELD_DEF] = game.piecemovekeys
-            index[SQUAREMOVE_FIELD_DEF] = game.squaremovekeys
+            index[PIECESQUARE_FIELD_DEF] = game.piecesquarekeys
         else:
             index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
@@ -1208,7 +1203,7 @@ class ChessDBrecordGamePieceLocation(Record):
         """Update database games with piece location indicies."""
         self.set_database(database)
         db_segment_size = SegmentSize.db_segment_size
-        index_key = database.encode_record_selector(PIECESQUAREMOVE_FIELD_DEF)
+        index_key = database.encode_record_selector(PIECESQUARE_FIELD_DEF)
         value = self.value
         old_segment = None
         cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
@@ -1216,7 +1211,7 @@ class ChessDBrecordGamePieceLocation(Record):
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
-                    reporter.append_text("Index piece locations stopped.")
+                    reporter.append_text("Index piece movement stopped.")
                 return False
             current_record = cursor.next()
             if current_record is None:
@@ -1268,7 +1263,7 @@ class ChessDBrecordGamePieceLocation(Record):
                             (
                                 "Games before ",
                                 format(current_segment * db_segment_size, ","),
-                                " indexed by piece locations.",
+                                " indexed by piece movement.",
                             )
                         )
                     )
@@ -1382,7 +1377,7 @@ class ChessDBrecordGamePGNTags(Record):
                             (
                                 "Games before ",
                                 format(current_segment * db_segment_size, ","),
-                                " indexed by PGN tags in Seven Tag Roster.",
+                                " indexed by selected PGN tags.",
                             )
                         )
                     )
@@ -1408,7 +1403,7 @@ class ChessDBrecordGamePGNTags(Record):
 
 
 class ChessDBkeyPartial(KeyData):
-    """Primary key of partial position record."""
+    """Primary key of CQL query record."""
 
 
 class ChessDBvaluePartial(CQLStatement, Value):
@@ -1427,18 +1422,18 @@ class ChessDBvaluePartial(CQLStatement, Value):
         return True
 
     def load(self, value):
-        """Set partial position from value."""
+        """Set CQL query from value."""
         self.load_statement(literal_eval(value))
 
     def pack_value(self):
-        """Return partial position value."""
+        """Return CQL query value."""
         return repr(self.get_name_statement_text())
 
     def pack(self):
-        """Extend, return partial position record and index data."""
+        """Extend, return CQL query record and index data."""
         value = super().pack()
         index = value[1]
-        index[PARTIALPOSITION_NAME_FIELD_DEF] = [self.get_name_text()]
+        index[CQL_NAME_FIELD_DEF] = [self.get_name_text()]
         return value
 
 
@@ -1446,17 +1441,17 @@ class ChessDBrecordPartial(Record):
     """Partial position record."""
 
     def __init__(self):
-        """Extend as a partial position record."""
+        """Extend as a CQL query record."""
         super().__init__(ChessDBkeyPartial, ChessDBvaluePartial)
 
     def get_keys(self, datasource=None, partial=None):
         """Return list of (key, value) tuples.
 
-        The partial position name is held in an attribute which is not named
+        The CQL query name is held in an attribute which is not named
         for the field where it exists in the database.
 
         """
-        if datasource.dbname == PARTIALPOSITION_NAME_FIELD_DEF:
+        if datasource.dbname == CQL_NAME_FIELD_DEF:
             return [(self.value.get_name_text(), self.key.pack())]
         return super().get_keys(datasource=datasource, partial=partial)
 

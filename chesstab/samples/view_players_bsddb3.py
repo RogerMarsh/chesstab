@@ -21,11 +21,11 @@ if __name__ == "__main__":
         "games_White": "White",
     }
 
-    # bsddb removed from Python 3.n
+    # bsddb removed from Python 3 and bsddb3 up to 3.10 only.
     try:
+        from berkeleydb.db import DB
+    except ModuleNotFoundError:
         from bsddb3.db import DB
-    except ImportError:
-        from bsddb.db import DB
 
     import tkinter.filedialog
 

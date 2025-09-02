@@ -2,7 +2,7 @@
 # Copyright 2013 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess chessql (partial position) exporters."""
+"""Chess chessql (CQL query) exporters."""
 
 from . import chessrecord, filespec
 from .cqlstatement import CQLStatement
@@ -17,7 +17,7 @@ def export_all_positions(database, filename):
     instance = chessrecord.ChessDBrecordPartial()
     instance.set_database(database)
     cursor = database.database_cursor(
-        filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
+        filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
     )
     try:
         with open(filename, "w", encoding=_ENCODING) as gamesout:
@@ -44,7 +44,7 @@ def export_selected_positions(grid, filename):
             for bookmark in sorted(grid.bookmarks):
                 instance.load_record(
                     database.get_primary_record(
-                        filespec.PARTIAL_FILE_DEF, bookmark[0]
+                        filespec.CQL_FILE_DEF, bookmark[0]
                     )
                 )
                 gamesout.write(instance.get_srvalue())
@@ -54,7 +54,7 @@ def export_selected_positions(grid, filename):
     instance = chessrecord.ChessDBrecordPartial()
     instance.set_database(database)
     cursor = database.database_cursor(
-        filespec.PARTIAL_FILE_DEF, filespec.PARTIAL_FILE_DEF
+        filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
     )
     try:
         with open(filename, "w", encoding=_ENCODING) as gamesout:

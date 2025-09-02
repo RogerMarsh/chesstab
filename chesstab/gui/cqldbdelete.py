@@ -124,17 +124,30 @@ class CQLDbDelete(DeleteText, DataDelete):
         return super().dialog_ok()
 
     def delete(self, commit=True):
-        """Delegate to superclass to delete record then delete game list."""
-        if commit:
-            self.datasource.dbhome.start_transaction()
-        super().delete(commit=False)
-        cqls = self.ui.partialpositionds(
-            self.ui.base_games.datasource.dbhome,
-            self.ui.base_games.datasource.dbset,
-            self.ui.base_games.datasource.dbset,
-            newrow=None,
+        """Delegate to superclass to delete record then delete game list.
+
+        If commit evaluates False caller is responsible for evaluating
+        CQL queries on the changes.
+
+        """
+        dbhome = self.datasource.dbhome
+        dbhome.mark_cql_statements_evaluated(
+            allexceptkey=self.object.key.recno
         )
-        assert self.object.newrecord is None
-        cqls.forget_cql_statement_games(self.object, commit=False)
+        dbhome.mark_all_games_not_evaluated()
         if commit:
-            self.datasource.dbhome.commit()
+            dbhome.remove_cql_query_match_list_for_query_key(
+                self.object.key.recno
+            )
+        super().delete(commit=commit)
+        dbhome.clear_games_and_cql_queries_pending_evaluation()
+        # cqls = self.ui.partialpositionds(
+        #    self.ui.base_games.datasource.dbhome,
+        #    self.ui.base_games.datasource.dbset,
+        #    self.ui.base_games.datasource.dbset,
+        #    newrow=None,
+        # )
+        # assert self.object.newrecord is None
+        # cqls.forget_cql_statement_games(self.object, commit=False)
+        # if commit:
+        #    self.datasource.dbhome.commit()

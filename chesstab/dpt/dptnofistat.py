@@ -6,7 +6,7 @@
 
 from solentware_base import dpt_database
 
-from ..core.filespec import FileSpec
+from ..core import filespec
 from ..basecore import database
 
 
@@ -32,7 +32,7 @@ class Database(database.Database, dpt_database.Database):
             sysprint = kargs.pop("sysprint")
         except KeyError:
             sysprint = "CONSOLE"
-        ddnames = FileSpec(
+        ddnames = filespec.make_filespec(
             use_specification_items=use_specification_items,
             dpt_records=dpt_records,
         )

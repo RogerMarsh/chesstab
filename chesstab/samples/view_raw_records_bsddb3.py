@@ -53,11 +53,11 @@ if __name__ == "__main__":
         "engine_command": "Engine_command",
     }
 
-    # bsddb removed from Python 3.n
+    # bsddb removed from Python 3 and bsddb3 up to 3.10 only.
     try:
+        from berkeleydb.db import DB, DBNoSuchFileError
+    except ModuleNotFoundError:
         from bsddb3.db import DB, DBNoSuchFileError
-    except ImportError:
-        from bsddb.db import DB, DBNoSuchFileError
 
     import tkinter.filedialog
 

@@ -10,16 +10,17 @@ The CQLUpdate class provides methods to update an existing CQL record.
 import tkinter
 import tkinter.messagebox
 
-from solentware_grid.gui.dataedit import RecordEdit
+from solentware_grid.gui import dataedit
 
-import chessql.core.basenode
+from . import displaytext
+from ..cql import queryevaluator
+from ..cql import runcql
+from ..core import chessrecord
+from ..core import filespec
+from . import cqlinsert
 
-from ..core.chessrecord import ChessDBrecordPartial
-from .displaytext import EditText
-from .cqlinsert import CQLInsert
 
-
-class CQLUpdate(EditText, CQLInsert):
+class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
     """Update an existing CQL statement database record.
 
     The list od records matching the statement is also updated.
@@ -28,6 +29,7 @@ class CQLUpdate(EditText, CQLInsert):
     def _update_item_database(self, event=None):
         """Modify existing ChessQL statement record."""
         del event
+        title = "Insert ChessQL Statement"
         if self.ui.database is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
@@ -74,91 +76,104 @@ class CQLUpdate(EditText, CQLInsert):
                 ),
             )
             return
-        original = ChessDBrecordPartial()
-        original.load_record(
-            (self.sourceobject.key.recno, self.sourceobject.srvalue)
-        )
-
-        # is it better to use DataClient directly?
-        # Then original would not be used. Instead DataSource.new_row
-        # gets record keyed by sourceobject and update is used to edit this.
-        updater = ChessDBrecordPartial()
-
-        self._clear_statement_tags()
-        try:
-            updater.value.prepare_cql_statement(
-                self.get_name_cql_statement_text()
+        # Ignore self.cql_statement except for getting statement text
+        # because ChessDBvaluePartial(CQLStatement, ...) will lead to a
+        # database update.
+        self.cql_statement.split_statement(
+            "\n".join(
+                (
+                    self.get_tagged_text(self.TITLE_DATA),
+                    self.get_tagged_text(self.TEXT_DATA),
+                )
             )
-        except chessql.core.basenode.NodeError as exc:
-            self._report_statement_error(updater.value, exc)
-            return
-        title = "Edit ChessQL Statement"
-        tname = title.replace("Edit ", "").replace("S", "s")
-        if not updater.value.get_name_text():
+        )
+        if not self.cql_statement.get_name_text():
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title=title,
                 message="".join(
                     (
                         "The '",
-                        tname,
+                        "CQL statement",
                         " has no name.\n\nPlease enter it's ",
                         "name as the first line of text.'",
                     )
                 ),
             )
             return
-        message = [
-            "".join(
-                (
-                    "Confirm request to edit ",
-                    tname,
-                    " named:\n\n",
-                    updater.value.get_name_text(),
-                    "\n\non database.\n\n",
-                )
+        # The ChessDBvaluePartial with default __init__ arguments is not
+        # appropriate here.
+        original = chessrecord.ChessDBrecordPartial()
+        original.value.dbset = filespec.GAMES_FILE_DEF
+        original.value.set_database(database=self.ui.database)
+        original.load_record(
+            (self.sourceobject.key.recno, self.sourceobject.srvalue)
+        )
+        updater = chessrecord.ChessDBrecordPartial()
+        updater.value.dbset = filespec.GAMES_FILE_DEF
+        updater.value.set_database(database=self.ui.database)
+        try:
+            updater.value.prepare_cql_statement(
+                self.get_name_cql_statement_text()
             )
-        ]
-        if not updater.value.cql_error:
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+        except queryevaluator.CQLStatementError as exc:
+            tag_ranges = self.score.tag_ranges(self.TEXT_DATA)
+            evaluator = updater.value.query_container.evaluator
+            if evaluator.error_location is not None:
+                start = self.score.index(evaluator.error_location)
+                if not tag_ranges or len(tag_ranges) > 2:
+                    self.score.tag_add(self.ERROR_TAG, start)
+                else:
+                    self.score.tag_add(
+                        self.ERROR_TAG,
+                        start,
+                        start + str(evaluator.error_length).join("+c"),
+                    )
+            tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message="".join(message),
-            ):
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title=title,
-                    message=tname.join(("Edit ", " on database abandonned.")),
-                )
-                return
-        else:
-            message.append(updater.value.cql_error.get_error_report())
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
-                parent=self.ui.get_toplevel(),
-                title=title,
-                message="".join(message),
-            ):
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title=title,
-                    message=tname.join(("Edit ", " on database abandonned.")),
-                )
-                return
-        editor = RecordEdit(updater, original)
-        editor.set_data_source(source=datasource)
-        updater.set_database(editor.get_data_source().dbhome)
-        original.set_database(editor.get_data_source().dbhome)
-        updater.key.recno = original.key.recno
-        editor.edit()
-        tkinter.messagebox.showinfo(
+                message=str(exc),
+            )
+            return
+        if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
             parent=self.ui.get_toplevel(),
             title=title,
             message="".join(
                 (
-                    tname,
-                    ' "',
+                    "Confirm request to edit CQL statement named:\n\n",
                     updater.value.get_name_text(),
-                    '" amended on database.',
+                    "\n\non database\n\n",
                 )
             ),
+        ):
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="Add CQL statement to database abandonned",
+            )
+            return
+        editor = dataedit.RecordEdit(updater, original)
+        editor.set_data_source(source=datasource)
+        updater.set_database(editor.get_data_source().dbhome)
+        original.set_database(editor.get_data_source().dbhome)
+        updater.key.recno = original.key.recno
+        datasource.dbhome.mark_cql_statements_evaluated(
+            allexceptkey=updater.key.recno
         )
+        datasource.dbhome.mark_all_games_not_evaluated()
+        editor.edit()
+        if datasource.dbhome.valid_cql_statements_exist():
+            runcql.make_runcql(datasource.dbhome, self.ui, True)
+            self.refresh_game_list(key_recno=updater.key.recno)
+        else:
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message="".join(
+                    (
+                        'CQL statement "',
+                        updater.value.get_name_text(),
+                        '" amended on database.',
+                    )
+                ),
+            )

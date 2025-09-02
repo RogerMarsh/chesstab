@@ -38,8 +38,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
     itemgrid is the ui reference to the DataGrid from which the record was
     selected.
 
-    opendatabase and evaluate are arguments for CQLStatement() call.
-
     Subclasses are responsible for providing a geometry manager.
 
     Attribute _most_recent_bindings is set to indicate the initial set of
@@ -52,8 +50,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         ui=None,
         items_manager=None,
         itemgrid=None,
-        opendatabase=None,
-        query_container_class=None,
         **ka,
     ):
         """Create widgets to display ChessQL statement."""
@@ -64,12 +60,9 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.score.tag_configure(self.CURSOR_TAG, background=self.CURSOR_COLOR)
 
         # Selection rule parser instance to process text.
-        self.cql_statement = CQLStatement(
-            opendatabase=opendatabase,
-            query_container_class=query_container_class,
-        )
-        # Not sure this is needed or wanted.
-        # self.cql_statement.dbset = ui.base_games.datasource.dbset
+        self.cql_statement = CQLStatement()
+        self.cql_statement.dbset = ui.base_games.datasource.dbset
+        self.cql_statement.set_database(database=ui.database)
 
     def set_and_tag_item_text(self, reset_undo=False):
         """Display the ChessQL statement as text.
@@ -114,7 +107,7 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
 
         return False
 
-    def refresh_game_list(self, ignore_sourceobject=False):
+    def refresh_game_list(self, key_recno=None):
         """Display games with position matching selected ChessQL statement."""
         grid = self.itemgrid
         # Should this complain also if the grid is not visible?
@@ -138,9 +131,7 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
             grid.datasource.get_cql_statement_games(None, None)
         else:
             try:
-                grid.datasource.get_cql_statement_games(
-                    cqls, None if ignore_sourceobject else self.sourceobject
-                )
+                grid.datasource.get_cql_statement_games(cqls, key_recno)
             except AttributeError as exc:
                 if str(exc) == "'NoneType' object has no attribute 'answer'":
                     msg = "".join(
@@ -188,18 +179,6 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
                         ("An empty game list will be displayed.")
                     ),
                 )
-        elif grid.datasource.not_implemented:
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title="ChessQL Statement Not Implemented",
-                message="".join(
-                    (
-                        "These filters are not implemented and ",
-                        "are ignored:\n\n",
-                        "\n".join(sorted(grid.datasource.not_implemented)),
-                    )
-                ),
-            )
 
     def _tag_match_text(self, match_, tag):
         """Add match_.text in self.score to tag.

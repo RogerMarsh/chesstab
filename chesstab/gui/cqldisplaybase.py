@@ -70,12 +70,12 @@ class CQLDisplayBase(
 
     @property
     def ui_displayed_items(self):
-        """Return manager of widgets displaying a partial position record."""
+        """Return manager of widgets displaying a CQL query record."""
         return self.ui.partial_items
 
     @property
     def ui_configure_item_list_grid(self):
-        """Return function to configure partial position grid to fit text."""
+        """Return function to configure CQL query grid to fit text."""
         return self.ui.configure_partial_grid
 
     @property
@@ -163,12 +163,10 @@ class CQLDisplayBase(
         """Prevent update from self if instance refers to same record."""
         if instance.newrecord:
             # Editing an existing record.
-            value = instance.newrecord.value
             key = instance.newrecord.key
 
         else:
             # Inserting a new record or deleting an existing record.
-            value = instance.value
             key = instance.key
 
         if self.sourceobject is not None:
@@ -179,81 +177,9 @@ class CQLDisplayBase(
             ):
                 self.blockchange = True
 
-        pds = self.ui.partial_games.datasource
-        if self.sourceobject is not None and key != self.sourceobject.key:
-            pass
-        elif self is not self.ui.partial_items.active_item:
-            pass
-        elif instance.newrecord is None:
-            pds.forget_cql_statement_games(instance)
-        elif instance.newrecord is False:
-            try:
-                pds.update_cql_statement_games(instance)
-            except AttributeError as exc:
-                if str(exc) == "'NoneType' object has no attribute 'answer'":
-                    msg = "".join(
-                        (
-                            "Unable to add ChessQL statement to database, ",
-                            "probably because an 'empty square' is in the ",
-                            "query (eg '.a2-3'):\n\nThe reported  error ",
-                            "is:\n\n",
-                            str(exc),
-                        )
-                    )
-                else:
-                    msg = "".join(
-                        (
-                            "Unable to add ChessQL statement to database:\n\n",
-                            "The reported error is:\n\n",
-                            str(exc),
-                        )
-                    )
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="Insert ChessQL Statement",
-                    message=msg,
-                )
-                return
-        else:
-            # Unfortunatly the existing list will have to be recalculated if
-            # one of the caught exceptions occurs.
-            pds.forget_cql_statement_games(instance)
-            try:
-                pds.update_cql_statement_games(instance.newrecord)
-            except AttributeError as exc:
-                if str(exc) == "'NoneType' object has no attribute 'answer'":
-                    msg = "".join(
-                        (
-                            "Unable to edit ChessQL statement on database, ",
-                            "probably because an 'empty square' is in the ",
-                            "query (eg '.a2-3'):\n\nThe reported  error ",
-                            "is:\n\n",
-                            str(exc),
-                        )
-                    )
-                else:
-                    msg = "".join(
-                        (
-                            "Unable to edit ChessQL statement on database:",
-                            "\n\nThe reported error is:\n\n",
-                            str(exc),
-                        )
-                    )
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="Insert ChessQL Statement",
-                    message=msg,
-                )
-                return
-
-        if self is self.ui.partial_items.active_item:
-            if self.sourceobject is not None and key == self.sourceobject.key:
-                # Maybe should create a new CQLStatement instance.
-                # self.cql_statement is a CQLStatement instance.
-                # value is a ChessDBvaluePartial instance.
-                self.cql_statement = value
-                self.set_and_tag_item_text()
-                self._get_cql_statement_games_to_grid(value)
+        # Code to refresh list of matching games removed because the
+        # recalculation is done by CQL program in separate processes
+        # after the change is committed.
 
     def get_text_for_statusbar(self):
         """Return 'Please wait ..' message for status bar."""
@@ -274,7 +200,17 @@ class CQLDisplayBase(
             0, func=self.try_command(self.ui.set_partial_name, self.panel)
         )
         self.panel.after(
-            0, func=self.try_command(self.refresh_game_list, self.panel)
+            0, func=self.try_command(self._refresh_game_list, self.panel)
+        )
+
+    def _refresh_game_list(self):
+        """Call refresh_game_list in a try_command() call.."""
+        self.refresh_game_list(
+            key_recno=(
+                self.sourceobject.key.recno
+                if self.sourceobject is not None
+                else None
+            )
         )
 
     def _get_cql_statement_games_to_grid(self, statement):  # match):
@@ -293,7 +229,12 @@ class CQLDisplayBase(
         pgd.close_client_cursor()
         try:
             pgd.datasource.get_cql_statement_games(
-                statement, self.sourceobject
+                statement,
+                (
+                    self.sourceobject.key.recno
+                    if self.sourceobject is not None
+                    else None
+                ),
             )
         except AttributeError as exc:
             if str(exc) == "'NoneType' object has no attribute 'answer'":
@@ -320,15 +261,3 @@ class CQLDisplayBase(
             )
             return
         pgd.fill_view(currentkey=key, exclude=False)
-        if pgd.datasource.not_implemented:
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title="ChessQL Statement Not Implemented",
-                message="".join(
-                    (
-                        "These filters are not implemented and ",
-                        "are ignored:\n\n",
-                        "\n".join(sorted(pgd.datasource.not_implemented)),
-                    )
-                ),
-            )

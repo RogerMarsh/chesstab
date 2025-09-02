@@ -25,8 +25,73 @@ from solentware_base.core.constants import (
     BRECPPG,
     FILEORG,
     DPT_PRIMARY_FIELD_LENGTH,
+    ACCESS_METHOD,
+    HASH,
+    BTREE,
 )
 import solentware_base.core.filespec
+
+# PGN Tag fields.
+# These are the names recommended in the PGN specification plus others
+# commonly used.
+# All are well-known PGN Tags: those which are intentionally not indexed
+# are commented in PGN_TAG_NAMES.
+PGN_TAG_NAMES = frozenset(
+    (
+        # These are the Seven Tag Roster in the PGN specification.
+        "Event",  # EVENT_FIELD_DEF.
+        "Site",  # SITE_FIELD_DEF.
+        "Date",  # DATE_FIELD_DEF.
+        "Round",  # ROUND_FIELD_DEF.
+        "White",  # WHITE_FIELD_DEF.
+        "Black",  # BLACK_FIELD_DEF.
+        "Result",  # RESULT_FIELD_DEF.
+        # These are the other tags in the PGN specification.
+        "WhiteTitle",
+        "BlackTitle",
+        "WhiteElo",
+        "BlackElo",
+        "WhiteUSCF",  # Example of national rating agency.
+        "BlackUSCF",  # Example of national rating agency.
+        "WhiteNA",
+        "BlackNA",
+        "WhiteType",
+        "BlackType",
+        "EventDate",
+        "EventSponsor",
+        "Stage",
+        "Board",
+        "Opening",
+        "Variation",
+        "SubVariation",
+        "ECO",
+        "NIC",
+        "Time",
+        "UTCTime",
+        "UTCDate",
+        "TimeControl",
+        "SetUp",
+        "FEN",
+        "Termination",
+        "Annotator",
+        "Mode",
+        "PlyCount",
+        # These are commonly used, in TWIC or LiChess for example.
+        "EventType",
+        "EventRounds",
+        "EventCountry",
+        "SourceTitle",
+        "Source",
+        "SourceDate",
+        "SourceVersion",
+        "SourceVersionDate",
+        "SourceQuality",
+        "WhiteTeam",
+        "BlackTeam",
+        "WhiteRatingDiff",
+        "BlackRatingDiff",
+    )
+)
 
 # Reference profile of a typical game (see FileSpec docstring)
 POSITIONS_PER_GAME = 75
@@ -37,7 +102,7 @@ BYTES_PER_GAME = 700  # Records per page set to 10 because 700 was good.
 # Names used to refer to file descriptions
 # DPT files or Berkeley DB primary databases
 GAMES_FILE_DEF = "games"
-PARTIAL_FILE_DEF = "partial"
+CQL_FILE_DEF = "cql"
 REPERTOIRE_FILE_DEF = "repertoire"
 ANALYSIS_FILE_DEF = "analysis"
 SELECTION_FILE_DEF = "selection"
@@ -60,16 +125,23 @@ WHITE_FIELD_DEF = "White"
 BLACK_FIELD_DEF = "Black"
 RESULT_FIELD_DEF = "Result"
 POSITIONS_FIELD_DEF = "positions"
-PIECESQUAREMOVE_FIELD_DEF = "piecesquaremove"
-PIECEMOVE_FIELD_DEF = "piecemove"
-SQUAREMOVE_FIELD_DEF = "squaremove"
+assert EVENT_FIELD_DEF in PGN_TAG_NAMES
+assert SITE_FIELD_DEF in PGN_TAG_NAMES
+assert DATE_FIELD_DEF in PGN_TAG_NAMES
+assert ROUND_FIELD_DEF in PGN_TAG_NAMES
+assert WHITE_FIELD_DEF in PGN_TAG_NAMES
+assert BLACK_FIELD_DEF in PGN_TAG_NAMES
+assert RESULT_FIELD_DEF in PGN_TAG_NAMES
+PIECESQUARE_FIELD_DEF = "piecesquare"
 IMPORT_FIELD_DEF = "import"
-PARTIALPOSITION_FIELD_DEF = "partialposition"
+CQL_QUERY_FIELD_DEF = "cqlquery"
 PGN_DATE_FIELD_DEF = "pgndate"
+CQL_EVALUATE_FIELD_DEF = "cqleval"
 
-# partial file fields.
-PARTIAL_FIELD_DEF = "Partial"
-PARTIALPOSITION_NAME_FIELD_DEF = "partialpositionname"
+# CQL query file fields.
+CQL_IDENTITY_FIELD_DEF = "cqlid"
+CQL_NAME_FIELD_DEF = "cqlname"
+CQL_ERROR_FIELD_DEF = "cqlerror"
 NEWGAMES_FIELD_DEF = "newgames"
 
 # repertoire file fields.
@@ -97,11 +169,6 @@ IDENTITY_TYPE_FIELD_DEF = "identitytype"
 
 # Non-standard field names. Standard is x_FIELD_DEF.title().
 # These are used as values in 'SECONDARY', and keys in 'FIELDS', dicts.
-_PIECESQUAREMOVE_FIELD_NAME = "PieceSquareMove"
-_PIECEMOVE_FIELD_NAME = "PieceMove"
-_SQUAREMOVE_FIELD_NAME = "SquareMove"
-_PARTIALPOSITION_FIELD_NAME = "PartialPosition"
-_PP_NAME_FIELD_NAME = "PartialPositionName"
 _NEWGAMES_FIELD_NAME = "NewGames"
 _OPENING_ERROR_FIELD_NAME = "OpeningError"
 _PGN_DATE_FIELD_NAME = "PGNdate"
@@ -115,11 +182,215 @@ DB_ENVIRONMENT_MAXOBJECTS = 120000  # OpenBSD only.
 # Symas LMMD environment.
 LMMD_MINIMUM_FREE_PAGES_AT_START = 20000
 
-# Any partial position indexed by NEWGAMES_FIELD_VALUE on _NEWGAMES_FIELD_NAME
-# has not been recalculated since an update to the games file.  The partial
-# position's _PARTIALGAMES_FIELD_NAME reference on the games file is out of
+# Any CQL query indexed by NEWGAMES_FIELD_VALUE on _NEWGAMES_FIELD_NAME
+# has not been recalculated since an update to the games file.  The CQL
+# query's _PARTIALGAMES_FIELD_NAME reference on the games file is out of
 # date and may be wrong.
 NEWGAMES_FIELD_VALUE = "changed"
+
+# Any game which needs to be evaluated against the existing CQL queries.
+CQL_EVALUATE_FIELD_VALUE = "changed"
+
+
+def _specification():
+    """Return file specification dict."""
+    dptdsn = FileSpec.dpt_dsn
+    field_name = FileSpec.field_name
+    return {
+        GAMES_FILE_DEF: {
+            DDNAME: "GAMES",
+            FILE: dptdsn(GAMES_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 10,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 14,
+            BTOD_CONSTANT: 800,
+            DEFAULT_RECORDS: 10000,
+            DEFAULT_INCREASE_FACTOR: 0.01,
+            PRIMARY: field_name(GAME_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 200,
+            SECONDARY: {
+                PGN_ERROR_FIELD_DEF: PGN_ERROR_FIELD_DEF.title(),
+                PGNFILE_FIELD_DEF: None,
+                # NUMBER_FIELD_DEF: None,
+                # EVENT_FIELD_DEF: None,
+                # SITE_FIELD_DEF: None,
+                # DATE_FIELD_DEF: None,
+                # ROUND_FIELD_DEF: None,
+                # WHITE_FIELD_DEF: None,
+                # BLACK_FIELD_DEF: None,
+                # RESULT_FIELD_DEF: None,
+                POSITIONS_FIELD_DEF: POSITIONS_FIELD_DEF.title(),
+                PIECESQUARE_FIELD_DEF: PIECESQUARE_FIELD_DEF.title(),
+                CQL_QUERY_FIELD_DEF: CQL_QUERY_FIELD_DEF.title(),
+                CQL_EVALUATE_FIELD_DEF: CQL_EVALUATE_FIELD_DEF.title(),
+                PGN_DATE_FIELD_DEF: _PGN_DATE_FIELD_NAME,
+                IMPORT_FIELD_DEF: None,
+            },
+            FIELDS: {
+                field_name(GAME_FIELD_DEF): None,
+                PGN_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
+                field_name(PGNFILE_FIELD_DEF): {INV: True, ORD: True},
+                # field_name(NUMBER_FIELD_DEF): {INV: True, ORD: True},
+                # WHITE_FIELD_DEF: {INV: True, ORD: True},
+                # BLACK_FIELD_DEF: {INV: True, ORD: True},
+                # EVENT_FIELD_DEF: {INV: True, ORD: True},
+                # ROUND_FIELD_DEF: {INV: True, ORD: True},
+                # DATE_FIELD_DEF: {INV: True, ORD: True},
+                # RESULT_FIELD_DEF: {INV: True, ORD: True},
+                # SITE_FIELD_DEF: {INV: True, ORD: True},
+                POSITIONS_FIELD_DEF.title(): {
+                    INV: True,
+                    ORD: True,
+                },  # , ACCESS_METHOD:HASH},
+                PIECESQUARE_FIELD_DEF.title(): {
+                    INV: True,
+                    ORD: True,
+                },  # , ACCESS_METHOD:HASH},
+                CQL_QUERY_FIELD_DEF.title(): {INV: True, ORD: True},
+                CQL_EVALUATE_FIELD_DEF.title(): {INV: True, ORD: True},
+                _PGN_DATE_FIELD_NAME: {INV: True, ORD: True},
+                field_name(IMPORT_FIELD_DEF): {INV: True, ORD: True},
+            },
+        },
+        CQL_FILE_DEF: {
+            DDNAME: "CQL",
+            FILE: dptdsn(CQL_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 40,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 1,  # a guess
+            BTOD_CONSTANT: 100,  # a guess
+            DEFAULT_RECORDS: 10000,
+            DEFAULT_INCREASE_FACTOR: 0.5,
+            PRIMARY: field_name(CQL_IDENTITY_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 127,
+            SECONDARY: {
+                CQL_NAME_FIELD_DEF: CQL_NAME_FIELD_DEF.title(),
+                CQL_ERROR_FIELD_DEF: CQL_ERROR_FIELD_DEF.title(),
+                NEWGAMES_FIELD_DEF: _NEWGAMES_FIELD_NAME,
+            },
+            FIELDS: {
+                field_name(CQL_IDENTITY_FIELD_DEF): None,
+                CQL_NAME_FIELD_DEF.title(): {INV: True, ORD: True},
+                CQL_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
+                _NEWGAMES_FIELD_NAME: {INV: True, ORD: True},
+            },
+        },
+        REPERTOIRE_FILE_DEF: {
+            DDNAME: "REPERT",
+            FILE: dptdsn(REPERTOIRE_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 1,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 0.1,
+            BTOD_CONSTANT: 800,
+            DEFAULT_RECORDS: 100,
+            DEFAULT_INCREASE_FACTOR: 0.01,
+            PRIMARY: field_name(REPERTOIRE_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 200,
+            SECONDARY: {
+                OPENING_FIELD_DEF: None,
+                OPENING_ERROR_FIELD_DEF: _OPENING_ERROR_FIELD_NAME,
+            },
+            FIELDS: {
+                field_name(REPERTOIRE_FIELD_DEF): None,
+                OPENING_FIELD_DEF: {INV: True, ORD: True},
+                _OPENING_ERROR_FIELD_NAME: {INV: True, ORD: True},
+            },
+        },
+        ANALYSIS_FILE_DEF: {
+            DDNAME: "ANALYSIS",
+            FILE: dptdsn(ANALYSIS_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 10,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 1,
+            BTOD_CONSTANT: 800,
+            DEFAULT_RECORDS: 100000,
+            DEFAULT_INCREASE_FACTOR: 1.0,
+            PRIMARY: field_name(ANALYSIS_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 200,
+            SECONDARY: {
+                ENGINE_FIELD_DEF: ENGINE_FIELD_DEF.title(),
+                VARIATION_FIELD_DEF: VARIATION_FIELD_DEF.title(),
+            },
+            FIELDS: {
+                field_name(ANALYSIS_FIELD_DEF): None,
+                ENGINE_FIELD_DEF.title(): {INV: True, ORD: True},
+                VARIATION_FIELD_DEF.title(): {INV: True, ORD: True},
+            },
+        },
+        SELECTION_FILE_DEF: {
+            DDNAME: "SLCTRULE",
+            FILE: dptdsn(SELECTION_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 20,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 1,  # a guess
+            BTOD_CONSTANT: 100,  # a guess
+            DEFAULT_RECORDS: 10000,
+            DEFAULT_INCREASE_FACTOR: 0.5,
+            PRIMARY: field_name(SELECTION_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 127,
+            SECONDARY: {
+                RULE_FIELD_DEF: RULE_FIELD_DEF.title(),
+            },
+            FIELDS: {
+                field_name(SELECTION_FIELD_DEF): None,
+                RULE_FIELD_DEF.title(): {INV: True, ORD: True},
+            },
+        },
+        ENGINE_FILE_DEF: {
+            DDNAME: "ENGINE",
+            FILE: dptdsn(ENGINE_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 150,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 1,  # a guess
+            BTOD_CONSTANT: 100,  # a guess
+            DEFAULT_RECORDS: 1000,
+            DEFAULT_INCREASE_FACTOR: 0.5,
+            PRIMARY: field_name(PROGRAM_FIELD_DEF),
+            DPT_PRIMARY_FIELD_LENGTH: 127,
+            SECONDARY: {
+                COMMAND_FIELD_DEF: COMMAND_FIELD_DEF.title(),
+            },
+            FIELDS: {
+                field_name(PROGRAM_FIELD_DEF): None,
+                COMMAND_FIELD_DEF.title(): {INV: True, ORD: True},
+            },
+        },
+        IDENTITY_FILE_DEF: {
+            DDNAME: "IDENTITY",
+            FILE: dptdsn(IDENTITY_FILE_DEF),
+            FILEDESC: {
+                BRECPPG: 80,
+                FILEORG: RRN,
+            },
+            BTOD_FACTOR: 2.0,
+            BTOD_CONSTANT: 50,
+            DEFAULT_RECORDS: 10,
+            DEFAULT_INCREASE_FACTOR: 0.01,
+            PRIMARY: field_name(IDENTITY_FIELD_DEF),
+            SECONDARY: {
+                IDENTITY_TYPE_FIELD_DEF: None,
+            },
+            FIELDS: {
+                field_name(IDENTITY_FIELD_DEF): None,
+                field_name(IDENTITY_TYPE_FIELD_DEF): {
+                    INV: True,
+                    ORD: True,
+                },
+            },
+        },
+    }
 
 
 class FileSpec(solentware_base.core.filespec.FileSpec):
@@ -164,215 +435,110 @@ class FileSpec(solentware_base.core.filespec.FileSpec):
 
     """
 
-    def __init__(
-        self, use_specification_items=None, dpt_records=None, **kargs
-    ):
-        """Define chess database."""
-        dptdsn = FileSpec.dpt_dsn
-        field_name = FileSpec.field_name
+    def is_consistent_with(self, stored_specification):
+        """Raise FileSpecError if stored_specification is not as expected.
 
-        super().__init__(
-            use_specification_items=use_specification_items,
-            dpt_records=dpt_records,
-            **{
-                GAMES_FILE_DEF: {
-                    DDNAME: "GAMES",
-                    FILE: dptdsn(GAMES_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 10,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 14,
-                    BTOD_CONSTANT: 800,
-                    DEFAULT_RECORDS: 10000,
-                    DEFAULT_INCREASE_FACTOR: 0.01,
-                    PRIMARY: field_name(GAME_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 200,
-                    SECONDARY: {
-                        PGN_ERROR_FIELD_DEF: PGN_ERROR_FIELD_DEF.title(),
-                        PGNFILE_FIELD_DEF: None,
-                        # NUMBER_FIELD_DEF: None,
-                        EVENT_FIELD_DEF: None,
-                        SITE_FIELD_DEF: None,
-                        DATE_FIELD_DEF: None,
-                        ROUND_FIELD_DEF: None,
-                        WHITE_FIELD_DEF: None,
-                        BLACK_FIELD_DEF: None,
-                        RESULT_FIELD_DEF: None,
-                        POSITIONS_FIELD_DEF: POSITIONS_FIELD_DEF.title(),
-                        PIECESQUAREMOVE_FIELD_DEF: _PIECESQUAREMOVE_FIELD_NAME,
-                        PIECEMOVE_FIELD_DEF: _PIECEMOVE_FIELD_NAME,
-                        SQUAREMOVE_FIELD_DEF: _SQUAREMOVE_FIELD_NAME,
-                        PARTIALPOSITION_FIELD_DEF: _PARTIALPOSITION_FIELD_NAME,
-                        PGN_DATE_FIELD_DEF: _PGN_DATE_FIELD_NAME,
-                        IMPORT_FIELD_DEF: None,
-                    },
-                    FIELDS: {
-                        field_name(GAME_FIELD_DEF): None,
-                        PGN_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
-                        field_name(PGNFILE_FIELD_DEF): {INV: True, ORD: True},
-                        # field_name(NUMBER_FIELD_DEF): {INV: True, ORD: True},
-                        WHITE_FIELD_DEF: {INV: True, ORD: True},
-                        BLACK_FIELD_DEF: {INV: True, ORD: True},
-                        EVENT_FIELD_DEF: {INV: True, ORD: True},
-                        ROUND_FIELD_DEF: {INV: True, ORD: True},
-                        DATE_FIELD_DEF: {INV: True, ORD: True},
-                        RESULT_FIELD_DEF: {INV: True, ORD: True},
-                        SITE_FIELD_DEF: {INV: True, ORD: True},
-                        POSITIONS_FIELD_DEF.title(): {
-                            INV: True,
-                            ORD: True,
-                        },  # , ACCESS_METHOD:HASH},
-                        _PIECESQUAREMOVE_FIELD_NAME: {
-                            INV: True,
-                            ORD: True,
-                        },  # , ACCESS_METHOD:HASH},
-                        _PIECEMOVE_FIELD_NAME: {
-                            INV: True,
-                            ORD: True,
-                        },  # , ACCESS_METHOD:HASH},
-                        _SQUAREMOVE_FIELD_NAME: {
-                            INV: True,
-                            ORD: True,
-                        },  # , ACCESS_METHOD:HASH},
-                        _PARTIALPOSITION_FIELD_NAME: {INV: True, ORD: True},
-                        _PGN_DATE_FIELD_NAME: {INV: True, ORD: True},
-                        field_name(IMPORT_FIELD_DEF): {INV: True, ORD: True},
-                    },
-                },
-                PARTIAL_FILE_DEF: {
-                    DDNAME: "PARTIAL",
-                    FILE: dptdsn(PARTIAL_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 40,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 1,  # a guess
-                    BTOD_CONSTANT: 100,  # a guess
-                    DEFAULT_RECORDS: 10000,
-                    DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: field_name(PARTIAL_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 127,
-                    SECONDARY: {
-                        PARTIALPOSITION_NAME_FIELD_DEF: _PP_NAME_FIELD_NAME,
-                        NEWGAMES_FIELD_DEF: _NEWGAMES_FIELD_NAME,
-                    },
-                    FIELDS: {
-                        field_name(PARTIAL_FIELD_DEF): None,
-                        _PP_NAME_FIELD_NAME: {INV: True, ORD: True},
-                        _NEWGAMES_FIELD_NAME: {INV: True, ORD: True},
-                    },
-                },
-                REPERTOIRE_FILE_DEF: {
-                    DDNAME: "REPERT",
-                    FILE: dptdsn(REPERTOIRE_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 1,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 0.1,
-                    BTOD_CONSTANT: 800,
-                    DEFAULT_RECORDS: 100,
-                    DEFAULT_INCREASE_FACTOR: 0.01,
-                    PRIMARY: field_name(REPERTOIRE_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 200,
-                    SECONDARY: {
-                        OPENING_FIELD_DEF: None,
-                        OPENING_ERROR_FIELD_DEF: _OPENING_ERROR_FIELD_NAME,
-                    },
-                    FIELDS: {
-                        field_name(REPERTOIRE_FIELD_DEF): None,
-                        OPENING_FIELD_DEF: {INV: True, ORD: True},
-                        _OPENING_ERROR_FIELD_NAME: {INV: True, ORD: True},
-                    },
-                },
-                ANALYSIS_FILE_DEF: {
-                    DDNAME: "ANALYSIS",
-                    FILE: dptdsn(ANALYSIS_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 10,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 1,
-                    BTOD_CONSTANT: 800,
-                    DEFAULT_RECORDS: 100000,
-                    DEFAULT_INCREASE_FACTOR: 1.0,
-                    PRIMARY: field_name(ANALYSIS_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 200,
-                    SECONDARY: {
-                        ENGINE_FIELD_DEF: ENGINE_FIELD_DEF.title(),
-                        VARIATION_FIELD_DEF: VARIATION_FIELD_DEF.title(),
-                    },
-                    FIELDS: {
-                        field_name(ANALYSIS_FIELD_DEF): None,
-                        ENGINE_FIELD_DEF.title(): {INV: True, ORD: True},
-                        VARIATION_FIELD_DEF.title(): {INV: True, ORD: True},
-                    },
-                },
-                SELECTION_FILE_DEF: {
-                    DDNAME: "SLCTRULE",
-                    FILE: dptdsn(SELECTION_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 20,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 1,  # a guess
-                    BTOD_CONSTANT: 100,  # a guess
-                    DEFAULT_RECORDS: 10000,
-                    DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: field_name(SELECTION_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 127,
-                    SECONDARY: {
-                        RULE_FIELD_DEF: RULE_FIELD_DEF.title(),
-                    },
-                    FIELDS: {
-                        field_name(SELECTION_FIELD_DEF): None,
-                        RULE_FIELD_DEF.title(): {INV: True, ORD: True},
-                    },
-                },
-                ENGINE_FILE_DEF: {
-                    DDNAME: "ENGINE",
-                    FILE: dptdsn(ENGINE_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 150,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 1,  # a guess
-                    BTOD_CONSTANT: 100,  # a guess
-                    DEFAULT_RECORDS: 1000,
-                    DEFAULT_INCREASE_FACTOR: 0.5,
-                    PRIMARY: field_name(PROGRAM_FIELD_DEF),
-                    DPT_PRIMARY_FIELD_LENGTH: 127,
-                    SECONDARY: {
-                        COMMAND_FIELD_DEF: COMMAND_FIELD_DEF.title(),
-                    },
-                    FIELDS: {
-                        field_name(PROGRAM_FIELD_DEF): None,
-                        COMMAND_FIELD_DEF.title(): {INV: True, ORD: True},
-                    },
-                },
-                IDENTITY_FILE_DEF: {
-                    DDNAME: "IDENTITY",
-                    FILE: dptdsn(IDENTITY_FILE_DEF),
-                    FILEDESC: {
-                        BRECPPG: 80,
-                        FILEORG: RRN,
-                    },
-                    BTOD_FACTOR: 2.0,
-                    BTOD_CONSTANT: 50,
-                    DEFAULT_RECORDS: 10,
-                    DEFAULT_INCREASE_FACTOR: 0.01,
-                    PRIMARY: field_name(IDENTITY_FIELD_DEF),
-                    SECONDARY: {
-                        IDENTITY_TYPE_FIELD_DEF: None,
-                    },
-                    FIELDS: {
-                        field_name(IDENTITY_FIELD_DEF): None,
-                        field_name(IDENTITY_TYPE_FIELD_DEF): {
-                            INV: True,
-                            ORD: True,
-                        },
-                    },
-                },
-            }
+        The stored_specification is expected to be consistent with the one
+        in the FileSpec instance (self).  The stored_specification should
+        be the one read from the database being opened.
+
+        In particular the access method for fields in the database version is
+        allowed to be different from the version in self, by being BTREE rather
+        than HASH.
+
+        """
+        file_spec_error = solentware_base.core.filespec.FileSpecError
+        # Compare specification with reference version in self to allow field
+        # access methods to differ.  Specification can say, or imply by
+        # default, BTREE while reference version can say HASH instead.
+        # (Matters for _db and _nosql modules.)
+        if self == stored_specification:
+            return
+        sdbspec = sorted(stored_specification)
+        sfsspec = sorted(self)
+        if sdbspec != sfsspec:
+            raise file_spec_error(
+                "".join(
+                    (
+                        "Specification does not have same files as ",
+                        "defined in this FileSpec",
+                    )
+                )
+            )
+        msgdh = "".join(
+            (
+                "Specification does not have same detail headings for each ",
+                "file as defined in this FileSpec",
+            )
         )
+        msgd = "".join(
+            (
+                "Specification does not have same detail for each file as ",
+                "defined in this FileSpec",
+            )
+        )
+        msgfield = "".join(
+            (
+                "Specification does not have same fields for each file as ",
+                "defined in this FileSpec",
+            )
+        )
+        msgam = "".join(
+            (
+                "Specification does not have same descriptions for each ",
+                "field in each file as defined in this FileSpec",
+            )
+        )
+        for dbs, fss in zip(sdbspec, sfsspec):
+            sdbs = sorted(s for s in stored_specification[dbs])
+            sfss = sorted(s for s in self[fss])
+            if sdbs != sfss:
+                raise file_spec_error(msgdh)
+            if dbs == GAMES_FILE_DEF:
+                if dbsd == FIELDS:
+                    continue
+                if dbsd == SECONDARY:
+                    continue
+            for dbsd in sdbs:
+                if dbsd != FIELDS:
+                    if stored_specification[dbs][dbsd] != self[fss][dbsd]:
+                        raise file_spec_error(msgd)
+                    continue
+                sdbsf = stored_specification[dbs][dbsd]
+                sfssf = self[fss][dbsd]
+                if sorted(sdbsf) != sorted(sfssf):
+                    raise file_spec_error(msgfield)
+                for fieldname in sdbsf:
+                    if sdbsf[fieldname] == sfssf[fieldname]:
+                        continue
+                    dbfp = sdbsf[fieldname].copy()
+                    fsfp = sfssf[fieldname].copy()
+                    if ACCESS_METHOD in dbfp:
+                        del dbfp[ACCESS_METHOD]
+                    if ACCESS_METHOD in fsfp:
+                        del fsfp[ACCESS_METHOD]
+                    if dbfp != fsfp:
+                        raise file_spec_error(msgam)
+                    dbfpam = sdbsf[fieldname].get(ACCESS_METHOD, BTREE)
+                    fsfpam = sfssf[fieldname].get(ACCESS_METHOD, BTREE)
+                    if dbfpam == fsfpam:
+                        continue
+                    if dbfpam == BTREE and fsfpam == HASH:
+                        continue
+                    raise file_spec_error(msgam)
+
+
+def make_filespec(use_specification_items=None, dpt_records=None):
+    """Return FileSpec instance."""
+    specification = _specification()
+    secondary = specification[GAMES_FILE_DEF][SECONDARY]
+    for tag in PGN_TAG_NAMES:
+        secondary[tag] = tag
+    fields = specification[GAMES_FILE_DEF][FIELDS]
+    for tag in PGN_TAG_NAMES:
+        fields[tag] = {INV: True, ORD: True}
+    return FileSpec(
+        use_specification_items=use_specification_items,
+        dpt_records=dpt_records,
+        **specification,
+    )

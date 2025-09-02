@@ -38,6 +38,9 @@ from .constants import (
     END_COMMENT,
     ANY_WHITE_PIECE_NAME,
     ANY_BLACK_PIECE_NAME,
+    EMPTY_SQUARE_NAME,
+    ALWAYS_MATCH,
+    WHITE_PIECE_NAMES,
 )
 
 MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
@@ -54,6 +57,7 @@ MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE = {
     FEN_BLACK_KNIGHT: ANY_BLACK_PIECE_NAME,
     FEN_BLACK_PAWN: ANY_BLACK_PIECE_NAME,
 }
+_ALWAYS_MATCH = frozenset(ALWAYS_MATCH)
 
 
 class GameDisplayMoves(GameIndicateCheck):
@@ -530,25 +534,26 @@ class GameRepertoireTags(GameTags):
 class GameUpdate(_Game):
     """Prepare indicies after each token has been processed."""
 
-    # self.positions, and the three similar, renamed to self.positionkeys.
+    # self.positions renamed to self.positionkeys.
     # self.movenumber is changed to self.halfmovenumber.
     def __init__(self):
-        """Delegate then prepare to collect positions and piece locations."""
+        """Delegate then prepare to collect positions."""
         super().__init__()
         self.positionkeys = []
-        self.piecesquaremovekeys = []
-        self.piecemovekeys = []
-        self.squaremovekeys = []
+        self.piecesquarekeys = set()
         self.halfmovenumber = None
-        self.variationnumber = None
-        self.currentvariation = None
-        self._variation = None
 
     # Replaces self.set_position_fen(self, fen=None)
     def set_initial_board_state(self, position_delta):
-        """Initialize PGN score parser with Forsyth Edwards Notation position.
+        """Delegate then initialize board state and index entries.
 
-        fen defaults to the starting position for a game of chess.
+        The piece location field of the FEN (Forsyth Edwards Notation) is
+        replaced by <Piece instance, square name> tuples for each piece
+        in position_delta
+
+        self.piecesquarekeys is initialised with values for all 64 squares,
+        meaning each square had the indicated state at some point during
+        the game.
 
         """
         super().set_initial_board_state(position_delta)
@@ -556,105 +561,51 @@ class GameUpdate(_Game):
             self.halfmovenumber = [(self._fullmove_number - 1) * 2]
         else:
             self.halfmovenumber = [self._fullmove_number * 2 - 1]
-        self.variationnumber = [0]
-        self._variation = "".join(
-            _convert_integer_to_length_hex(i) for i in self.variationnumber
-        )
-        # Partial positions seems to need the initial position indexed so
-        # CQL queries are evaluated correctly.
-        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
-        piecesquaremovekeys = self.piecesquaremovekeys
-        piecemovekeys = self.piecemovekeys
-        squaremovekeys = self.squaremovekeys
-        pieces = [""] * 64
-        mnv = movenumber + self._variation
-        for piece in self._piece_placement_data.values():
-            piece_name = piece.name
-            piece_square = piece.square
-            square_name = piece_square.name
-            pieces[piece_square.number] = piece_name
-
-            # piecesquaremovekeys.append(mnv + piece_name + square_name)
-            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
-
-            # If 'square piece' is better order than 'piece square'
-            piecesquaremovekeys.append(mnv + square_name + piece_name)
-            squaremovekeys.append(
+        piecesquarekeys = self.piecesquarekeys
+        piecesquarekeys.update(_ALWAYS_MATCH)
+        for square in set(Squares.squares).difference(
+            {s[1] for s in position_delta[0]}
+        ):
+            piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        for piece, square in position_delta[0]:
+            piecesquarekeys.update(
                 (
-                    mnv
-                    + square_name
-                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                    str(piece),
+                    (
+                        ANY_WHITE_PIECE_NAME
+                        if piece.name in WHITE_PIECE_NAMES
+                        else ANY_BLACK_PIECE_NAME
+                    )
+                    + square,
+                    piece.name,
                 )
             )
-        for piece_name in set("".join(pieces)):
-            piecemovekeys.append(mnv + piece_name)
-
-    def reset_board_state(self, position_delta):
-        """Delegate then append variation number to fit ravstack level."""
-        super().reset_board_state(position_delta)
-        if len(self._ravstack) > len(self.variationnumber):
-            self.variationnumber.append(0)
-
-    # Why '[len(self._ravstack)-1]' rather than '[-1]'?  The '[len()]' version
-    # came from PGNUpdate in chesstab, without the -1 adjustment, and seems to
-    # work.
-    def set_board_state(self, position_delta):
-        """Delegate then increment variation number.
-
-        Both numeric and string variation numbers are kept in step in case
-        there is another variation at this level.  For example:
-        '... Ba7 ) ( Nf4 ...'.
-        """
-        super().set_board_state(position_delta)
-        self.variationnumber[len(self._ravstack) - 1] += 1
-        self._variation = "".join(
-            _convert_integer_to_length_hex(i) for i in self.variationnumber
-        )
 
     def modify_board_state(self, position_delta):
-        """Delegate then modify board state and add index entries."""
+        """Delegate then modify board state and add index entries.
+
+        position_delta contains before, and after, move FEN descriptions
+        of the board with <square name, Piece instance> tuples for the
+        pieces removed and added to the board by the move replacing the
+        FEN piece location field.
+
+        self.piecesquarekeys is extended to show these squares had the
+        indicated state at some point in the game.
+
+        """
         super().modify_board_state(position_delta)
         if len(self._ravstack) != len(self.halfmovenumber):
             while len(self._ravstack) < len(self.halfmovenumber):
                 self.halfmovenumber.pop()
-                self.variationnumber.pop()
             while len(self._ravstack) > len(self.halfmovenumber):
                 self.halfmovenumber.append(self.halfmovenumber[-1])
-                self.variationnumber.append(0)
-            self._variation = "".join(
-                _convert_integer_to_length_hex(i) for i in self.variationnumber
-            )
         self.halfmovenumber[-1] += 1
-        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
-        piecesquaremovekeys = self.piecesquaremovekeys
-        piecemovekeys = self.piecemovekeys
-        squaremovekeys = self.squaremovekeys
         pieces = [""] * 64
         bits = 0
-        mnv = movenumber + self._variation
         for piece in self._piece_placement_data.values():
-            piece_name = piece.name
-            piece_square = piece.square
-            square_name = piece_square.name
-            pieces[piece_square.number] = piece_name
-            bits += piece_square.bit
-
-            # piecesquaremovekeys.append(mnv + piece_name + square_name)
-            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
-
-            # If 'square piece' is better order than 'piece square'
-            piecesquaremovekeys.append(mnv + square_name + piece_name)
-            squaremovekeys.append(
-                (
-                    mnv
-                    + square_name
-                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
-                )
-            )
-
+            pieces[piece.square.number] = piece.name
+            bits += piece.square.bit
         pieces = "".join(pieces)
-        for piece_name in set(pieces):
-            piecemovekeys.append(mnv + piece_name)
         delta_after = position_delta[1]
         self.positionkeys.append(
             bits.to_bytes(8, "big").decode("iso-8859-1")
@@ -663,6 +614,31 @@ class GameUpdate(_Game):
             + delta_after[3]
             + delta_after[2]
         )
+        delta_before = position_delta[0]
+        piecesquarekeys = self.piecesquarekeys
+        if len(delta_before[0]) == len(delta_after[0]):
+            for square, _ in delta_before[0]:
+                piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        else:
+            for square, _ in delta_before[0]:
+                for square_after, _ in delta_after[0]:
+                    if square == square_after:
+                        break
+                else:
+                    piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        for square, piece in delta_after[0]:
+            piecesquarekeys.update(
+                (
+                    str(piece),
+                    (
+                        ANY_WHITE_PIECE_NAME
+                        if piece.name in WHITE_PIECE_NAMES
+                        else ANY_BLACK_PIECE_NAME
+                    )
+                    + square,
+                    piece.name,  # Promote to piece not in initial position.
+                )
+            )
 
 
 class GameUpdatePosition(_Game):
@@ -699,19 +675,20 @@ class GameUpdatePieceLocation(_Game):
     def __init__(self):
         """Delegate then prepare to collect piece locations."""
         super().__init__()
-        self.piecesquaremovekeys = []
-        self.piecemovekeys = []
-        self.squaremovekeys = []
+        self.piecesquarekeys = set()
         self.halfmovenumber = None
-        self.variationnumber = None
-        self.currentvariation = None
-        self._variation = None
 
     # Replaces self.set_position_fen(self, fen=None)
     def set_initial_board_state(self, position_delta):
-        """Initialize PGN score parser with Forsyth Edwards Notation position.
+        """Delegate then initialize index entries.
 
-        fen defaults to the starting position for a game of chess.
+        The piece location field of the FEN (Forsyth Edwards Notation) is
+        replaced by <Piece instance, square name> tuples for each piece
+        in position_delta
+
+        self.piecesquarekeys is initialised with values for all 64 squares,
+        meaning each square had the indicated state at some point during
+        the game.
 
         """
         super().set_initial_board_state(position_delta)
@@ -719,102 +696,71 @@ class GameUpdatePieceLocation(_Game):
             self.halfmovenumber = [(self._fullmove_number - 1) * 2]
         else:
             self.halfmovenumber = [self._fullmove_number * 2 - 1]
-        self.variationnumber = [0]
-        self._variation = "".join(
-            _convert_integer_to_length_hex(i) for i in self.variationnumber
-        )
-        # Partial positions seems to need the initial position indexed so
-        # CQL queries are evaluated correctly.
-        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
-        piecesquaremovekeys = self.piecesquaremovekeys
-        piecemovekeys = self.piecemovekeys
-        squaremovekeys = self.squaremovekeys
-        pieces = [""] * 64
-        mnv = movenumber + self._variation
-        for piece in self._piece_placement_data.values():
-            piece_name = piece.name
-            piece_square = piece.square
-            square_name = piece_square.name
-            pieces[piece_square.number] = piece_name
-
-            # piecesquaremovekeys.append(mnv + piece_name + square_name)
-            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
-
-            # If 'square piece' is better order than 'piece square'
-            piecesquaremovekeys.append(mnv + square_name + piece_name)
-            squaremovekeys.append(
+        piecesquarekeys = self.piecesquarekeys
+        piecesquarekeys.update(_ALWAYS_MATCH)
+        for square in set(Squares.squares).difference(
+            {s[1] for s in position_delta[0]}
+        ):
+            piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        for piece, square in position_delta[0]:
+            piecesquarekeys.update(
                 (
-                    mnv
-                    + square_name
-                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                    str(piece),
+                    (
+                        ANY_WHITE_PIECE_NAME
+                        if piece.name in WHITE_PIECE_NAMES
+                        else ANY_BLACK_PIECE_NAME
+                    )
+                    + square,
+                    piece.name,
                 )
             )
-        for piece_name in set("".join(pieces)):
-            piecemovekeys.append(mnv + piece_name)
-
-    def reset_board_state(self, position_delta):
-        """Delegate then append variation number to fit ravstack level."""
-        super().reset_board_state(position_delta)
-        if len(self._ravstack) > len(self.variationnumber):
-            self.variationnumber.append(0)
-
-    # Why '[len(self._ravstack)-1]' rather than '[-1]'?  The '[len()]' version
-    # came from PGNUpdate in chesstab, without the -1 adjustment, and seems to
-    # work.
-    def set_board_state(self, position_delta):
-        """Delegate then increment variation number.
-
-        Both numeric and string variation numbers are kept in step in case
-        there is another variation at this level.  For example:
-        '... Ba7 ) ( Nf4 ...'.
-        """
-        super().set_board_state(position_delta)
-        self.variationnumber[len(self._ravstack) - 1] += 1
-        self._variation = "".join(
-            _convert_integer_to_length_hex(i) for i in self.variationnumber
-        )
 
     def modify_board_state(self, position_delta):
-        """Delegate then modify board state and add index entries."""
+        """Delegate then add index entries.
+
+        position_delta contains before, and after, move FEN descriptions
+        of the board with <square name, Piece instance> tuples for the
+        pieces removed and added to the board by the move replacing the
+        FEN piece location field.
+
+        self.piecesquarekeys is extended to show these squares had the
+        indicated state at some point in the game.
+
+        """
         super().modify_board_state(position_delta)
         if len(self._ravstack) != len(self.halfmovenumber):
             while len(self._ravstack) < len(self.halfmovenumber):
                 self.halfmovenumber.pop()
-                self.variationnumber.pop()
             while len(self._ravstack) > len(self.halfmovenumber):
                 self.halfmovenumber.append(self.halfmovenumber[-1])
-                self.variationnumber.append(0)
-            self._variation = "".join(
-                _convert_integer_to_length_hex(i) for i in self.variationnumber
-            )
         self.halfmovenumber[-1] += 1
-        movenumber = _convert_integer_to_length_hex(self.halfmovenumber[-1])
-        piecesquaremovekeys = self.piecesquaremovekeys
-        piecemovekeys = self.piecemovekeys
-        squaremovekeys = self.squaremovekeys
-        pieces = [""] * 64
-        mnv = movenumber + self._variation
-        for piece in self._piece_placement_data.values():
-            piece_name = piece.name
-            piece_square = piece.square
-            square_name = piece_square.name
-            pieces[piece_square.number] = piece_name
-
-            # piecesquaremovekeys.append(mnv + piece_name + square_name)
-            # squaremovekeys.append(mnv + mp[piece_name] + square_name)
-
-            # If 'square piece' is better order than 'piece square'
-            piecesquaremovekeys.append(mnv + square_name + piece_name)
-            squaremovekeys.append(
+        delta_after = position_delta[1]
+        delta_before = position_delta[0]
+        piecesquarekeys = self.piecesquarekeys
+        if len(delta_before[0]) == len(delta_after[0]):
+            for square, _ in delta_before[0]:
+                piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        else:
+            for square, _ in delta_before[0]:
+                for square_after, _ in delta_after[0]:
+                    if square == square_after:
+                        break
+                else:
+                    piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
+        for square, piece in delta_after[0]:
+            piecesquarekeys.update(
                 (
-                    mnv
-                    + square_name
-                    + MAP_PGN_PIECE_TO_CQL_COMPOSITE_PIECE[piece_name]
+                    str(piece),
+                    (
+                        ANY_WHITE_PIECE_NAME
+                        if piece.name in WHITE_PIECE_NAMES
+                        else ANY_BLACK_PIECE_NAME
+                    )
+                    + square,
+                    piece.name,  # Promote to piece not in initial position.
                 )
             )
-        for piece_name in set("".join(pieces)):
-            piecemovekeys.append(mnv + piece_name)
-        # delta_after = position_delta[1]
 
 
 class GameUpdateEstimate(GameUpdate):

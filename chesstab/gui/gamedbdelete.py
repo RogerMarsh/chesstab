@@ -133,6 +133,22 @@ class GameDbDelete(DeletePGNToplevel, DataDelete):
     # mark...recalculated starts and commits a transaction unconditionally.
     # No harm in using the same default as the 'super()' method.
     def delete(self, commit=True):
-        """Mark partial position records for recalculation and return key."""
-        self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
+        """Mark CQL query records for recalculation and return key.
+
+        If commit evaluates False caller is responsible for evaluating
+        CQL queries on the changes.
+
+        """
+        dbhome = self.datasource.dbhome
+        dbhome.mark_games_evaluated(
+            allexceptkey=(
+                self.object.key.recno if self.object is not None else None
+            )
+        )
+        dbhome.mark_all_cql_statements_not_evaluated()
+        if commit:
+            dbhome.remove_game_key_from_all_cql_query_match_lists(
+                self.object.key.recno
+            )
         super().delete(commit=commit)
+        dbhome.clear_games_and_cql_queries_pending_evaluation()

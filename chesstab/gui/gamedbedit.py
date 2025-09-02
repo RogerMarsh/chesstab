@@ -17,6 +17,7 @@ from .gametoplevel import GameToplevel, GameToplevelEdit
 from .toplevelpgn import EditPGNToplevel
 from .constants import EMPTY_SEVEN_TAG_ROSTER
 from ..core import utilities
+from ..cql import runcql
 
 
 class GameDbEdit(EditPGNToplevel, DataEdit):
@@ -163,18 +164,56 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
     # mark...recalculated starts and commits a transaction unconditionally.
     # No harm in using the same default as the 'super()' method.
     def put(self, commit=True):
-        """Mark partial position records for recalculation and return key."""
-        self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
+        """Mark CQL query records for recalculation and return key.
+
+        If commit evaluates False caller is responsible for evaluating
+        CQL queries on the changes.
+
+        """
+        self.datasource.dbhome.mark_games_evaluated(
+            allexceptkey=(
+                self.newobject.key.recno
+                if self.newobject is not None
+                else None
+            )
+        )
+        self.datasource.dbhome.mark_all_cql_statements_not_evaluated()
         super().put(commit=commit)
+        if commit:
+            runcql.make_runcql(self.datasource.dbhome, self.ui, False)
+            if self.ui.partial_items.count_items_in_stack():
+                active_item = self.ui.partial_items.active_item
+                active_item.refresh_game_list(
+                    key_recno=active_item.sourceobject.key.recno
+                )
 
     # Resolve pylint message arguments-differ deferred.
     # Depends on detail of planned naming of methods as private if possible.
     # mark...recalculated starts and commits a transaction unconditionally.
     # No harm in using the same default as the 'super()' method.
     def edit(self, commit=True):
-        """Mark partial position records for recalculation and return key."""
-        self.datasource.dbhome.mark_partial_positions_to_be_recalculated()
+        """Mark CQL query records for recalculation and return key.
+
+        If commit evaluates False caller is responsible for evaluating
+        CQL queries on the changes.
+
+        """
+        self.datasource.dbhome.mark_games_evaluated(
+            allexceptkey=(
+                self.oldobject.key.recno
+                if self.oldobject is not None
+                else None
+            )
+        )
+        self.datasource.dbhome.mark_all_cql_statements_not_evaluated()
         super().edit(commit=commit)
+        if commit:
+            runcql.make_runcql(self.datasource.dbhome, self.ui, False)
+            if self.ui.partial_items.count_items_in_stack():
+                active_item = self.ui.partial_items.active_item
+                active_item.refresh_game_list(
+                    key_recno=active_item.sourceobject.key.recno
+                )
 
     # This method forced by addition of second list element in Game record
     # value, which breaks the 'class <Repertoire>(<Game>)' relationship in
@@ -182,8 +221,8 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
     # Nowhere to put this in common with GameDisplayEdit.
     def _construct_record_value(self, reference):
         """Return record value for Game record."""
-        # Record value becomes {"file": "/", "game": ""} because the
-        # "file" value cannot be "" when used as a key in a LMDB database.
+        # Record value becomes {"file": "/", "game": ""} because the "file"
+        # value cannot be length zero when used as a key in a LMDB database.
         # When "file" is a file name the "game" values will be 1, 2, 3,
         # and so forth.
         if reference[constants.GAME]:

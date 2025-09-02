@@ -145,7 +145,7 @@ def du_extract(
     else:
         indicies = (
             filespec.POSITIONS_FIELD_DEF,
-            filespec.PIECESQUAREMOVE_FIELD_DEF,
+            filespec.PIECESQUARE_FIELD_DEF,
         )
     file_games = cdb.recordlist_key(
         filespec.GAMES_FILE_DEF,
@@ -251,7 +251,7 @@ def du_index_pgn_tags(
     if index_games_count == 0:
         if reporter is not None:
             reporter.append_text(
-                "No games need indexing by PGN tags in Seven Tag Roster."
+                "No games need indexing by selected PGN tags."
             )
             reporter.append_text_only("")
         cdb.backout()
@@ -268,7 +268,7 @@ def du_index_pgn_tags(
             )
             if reporter is not None:
                 reporter.append_text(
-                    "No games need indexing by PGN tags in Seven Tag Roster."
+                    "No games need indexing by selected PGN tags."
                 )
                 reporter.append_text_only("")
             cdb.commit()
@@ -286,7 +286,7 @@ def du_index_pgn_tags(
                 (
                     str(index_games_count),
                     " game needs" if index_games_count == 1 else " games need",
-                    " indexing by PGN tags in Seven Tag Roster.",
+                    " indexing by selected PGN tags.",
                 )
             )
         )
@@ -391,6 +391,7 @@ def du_index_positions(
     if index_games_count == 0:
         if reporter is not None:
             reporter.append_text("No games need indexing by positions.")
+            reporter.append_text_only("")
         cdb.backout()
         return True
     error_games = _get_error_games(cdb, pgnpaths)
@@ -464,7 +465,7 @@ def du_index_positions(
     return True
 
 
-def du_index_piece_locations(
+def du_index_piece_squares(
     cdb,
     pgnpaths,
     indexing=True,
@@ -473,7 +474,7 @@ def du_index_piece_locations(
     quit_event=None,
     **kwargs,
 ):
-    """Index games not yet indexed by piece locations in open database cdb.
+    """Index games not yet indexed by piece movement in open database cdb.
 
     Return True if indexing is completed, or False if indexing fails or is
     interrupted before it is completed.
@@ -505,7 +506,7 @@ def du_index_piece_locations(
             reporter.append_text(
                 repr(file).join(
                     (
-                        "Unable to index piece locations '",
+                        "Unable to index piece squares '",
                         "': not found in database.",
                     )
                 )
@@ -520,12 +521,13 @@ def du_index_piece_locations(
     index_games = cdb.recordlist_key(
         filespec.GAMES_FILE_DEF,
         filespec.IMPORT_FIELD_DEF,
-        key=cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+        key=cdb.encode_record_selector(filespec.PIECESQUARE_FIELD_DEF),
     )
     index_games_count = index_games.count_records()
     if index_games_count == 0:
         if reporter is not None:
-            reporter.append_text("No games need indexing by piece locations.")
+            reporter.append_text("No games need indexing by piece squares.")
+            reporter.append_text_only("")
         cdb.backout()
         return True
     error_games = _get_error_games(cdb, pgnpaths)
@@ -536,11 +538,11 @@ def du_index_piece_locations(
             cdb.unfile_records_under(
                 filespec.GAMES_FILE_DEF,
                 filespec.IMPORT_FIELD_DEF,
-                cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+                cdb.encode_record_selector(filespec.PIECESQUARE_FIELD_DEF),
             )
             if reporter is not None:
                 reporter.append_text(
-                    "No games need indexing by piece locations."
+                    "No games need indexing by piece movement."
                 )
                 reporter.append_text_only("")
             cdb.commit()
@@ -549,16 +551,16 @@ def du_index_piece_locations(
             filespec.GAMES_FILE_DEF,
             filespec.IMPORT_FIELD_DEF,
             index_games,
-            cdb.encode_record_selector(filespec.PIECESQUAREMOVE_FIELD_DEF),
+            cdb.encode_record_selector(filespec.PIECESQUARE_FIELD_DEF),
         )
     if reporter is not None:
-        reporter.append_text("Index piece locations started.")
+        reporter.append_text("Index piece movement started.")
         reporter.append_text(
             "".join(
                 (
                     str(index_games_count),
                     " game needs" if index_games_count == 1 else " games need",
-                    " indexing by piece locations.",
+                    " indexing by piece movement.",
                 )
             )
         )
@@ -573,7 +575,7 @@ def du_index_piece_locations(
         return False
     if reporter is not None:
         reporter.append_text_only("")
-        reporter.append_text("Finishing piece location indexing: please wait.")
+        reporter.append_text("Finishing piece square indexing: please wait.")
         reporter.append_text_only("")
     # if indexing:
     #    cdb.do_final_segment_deferred_updates(write_ebm=False)
@@ -1373,7 +1375,7 @@ def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
                 reporter.append_text_only("")
                 reporter.append_text("Import not completed.")
             return
-        if not du_index_piece_locations(
+        if not du_index_piece_squares(
             cdb, *args, reporter=reporter, file=file, **kwargs
         ):
             if reporter is not None:
@@ -1548,7 +1550,7 @@ def get_filespec(**kargs):
 
     The FILEDESCs are deleted if allowcreate is False, the default.
     """
-    names = filespec.FileSpec(**kargs)
+    names = filespec.make_filespec()
     if not kargs.get("allowcreate", False):
         for table_name in names:
             if FILEDESC in names[table_name]:

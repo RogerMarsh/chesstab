@@ -614,7 +614,7 @@ class EventSpec:
         "",
     )  # No menu entry because character required.
 
-    # Partial widget partial position export events.
+    # Partial widget CQL query export events.
     # Inherited by PartialEdit widget.
     text_from_partial = (
         "<Control-Alt-KeyPress-Home>",
@@ -706,6 +706,7 @@ class EventSpec:
         4,
     )
     text_internal_format = ("<Alt-KeyPress-Home>", "Text", "Alt Home", 0)
+    menu_database_export_games_cql = ("", "PGN CQL scan", "", 4)
 
     # ButtonPress event definitions.
     control_buttonpress_1 = ("<Control-ButtonPress-1>", "", "")
@@ -755,7 +756,8 @@ class EventSpec:
     menu_select_index_round = ("", "Round", "", 4)
 
     menu_game_new_game = ("", "New Game", "", 0)
-    menu_position_partial = ("", "Partial", "", 0)
+    menu_position_partial = ("", "Query", "", 0)
+    menu_position_show_query_engines = ("", "Show Query Engines", "", 11)
     menu_repertoire_opening = ("", "Opening", "", 0)
     menu_tools_board_style = ("", "Board Style", "", 6)
     menu_tools_board_fonts = ("", "Board Fonts", "", 6)

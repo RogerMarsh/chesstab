@@ -12,7 +12,7 @@ Selection rules can be created for the list of games on a database.
 
 The rule "White eq Green, John or Black eq Green, John" would list just the games on the database played by "Green, John" rather than all the games on the databsae.
 
-"White" and "Black" are two of the seven tag names in the Seven Tag Roster defined by the PGN standard.  The tag names in the Seven Tag Roster are the ones which can be used in selection rules.
+"White" and "Black" are two of the seven tag names in the Seven Tag Roster defined by the PGN standard.  Most tag names in any game on the database can be used in selection rules.
 
 "Green, John" is a plausible value of a "White" or "Black" tag pair.
 

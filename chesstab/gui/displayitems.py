@@ -9,7 +9,7 @@ displayed in some container (panel).  In some circumstances it is convenient
 to use the DisplayItemsStub class to give appropriate answers: when the
 container is not used.
 
-There are four kinds of item: game, repertoire, partial position, and selection
+There are four kinds of item: game, repertoire, CQL query, and selection
 rule.
 
 """

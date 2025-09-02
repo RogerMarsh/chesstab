@@ -17,7 +17,7 @@ def berkeleydb_du_splice_fix(home=None):
 
     """
     solentware_base.tools.berkeleydb_du_splice_fix.berkeleydb_du_splice_fix(
-        home=home, specification=filespec.FileSpec()
+        home=home, specification=filespec.make_filespec()
     )
 
 
