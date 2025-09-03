@@ -10,29 +10,16 @@ chess GUI.
 Spawn the deferred update process by the multiprocessing module.
 
 """
-import sys
 import importlib
 import os
 import datetime
 import traceback
-
-# Module resource is unix-only.  It is used if OS is OpenBSD.
-try:
-    import resource
-except ModuleNotFoundError:
-    pass
 
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
 )
 from ..gui import chessdu
-
-if not sys.platform.startswith("openbsd"):
-    try:
-        del resource
-    except NameError:
-        pass
 
 
 class RunduError(Exception):
@@ -82,37 +69,6 @@ def rundu(
 
     """
     database_module = importlib.import_module(database_module_name)
-    if sys.platform.startswith("openbsd"):
-        # The default user class is limited to 512Mb memory but imports need
-        # ~550Mb at Python3.6 for sqlite3.
-        # Processes running for users in some login classes are allowed to
-        # increase their memory limit, unlike the default class, and the limit
-        # is doubled if the process happens to be running for a user in one of
-        # these login classes.  The staff login class is one of these.
-        # At time of writing the soft limit is doubled from 512Mb to 1024Mb.
-        try:
-            b" " * 1000000000
-        except MemoryError:
-            soft, hard = resource.getrlimit(resource.RLIMIT_DATA)
-            try:
-                resource.setrlimit(
-                    resource.RLIMIT_DATA, (min(soft * 2, hard), hard)
-                )
-            except Exception as exc_a:
-                try:
-                    write_error_to_log(home_directory)
-                except Exception as exc_b:
-                    # Maybe the import is small enough to get away with
-                    # limited memory (~500Mb).
-                    raise SystemExit(
-                        " reporting exception in ".join(
-                            ("Exception while", "set resource limit in rundu")
-                        )
-                    ) from exc_b
-                raise SystemExit(
-                    "Exception in rundu while setting resource limit"
-                ) from exc_a
-
     deferred_update = chessdu.DeferredUpdate(
         deferred_update_module=database_module,
         database_class=database_module.Database,
