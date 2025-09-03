@@ -165,7 +165,6 @@ class Chess(Bindings):
             self._fullposition_class = None
             self._engineanalysis_class = None
             self._selection_class = None
-            self._pgnfiles = None
             self.queue = None
             self.reportqueue = queue.Queue(maxsize=1)
             self.show_query_engines_toplevel = None
@@ -1683,38 +1682,14 @@ class Chess(Bindings):
                 ),
             )
             return
-        # Use askopenfilenames rather than askopenfilename with
-        # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
-        # is returned while at least some versions of the Microsoft Windows
-        # port return a space separated string (which looks a lot like a
-        # TCL list - curly brackets around path names containing spaces).
-        # Then only the dialogues intercept of askopenfilenames needs
-        # changing as askopenfilename with default multiple argument
-        # returns a string containg one path name in all cases.
-        #
-        # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
-        # the dialogue supports selection of a single file only.
-        if resume is None:
-            title = "Select files containing games to import"
-        else:
-            title = resume.join(
-                ("Select '", "' to resume import of this file")
-            )
-        gamefile = tkinter.filedialog.askopenfilenames(
-            parent=self._get_toplevel(),
-            title=title,
-            initialdir="~",
-            filetypes=[("Portable Game Notation (chess)", ".pgn")],
+        self.statusbar.set_status_text(
+            text="Please wait while importing PGN file"
         )
-        if gamefile:
-            self.statusbar.set_status_text(
-                text="Please wait while importing PGN file"
-            )
-            # gives time for destruction of dialogue and widget refresh
-            # does nothing for obscuring and revealing application later
-            self.root.after_idle(
-                self.try_command(self._import_pgnfiles, self.root), gamefile
-            )
+        # gives time for destruction of dialogue and widget refresh
+        # does nothing for obscuring and revealing application later
+        self.root.after_idle(
+            self.try_command(self._import_pgnfiles, self.root), resume
+        )
 
     def _import_repertoires(self):
         """Import repertoires from PGN-like file."""
@@ -1746,22 +1721,15 @@ class Chess(Bindings):
             message="Not implemented",
         )
 
-    def _import_pgnfiles(self, pgnfiles):
+    def _import_pgnfiles(self, resume):
         """Import games to open database."""
         self.ui.set_import_subprocess()  # raises exception if already active
-        self._pgnfiles = pgnfiles
         usedu = self.opendatabase.deferred_update_module_name()
         if usedu is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Import",
-                message="".join(
-                    (
-                        "Import\n\n",
-                        "\n".join([os.path.basename(p) for p in pgnfiles]),
-                        "\n\ncancelled",
-                    )
-                ),
+                message="Import cancelled because no method exists",
             )
             self.statusbar.set_status_text(text="")
             return
@@ -1773,25 +1741,22 @@ class Chess(Bindings):
                 target=rundu.rundu,
                 args=(
                     self.opendatabase.home_directory,
-                    pgnfiles,
                     usedu,
+                    resume,
                 ),
             )
         )
         self.ui.get_import_subprocess().start()
-        self._wait_deferred_updates(pgnfiles)
+        self._wait_deferred_updates()
         return
 
-    def _wait_deferred_updates(self, pgnfiles):
+    def _wait_deferred_updates(self):
         """Wait until subprocess doing deferred updates completes.
-
-        pgnfiles - the PGN files being imported
 
         Wait for import subprocess to finish in a thread then do restart
         User Interface actions after idletasks.
 
         """
-        del pgnfiles
 
         def completed():
             self.ui.get_import_subprocess().join()

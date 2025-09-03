@@ -751,7 +751,7 @@ class DeferredUpdate(Bindings):
         deferred_update_module=None,
         database_class=None,
         home_directory=None,
-        pgnfiles=None,
+        resume=None,
         sample=5000,
     ):
         """Create the database and User Interface objects.
@@ -771,7 +771,8 @@ class DeferredUpdate(Bindings):
         self.quit_event = multiprocessing.Event()
         self.increases = multiprocessing.Array("i", [0, 0, 0, 0])
         self.home_directory = home_directory
-        self.pgnfiles = pgnfiles
+        self.resume = resume
+        self.pgnfiles = None
         self.deferred_update_module = deferred_update_module
         self.sample = sample
         self._import_done = False
@@ -782,6 +783,8 @@ class DeferredUpdate(Bindings):
             allowcreate=True,
             deferupdatefiles={GAMES_FILE_DEF},
         )
+        self.deferred_update = None
+        self.quit_thread = None
 
         self.root = tkinter.Tk()
         self.root.wm_title(
@@ -823,6 +826,12 @@ class DeferredUpdate(Bindings):
             text="Merge Import",
             underline=0,
             command=self.try_command(self._do_merge_import, self.buttonframe),
+        ).pack(side=tkinter.RIGHT, padx=12)
+        tkinter.Button(
+            master=self.buttonframe,
+            text="Select PGN Files",
+            underline=7,
+            command=self.try_command(self._select_pgn_files, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
         if self._database_looks_like_dpt():
             tkinter.Button(
@@ -892,30 +901,13 @@ class DeferredUpdate(Bindings):
         self._report_to_log(
             "".join(("Importing to database ", home_directory, "."))
         )
-        self._report_to_log_text_only("")
-        self._report_to_log("Count games.")
-        self._report_to_log_text_only("About 2 minutes per million games.")
-        self._report_to_log_text_only("")
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
         )
         self.root.iconify()
         self.root.update()
         self.root.deiconify()
-        self._allow_job = False
-        self.deferred_update = DeferredUpdateEstimateProcess(
-            self.database,
-            self.sample,
-            self.report_queue,
-            self.quit_event,
-            self.increases,
-            self.pgnfiles,
-        )
-        self.deferred_update.process.start()
-        self.quit_thread = multiprocessing.dummy.DummyProcess(
-            target=self._deferred_update_estimate_join
-        )
-        self.quit_thread.start()
+        self._allow_job = True
         self._add_queued_reports_to_log()
 
     def _database_looks_like_dpt(self):
@@ -1122,6 +1114,13 @@ class DeferredUpdate(Bindings):
 
         """
         del event
+        if self.pgnfiles is None:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Import",
+                message="No PGN files selected for import",
+            )
+            return
         self._import(
             self.deferred_update_module.database_du, "Import", "import"
         )
@@ -1134,6 +1133,13 @@ class DeferredUpdate(Bindings):
 
         """
         del event
+        if self.pgnfiles is None:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Merge Import",
+                message="No PGN files selected for merge import",
+            )
+            return
         self._import(
             self.deferred_update_module.database_reload_du,
             "Merge Import",
@@ -1222,3 +1228,70 @@ class DeferredUpdate(Bindings):
             except FileNotFoundError:
                 pass
         self.root.destroy()
+
+    def _select_pgn_files(self, event=None):
+        """Select PGN files to import.
+
+        event is ignored and is present for compatibility between button click
+        and keypress.
+
+        """
+        del event
+        # Use askopenfilenames rather than askopenfilename with
+        # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
+        # is returned while at least some versions of the Microsoft Windows
+        # port return a space separated string (which looks a lot like a
+        # TCL list - curly brackets around path names containing spaces).
+        # Then only the dialogues intercept of askopenfilenames needs
+        # changing as askopenfilename with default multiple argument
+        # returns a string containg one path name in all cases.
+        #
+        # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
+        # the dialogue supports selection of a single file only.
+        if not self._allow_job:
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Select PGN Files",
+                message="".join(
+                    (
+                        "Cannot select PGN files to import because a task is ",
+                        "in progress.\n\nThe current task must be allowed to ",
+                        "finish, or be stopped, first.",
+                    )
+                ),
+            )
+            return
+        if self.resume is None:
+            title = "Select files containing games to import"
+        else:
+            title = self.resume.join(
+                ("Select '", "' to resume import of this file")
+            )
+        gamefiles = tkinter.filedialog.askopenfilenames(
+            parent=self.root,
+            title=title,
+            initialdir="~",
+            filetypes=[("Portable Game Notation (chess)", ".pgn")],
+        )
+        if not gamefiles:
+            return
+        self.pgnfiles = gamefiles
+        self._import_done = False
+        self._report_to_log_text_only("")
+        self._report_to_log("Count games.")
+        self._report_to_log_text_only("About 2 minutes per million games.")
+        self._report_to_log_text_only("")
+        self.deferred_update = DeferredUpdateEstimateProcess(
+            self.database,
+            self.sample,
+            self.report_queue,
+            self.quit_event,
+            self.increases,
+            self.pgnfiles,
+        )
+        self.deferred_update.process.start()
+        self.quit_thread = multiprocessing.dummy.DummyProcess(
+            target=self._deferred_update_estimate_join
+        )
+        self.quit_thread.start()
+        self._add_queued_reports_to_log()

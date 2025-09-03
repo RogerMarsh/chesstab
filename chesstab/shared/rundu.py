@@ -69,8 +69,8 @@ def write_error_to_log(directory):
 
 def rundu(
     home_directory,
-    pgnfiles,
     database_module_name,
+    resume,
 ):
     """Do the deferred update using the specified database engine.
 
@@ -117,7 +117,7 @@ def rundu(
         deferred_update_module=database_module,
         database_class=database_module.Database,
         home_directory=home_directory,
-        pgnfiles=pgnfiles,
+        resume=resume,
     )
     try:
         deferred_update.root.mainloop()
