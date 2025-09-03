@@ -1513,7 +1513,6 @@ class Chess(Bindings):
         self.ui.set_board_colours_from_options(
             options.get_saved_options(chessfolder)
         )
-        # start code also used in _retry_import
         self.root.wm_title(
             " - ".join(
                 (
@@ -1541,7 +1540,6 @@ class Chess(Bindings):
             )
         )
         self.ui.show_game_grid(self.opendatabase)
-        # end code also used in _retry_import
 
     def _close_database_and_hide_widgets(self):
         """Close database and hide database display widgets."""
@@ -1914,26 +1912,6 @@ class Chess(Bindings):
     def _try_command_after_idle(self, method, widget):
         """Run command in main thread after idle."""
         self.root.after_idle(self.try_command(method, widget))
-
-    def _retry_import(self, files):
-        """Open database and retry import with increased file sizes.
-
-        DPT does not increase file sizes automatically as needed.
-        The action still makes sense in Berkeley DB if other files had to be
-        deleted to allow the automatic increase to occur.
-
-        """
-        self.opendatabase.open_database_contexts(files=files)
-        self.opendatabase.adjust_database_for_retry_import(files)
-        self.opendatabase.close_database_contexts()
-        if self._pgnfiles:
-            self.statusbar.set_status_text(
-                text="Please wait while importing PGN file"
-            )
-            self.root.after_idle(
-                self.try_command(self._import_pgnfiles, self.root),
-                self._pgnfiles,
-            )
 
     # The methods which export data from a database.
 
