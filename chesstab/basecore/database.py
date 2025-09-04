@@ -5,7 +5,6 @@
 """ChessTab database methods common to all database engine interfaces."""
 
 import os
-import bz2
 import shutil
 import ast
 
@@ -39,57 +38,6 @@ class Database:
     def open_database(self, files=None):
         """Return True to fit behaviour of dpt version of this method."""
         super().open_database(files=files)
-        return True
-
-    @staticmethod
-    def dump_database(names=()):
-        """Dump database in compressed files."""
-        for name in names:
-            compressor = bz2.BZ2Compressor()
-            archivename = ".".join((name, "broken", "bz2"))
-            with open(name, "rb") as file_in, open(
-                archivename, "wb"
-            ) as file_out:
-                inp = file_in.read(10000000)
-                while inp:
-                    compressed = compressor.compress(inp)
-                    if compressed:
-                        file_out.write(compressed)
-                    inp = file_in.read(10000000)
-                compressed = compressor.flush()
-                if compressed:
-                    file_out.write(compressed)
-
-    @staticmethod
-    def delete_backups(names=()):
-        """Delete backup files."""
-        for name in names:
-            archiveguard = ".".join((name, "grd"))
-            archivename = ".".join((name, "bz2"))
-            try:
-                os.remove(archiveguard)
-            except FileNotFoundError:
-                pass
-            try:
-                os.remove(archivename)
-            except FileNotFoundError:
-                pass
-
-    @staticmethod
-    def restore_backups(names=()):
-        """Restore database from backup files."""
-        for name in names:
-            decompressor = bz2.BZ2Decompressor()
-            archivename = ".".join((name, "bz2"))
-            with open(archivename, "rb") as file_in, open(
-                name, "wb"
-            ) as file_out:
-                inp = file_in.read(1000000)
-                while inp:
-                    decompressed = decompressor.decompress(inp)
-                    if decompressed:
-                        file_out.write(decompressed)
-                    inp = file_in.read(1000000)
         return True
 
     # @staticmethod
