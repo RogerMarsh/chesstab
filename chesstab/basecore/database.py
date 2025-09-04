@@ -89,32 +89,6 @@ class Database:
                 message = str(exc)
         return message
 
-    def get_archive_names(self, file=None):
-        """Return names and operating system files for archives and guards."""
-        if self.home_directory is None:
-            return (None, (), ())
-        archives = {}
-        guards = {}
-        if self._file_per_database:
-            for key in self.specification:
-                if key != file:
-                    continue
-                file = os.path.join(self.home_directory, key)
-                for box, arch in (
-                    (archives, ".".join((file, "zip"))),
-                    (guards, ".".join((file, "grd"))),
-                ):
-                    if os.path.exists(arch):
-                        box[file] = arch
-                return ([file], archives, guards)
-        for box, arch in (
-            (archives, ".".join((self.database_file, "bz2"))),
-            (guards, ".".join((self.database_file, "grd"))),
-        ):
-            if os.path.exists(arch):
-                box[self.database_file] = arch
-        return ([file], archives, guards)
-
     def open_after_import(self, files=()):
         """Return True after doing database engine specific open actions.
 

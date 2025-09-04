@@ -94,19 +94,6 @@ class Database(dptnofistat.Database):
             names.append(value.file)
         return tuple(names)
 
-    def get_archive_names(self, file=None):
-        """Return names and operating system files for archives and guards."""
-        names = [v.file for k, v in self.table.items() if k == file]
-        archives = {}
-        guards = {}
-        for name in names:
-            archiveguard = ".".join((name, "grd"))
-            archivefile = ".".join((name, "bz2"))
-            for box, arch in ((archives, archivefile), (guards, archiveguard)):
-                if os.path.exists(arch):
-                    box[name] = arch
-        return (names, archives, guards)
-
     def open_after_import(self, files=()):
         """Return open context after doing database engine specific actions.
 

@@ -1775,44 +1775,15 @@ class Chess(Bindings):
 
         def after_completion():
             returncode = self.ui.get_import_subprocess().exitcode
-            archives, guards = self.opendatabase.get_archive_names(
-                file=GAMES_FILE_DEF
-            )[1:]
-
-            # Failed or cancelled while taking backups.
-            if guards or archives:
-                if returncode == 0:
-                    msg = "was cancelled "
-                else:
-                    msg = "failed "
-                tkinter.messagebox.showinfo(
-                    parent=self._get_toplevel(),
-                    title="Import",
-                    message="".join(
-                        (
-                            "The import ",
-                            msg,
-                            "before completion of backups.",
-                            "\n\nThe database has not been changed and will ",
-                            "not be opened.",
-                            "\n\nRestore the database from a backup, either ",
-                            "from the one just taken or from the regular ",
-                            "system backup sequence.",
-                        )
-                    ),
-                )
-                return
-
-            # Failed with no backups.
             if returncode != 0:
                 tkinter.messagebox.showinfo(
                     parent=self._get_toplevel(),
                     title="Import",
                     message="".join(
                         (
-                            "The import failed.\n\nBackups were not ",
-                            "taken so the database cannot be restored ",
-                            "and may not be usable.",
+                            "The import failed.\n\nResolve the problem ",
+                            "(insufficient space perhaps) ",
+                            "and restart the import.",
                         )
                     ),
                 )
