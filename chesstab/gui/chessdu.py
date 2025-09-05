@@ -37,27 +37,6 @@ from ..core.filespec import (
     IMPORT_FIELD_DEF,
 )
 
-# Time taken to parse a sample of a PGN file is measured.
-# Number of games in file is estimated from number of bytes used in game scores
-# compared with number of bytes in file.
-# _DATABASE_UPDATE_FACTOR is set from measuring time taken to import a PGN file
-# containing a large number of games to an empty database.  Large means over a
-# million games.
-# This factor is a big under-estimate when number of games is less than segment
-# size.  In practice the difference will be noticed when importing less than
-# 131072 games to a database which already has games: the new games will span
-# up to three segments when imported.
-# Available memory has a big impact because it determines how long the runs of
-# sequential updates to indexes can be.  The factor 5 is appropriate when at
-# least 1.5Gb is available.  A default build of FreeBSD 10.1 on a PC with 2Gb
-# installed passes this test; but Microsoft Windows XP, and later presumably,
-# needs more memory to do so.  A default build of OpenBSD 5.9 restricts user
-# processes to 0.5Gb.  The situation is not known for OS X or any Linux
-# distribution.
-# Factor changed from 3 to 5 when CQL5.1 syntax introduced to implement CQL
-# query searches, due to extra index updates.
-_DATABASE_UPDATE_FACTOR = 5
-
 _GAMECOUNT_REPORT_INTERVAL = 1000000
 
 
@@ -467,7 +446,6 @@ class DeferredUpdateEstimateProcess:
     def __init__(
         self,
         database,
-        sample,
         report_queue,
         quit_event,
         increases,
@@ -475,7 +453,6 @@ class DeferredUpdateEstimateProcess:
     ):
         """Provide queues for communication with GUI."""
         self.database = database
-        self.sample = sample
         self.report_queue = report_queue
         self.quit_event = quit_event
         self.increases = increases
@@ -752,13 +729,11 @@ class DeferredUpdate(Bindings):
         database_class=None,
         home_directory=None,
         resume=None,
-        sample=5000,
     ):
         """Create the database and User Interface objects.
 
         deferred_update_method - the method to do the import
         database_class - access the database with an instance of this class
-        sample - estimate import size from first 'sample' games in PGN file.
 
         The deferred update module for each database engine will have one or
         more methods to do tasks as the target method of a multiprocessing
@@ -774,7 +749,6 @@ class DeferredUpdate(Bindings):
         self.resume = resume
         self.pgnfiles = None
         self.deferred_update_module = deferred_update_module
-        self.sample = sample
         self._import_done = False
         self._import_job = None
         self._task_name = "estimating"
@@ -1283,7 +1257,6 @@ class DeferredUpdate(Bindings):
         self._report_to_log_text_only("")
         self.deferred_update = DeferredUpdateEstimateProcess(
             self.database,
-            self.sample,
             self.report_queue,
             self.quit_event,
             self.increases,
