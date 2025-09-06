@@ -41,6 +41,9 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         # passed to QueryDisplay. (Needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # QueryDisplay is to be put.
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Display")
+            return None
         selection = self.make_display_widget(selected)
         self.ui.add_selection_rule_to_display(selection)
         self.ui.selection_items.increment_object_count(key)
@@ -75,6 +78,9 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         # passed to QueryDisplayEdit. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # QueryDisplayEdit is to be put.
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Display Edit")
+            return None
         selection = self.make_edit_widget(selected)
         self.ui.add_selection_rule_to_display(selection)
         self.ui.selection_items.increment_object_count(key)
@@ -127,6 +133,9 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Delete")
+            return None
         oldobject = ChessDBrecordQuery()
         oldobject.set_database(self.ui.base_games.datasource.dbhome)
         oldobject.value.dbset = self.ui.base_games.datasource.dbset
@@ -136,9 +145,13 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         self.create_delete_dialog(
             self.objects[key], oldobject, modal, title="Delete Selection Rule"
         )
+        return None
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Edit")
+            return None
         self.create_edit_dialog(
             self.objects[key],
             ChessDBrecordQuery(),
@@ -147,9 +160,13 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
             modal,
             title="Edit Selection Rule",
         )
+        return None
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Edit and Show")
+            return None
         self.create_edit_dialog(
             self.objects[key],
             ChessDBrecordQuery(),
@@ -158,14 +175,18 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
             modal,
             title="Edit Selection Rule",
         )
+        return None
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Insert")
+            return None
         instance = self.datasource.new_row()
 
         # Later process_query_statement() causes display of empty title and
         # query lines.
-        instance.srvalue = repr("")
+        instance.srvalue = repr("\n")
 
         self.create_edit_dialog(
             instance,
@@ -175,9 +196,13 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
             modal,
             title="New Selection Rule",
         )
+        return None
 
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Show")
+            return None
         oldobject = ChessDBrecordQuery()
         oldobject.set_database(self.ui.base_games.datasource.dbhome)
         oldobject.value.dbset = self.ui.base_games.datasource.dbset
@@ -187,6 +212,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         self.create_show_dialog(
             self.objects[key], oldobject, modal, title="Show Selection Rule"
         )
+        return None
 
     def _set_grid_database(self, object_):
         object_.set_database(self.ui.base_games.datasource.dbhome)

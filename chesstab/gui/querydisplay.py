@@ -173,7 +173,7 @@ class _QueryDisplay(
 
         # This should see if game selection rule with same name already exists,
         # after checking for database open, and offer option to insert anyway.
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Insert Game Selection Rule",
@@ -423,7 +423,7 @@ class QueryDisplay(_QueryDisplay, Query, DataNotify):
     def _delete_item_database(self, event=None):
         """Remove game selection rule from database."""
         del event
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Delete Game Selection Rule",
@@ -549,7 +549,7 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
     def _update_item_database(self, event=None):
         """Modify existing game selection rule record."""
         del event
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Edit Game Selection Rule",

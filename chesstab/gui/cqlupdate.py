@@ -30,7 +30,7 @@ class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
         """Modify existing ChessQL statement record."""
         del event
         title = "Insert ChessQL Statement"
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Edit ChessQL Statement",

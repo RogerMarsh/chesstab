@@ -83,6 +83,9 @@ class _GameListGridBase(
         # Yes because GameDisplayEdit (see _edit_selected_item) includes
         # extra widgets. Want to say game.widget.destroy() eventually.
         # Read make_display_widget for GameDisplay and GameDisplayEdit.
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Display")
+            return None
         game = self.make_display_widget(selected)
         self.ui.add_game_to_display(game)
         self.ui.game_items.increment_object_count(key)
@@ -114,6 +117,9 @@ class _GameListGridBase(
         # Yes because GameDisplay (see _display_selected_item) includes
         # less widgets. Want to say game.widget.destroy() eventually.
         # Read make_edit_widget for GameDisplay and GameDisplayEdit.
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Display Edit")
+            return None
         game = self.make_edit_widget(selected)
         self.ui.add_game_to_display(game)
         self.ui.game_items.increment_object_count(key)
@@ -162,6 +168,9 @@ class _GameListGridBase(
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
         # pylint: disable=no-member
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Delete")
+            return None
         oldobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNDelete)
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
@@ -172,10 +181,14 @@ class _GameListGridBase(
             )
         except ScoreMapToBoardException as exc:
             self._score_map_exception_dialogue(exc, "Delete Game")
+        return None
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
         # pylint: disable=no-member
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Edit")
+            return None
         try:
             self.create_edit_dialog(
                 self.objects[key],
@@ -187,10 +200,14 @@ class _GameListGridBase(
             )
         except ScoreMapToBoardException as exc:
             self._score_map_exception_dialogue(exc, "Edit Game")
+        return None
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
         # pylint: disable=no-member
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Edit and Show")
+            return None
         try:
             self.create_edit_dialog(
                 self.objects[key],
@@ -202,10 +219,14 @@ class _GameListGridBase(
             )
         except ScoreMapToBoardException as exc:
             self._score_map_exception_dialogue(exc, "Edit Game")
+        return None
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
         # pylint: disable=no-member
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Insert")
+            return None
         newobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNEdit)
         instance = self.datasource.new_row()
         instance.srvalue = repr(
@@ -217,10 +238,14 @@ class _GameListGridBase(
         self.create_edit_dialog(
             instance, newobject, None, False, modal, title="New Game"
         )
+        return None
 
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
         # pylint: disable=no-member
+        if self.ui.database is None or self.ui.database.dbenv is None:
+            self._database_not_available_dialogue("Show")
+            return None
         oldobject = ChessDBrecordGameUpdate()
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
@@ -231,6 +256,7 @@ class _GameListGridBase(
             )
         except ScoreMapToBoardException as exc:
             self._score_map_exception_dialogue(exc, "Show Game")
+        return None
 
     def _set_object_panel_item_properties(self):
         """Adjust properties of game_items to fit configure canvas event."""

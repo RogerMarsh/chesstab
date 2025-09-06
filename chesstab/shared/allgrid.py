@@ -124,6 +124,15 @@ class AllGrid:
             return False
         return True
 
+    def _database_not_available_dialogue(self, title):
+        """Display dialogue to report database not available."""
+        # pylint: disable=no-member
+        tkinter.messagebox.showinfo(
+            parent=self.get_frame(),
+            title=title,
+            message="Chess database is not available at present",
+        )
+
     def _set_event_bindings_frame(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event

@@ -26,7 +26,7 @@ class CQLDelete(CQLDisplay, CQL, DataNotify):
     def _delete_item_database(self, event=None):
         """Remove ChessQL statement from database."""
         del event
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Delete ChessQL Statement",

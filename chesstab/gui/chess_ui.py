@@ -1804,11 +1804,7 @@ class ChessUI(Bindings):
 
     def make_position_analysis_data_source(self):
         """Create a new DataSource for stored chess engine analysis."""
-        if self.database:
-            # Without the 'is not None' seems unreliable at 08 Nov 2015.
-            # What is wrong with 'if <obj>:' where obj is a bsddb3.DB instance?
-            # It does work sometimes, so some environment clutter perhaps.
-            # Not yet known what happens with sqlite3 and so forth.
+        if self.database is not None and self.database.dbenv is not None:
             if (
                 self.database.is_database_file_active(ANALYSIS_FILE_DEF)
                 is not None

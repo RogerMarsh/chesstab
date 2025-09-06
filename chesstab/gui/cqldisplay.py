@@ -46,7 +46,7 @@ class CQLDisplay(cqldisplaybase.CQLDisplayBase):
 
         # This should see if ChessQL statement with same name already exists,
         # after checking for database open, and offer option to insert anyway.
-        if self.ui.database is None:
+        if self.ui.database is None or self.ui.database.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,

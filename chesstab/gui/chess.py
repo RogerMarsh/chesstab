@@ -1282,7 +1282,7 @@ class Chess(Bindings):
 
     def _database_delete(self):
         """Delete chess database."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Delete",
@@ -1369,7 +1369,7 @@ class Chess(Bindings):
 
     def _index_show(self):
         """Show list of stored stored selection rules."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1406,7 +1406,7 @@ class Chess(Bindings):
 
         def index_changed():
             """Set the index used to display list of games."""
-            if self.opendatabase is None:
+            if self.opendatabase is None or self.opendatabase.dbenv is None:
                 tkinter.messagebox.showinfo(
                     parent=self._get_toplevel(),
                     title="Select Index for games database",
@@ -1437,7 +1437,7 @@ class Chess(Bindings):
 
     def _position_show(self):
         """Show list of stored CQL queries."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1471,7 +1471,7 @@ class Chess(Bindings):
 
     def _repertoire_show(self):
         """Show list of stored repertoire games (opening variations)."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1648,7 +1648,7 @@ class Chess(Bindings):
 
     def _database_import(self, resume=None):
         """Import games to open database."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Import",
@@ -1965,7 +1965,7 @@ class Chess(Bindings):
 
     def _show_query_engines(self):
         """Show list of CQL query engines available."""
-        if self.opendatabase is None:
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",

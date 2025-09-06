@@ -165,7 +165,7 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         self.ui.statusbar.set_status_text()
 
         if cqls.cql_error:
-            if self.ui.database is None:
+            if self.ui.database is None or self.ui.database.dbenv is None:
                 tkinter.messagebox.showinfo(
                     parent=self.ui.get_toplevel(),
                     title="ChessQL Statement Error",
