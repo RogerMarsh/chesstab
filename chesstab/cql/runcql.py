@@ -20,16 +20,15 @@ from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
 )
+from ..cql import queryevaluator
 
 
-class RuncqlError(Exception):
-    """Exception class for runcql module."""
-
-
+# This code is adapted from exceptionhandler module where it is not
+# available as an ExceptionHandler method.
 def write_error_to_log(directory):
     """Write the exception to the error log with a time stamp."""
     with open(
-        os.path.join(directory, ERROR_LOG),  # Was sys.argv[1]
+        os.path.join(directory, ERROR_LOG),
         "a",
         encoding="utf-8",
     ) as file:
@@ -84,11 +83,13 @@ class RunCQL(Bindings):
 
     def run(self):
         """Run the CQL runner."""
-        self.database.run_cql_statements_on_games_not_evaluated(
-            self.root, self.report, self.forget_old
-        )
-        self.database.mark_games_evaluated()
-        self.database.mark_cql_statements_evaluated()
+        try:
+            self.database.run_cql_statements_on_games_not_evaluated(
+                self.root, self.report, self.forget_old
+            )
+        finally:
+            self.database.mark_games_evaluated()
+            self.database.mark_cql_statements_evaluated()
 
 
 def make_runcql(database, ui, forget_old):
@@ -100,18 +101,45 @@ def make_runcql(database, ui, forget_old):
 
     """
     cqlrunner = RunCQL(database, ui, forget_old)
+    title = " - ".join((APPLICATION_NAME, "run CQL"))
     try:
         cqlrunner.run()
-    except Exception as error:
-        try:
+    except queryevaluator.QueryEvaluatorError:
+        cqlrunner.report_exception(root=cqlrunner.root, title=title)
+    except tkinter.TclError as error:
+        if not str(error).startswith("invalid command name"):
             write_error_to_log(database.home_directory)
-        except Exception:
-            # Assume that parent process will report the failure.
+            tkinter.messagebox.showinfo(
+                title=title,
+                message="".join(
+                    (
+                        "Unable to show exception report\n\n",
+                        "The reported reason is:\n\n",
+                        str(error),
+                        "\n\nAn entry has been made in the error log",
+                        "\n\nThe query evaluation was probably not completed",
+                        "\n\n",
+                        APPLICATION_NAME,
+                        " will terminate on dismissing this dialogue",
+                    )
+                ),
+            )
             raise SystemExit(
-                " reporting exception in ".join(
-                    ("Exception while", "doing CQL evaluation in runcql")
-                )
+                "Terminate after exception in CQL evaluation"
             ) from error
+        # Assume the runcql widget was terminated by window manager or
+        # desktop action rather than some application error.
+        tkinter.messagebox.showinfo(
+            title=title,
+            message="".join(
+                (
+                    "The CQL query run was stopped\n\n",
+                    "The query evaluation was probably not completed",
+                )
+            ),
+        )
+    except:
+        cqlrunner.report_exception(root=cqlrunner.root, title=title)
         raise SystemExit(
-            "Reporting exception in runcql while doing CQL evaluation"
-        ) from error
+            "Terminate after exception in CQL evaluation"
+        ) from None
