@@ -1211,17 +1211,6 @@ class DeferredUpdate(Bindings):
 
         """
         del event
-        # Use askopenfilenames rather than askopenfilename with
-        # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
-        # is returned while at least some versions of the Microsoft Windows
-        # port return a space separated string (which looks a lot like a
-        # TCL list - curly brackets around path names containing spaces).
-        # Then only the dialogues intercept of askopenfilenames needs
-        # changing as askopenfilename with default multiple argument
-        # returns a string containg one path name in all cases.
-        #
-        # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
-        # the dialogue supports selection of a single file only.
         if not self._allow_job:
             tkinter.messagebox.showinfo(
                 parent=self.root,
@@ -1235,12 +1224,50 @@ class DeferredUpdate(Bindings):
                 ),
             )
             return
+        # After the _allow_job test so the pgnfiles test does not become
+        # relevant until DeferredUpdateEstimateProcess job has finished.
+        if self.pgnfiles is not None:
+            if self._import_done is None:
+                tkinter.messagebox.showinfo(
+                    parent=self.root,
+                    title="Select PGN Files",
+                    message="".join(
+                        (
+                            "PGN files for import already selected\n\n",
+                            "Dismiss Log and start again to select PGN files",
+                        )
+                    ),
+                )
+                return
+            tkinter.messagebox.showinfo(
+                parent=self.root,
+                title="Select PGN Files",
+                message="".join(
+                    (
+                        "The import job for the selected PGN files has ",
+                        "been done.\n\n",
+                        "Dismiss Log and start again to select PGN files",
+                    )
+                ),
+            )
+            return
         if self.resume is None:
             title = "Select files containing games to import"
         else:
             title = self.resume.join(
                 ("Select '", "' to resume import of this file")
             )
+        # Use askopenfilenames rather than askopenfilename with
+        # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
+        # is returned while at least some versions of the Microsoft Windows
+        # port return a space separated string (which looks a lot like a
+        # TCL list - curly brackets around path names containing spaces).
+        # Then only the dialogues intercept of askopenfilenames needs
+        # changing as askopenfilename with default multiple argument
+        # returns a string containg one path name in all cases.
+        #
+        # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
+        # the dialogue supports selection of a single file only.
         gamefiles = tkinter.filedialog.askopenfilenames(
             parent=self.root,
             title=title,
@@ -1250,9 +1277,20 @@ class DeferredUpdate(Bindings):
         if not gamefiles:
             return
         self.pgnfiles = gamefiles
-        self._import_done = False
+        self._allow_job = False
         self._report_to_log_text_only("")
         self._report_to_log("Count games.")
+        if isinstance(self.pgnfiles, tuple):
+            self._report_to_log_text_only(
+                "".join(("Files in ", os.path.dirname(self.pgnfiles[0])))
+            )
+            for file in self.pgnfiles:
+                self._report_to_log_text_only(os.path.basename(file))
+        else:
+            self._report_to_log_text_only(
+                "".join(("Files in ", os.path.dirname(self.pgnfiles)))
+            )
+            self._report_to_log_text_only(os.path.basename(self.pgnfiles))
         self._report_to_log_text_only("About 2 minutes per million games.")
         self._report_to_log_text_only("")
         self.deferred_update = DeferredUpdateEstimateProcess(
