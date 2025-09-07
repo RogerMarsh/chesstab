@@ -17,7 +17,7 @@ from ..shared.allgrid import AllGrid
 from .cqlrow import ChessDBrowCQL
 from .cqlupdate import CQLUpdate
 from .cqldelete import CQLDelete
-from ..cql.queryevaluator import CQLStatementError
+from ..cql.queryevaluator import QueryEvaluatorError
 
 
 class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
@@ -135,7 +135,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
                 modal,
                 title="Delete ChessQL Statement",
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             tkinter.messagebox.showinfo(
                 title="Delete ChessQL Statement",
                 message="".join(
@@ -165,7 +165,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
                 modal,
                 title="Edit ChessQL Statement",
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             tkinter.messagebox.showinfo(
                 title="Edit ChessQL Statement",
                 message="".join(
@@ -195,7 +195,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
                 modal,
                 title="Edit ChessQL Statement",
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             tkinter.messagebox.showinfo(
                 title="Edit ChessQL Statement",
                 message="".join(
@@ -225,7 +225,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
                 modal,
                 title="New ChessQL Statement",
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             tkinter.messagebox.showinfo(
                 title="New ChessQL Statement",
                 message="".join(
@@ -257,7 +257,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
                 modal,
                 title="Show ChessQL Statement",
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             tkinter.messagebox.showinfo(
                 title="Show ChessQL Statement",
                 message="".join(

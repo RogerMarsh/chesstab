@@ -116,7 +116,7 @@ class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
             updater.value.prepare_cql_statement(
                 self.get_name_cql_statement_text()
             )
-        except queryevaluator.CQLStatementError as exc:
+        except queryevaluator.QueryEvaluatorError as exc:
             tag_ranges = self.score.tag_ranges(self.TEXT_DATA)
             evaluator = updater.value.query_container.evaluator
             if evaluator.error_location is not None:

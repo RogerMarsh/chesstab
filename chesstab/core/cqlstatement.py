@@ -24,7 +24,7 @@ import os
 import re
 
 from ..cql import querycontainer
-from ..cql.queryevaluator import CQLStatementError
+from ..cql.queryevaluator import QueryEvaluatorError
 
 # Search for start of CQL statement for internal evaluator.
 _title_re = re.compile("^[^\n]*")
@@ -67,7 +67,7 @@ class CQLStatement:
         if self._dbset is None:
             self._dbset = value
         elif self._dbset != value:
-            raise CQLStatementError(
+            raise QueryEvaluatorError(
                 "".join(
                     (
                         "Database file name already set to ",
@@ -161,7 +161,7 @@ class CQLStatement:
         if text:  # Assume text "" means an insert new action.
             self._query_container.prepare_statement(self, text)
         if self._query_container.message is not None:
-            raise CQLStatementError(self._query_container.message)
+            raise QueryEvaluatorError(self._query_container.message)
 
     # At time of writing the implementation is same as load_statement but
     # it is correct these are different methods.

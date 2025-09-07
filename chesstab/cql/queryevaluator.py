@@ -43,8 +43,8 @@ _game_number_re = re.compile(rb"<(\d+)>")
 CQL_GAME_NUMBER_OFFSET = 1
 
 
-class CQLStatementError(Exception):
-    """Exception class for CQL statement parsing and evaluation."""
+class QueryEvaluatorError(Exception):
+    """Exception class for CQL query evaluation."""
 
 
 class QueryEvaluator:
@@ -294,7 +294,7 @@ class QueryEvaluator:
                     str(exc),
                 )
             )
-        except CQLStatementError as exc:
+        except QueryEvaluatorError as exc:
             self.message = "".join(
                 (
                     "CQL run of \n\n'",
@@ -343,14 +343,14 @@ def _run_statement(
         check=False,
     )
     if completed.returncode:
-        raise CQLStatementError(
+        raise QueryEvaluatorError(
             " ".join(("Returncode is", str(completed.returncode)))
         )
     if _version_re.match(completed.stdout) is None:
-        raise CQLStatementError("Version not found evaluating CQL")
+        raise QueryEvaluatorError("Version not found evaluating CQL")
     games = _game_count_re.search(completed.stdout)
     if games is None:
-        raise CQLStatementError("Game counts not found evaluating CQL")
+        raise QueryEvaluatorError("Game counts not found evaluating CQL")
     matches = int(games[1])
     game_count = int(games[2])
     reporter.append_text_only(
@@ -364,7 +364,7 @@ def _run_statement(
         )
     )
     if game_count != len(record_map):
-        raise CQLStatementError(
+        raise QueryEvaluatorError(
             " ".join(
                 (
                     str(game_count),
@@ -384,7 +384,7 @@ def _run_statement(
         for game in _game_number_re.finditer(completed.stdout):
             game_number = int(game.group(1))
             if game_number not in record_map:
-                raise CQLStatementError(
+                raise QueryEvaluatorError(
                     " ".join(
                         (
                             "Game number",
@@ -400,7 +400,7 @@ def _run_statement(
         recordset &= recordset.dbhome.recordlist_ebm(recordset.dbset)
         game_number_count = recordset.count_records()
         if matches != game_number_count:
-            raise CQLStatementError(
+            raise QueryEvaluatorError(
                 " ".join(
                     (
                         str(matches),
