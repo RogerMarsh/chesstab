@@ -151,4 +151,4 @@ class GameDbDelete(DeletePGNToplevel, DataDelete):
                 self.object.key.recno
             )
         super().delete(commit=commit)
-        dbhome.clear_games_and_cql_queries_pending_evaluation()
+        dbhome.clear_cql_queries_pending_evaluation()

@@ -88,8 +88,10 @@ class RunCQL(Bindings):
                 self.root, self.report, self.forget_old
             )
         finally:
-            self.database.mark_games_evaluated()
-            self.database.mark_cql_statements_evaluated()
+            if self.database.all_games_and_queries_evaluated():
+                self.database.clear_cql_queries_pending_evaluation()
+                self.database.mark_games_evaluated()
+                self.database.mark_cql_statements_evaluated()
 
 
 def make_runcql(database, ui, forget_old):

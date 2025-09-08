@@ -140,14 +140,4 @@ class CQLDbDelete(DeleteText, DataDelete):
                 self.object.key.recno
             )
         super().delete(commit=commit)
-        dbhome.clear_games_and_cql_queries_pending_evaluation()
-        # cqls = self.ui.partialpositionds(
-        #    self.ui.base_games.datasource.dbhome,
-        #    self.ui.base_games.datasource.dbset,
-        #    self.ui.base_games.datasource.dbset,
-        #    newrow=None,
-        # )
-        # assert self.object.newrecord is None
-        # cqls.forget_cql_statement_games(self.object, commit=False)
-        # if commit:
-        #    self.datasource.dbhome.commit()
+        dbhome.clear_cql_queries_pending_evaluation()

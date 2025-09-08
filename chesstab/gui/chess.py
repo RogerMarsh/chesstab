@@ -1820,18 +1820,16 @@ class Chess(Bindings):
 
         """
         if self.opendatabase.any_cql_queries_pending_evaluation():
-            if self.opendatabase.any_games_pending_evaluation():
-                runcql.make_runcql(self.opendatabase, self.ui, False)
-                if self.ui.partial_items.count_items_in_stack():
-                    active_item = self.ui.partial_items.active_item
-                    # Assume active item is from a previously open database
-                    # if sourceobject is None.
-                    if active_item.sourceobject is not None:
-                        active_item.refresh_game_list(
-                            key_recno=active_item.sourceobject.key.recno
-                        )
-                return
-        self.opendatabase.clear_games_and_cql_queries_pending_evaluation()
+            runcql.make_runcql(self.opendatabase, self.ui, False)
+            if self.ui.partial_items.count_items_in_stack():
+                active_item = self.ui.partial_items.active_item
+                # Assume active item is from a previously open database
+                # if sourceobject is None.
+                if active_item.sourceobject is not None:
+                    active_item.refresh_game_list(
+                        key_recno=active_item.sourceobject.key.recno
+                    )
+            return
 
     def _refresh_grids_after_import(self):
         """Repopulate grid from database after import."""

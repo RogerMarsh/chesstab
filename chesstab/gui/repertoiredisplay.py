@@ -143,9 +143,7 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
         """
 
     @staticmethod
-    def clear_games_and_cql_queries_pending_evaluation(
-        datasource=None, commit=True
-    ):
+    def clear_cql_queries_pending_evaluation(datasource=None, commit=True):
         """Do nothing.
 
         Exists for compatibility with gamedisplay.GameDisplay.

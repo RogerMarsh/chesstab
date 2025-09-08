@@ -142,6 +142,7 @@ CQL_EVALUATE_FIELD_DEF = "cqleval"
 CQL_IDENTITY_FIELD_DEF = "cqlid"
 CQL_NAME_FIELD_DEF = "cqlname"
 CQL_ERROR_FIELD_DEF = "cqlerror"
+CQL_PENDING_FIELD_DEF = "cqlpending"
 NEWGAMES_FIELD_DEF = "newgames"
 
 # repertoire file fields.
@@ -270,12 +271,14 @@ def _specification():
             SECONDARY: {
                 CQL_NAME_FIELD_DEF: CQL_NAME_FIELD_DEF.title(),
                 CQL_ERROR_FIELD_DEF: CQL_ERROR_FIELD_DEF.title(),
+                CQL_PENDING_FIELD_DEF: CQL_PENDING_FIELD_DEF.title(),
                 NEWGAMES_FIELD_DEF: _NEWGAMES_FIELD_NAME,
             },
             FIELDS: {
                 field_name(CQL_IDENTITY_FIELD_DEF): None,
                 CQL_NAME_FIELD_DEF.title(): {INV: True, ORD: True},
                 CQL_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
+                CQL_PENDING_FIELD_DEF.title(): {INV: True, ORD: True},
                 _NEWGAMES_FIELD_NAME: {INV: True, ORD: True},
             },
         },

@@ -20,6 +20,7 @@ from ..core.filespec import (
     PGN_ERROR_FIELD_DEF,
     CQL_ERROR_FIELD_DEF,
     CQL_QUERY_FIELD_DEF,
+    CQL_PENDING_FIELD_DEF,
 )
 from ..core import export_game
 from ..core import cqlstatement
@@ -204,6 +205,22 @@ class Database:
                 self.encode_record_selector(NEWGAMES_FIELD_VALUE),
             )
             allexcept.close()
+            # The records which do need evaluation.
+            if allexceptkey is not None:
+                pending = self.recordlist_record_number(
+                    CQL_FILE_DEF, key=allexceptkey
+                )
+                pending.remove_recordset(
+                    self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+                )
+                if pending.count_records():
+                    self.file_records_under(
+                        CQL_FILE_DEF,
+                        CQL_PENDING_FIELD_DEF,
+                        pending,
+                        self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                    )
+                pending.close()
             if commit:
                 self.commit()
         except:  # Backout for any exception, then re-raise.
@@ -231,6 +248,13 @@ class Database:
                 allrecords,
                 self.encode_record_selector(NEWGAMES_FIELD_VALUE),
             )
+            # The records which do need evaluation.
+            self.file_records_under(
+                CQL_FILE_DEF,
+                CQL_PENDING_FIELD_DEF,
+                allrecords ^ self.recordlist_ebm(CQL_FILE_DEF),
+                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+            )
             allrecords.close()
             if commit:
                 self.commit()
@@ -256,7 +280,6 @@ class Database:
         finally:  # end_read_only_transaction() correct for any exception too.
             self.end_read_only_transaction()
         if nothing_to_do:
-            self.clear_games_and_cql_queries_pending_evaluation()
             reporter.append_text("Nothing to do.")
             return
         widget.update()
@@ -268,7 +291,6 @@ class Database:
         finally:  # end_read_only_transaction() correct for any exception too.
             self.end_read_only_transaction()
         if nothing_to_do:
-            self.clear_games_and_cql_queries_pending_evaluation()
             reporter.append_text("Nothing to do.")
             return
         widget.update()
@@ -492,7 +514,11 @@ class Database:
         """Return True if any CQL queries are pending evaluation."""
         self.start_read_only_transaction()
         try:
-            queries = self._get_cql_queries_pending_evaluation()
+            queries = self.recordlist_key(
+                CQL_FILE_DEF,
+                CQL_PENDING_FIELD_DEF,
+                key=self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+            )
             try:
                 return queries.count_records() > 0
             finally:
@@ -515,8 +541,8 @@ class Database:
         finally:  # end_read_only_transaction() for any exception too.
             self.end_read_only_transaction()
 
-    def clear_games_and_cql_queries_pending_evaluation(self, commit=True):
-        """Clear the games and CQL query needs evaluation lists.
+    def clear_cql_queries_pending_evaluation(self, commit=True):
+        """Clear the CQL query needs evaluation list.
 
         If commit evaluates False caller is responsible for transactions.
 
@@ -524,17 +550,10 @@ class Database:
         if commit:
             self.start_transaction()
         try:
-            # The records which do not need evaluation.
-            self.unfile_records_under(
-                GAMES_FILE_DEF,
-                CQL_EVALUATE_FIELD_DEF,
-                self.encode_record_selector(CQL_EVALUATE_FIELD_VALUE),
-            )
-            # The records which do not need evaluation.
             self.unfile_records_under(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                CQL_PENDING_FIELD_DEF,
+                key=self.encode_record_selector(NEWGAMES_FIELD_VALUE),
             )
             if commit:
                 self.commit()
@@ -542,6 +561,27 @@ class Database:
             if commit:
                 self.backout()
             raise
+
+    def all_games_and_queries_evaluated(self):
+        """Return True if all games and CQL queries are evaluated."""
+        self.start_read_only_transaction()
+        try:
+            pending_games = self.recordlist_key(
+                GAMES_FILE_DEF,
+                CQL_EVALUATE_FIELD_DEF,
+                self.encode_record_selector(CQL_EVALUATE_FIELD_VALUE),
+            )
+            pending_queries = self.recordlist_key(
+                CQL_FILE_DEF,
+                NEWGAMES_FIELD_DEF,
+                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+            )
+            return (
+                pending_games.count_records() == 0
+                and pending_queries.count_records() == 0
+            )
+        finally:  # end_read_only_transaction() for any exception too.
+            self.end_read_only_transaction()
 
     def remove_game_key_from_all_cql_query_match_lists(self, gamekey):
         """Remove gamekey from all recordsets in CQL_QUERY_FIELD_DEF table.

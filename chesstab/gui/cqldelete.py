@@ -101,7 +101,7 @@ class CQLDelete(CQLDisplay, CQL, DataNotify):
             querykey=self.sourceobject.key.recno
         )
         editor.delete()
-        datasource.dbhome.clear_games_and_cql_queries_pending_evaluation()
+        datasource.dbhome.clear_cql_queries_pending_evaluation()
         self.refresh_game_list()
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),

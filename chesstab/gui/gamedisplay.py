@@ -160,9 +160,7 @@ class GameDisplayBase(
         datasource.dbhome.mark_all_cql_statements_not_evaluated(commit=commit)
 
     @staticmethod
-    def clear_games_and_cql_queries_pending_evaluation(
-        datasource=None, commit=True
-    ):
+    def clear_cql_queries_pending_evaluation(datasource=None, commit=True):
         """Delegate to database specific method of same name.
 
         If commit evaluates False caller is responsible for transactions.
@@ -171,9 +169,7 @@ class GameDisplayBase(
         does nothing.
 
         """
-        datasource.dbhome.clear_games_and_cql_queries_pending_evaluation(
-            commit=commit
-        )
+        datasource.dbhome.clear_cql_queries_pending_evaluation(commit=commit)
 
     @staticmethod
     def remove_game_key_from_all_cql_query_match_lists(

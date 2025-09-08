@@ -349,9 +349,7 @@ class DisplayPGN(DisplayText):
             datasource=datasource, gamekey=self.sourceobject.key.recno
         )
         editor.delete()
-        self.clear_games_and_cql_queries_pending_evaluation(
-            datasource=datasource
-        )
+        self.clear_cql_queries_pending_evaluation(datasource=datasource)
         tags = original.value.collected_game.pgn_tags
         tkinter.messagebox.showinfo(
             parent=self.ui.get_toplevel(),
