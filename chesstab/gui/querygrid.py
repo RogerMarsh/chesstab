@@ -41,7 +41,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         # passed to QueryDisplay. (Needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # QueryDisplay is to be put.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Display")
             return None
         selection = self.make_display_widget(selected)
@@ -78,7 +78,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         # passed to QueryDisplayEdit. (Which needs 'import Tkinter' above.)
         # Rather than passing the container where the Frame created by
         # QueryDisplayEdit is to be put.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Display Edit")
             return None
         selection = self.make_edit_widget(selected)
@@ -133,7 +133,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Delete")
             return None
         oldobject = ChessDBrecordQuery()
@@ -149,7 +149,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Edit")
             return None
         self.create_edit_dialog(
@@ -164,7 +164,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Edit and Show")
             return None
         self.create_edit_dialog(
@@ -179,7 +179,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Insert")
             return None
         instance = self.datasource.new_row()
@@ -200,7 +200,7 @@ class QueryListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
 
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Show")
             return None
         oldobject = ChessDBrecordQuery()

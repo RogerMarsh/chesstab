@@ -561,7 +561,7 @@ class Game(Score, EventBinding, AnalysisEventBinding):
         # When a database is open the analysis is refreshed from the database
         # while checking if that analysis is up-to-date compared with the depth
         # and multiPV parameters held in self.uci.uci UCI object.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._refresh_analysis_widget_from_engine(analysis)
             return
 

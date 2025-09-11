@@ -26,14 +26,15 @@ class CQLDelete(CQLDisplay, CQL, DataNotify):
     def _delete_item_database(self, event=None):
         """Remove ChessQL statement from database."""
         del event
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title="Delete ChessQL Statement",
                 message="".join(
                     (
-                        "Cannot delete ChessQL statement:\n\n",
-                        "No database open.",
+                        "Cannot delete ChessQL statement\n\n",
+                        "No database open or an import or CQL query ",
+                        "is unfinished",
                     )
                 ),
             )

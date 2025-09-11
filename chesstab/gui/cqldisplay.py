@@ -46,11 +46,17 @@ class CQLDisplay(cqldisplaybase.CQLDisplayBase):
 
         # This should see if ChessQL statement with same name already exists,
         # after checking for database open, and offer option to insert anyway.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message="Cannot add CQL statement\n\nNo database open",
+                message="".join(
+                    (
+                        "Cannot add CQL statement\n\n",
+                        "No database open or an import or CQL query ",
+                        "is unfinished",
+                    )
+                ),
             )
             return
 

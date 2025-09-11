@@ -168,11 +168,18 @@ class ShowPGN(ShowText, ScorePGN):
 
         # This should see if game with same PGN Tags already exists,
         # after checking for database open, and offer option to insert anyway.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=psn.join(("Cannot add ", ":\n\nNo database open.")),
+                message="".join(
+                    (
+                        "Cannot add ",
+                        psn,
+                        "\n\nNo database open or an import or CQL query ",
+                        "is unfinished",
+                    )
+                ),
             )
             return None
 
@@ -281,11 +288,18 @@ class DisplayPGN(DisplayText):
         del event
         title = " ".join(("Delete", self.pgn_score_name.title()))
         psn = self.pgn_score_name
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=psn.join(("Cannot delete ", ":\n\nNo database open.")),
+                message="".join(
+                    (
+                        "Cannot delete ",
+                        psn,
+                        "\n\nNo database open or an import or CQL query ",
+                        "is unfinished",
+                    )
+                ),
             )
             return
         datasource = self.ui_base_table.get_data_source()
@@ -457,11 +471,18 @@ class EditPGN(EditText):
         del event
         title = " ".join(("Edit", self.pgn_score_name.title()))
         psn = self.pgn_score_name
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
-                message=psn.join(("Cannot edit ", ":\n\nNo database open.")),
+                message="".join(
+                    (
+                        "Cannot edit ",
+                        psn,
+                        "\n\nNo database open or an import or CQL query ",
+                        "is unfinished",
+                    )
+                ),
             )
             return
         datasource = self.ui_base_table.get_data_source()

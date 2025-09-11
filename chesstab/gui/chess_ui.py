@@ -2031,3 +2031,21 @@ class ChessUI(Bindings):
     def _create_cql_grid(self):
         """Return CQLGrid instance."""
         return CQLGrid(self)
+
+    def is_database_access_inhibited(self):
+        """Return True if database cannot be accessed."""
+        if self.database is None or self.database.dbenv is None:
+            return True
+        return False
+
+    def is_database_update_inhibited(self):
+        """Return True if database cannot be updated."""
+        if self.is_database_access_inhibited():
+            return True
+        # if not self.database.all_games_and_queries_evaluated():
+        #    return True
+        # if utilities.get_pgn_filename_of_an_import_in_progress_txn(
+        #    self.database
+        # ):
+        #    return True
+        return False

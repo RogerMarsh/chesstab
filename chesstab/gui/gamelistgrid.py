@@ -83,7 +83,7 @@ class _GameListGridBase(
         # Yes because GameDisplayEdit (see _edit_selected_item) includes
         # extra widgets. Want to say game.widget.destroy() eventually.
         # Read make_display_widget for GameDisplay and GameDisplayEdit.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Display")
             return None
         game = self.make_display_widget(selected)
@@ -117,7 +117,7 @@ class _GameListGridBase(
         # Yes because GameDisplay (see _display_selected_item) includes
         # less widgets. Want to say game.widget.destroy() eventually.
         # Read make_edit_widget for GameDisplay and GameDisplayEdit.
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Display Edit")
             return None
         game = self.make_edit_widget(selected)
@@ -168,7 +168,7 @@ class _GameListGridBase(
     def launch_delete_record(self, key, modal=True):
         """Create delete dialogue."""
         # pylint: disable=no-member
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Delete")
             return None
         oldobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNDelete)
@@ -186,7 +186,7 @@ class _GameListGridBase(
     def launch_edit_record(self, key, modal=True):
         """Create edit dialogue."""
         # pylint: disable=no-member
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Edit")
             return None
         try:
@@ -205,7 +205,7 @@ class _GameListGridBase(
     def launch_edit_show_record(self, key, modal=True):
         """Create edit dialogue including reference copy of original."""
         # pylint: disable=no-member
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Edit and Show")
             return None
         try:
@@ -224,7 +224,7 @@ class _GameListGridBase(
     def launch_insert_new_record(self, modal=True):
         """Create insert dialogue."""
         # pylint: disable=no-member
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Insert")
             return None
         newobject = ChessDBrecordGameUpdate(valueclass=ChessDBvaluePGNEdit)
@@ -243,7 +243,7 @@ class _GameListGridBase(
     def launch_show_record(self, key, modal=True):
         """Create show dialogue."""
         # pylint: disable=no-member
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Show")
             return None
         oldobject = ChessDBrecordGameUpdate()

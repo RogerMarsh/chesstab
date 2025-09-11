@@ -62,7 +62,7 @@ class ShowText(_ToplevelText):
 
     def dialog_ok(self):
         """Close the show record toplevel."""
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self.destroy_dialog_on_ok_and_blockchange()
             return False
         return super().dialog_ok()
@@ -78,7 +78,7 @@ class DeleteText(_ToplevelText):
         started.
 
         """
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self.status.configure(
                 text="Cannot delete because not connected to a database"
             )
@@ -116,7 +116,7 @@ class EditText(_ToplevelText):
         started.
 
         """
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        if self.ui.is_database_access_inhibited():
             self.status.configure(
                 text="Cannot update because not connected to a database"
             )

@@ -29,19 +29,25 @@ class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
     def _update_item_database(self, event=None):
         """Modify existing ChessQL statement record."""
         del event
-        title = "Insert ChessQL Statement"
-        if self.ui.database is None or self.ui.database.dbenv is None:
+        title = "Edit ChessQL Statement"
+        if self.ui.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Edit ChessQL Statement",
-                message="Cannot edit ChessQL statement:\n\nNo database open.",
+                title=title,
+                message="".join(
+                    (
+                        "Cannot edit ChessQL statement\n\n",
+                        "No database open or an import or CQL query ",
+                        "is unfinished",
+                    )
+                ),
             )
             return
         datasource = self.ui.base_partials.get_data_source()
         if datasource is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Edit ChessQL Statement",
+                title=title,
                 message="".join(
                     (
                         "Cannot edit ChessQL statement:\n\n",
@@ -53,7 +59,7 @@ class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
         if self.sourceobject is None:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Edit ChessQL Statement",
+                title=title,
                 message="".join(
                     (
                         "The ChessQL statement to edit has not ",
@@ -67,7 +73,7 @@ class CQLUpdate(displaytext.EditText, cqlinsert.CQLInsert):
         if self.blockchange:
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
-                title="Edit ChessQL Statement",
+                title=title,
                 message="\n".join(
                     (
                         "Cannot edit ChessQL statement.",
