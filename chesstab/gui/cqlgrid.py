@@ -46,6 +46,8 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Display")
             return None
+        if self.ui.is_database_update_inhibited():
+            self._database_update_not_available_dialogue("Display")
         selection = self.make_display_widget(selected)
         self.ui.add_partial_position_to_display(selection)
         self.ui.partial_items.increment_object_count(key)
@@ -125,7 +127,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         """Create delete dialogue."""
         if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Delete")
-            return None
+            return
         oldobject = ChessDBrecordPartial()
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)
@@ -160,7 +162,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         """Create edit dialogue."""
         if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Display Edit")
-            return None
+            return
         # A "" srvalue would be assumed an insert action later.
         if not self.objects[key].srvalue:
             tkinter.messagebox.showinfo(
@@ -193,7 +195,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         """Create edit dialogue including reference copy of original."""
         if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Display Edit")
-            return None
+            return
         # A "" srvalue would be assumed an insert action later.
         if not self.objects[key].srvalue:
             tkinter.messagebox.showinfo(
@@ -226,7 +228,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         """Create insert dialogue."""
         if self.ui.is_database_update_inhibited():
             self._database_not_available_dialogue("Insert")
-            return None
+            return
         instance = self.datasource.new_row()
 
         # Later prepare_cql_statement() causes display of empty title and
@@ -259,7 +261,7 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
         """Create show dialogue."""
         if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Show")
-            return None
+            return
         oldobject = ChessDBrecordPartial()
         oldobject.load_record(
             (self.objects[key].key.pack(), self.objects[key].srvalue)

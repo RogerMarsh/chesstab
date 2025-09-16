@@ -133,6 +133,22 @@ class AllGrid:
             message="Chess database is not available at present",
         )
 
+    def _database_update_not_available_dialogue(self, title):
+        """Display dialogue to report database not available."""
+        # pylint: disable=no-member
+        tkinter.messagebox.showwarning(
+            parent=self.get_frame(),
+            title=title,
+            message="".join(
+                (
+                    "Some database updates are not available here at present",
+                    "\n\nActions which do not update games or CQL queries ",
+                    "will proceed as normal\n\n",
+                    "Reason is an interrupted PGN import or CQL evaluation",
+                )
+            ),
+        )
+
     def _set_event_bindings_frame(self, bindings=(), switch=True):
         """Set bindings if switch is True or unset the bindings."""
         ste = self.try_event

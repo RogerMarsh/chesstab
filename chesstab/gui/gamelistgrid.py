@@ -86,6 +86,8 @@ class _GameListGridBase(
         if self.ui.is_database_access_inhibited():
             self._database_not_available_dialogue("Display")
             return None
+        if self.ui.is_database_update_inhibited():
+            self._database_update_not_available_dialogue("Display")
         game = self.make_display_widget(selected)
         self.ui.add_game_to_display(game)
         self.ui.game_items.increment_object_count(key)

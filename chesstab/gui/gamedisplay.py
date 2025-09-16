@@ -279,6 +279,10 @@ class GameDisplayBase(
         }
         return navigation_map, local_map
 
+    def is_database_update_inhibited(self):
+        """Return True if database cannot be updated."""
+        return self.ui.is_database_update_inhibited()
+
 
 class GameDisplay(GameDisplayBase, Game, DataNotify):
     """Display a chess game from a database allowing delete and insert."""

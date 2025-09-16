@@ -64,7 +64,7 @@ from ..core.filespec import (
     BLACK_FIELD_DEF,
     RESULT_FIELD_DEF,
     OPENING_FIELD_DEF,
-    CQL_NAME_FIELD_DEF,
+    QUERY_NAME_FIELD_DEF,
 )
 from .displayitems import DisplayItems
 from ..core.chessrecord import ChessDBrecordAnalysis
@@ -1356,7 +1356,7 @@ class ChessUI(Bindings):
             DataSource(
                 database,
                 CQL_FILE_DEF,
-                CQL_NAME_FIELD_DEF,
+                QUERY_NAME_FIELD_DEF,
                 self._create_partial_position_row(),
             ),
             self.base_partials.on_data_change,
@@ -2042,8 +2042,8 @@ class ChessUI(Bindings):
         """Return True if database cannot be updated."""
         if self.is_database_access_inhibited():
             return True
-        # if not self.database.all_games_and_queries_evaluated():
-        #    return True
+        if self.database.any_cql_queries_pending_evaluation():
+            return True
         # if utilities.get_pgn_filename_of_an_import_in_progress_txn(
         #    self.database
         # ):

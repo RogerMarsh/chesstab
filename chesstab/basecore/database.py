@@ -11,16 +11,16 @@ import ast
 from solentware_base.core import wherevalues
 
 from ..core.filespec import (
-    NEWGAMES_FIELD_DEF,
-    NEWGAMES_FIELD_VALUE,
-    CQL_FILE_DEF,
     GAMES_FILE_DEF,
     CQL_EVALUATE_FIELD_DEF,
     CQL_EVALUATE_FIELD_VALUE,
     PGN_ERROR_FIELD_DEF,
-    CQL_ERROR_FIELD_DEF,
     CQL_QUERY_FIELD_DEF,
-    CQL_PENDING_FIELD_DEF,
+    CQL_FILE_DEF,
+    QUERY_STATUS_FIELD_DEF,
+    STATUS_VALUE_ERROR,
+    STATUS_VALUE_NEWGAMES,
+    STATUS_VALUE_PENDING,
 )
 from ..core import export_game
 from ..core import cqlstatement
@@ -196,13 +196,17 @@ class Database:
             allexcept = self.recordlist_ebm(CQL_FILE_DEF)
             if allexceptkey is not None:
                 allexcept.remove_record_number(allexceptkey)
-            allexcept |= self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+            allexcept |= self.recordlist_key(
+                CQL_FILE_DEF,
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_ERROR),
+            )
             # The records which do not need evaluation.
             self.file_records_under(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
+                QUERY_STATUS_FIELD_DEF,
                 allexcept,
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
             allexcept.close()
             # The records which do need evaluation.
@@ -211,14 +215,18 @@ class Database:
                     CQL_FILE_DEF, key=allexceptkey
                 )
                 pending.remove_recordset(
-                    self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+                    self.recordlist_key(
+                        CQL_FILE_DEF,
+                        QUERY_STATUS_FIELD_DEF,
+                        key=self.encode_record_selector(STATUS_VALUE_ERROR),
+                    )
                 )
                 if pending.count_records():
                     self.file_records_under(
                         CQL_FILE_DEF,
-                        CQL_PENDING_FIELD_DEF,
+                        QUERY_STATUS_FIELD_DEF,
                         pending,
-                        self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                        self.encode_record_selector(STATUS_VALUE_PENDING),
                     )
                 pending.close()
             if commit:
@@ -240,20 +248,24 @@ class Database:
         if commit:
             self.start_transaction()
         try:
-            allrecords = self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+            allrecords = self.recordlist_key(
+                CQL_FILE_DEF,
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_ERROR),
+            )
             # The records which do not need evaluation.
             self.file_records_under(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
+                QUERY_STATUS_FIELD_DEF,
                 allrecords,
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
             # The records which do need evaluation.
             self.file_records_under(
                 CQL_FILE_DEF,
-                CQL_PENDING_FIELD_DEF,
+                QUERY_STATUS_FIELD_DEF,
                 allrecords ^ self.recordlist_ebm(CQL_FILE_DEF),
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                self.encode_record_selector(STATUS_VALUE_PENDING),
             )
             allrecords.close()
             if commit:
@@ -412,8 +424,8 @@ class Database:
             )
             self.unfile_records_under(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                QUERY_STATUS_FIELD_DEF,
+                self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
             self.commit()
         except:  # Backout for any exception, then re-raise.
@@ -434,7 +446,7 @@ class Database:
         pending_query = self._get_cql_queries_pending_evaluation()
         try:
             cursor = pending_query.dbhome.database_cursor(
-                CQL_FILE_DEF, NEWGAMES_FIELD_DEF, recordset=pending_query
+                CQL_FILE_DEF, QUERY_STATUS_FIELD_DEF, recordset=pending_query
             )
             try:
                 while True:
@@ -498,14 +510,18 @@ class Database:
         # Should not be needed if mark_all_cql_statements_not_evaluated()
         # was called.
         pending.remove_recordset(
-            self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+            self.recordlist_key(
+                CQL_FILE_DEF,
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_ERROR),
+            )
         )
 
         pending.remove_recordset(
             self.recordlist_key(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
-                key=self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
         )
         return pending
@@ -516,8 +532,8 @@ class Database:
         try:
             queries = self.recordlist_key(
                 CQL_FILE_DEF,
-                CQL_PENDING_FIELD_DEF,
-                key=self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_PENDING),
             )
             try:
                 return queries.count_records() > 0
@@ -533,7 +549,11 @@ class Database:
             queries = self.recordlist_ebm(CQL_FILE_DEF)
             try:
                 queries.remove_recordset(
-                    self.recordlist_all(CQL_FILE_DEF, CQL_ERROR_FIELD_DEF)
+                    self.recordlist_key(
+                        CQL_FILE_DEF,
+                        QUERY_STATUS_FIELD_DEF,
+                        key=self.encode_record_selector(STATUS_VALUE_ERROR),
+                    )
                 )
                 return queries.count_records() != 0
             finally:
@@ -552,8 +572,8 @@ class Database:
         try:
             self.unfile_records_under(
                 CQL_FILE_DEF,
-                CQL_PENDING_FIELD_DEF,
-                key=self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_PENDING),
             )
             if commit:
                 self.commit()
@@ -573,8 +593,8 @@ class Database:
             )
             pending_queries = self.recordlist_key(
                 CQL_FILE_DEF,
-                NEWGAMES_FIELD_DEF,
-                self.encode_record_selector(NEWGAMES_FIELD_VALUE),
+                QUERY_STATUS_FIELD_DEF,
+                self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
             return (
                 pending_games.count_records() == 0

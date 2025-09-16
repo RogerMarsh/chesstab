@@ -628,6 +628,13 @@ class UCI(Bindings):
 
     def _show_engines(self):
         """Show Chess Engine Descriptions on database."""
+        if self.database is None or self.database.dbenv is None:
+            tkinter.messagebox.showinfo(
+                parent=self.menu_engines,
+                title="Show Engines",
+                message="No chess database open",
+            )
+            return
         if self._show_engines_toplevel is not None:
             tkinter.messagebox.showinfo(
                 parent=self.menu_engines,
@@ -810,3 +817,17 @@ class UCI(Bindings):
             self._modify_command_menu_item(
                 "Clear Hash on", "Clear Hash off", self._set_clear_hash_off
             )
+
+    def is_database_access_inhibited(self):
+        """Return True if database cannot be accessed."""
+        if self.database is None or self.database.dbenv is None:
+            return True
+        return False
+
+    def is_database_update_inhibited(self):
+        """Return True if database cannot be updated."""
+        if self.is_database_access_inhibited():
+            return True
+        # Interrupted PGN game imports or CQL evaluations are not a reason
+        # to inhibited chess engine updates.
+        return False

@@ -250,6 +250,14 @@ class _RepertoireDisplay(ShowPGN, Game, Bindings, DataNotify, Display):
         }
         return navigation_map, local_map
 
+    def is_database_update_inhibited(self):
+        """Return True if database cannot be updated."""
+        if self.ui.is_database_access_inhibited():
+            return True
+        # Interrupted PGN game imports or CQL evaluations are not a reason
+        # to inhibited repertoire updates.
+        return False
+
 
 class RepertoireDisplay(
     _RepertoireDisplay, DisplayPGN, ShowPGN, Repertoire, DataNotify

@@ -74,7 +74,7 @@ from .filespec import (
     PGN_DATE_FIELD_DEF,
     VARIATION_FIELD_DEF,
     ENGINE_FIELD_DEF,
-    CQL_NAME_FIELD_DEF,
+    QUERY_NAME_FIELD_DEF,
     RULE_FIELD_DEF,
     COMMAND_FIELD_DEF,
     PGNFILE_FIELD_DEF,
@@ -1433,7 +1433,7 @@ class ChessDBvaluePartial(CQLStatement, Value):
         """Extend, return CQL query record and index data."""
         value = super().pack()
         index = value[1]
-        index[CQL_NAME_FIELD_DEF] = [self.get_name_text()]
+        index[QUERY_NAME_FIELD_DEF] = [self.get_name_text()]
         return value
 
 
@@ -1451,7 +1451,7 @@ class ChessDBrecordPartial(Record):
         for the field where it exists in the database.
 
         """
-        if datasource.dbname == CQL_NAME_FIELD_DEF:
+        if datasource.dbname == QUERY_NAME_FIELD_DEF:
             return [(self.value.get_name_text(), self.key.pack())]
         return super().get_keys(datasource=datasource, partial=partial)
 

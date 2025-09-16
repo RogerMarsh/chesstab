@@ -168,7 +168,7 @@ class ShowPGN(ShowText, ScorePGN):
 
         # This should see if game with same PGN Tags already exists,
         # after checking for database open, and offer option to insert anyway.
-        if self.ui.is_database_update_inhibited():
+        if self.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
@@ -288,7 +288,7 @@ class DisplayPGN(DisplayText):
         del event
         title = " ".join(("Delete", self.pgn_score_name.title()))
         psn = self.pgn_score_name
-        if self.ui.is_database_update_inhibited():
+        if self.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,
@@ -471,7 +471,7 @@ class EditPGN(EditText):
         del event
         title = " ".join(("Edit", self.pgn_score_name.title()))
         psn = self.pgn_score_name
-        if self.ui.is_database_update_inhibited():
+        if self.is_database_update_inhibited():
             tkinter.messagebox.showinfo(
                 parent=self.ui.get_toplevel(),
                 title=title,

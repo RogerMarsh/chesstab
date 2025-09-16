@@ -139,11 +139,9 @@ PGN_DATE_FIELD_DEF = "pgndate"
 CQL_EVALUATE_FIELD_DEF = "cqleval"
 
 # CQL query file fields.
-CQL_IDENTITY_FIELD_DEF = "cqlid"
-CQL_NAME_FIELD_DEF = "cqlname"
-CQL_ERROR_FIELD_DEF = "cqlerror"
-CQL_PENDING_FIELD_DEF = "cqlpending"
-NEWGAMES_FIELD_DEF = "newgames"
+QUERY_IDENTITY_FIELD_DEF = "queryid"
+QUERY_NAME_FIELD_DEF = "queryname"
+QUERY_STATUS_FIELD_DEF = "querystatus"
 
 # repertoire file fields.
 REPERTOIRE_FIELD_DEF = "Repertoire"
@@ -156,7 +154,7 @@ VARIATION_FIELD_DEF = "variation"
 ENGINE_FIELD_DEF = "engine"
 
 # selection file fields.
-SELECTION_FIELD_DEF = "rulename"
+RULE_IDENTITY_FIELD_DEF = "ruleid"
 RULE_FIELD_DEF = "rule"
 
 # engine file fields.
@@ -170,7 +168,6 @@ IDENTITY_TYPE_FIELD_DEF = "identitytype"
 
 # Non-standard field names. Standard is x_FIELD_DEF.title().
 # These are used as values in 'SECONDARY', and keys in 'FIELDS', dicts.
-_NEWGAMES_FIELD_NAME = "NewGames"
 _OPENING_ERROR_FIELD_NAME = "OpeningError"
 _PGN_DATE_FIELD_NAME = "PGNdate"
 
@@ -183,11 +180,13 @@ DB_ENVIRONMENT_MAXOBJECTS = 120000  # OpenBSD only.
 # Symas LMMD environment.
 LMMD_MINIMUM_FREE_PAGES_AT_START = 20000
 
-# Any CQL query indexed by NEWGAMES_FIELD_VALUE on _NEWGAMES_FIELD_NAME
+# Any CQL query indexed by STATUS_VALUE_NEWGAMES on CQL_STATUS_FIELD_NAME
 # has not been recalculated since an update to the games file.  The CQL
 # query's _PARTIALGAMES_FIELD_NAME reference on the games file is out of
 # date and may be wrong.
-NEWGAMES_FIELD_VALUE = "changed"
+STATUS_VALUE_ERROR = "cqlerror"
+STATUS_VALUE_NEWGAMES = "changed"
+STATUS_VALUE_PENDING = "pending"  # Is this same as STATUS_VALUE_NEWGAMES?
 
 # Any game which needs to be evaluated against the existing CQL queries.
 CQL_EVALUATE_FIELD_VALUE = "changed"
@@ -266,20 +265,16 @@ def _specification():
             BTOD_CONSTANT: 100,  # a guess
             DEFAULT_RECORDS: 10000,
             DEFAULT_INCREASE_FACTOR: 0.5,
-            PRIMARY: field_name(CQL_IDENTITY_FIELD_DEF),
+            PRIMARY: field_name(QUERY_IDENTITY_FIELD_DEF),
             DPT_PRIMARY_FIELD_LENGTH: 127,
             SECONDARY: {
-                CQL_NAME_FIELD_DEF: CQL_NAME_FIELD_DEF.title(),
-                CQL_ERROR_FIELD_DEF: CQL_ERROR_FIELD_DEF.title(),
-                CQL_PENDING_FIELD_DEF: CQL_PENDING_FIELD_DEF.title(),
-                NEWGAMES_FIELD_DEF: _NEWGAMES_FIELD_NAME,
+                QUERY_NAME_FIELD_DEF: QUERY_NAME_FIELD_DEF.title(),
+                QUERY_STATUS_FIELD_DEF: QUERY_STATUS_FIELD_DEF.title(),
             },
             FIELDS: {
-                field_name(CQL_IDENTITY_FIELD_DEF): None,
-                CQL_NAME_FIELD_DEF.title(): {INV: True, ORD: True},
-                CQL_ERROR_FIELD_DEF.title(): {INV: True, ORD: True},
-                CQL_PENDING_FIELD_DEF.title(): {INV: True, ORD: True},
-                _NEWGAMES_FIELD_NAME: {INV: True, ORD: True},
+                field_name(QUERY_IDENTITY_FIELD_DEF): None,
+                QUERY_NAME_FIELD_DEF.title(): {INV: True, ORD: True},
+                QUERY_STATUS_FIELD_DEF.title(): {INV: True, ORD: True},
             },
         },
         REPERTOIRE_FILE_DEF: {
@@ -339,13 +334,13 @@ def _specification():
             BTOD_CONSTANT: 100,  # a guess
             DEFAULT_RECORDS: 10000,
             DEFAULT_INCREASE_FACTOR: 0.5,
-            PRIMARY: field_name(SELECTION_FIELD_DEF),
+            PRIMARY: field_name(RULE_IDENTITY_FIELD_DEF),
             DPT_PRIMARY_FIELD_LENGTH: 127,
             SECONDARY: {
                 RULE_FIELD_DEF: RULE_FIELD_DEF.title(),
             },
             FIELDS: {
-                field_name(SELECTION_FIELD_DEF): None,
+                field_name(RULE_IDENTITY_FIELD_DEF): None,
                 RULE_FIELD_DEF.title(): {INV: True, ORD: True},
             },
         },

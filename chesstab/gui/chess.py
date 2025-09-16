@@ -421,7 +421,7 @@ class Chess(Bindings):
             menubar.add_cascade(label="Engines", menu=menu7, underline=0)
 
             menu8 = tkinter.Menu(menubar, name="commands", tearoff=False)
-            menus.append(menu7)
+            menus.append(menu8)
             menubar.add_cascade(label="Commands", menu=menu8, underline=0)
 
             self._create_menuhelp(menus, menubar)
@@ -669,7 +669,19 @@ class Chess(Bindings):
 
     def _new_partial_position(self):
         """Enter a new CQL query."""
-        position = self._create_cql_display_insert_instance()
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="CQL Query",
+                message="No chess database open",
+            )
+            return
+        position = CQLInsert(
+            master=self.ui.view_partials_pw,
+            ui=self.ui,
+            items_manager=self.ui.partial_items,
+            itemgrid=self.ui.partial_games,
+        )
         position.set_and_tag_item_text(reset_undo=True)
         self.ui.add_partial_position_to_display(position)
         try:
@@ -682,15 +694,6 @@ class Chess(Bindings):
 
         # Wrap to take account of self.ui.single_view
         self.ui.partial_items.active_item.takefocus_widget.focus_set()
-
-    def _create_cql_display_insert_instance(self):
-        """Return a ..gui.cqlinsert.CQLInsert instance."""
-        return CQLInsert(
-            master=self.ui.view_partials_pw,
-            ui=self.ui,
-            items_manager=self.ui.partial_items,
-            itemgrid=self.ui.partial_games,
-        )
 
     def _repertoire_game(self):
         """Enter a new opening variation (callback for Menu option)."""
