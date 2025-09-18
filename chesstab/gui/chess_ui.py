@@ -2044,8 +2044,6 @@ class ChessUI(Bindings):
             return True
         if self.database.any_cql_queries_pending_evaluation():
             return True
-        # if utilities.get_pgn_filename_of_an_import_in_progress_txn(
-        #    self.database
-        # ):
-        #    return True
+        if utilities.is_import_in_progress_txn(self.database):
+            return True
         return False

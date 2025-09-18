@@ -33,6 +33,7 @@ from solentware_bind.gui.bindings import Bindings
 
 from .query import Query
 from .queryedit import QueryEdit
+from ..core import utilities
 from ..core.chessrecord import ChessDBrecordQuery
 from .eventspec import EventSpec
 from .display import Display
@@ -383,6 +384,25 @@ class _QueryDisplay(
     def _process_and_set_selection_rule_list(self, event=None):
         """Display games matching edited game selection rule."""
         del event
+        if self.ui.is_database_access_inhibited():
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title="List Selection Rule Games",
+                message="No chess database open",
+            )
+            return "break"
+        if utilities.is_import_in_progress_txn(self.ui.database):
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title="List Selection Rule Games",
+                message="".join(
+                    (
+                        "Cannot list games for rule because an ",
+                        "interrupted PGN import exists",
+                    )
+                ),
+            )
+            return "break"
         if self.ui.base_games.datasource:
             self.query_statement.set_database(
                 self.ui.base_games.datasource.dbhome

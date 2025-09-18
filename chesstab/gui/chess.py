@@ -1416,7 +1416,29 @@ class Chess(Bindings):
                     message="No chess database open",
                 )
                 return
-
+            if utilities.is_import_in_progress_txn(self.opendatabase):
+                if index not in (GAMES_FILE_DEF, PGN_ERROR_FIELD_DEF):
+                    tkinter.messagebox.showinfo(
+                        parent=self._get_toplevel(),
+                        title="Select Index for games database",
+                        message="".join(
+                            (
+                                "Cannot select index because an ",
+                                "interrupted PGN import exists",
+                            )
+                        ),
+                    )
+                    return
+                tkinter.messagebox.showwarning(
+                    parent=self._get_toplevel(),
+                    title="Select Index for games database",
+                    message="".join(
+                        (
+                            "Games may be missing because an ",
+                            "interrupted PGN import exists",
+                        )
+                    ),
+                )
             ui = self.ui
             self._index = index
             ui.base_games.set_data_source(
