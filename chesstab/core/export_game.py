@@ -269,6 +269,70 @@ def export_all_games_pgn_no_comments(database, filename):
     return all_games_output
 
 
+def export_all_games_pgn_no_structured_comments(database, filename):
+    """Export database games in PGN export format without {[%]} comments."""
+    if filename is None:
+        return True
+    instance = chessrecord.ChessDBrecordGame()
+    instance.set_database(database)
+    all_games_output = None
+    no_games_output = True
+    games_for_date = []
+    prev_date = None
+    database.start_read_only_transaction()
+    try:
+        cursor = database.database_cursor(
+            filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    if current_record[0] != prev_date:
+                        for gfd in sorted(games_for_date):
+                            gamesout.write(gfd[0])
+                            gamesout.write("\n")
+                            gamesout.write(gfd[2])
+                            gamesout.write("\n")
+                            gamesout.write(gfd[1])
+                            gamesout.write("\n\n")
+                        prev_date = current_record[0]
+                        games_for_date = []
+                    game = database.get_primary_record(
+                        filespec.GAMES_FILE_DEF, current_record[1]
+                    )
+                    try:
+                        instance.load_record(game)
+                    except StopIteration:
+                        break
+                    # Fix pycodestyle E501 (83 > 79 characters).
+                    # black formatting applied with line-length = 79.
+                    ivcg = instance.value.collected_game
+                    if ivcg.is_pgn_valid_export_format():
+                        games_for_date.append(
+                            ivcg.get_export_pgn_rav_no_structured_comments()
+                        )
+                        if all_games_output is None:
+                            all_games_output = True
+                            no_games_output = False
+                    elif all_games_output:
+                        if not no_games_output:
+                            all_games_output = False
+                    current_record = cursor.next()
+                for gfd in sorted(games_for_date):
+                    gamesout.write(gfd[0])
+                    gamesout.write("\n")
+                    gamesout.write(gfd[2])
+                    gamesout.write("\n")
+                    gamesout.write(gfd[1])
+                    gamesout.write("\n\n")
+        finally:
+            cursor.close()
+    finally:
+        database.end_read_only_transaction()
+    return all_games_output
+
+
 def export_all_games_pgn_no_comments_no_ravs(database, filename):
     """Export all database games, tags and moves only, in PGN export format.
 
@@ -725,6 +789,112 @@ def export_selected_games_pgn_no_comments(grid, filename):
         database.end_read_only_transaction()
 
 
+def export_selected_games_pgn_no_structured_comments(grid, filename):
+    """Export selected records in export format excluding {[%]} comments.
+
+    If any records are bookmarked just the bookmarked records are exported,
+    otherwise all records selected for display in the grid are exported.
+
+    """
+    if filename is None:
+        return True
+    database = grid.get_data_source().dbhome
+    database.start_read_only_transaction()
+    try:
+        primary = database.is_primary(
+            grid.get_data_source().dbset, grid.get_data_source().dbname
+        )
+        instance = chessrecord.ChessDBrecordGame()
+        instance.set_database(database)
+        games = []
+        all_games_output = True
+        if grid.bookmarks:
+            for bookmark in grid.bookmarks:
+                instance.load_record(
+                    database.get_primary_record(
+                        filespec.GAMES_FILE_DEF, bookmark[0 if primary else 1]
+                    )
+                )
+                # Fix pycodestyle E501 (83 > 79 characters).
+                # black formatting applied with line-length = 79.
+                ivcg = instance.value.collected_game
+                if ivcg.is_pgn_valid_export_format():
+                    games.append(
+                        ivcg.get_export_pgn_rav_no_structured_comments()
+                    )
+                else:
+                    all_games_output = False
+        elif grid.partial:
+            cursor = grid.get_cursor()
+            try:
+                if primary:
+                    current_record = cursor.first()
+                else:
+                    current_record = cursor.nearest(
+                        database.encode_record_selector(grid.partial)
+                    )
+                while current_record:
+                    if not primary:
+                        if not current_record[0].startswith(grid.partial):
+                            break
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.GAMES_FILE_DEF,
+                            current_record[0 if primary else 1],
+                        )
+                    )
+                    # Fix pycodestyle E501 (83 > 79 characters).
+                    # black formatting applied with line-length = 79.
+                    ivcg = instance.value.collected_game
+                    if ivcg.is_pgn_valid_export_format():
+                        games.append(
+                            ivcg.get_export_pgn_rav_no_structured_comments()
+                        )
+                    else:
+                        all_games_output = False
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+        else:
+            cursor = grid.get_cursor()
+            try:
+                current_record = cursor.first()
+                while True:
+                    if current_record is None:
+                        break
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.GAMES_FILE_DEF,
+                            current_record[0 if primary else 1],
+                        )
+                    )
+                    # Fix pycodestyle E501 (83 > 79 characters).
+                    # black formatting applied with line-length = 79.
+                    ivcg = instance.value.collected_game
+                    if ivcg.is_pgn_valid_export_format():
+                        games.append(
+                            ivcg.get_export_pgn_rav_no_structured_comments()
+                        )
+                    else:
+                        all_games_output = False
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+        if len(games) == 0:
+            return None
+        with open(filename, "w", encoding=_ENCODING) as gamesout:
+            for game in sorted(games):
+                gamesout.write(game[0])
+                gamesout.write("\n")
+                gamesout.write(game[2])
+                gamesout.write("\n")
+                gamesout.write(game[1])
+                gamesout.write("\n\n")
+        return all_games_output
+    finally:
+        database.end_read_only_transaction()
+
+
 def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
     """Export selected records in PGN export format excluding comments.
 
@@ -1080,6 +1250,26 @@ def export_single_game_pgn_no_comments(collected_game, filename):
         gamesout.write("\n")
         gamesout.write(
             collected_game.get_movetext_without_comments_in_pgn_export_format()
+        )
+        gamesout.write("\n\n")
+    return True
+
+
+def export_single_game_pgn_no_structured_comments(collected_game, filename):
+    """Export collected_game to filename without {[%]} comments.
+
+    Caller should test is_pgn_valid_export_format before picking filename.
+
+    """
+    if filename is None:
+        return None
+    with open(filename, "w", encoding=_ENCODING) as gamesout:
+        gamesout.write(collected_game.get_seven_tag_roster_tags())
+        gamesout.write("\n")
+        gamesout.write(collected_game.get_non_seven_tag_roster_tags())
+        gamesout.write("\n")
+        gamesout.write(
+            collected_game.get_export_movetext_without_structured_comments()
         )
         gamesout.write("\n\n")
     return True

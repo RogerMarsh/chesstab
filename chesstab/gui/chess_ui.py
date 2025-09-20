@@ -111,6 +111,9 @@ class ChessUI(Bindings):
         self.show_analysis = True
         self.visible_scrollbars = True
 
+        # {[%...]} comments are not suppressed by default.
+        self.suppress_structured_comment = False
+
         # Create widgets for toolbarframe (to left of Statusbar set by Chess).
         if toolbarframe is not None:
             self.tb_entry = tkinter.ttk.Entry(toolbarframe, width=20)

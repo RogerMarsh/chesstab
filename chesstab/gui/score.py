@@ -54,7 +54,12 @@ from .eventspec import EventSpec
 from .blanktext import BlankText, NonTagBind
 from .sharedtext import SharedTextScore
 from ..core import export_game
-from ..core.pgn import get_position_string, GameDisplayMoves
+from ..core.pgn import (
+    get_position_string,
+    GameDisplayMoves,
+    structured_comment_re,
+    NULL_PGN_COMMENT,
+)
 from ._score_scaffold import _ScoreScaffold
 
 
@@ -183,6 +188,13 @@ class Score(SharedTextScore, BlankText):
     ):
         """Create widgets to display game score."""
         super().__init__(panel, items_manager=items_manager, **ka)
+
+        # {[%...]} comments are not suppressed by default.
+        # The Game(Score, ...) class may set this True.
+        # The AnalysisScore instance which is an attribute of a Game instance
+        # will never set this True.
+        self._suppress_comment = False
+
         self.itemgrid = itemgrid
         if tags_variations_comments_font:
             self.tags_variations_comments_font = tags_variations_comments_font
@@ -235,6 +247,29 @@ class Score(SharedTextScore, BlankText):
 
         self.gamevartag = None
         self._game_scaffold = None
+
+    # Moved from analysisscore.AnalysisScore to support toggle suppression
+    # of PGN comments like '{ [%eval 1.0] }' too.
+    def clear_score(self):
+        """Clear data stuctures for navigating a game score.
+
+        Normally a game is loaded into the Score instance and remains for the
+        lifetime of the instance.  UCI Chess Engine analysis, in particular, is
+        used to refresh the game score snippet in an analysis widget after each
+        navigation event in the main game widget.
+
+        This method allows the Score instance to be reused for many PGN game
+        scores, full games or otherwise.
+
+        """
+        self.variation_number = 0
+        self.varstack = []
+        self.choice_number = 0
+        self.choicestack = []
+        self.position_number = 0
+        self.tagpositionmap = {}
+        self.previousmovetags = {}
+        self.nextmovetags = {}
 
     # The methods which bind and handle events.
 
@@ -430,6 +465,10 @@ class Score(SharedTextScore, BlankText):
             (EventSpec.pgn_export_format, self._export_pgn),
             (EventSpec.pgn_import_format, self.export_pgn_import_format),
             (EventSpec.text_internal_format, self._export_text),
+            (
+                EventSpec.pgn_export_format_no_structured_comments,
+                self._export_pgn_no_structured_comments,
+            ),
         )
 
     # These are the event bindings to traverse moves in PGN movetext.
@@ -785,6 +824,30 @@ class Score(SharedTextScore, BlankText):
             collected_game,
             self.board.ui.get_export_filename_for_single_item(
                 type_name + " (no comments)", pgn=True
+            ),
+        )
+
+    def _export_pgn_no_structured_comments(self, event=None):
+        """Export PGN tags and movetext without {[%]} comments."""
+        del event
+        type_name, game_class = self.pgn_export_type
+        collected_game = next(
+            PGN(game_class=game_class).read_games(
+                self.score.get("1.0", tkinter.END)
+            )
+        )
+        if not collected_game.is_pgn_valid():
+            tkinter.messagebox.showinfo(
+                parent=self.board.ui.get_toplevel(),
+                title=type_name.join(("Export ", " (no {[%]} comments)")),
+                message=type_name
+                + " score is not PGN export format compliant",
+            )
+            return
+        export_game.export_single_game_pgn_no_structured_comments(
+            collected_game,
+            self.board.ui.get_export_filename_for_single_item(
+                type_name + " (no {[%]} comments)", pgn=True
             ),
         )
 
@@ -1195,6 +1258,10 @@ class Score(SharedTextScore, BlankText):
                 if not tags_displayed:
                     self._map_tag(text)
             elif first_char == "{":
+                if self._suppress_comment and text != NULL_PGN_COMMENT:
+                    text = structured_comment_re.sub("{", text)
+                    if text == NULL_PGN_COMMENT:
+                        continue
                 self._map_start_comment(text)
             elif first_char == "(":
                 self.map_start_rav(text, position)

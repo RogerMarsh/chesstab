@@ -477,6 +477,12 @@ class Game(Score, EventBinding, AnalysisEventBinding):
             widget.tag_configure(ANALYSIS_PGN_TAGS_TAG, elide=tkinter.TRUE)
         self._see_current_move()
 
+    def toggle_game_structured_comments(self):
+        """Toggle display of '{[%<any>]}' comments in game score widgets."""
+        self._suppress_comment = self.ui.suppress_structured_comment
+        self.clear_score()
+        self.set_and_tag_item_text(reset_undo=False)
+
     def toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
         widget = self.score

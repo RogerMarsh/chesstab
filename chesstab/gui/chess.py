@@ -246,13 +246,20 @@ class Chess(Bindings):
                     self.export_all_games_pgn_import_format,
                 ),
                 (EventSpec.text_internal_format, self.export_all_games_text),
+                (
+                    EventSpec.menu_database_export_games_cql,
+                    self.export_all_games_for_cql_scan,
+                ),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self.export_all_games_pgn_no_structured_comments,
+                ),
             ):
                 menu10101.add_command(
                     label=accelerator[1],
                     command=self.try_command(function, menu10101),
                     underline=accelerator[3],
                 )
-            self._add_cql_scan_to_menu(menu10101)
             menu10102 = tkinter.Menu(
                 menu101, name="repertoires", tearoff=False
             )
@@ -391,6 +398,10 @@ class Chess(Bindings):
                     self._show_scrollbars,
                 ),
                 (
+                    EventSpec.menu_tools_toggle_game_structured_comments,
+                    self._toggle_game_structured_comments,
+                ),
+                (
                     EventSpec.menu_tools_toggle_game_move_numbers,
                     self._toggle_game_move_numbers,
                 ),
@@ -413,7 +424,7 @@ class Chess(Bindings):
                     underline=accelerator[3],
                 )
             menu6.add_separator()
-            for index in (10, 9, 8, 7, 5, 3, 0):
+            for index in (11, 10, 9, 8, 7, 5, 3, 0):
                 menu6.insert_separator(index)
 
             menu7 = tkinter.Menu(menubar, name="engines", tearoff=False)
@@ -512,17 +523,6 @@ class Chess(Bindings):
         menu4.add_separator()
         for index in (3, 1, 0):
             menu4.insert_separator(index)
-
-    def _add_cql_scan_to_menu(self, menu10101):
-        """Create menu specification for exporting PGN file for CQL scan."""
-        accelerator = EventSpec.menu_database_export_games_cql
-        menu10101.add_command(
-            label=accelerator[1],
-            command=self.try_command(
-                self.export_all_games_for_cql_scan, menu10101
-            ),
-            underline=accelerator[3],
-        )
 
     def _create_menuhelp(self, menus, menubar):
         """Create default help menu with default actions which do nothing."""
@@ -802,6 +802,25 @@ class Chess(Bindings):
         """Show the scrollbars in the game display widgets."""
         self.ui.show_scrollbars()
         self.ui.uci.show_scrollbars()
+
+    def _toggle_game_structured_comments(self):
+        """Toggle dispaly of '{[%<any>]}' comments in game score widgets."""
+        self.ui.suppress_structured_comment = (
+            not self.ui.suppress_structured_comment
+        )
+        exceptions = []
+        for games in (
+            self.ui.game_items.order,
+            self.ui.repertoire_items.order,
+            self.ui.games_and_repertoires_in_toplevels,
+        ):
+            for game in games:
+                try:
+                    game.toggle_game_structured_comments()
+                except tkinter.TclError:
+                    exceptions.append((game, games))
+        for game, games in exceptions:
+            games.remove(game)
 
     def _toggle_game_move_numbers(self):
         """Toggle display of move numbers in game score widgets."""
@@ -1935,6 +1954,30 @@ class Chess(Bindings):
             self.ui.get_export_filename("Games (internal format)", pgn=False),
         )
 
+    def export_all_games_for_cql_scan(self):
+        """Export all database games in a PGN import format for CQL scan."""
+        self.ui.export_report(
+            export_game.export_all_games_for_cql_scan(
+                self.opendatabase,
+                self.ui.get_export_filename(
+                    "Games (CQL scan format)", pgn=True
+                ),
+            ),
+            "Games (CQL scan format)",
+        )
+
+    def export_all_games_pgn_no_structured_comments(self):
+        """Export all games in PGN export format excluding {[%]} comments."""
+        self.ui.export_report(
+            export_game.export_all_games_pgn_no_structured_comments(
+                self.opendatabase,
+                self.ui.get_export_filename(
+                    "Games (no {[%]} comments)", pgn=True
+                ),
+            ),
+            "Games (no {[%]} comments)",
+        )
+
     def export_all_repertoires_pgn_no_comments(self):
         """Export all repertoires in PGN export format without comments."""
         export_repertoire.export_all_repertoires_pgn_no_comments(
@@ -1972,18 +2015,6 @@ class Chess(Bindings):
         export_chessql.export_all_positions(
             self.opendatabase,
             self.ui.get_export_filename("Partial Positions", pgn=False),
-        )
-
-    def export_all_games_for_cql_scan(self):
-        """Export all database games in a PGN import format for CQL scan."""
-        self.ui.export_report(
-            export_game.export_all_games_for_cql_scan(
-                self.opendatabase,
-                self.ui.get_export_filename(
-                    "Games (CQL scan format)", pgn=True
-                ),
-            ),
-            "Games (CQL scan format)",
         )
 
     def _show_query_engines(self):

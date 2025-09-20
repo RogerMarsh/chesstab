@@ -80,27 +80,6 @@ class AnalysisScore(Score):
         super().__init__(*a, **ka)
         self.owned_by_game = owned_by_game
 
-    def clear_score(self):
-        """Clear data stuctures for navigating a game score.
-
-        Normally a game is loaded into the Score instance and remains for the
-        lifetime of the instance.  UCI Chess Engine analysis, in particular, is
-        used to refresh the game score snippet in an analysis widget after each
-        navigation event in the main game widget.
-
-        This method allows the Score instance to be reused for many PGN game
-        scores, full games or otherwise.
-
-        """
-        self.variation_number = 0
-        self.varstack = []
-        self.choice_number = 0
-        self.choicestack = []
-        self.position_number = 0
-        self.tagpositionmap = {}
-        self.previousmovetags = {}
-        self.nextmovetags = {}
-
     def _go_to_token(self, event=None):
         """Set position and highlighting for token under pointer in analysis.
 

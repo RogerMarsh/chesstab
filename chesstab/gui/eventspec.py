@@ -707,6 +707,12 @@ class EventSpec:
     )
     text_internal_format = ("<Alt-KeyPress-Home>", "Text", "Alt Home", 0)
     menu_database_export_games_cql = ("", "PGN CQL scan", "", 4)
+    pgn_export_format_no_structured_comments = (
+        "<Control-KeyPress-KP_Home>",
+        "PGN no {[%]} comments",
+        "Ctrl KP_Home",
+        8,
+    )
 
     # ButtonPress event definitions.
     control_buttonpress_1 = ("<Control-ButtonPress-1>", "", "")
@@ -766,6 +772,12 @@ class EventSpec:
     menu_tools_show_game_analysis = ("", "Show Game Analysis", "", 5)
     menu_tools_hide_game_scrollbars = ("", "Hide Game Scrollbars", "", 1)
     menu_tools_show_game_scrollbars = ("", "Show Game Scrollbars", "", 2)
+    menu_tools_toggle_game_structured_comments = (
+        "",
+        "Toggle Game {[%...]} Comments",
+        "",
+        13,
+    )
     menu_tools_toggle_game_move_numbers = (
         "",
         "Toggle Game Move Numbers",

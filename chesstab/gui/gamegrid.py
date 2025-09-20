@@ -164,6 +164,10 @@ class GameGridBasePartial:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             ),
         )
         bindings = (
@@ -270,6 +274,10 @@ class GameGridBasePartial:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             )
         )
 
@@ -299,6 +307,7 @@ class GameGridBasePartial:
                 (EventSpec.pgn_reduced_export_format, ""),
                 (EventSpec.pgn_export_format_no_comments, ""),
                 (EventSpec.pgn_export_format, ""),
+                (EventSpec.pgn_export_format_no_structured_comments, ""),
             )
         )
 
@@ -373,6 +382,10 @@ class GameGridBaseTransposition:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             ),
         )
         bindings = (
@@ -479,6 +492,10 @@ class GameGridBaseTransposition:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             )
         )
 
@@ -508,6 +525,7 @@ class GameGridBaseTransposition:
                 (EventSpec.pgn_reduced_export_format, ""),
                 (EventSpec.pgn_export_format_no_comments, ""),
                 (EventSpec.pgn_export_format, ""),
+                (EventSpec.pgn_export_format_no_structured_comments, ""),
             )
         )
 
@@ -588,6 +606,10 @@ class GameGridBaseTagRoster:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             ),
         )
         bindings = (
@@ -700,6 +722,10 @@ class GameGridBaseTagRoster:
                 (EventSpec.pgn_export_format, self._export_pgn),
                 (EventSpec.pgn_import_format, self.export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
+                (
+                    EventSpec.pgn_export_format_no_structured_comments,
+                    self._export_pgn_no_structured_comments,
+                ),
             )
         )
 
@@ -729,6 +755,7 @@ class GameGridBaseTagRoster:
                 (EventSpec.pgn_reduced_export_format, ""),
                 (EventSpec.pgn_export_format_no_comments, ""),
                 (EventSpec.pgn_export_format, ""),
+                (EventSpec.pgn_export_format_no_structured_comments, ""),
             )
         )
 

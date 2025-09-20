@@ -361,6 +361,19 @@ class _GameListGridBase(
             "Games (no comments)",
         )
 
+    def _export_pgn_no_structured_comments(self, event=None):
+        """Export selected games as PGN excluding {[%]} commentary tokens."""
+        del event
+        self.ui.export_report(
+            export_game.export_selected_games_pgn_no_structured_comments(
+                self,
+                self.ui.get_export_filename(
+                    "Games (no {[%]} comments)", pgn=True
+                ),
+            ),
+            "Games (no {[%]} comments)",
+        )
+
     def _score_map_exception_dialogue(self, exception_instance, title):
         """Display dialogue to report problem displaying game."""
         # pylint: disable=no-member
