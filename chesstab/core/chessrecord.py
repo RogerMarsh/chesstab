@@ -42,6 +42,7 @@ from .pgn import (
     GameUpdatePosition,
     GameUpdatePieceLocation,
     GameMoveText,
+    GameStore,
 )
 from .constants import (
     START_RAV,
@@ -784,10 +785,10 @@ class ChessDBrecordGameSequential(Record):
         return True
 
 
-class ChessDBvaluePGNStore(PGNMoveText, _GameLoadPack):
+class ChessDBvaluePGNStore(PGN, _GameLoadPack):
     """Chess game data with references to indicies to be applied."""
 
-    def __init__(self, game_class=GameMoveText):
+    def __init__(self, game_class=GameStore):
         """Delegate to superclass with game_class argument."""
         super().__init__(game_class=game_class)
         self.gamesource = None

@@ -930,3 +930,9 @@ class GameMoveText(MoveText):
 
         """
         return self.is_tag_roster_valid()
+
+
+# Intended to override pgn_read.core.game.Game._append_piece_movetext() in
+# pgn-read_2.5.dev0 which seems to be useless and has been removed.
+class GameStore(Game):
+    """Customize methods of Game for importing games from PGN files."""

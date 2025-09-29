@@ -5,9 +5,9 @@
 """Chess game exporters."""
 
 import ast
-import re
 
 from pgn_read.core.parser import PGN
+from pgn_read.core.movetext_parser import full_disambiguation_allowed
 
 from . import chessrecord, filespec
 from .export_pgn_import_format import get_game_pgn_import_format
@@ -1239,18 +1239,11 @@ def export_single_game_text(collected_game, filename):
 
 
 def export_all_games_for_cql_scan(database, filename):
-    """Export all database games in a PGN inport format for CQL scan.
-
-    A dummy game with no moves, '*' as result, and just the PGN Seven Tag
-    Roster tags with the value representing unknown, is output in place
-    of any game with errors.
-
-    """
+    """Export all database games in a PGN inport format for CQL scan."""
     if filename is None:
         return True
-    literal_eval = ast.literal_eval
-    instance = chessrecord.ChessDBrecordGame()
-    instance.set_database(database)
+    instance = chessrecord.ChessDBrecordGamePGNTags()
+    full_instance = chessrecord.ChessDBrecordGame()
     all_games_output = None
     database.start_read_only_transaction()
     valid_games = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
@@ -1270,11 +1263,24 @@ def export_all_games_for_cql_scan(database, filename):
                 current_record = cursor.first()
                 while current_record:
                     instance.load_record(current_record)
-                    gamesout.write(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game, tag_separator="\n"
+                    if full_disambiguation_allowed.search(
+                        instance.value.pgntext
+                    ):
+                        full_instance.load_record(current_record)
+                        gamesout.write(
+                            get_game_pgn_import_format(
+                                full_instance.value.collected_game,
+                                tag_separator="\n",
+                            )
                         )
-                    )
+                    else:
+                        for text in instance.value.collected_game.pgn_text:
+                            gamesout.write(text)
+                            if text[0] in "[%":
+                                gamesout.write("\n")
+                            else:
+                                gamesout.write(" ")
+                        gamesout.write("\n")
                     if all_games_output is None:
                         all_games_output = True
                     current_record = cursor.next()
@@ -1293,10 +1299,9 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
     placed in recordmap.
 
     """
-    literal_eval = ast.literal_eval
     database = recordset.dbhome
-    instance = chessrecord.ChessDBrecordGame()
-    instance.set_database(database)
+    instance = chessrecord.ChessDBrecordGamePGNTags()
+    full_instance = chessrecord.ChessDBrecordGame()
     record_map = {}
     if commit:
         database.start_read_only_transaction()
@@ -1310,14 +1315,27 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
             with open(filename, "w", encoding=_ENCODING) as gamesout:
                 current_record = cursor.first()
                 while current_record:
-                    instance.load_record(current_record)
                     record_number = current_record[0]
                     record_map[len(record_map) + 1] = record_number
-                    gamesout.write(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game, tag_separator="\n"
+                    instance.load_record(current_record)
+                    if full_disambiguation_allowed.search(
+                        instance.value.pgntext
+                    ):
+                        full_instance.load_record(current_record)
+                        gamesout.write(
+                            get_game_pgn_import_format(
+                                full_instance.value.collected_game,
+                                tag_separator="\n",
+                            )
                         )
-                    )
+                    else:
+                        for text in instance.value.collected_game.pgn_text:
+                            gamesout.write(text)
+                            if text[0] in "[%":
+                                gamesout.write("\n")
+                            else:
+                                gamesout.write(" ")
+                        gamesout.write("\n")
                     if len(record_map) > limit:
                         break
                     current_record = cursor.next()
