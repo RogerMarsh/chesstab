@@ -36,7 +36,7 @@ from pgn_read.core.constants import (
     TAG_SETUP,
 )
 from pgn_read.core.parser import PGN
-from pgn_read.core.game import generate_fen_for_position
+from pgn_read.core.gamedata import generate_fen_for_position
 
 from ..core.pgn import (
     GameDisplayMoves,

@@ -1873,7 +1873,6 @@ class Chess(Bindings):
                     active_item.refresh_game_list(
                         key_recno=active_item.sourceobject.key.recno
                     )
-            return
 
     def _refresh_grids_after_import(self):
         """Repopulate grid from database after import."""

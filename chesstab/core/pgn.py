@@ -9,7 +9,8 @@ Game* classes replace PGN* classes in ChessTab version 4.3.
 """
 import re
 
-from pgn_read.core.game import Game, GameIndicateCheck, suffix_annotations
+from pgn_read.core.game import Game, suffix_annotations
+from pgn_read.core.game_indicate_check import GameIndicateCheck
 from pgn_read.core.movetext_parser import MoveText
 from pgn_read.core.squares import Squares
 from pgn_read.core.constants import (
@@ -508,9 +509,9 @@ class GameTags(Game):
             self._movetext_offset = len(self._text)
         self._text.append(match.group())
         try:
-            self.repeat_board_state(self._position_deltas[-1])
+            self.repeat_board_state()
         except IndexError:
-            self.add_board_state_none(None)
+            self.add_board_state_none()
 
     def append_token(self, match):
         """Ignore valid non-tag token which does not change board state.
@@ -520,9 +521,9 @@ class GameTags(Game):
 
         """
         try:
-            self.repeat_board_state(self._position_deltas[-1])
+            self.repeat_board_state()
         except IndexError:
-            self.add_board_state_none(None)
+            self.add_board_state_none()
 
     append_reserved = append_token
 
@@ -534,9 +535,9 @@ class GameTags(Game):
 
         """
         if self._movetext_offset is None:
-            self.append_token_and_set_error(match)
+            self._append_token_and_set_error(match)
             return
-        self.reset_board_state(None)
+        self.set_board_state(None)
         self._ravstack.append(None)
         self._text.append(match.group())
         self._state_stack.append(self._state)
@@ -548,23 +549,11 @@ class GameTags(Game):
         place in game score.
 
         """
-        if self._state is not None or self._movetext_offset is None:
-            self.append_token_and_set_error(match)
-            return None
-
-        if self._movetext_offset is None:
-            self.append_token_and_set_error(match)
-            return None
-        if len(self._ravstack) == 1:
-            self.append_token_and_set_error(match)
-            return None
-        del self._ravstack[-1]
-        del self._state_stack[-1]
-        self._state = self._state_stack[-1]
-
+        if not self._reset_after_end_rav(match):
+            return
         self.set_board_state(None)
         self._text.append(match.group())
-        return True
+        return
 
     def append_other_or_disambiguation_pgn(self, match):
         """Ignore token.
@@ -614,10 +603,10 @@ class GameTags(Game):
                 # Cannot call append_end_rav() method because it tests some
                 # conditions that should be true when errors are absent.
                 if self._movetext_offset is None:
-                    self.append_token_and_set_error(match)
+                    self._append_token_and_set_error(match)
                     return
                 if len(self._ravstack) == 1:
-                    self.append_token_and_set_error(match)
+                    self._append_token_and_set_error(match)
                     return
                 del self._ravstack[-1]
                 del self._state_stack[-1]
@@ -930,3 +919,25 @@ class GameMoveText(MoveText):
 
         """
         return self.is_tag_roster_valid()
+
+
+class GameStore(GameIndicateCheck):
+    """Add structures to support writing PGN moves to database."""
+
+    def _append_decorated_text(self, movetext):
+        """Append movetext plus appropriate check indicator to self._text.
+
+        self._position_deltas[-1][0][0][-1] has the location and name of
+        the piece moving to the destination square in movetext.
+
+        """
+        delta = self._position_deltas[-1][0][0][-1]
+        source = "".join(reversed(delta[1].name + delta[0])) + movetext
+        self._text.append(movetext)
+        self._append_check_indicator()
+
+    def _append_decorated_castles_text(self, movetext):
+        """Append movetext plus appropriate check indicator to self._text."""
+        source = "O" if self._active_color == FEN_WHITE_ACTIVE else "o"
+        self._text.append(movetext)
+        self._append_check_indicator()

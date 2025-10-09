@@ -33,7 +33,7 @@ from pgn_read.core.constants import (
     FEN_WHITE_ACTIVE,
 )
 from pgn_read.core.parser import PGN
-from pgn_read.core.game import GameStrictPGN
+from pgn_read.core.game_strict_pgn import GameStrictPGN
 
 from ..core.constants import (
     WHITE_WIN,
