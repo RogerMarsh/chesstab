@@ -749,6 +749,17 @@ class GameUpdate(_Game):
             )
 
 
+class GameMergeUpdate(GameUpdate):
+    """Prepare indicies after each token has been processed.
+
+    Assume PGN movetext gives no moves leaving king of moving side in check.
+    """
+
+    def is_side_off_move_in_check(self):
+        """Override and return False."""
+        return False
+
+
 class GameUpdatePosition(_Game):
     """Prepare position index after each token has been processed."""
 

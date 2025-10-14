@@ -848,7 +848,9 @@ def write_indicies_for_extracted_games(
 
     """
     del kwargs
-    importer = chessrecord.ChessDBrecordGameSequential()
+    importer = chessrecord.ChessDBrecordGameSequential(
+        valueclass=chessrecord.ChessDBvaluePGNMergeUpdate
+    )
     for key in cdb.table.keys():
         if key == file:
             break

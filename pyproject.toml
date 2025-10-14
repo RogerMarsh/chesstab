@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chesstab"
-version = "8.1.dev10"
+version = "8.1.dev11"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]

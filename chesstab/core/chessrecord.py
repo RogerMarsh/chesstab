@@ -43,6 +43,7 @@ from .pgn import (
     GameUpdatePieceLocation,
     GameMoveText,
     GameStore,
+    GameMergeUpdate,
 )
 from .constants import (
     START_RAV,
@@ -690,6 +691,19 @@ class ChessDBrecordGameUpdate(Record):
                     keys.append(convert_format(record, gamekey))
             ref += 1
         return keys
+
+
+class ChessDBvaluePGNMergeUpdate(ChessDBvaluePGNUpdate):
+    """Chess game data with position, piece location, and PGN Tag, indexes.
+
+    Alternative valueclass argument for ChessDBrecordGameSequential if the
+    PGN movetext can be trusted to not have moves which leave the mover's
+    king in check.
+    """
+
+    def __init__(self, game_class=GameMergeUpdate):
+        """Extend with game source and move number encoder placeholders."""
+        super().__init__(game_class=game_class)
 
 
 class ChessDBrecordGameSequential(Record):
