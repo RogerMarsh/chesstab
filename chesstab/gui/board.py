@@ -40,7 +40,7 @@ from pgn_read.core.constants import (
     FEN_WHITE_PIECES,
     FEN_BLACK_PIECES,
 )
-from pgn_read.core.squares import Squares
+from pgn_read.core.squares import fen_squares
 
 from . import constants
 from ..core.constants import NOPIECE
@@ -302,9 +302,8 @@ class Board(Bindings):
         squares = self.squares
         occupied = list(squares.keys())
         squares.clear()
-        square_properties = Squares.squares
         for square, piece in board.items():
-            squares[square_properties[square].number] = piece.name
+            squares[fen_squares[square].number] = piece.name
         for square in occupied:
             if square not in squares:
                 squares[square] = NOPIECE

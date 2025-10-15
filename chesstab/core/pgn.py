@@ -12,7 +12,7 @@ import re
 from pgn_read.core.game import Game, suffix_annotations
 from pgn_read.core.game_indicate_check import GameIndicateCheck
 from pgn_read.core.movetext_parser import MoveText
-from pgn_read.core.squares import Squares
+from pgn_read.core.squares import fen_squares
 from pgn_read.core.constants import (
     FEN_WHITE_KING,
     FEN_WHITE_QUEEN,
@@ -334,7 +334,7 @@ def get_position_string(
 
     """
     del halfmove_clock, fullmove_number
-    squares = Squares.squares
+    squares = fen_squares
     for square, piece in board.items():
         piece.set_square(square)
     return (
@@ -671,7 +671,7 @@ class GameUpdate(_Game):
             self.halfmovenumber = [self._fullmove_number * 2 - 1]
         piecesquarekeys = self.piecesquarekeys
         piecesquarekeys.update(_ALWAYS_MATCH)
-        for square in set(Squares.squares).difference(
+        for square in set(fen_squares).difference(
             {s[1] for s in position_delta[0]}
         ):
             piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
@@ -817,7 +817,7 @@ class GameUpdatePieceLocation(_Game):
             self.halfmovenumber = [self._fullmove_number * 2 - 1]
         piecesquarekeys = self.piecesquarekeys
         piecesquarekeys.update(_ALWAYS_MATCH)
-        for square in set(Squares.squares).difference(
+        for square in set(fen_squares).difference(
             {s[1] for s in position_delta[0]}
         ):
             piecesquarekeys.add(EMPTY_SQUARE_NAME + square)
