@@ -25,6 +25,7 @@ from solentware_base.core.merge import SortIndiciesToSequentialFiles
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.movetext_parser import PGNMoveText
+from pgn_read.core.tagpair_parser import PGNTagPair
 from pgn_read.core.constants import (
     # SEVEN_TAG_ROSTER,
     TAG_DATE,
@@ -1288,7 +1289,7 @@ class ChessDBrecordGamePieceLocation(Record):
         return True
 
 
-class ChessDBvaluePGNTags(PGNMoveText, _GameLoadPack):
+class ChessDBvaluePGNTags(PGNTagPair, _GameLoadPack):
     """Chess game data with references to indicies to be applied."""
 
     def __init__(self, game_class=GameMoveText):
@@ -1415,6 +1416,25 @@ class ChessDBrecordGamePGNTags(Record):
                 continue
             database.index_instance(GAMES_FILE_DEF, self)
         return True
+
+
+class ChessDBvalueCQLScan(PGNMoveText, _GameLoadPack):
+    """Chess game data with references to indicies to be applied."""
+
+    def __init__(self, game_class=GameMoveText):
+        """Delegate to superclass with game_class argument."""
+        super().__init__(game_class=game_class)
+        self.gamesource = None
+
+
+class ChessDBrecordGameCQLScan(Record):
+    """Customise chess game record to index games by PGN tags."""
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvalueCQLScan
+    ):
+        """Customise Record with chess database key and value classes."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
 
 
 class ChessDBkeyPartial(KeyData):

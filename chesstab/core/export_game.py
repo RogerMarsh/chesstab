@@ -1242,7 +1242,7 @@ def export_all_games_for_cql_scan(database, filename):
     """Export all database games in a PGN inport format for CQL scan."""
     if filename is None:
         return True
-    instance = chessrecord.ChessDBrecordGamePGNTags()
+    instance = chessrecord.ChessDBrecordGameCQLScan()
     full_instance = chessrecord.ChessDBrecordGame()
     all_games_output = None
     database.start_read_only_transaction()
@@ -1300,7 +1300,7 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
 
     """
     database = recordset.dbhome
-    instance = chessrecord.ChessDBrecordGamePGNTags()
+    instance = chessrecord.ChessDBrecordGameCQLScan()
     full_instance = chessrecord.ChessDBrecordGame()
     record_map = {}
     if commit:

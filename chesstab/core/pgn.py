@@ -761,7 +761,10 @@ class GameMergeUpdate(GameUpdate):
 
 
 class GameUpdatePosition(_Game):
-    """Prepare position index after each token has been processed."""
+    """Prepare position index after each token has been processed.
+
+    Assume PGN movetext gives no moves leaving king of moving side in check.
+    """
 
     def __init__(self):
         """Delegate then prepare to collect positions."""
@@ -787,9 +790,16 @@ class GameUpdatePosition(_Game):
             + delta_after[2]
         )
 
+    def is_side_off_move_in_check(self):
+        """Override and return False."""
+        return False
+
 
 class GameUpdatePieceLocation(_Game):
-    """Prepare piece location indicies after each token has been processed."""
+    """Prepare piece location indicies after each token has been processed.
+
+    Assume PGN movetext gives no moves leaving king of moving side in check.
+    """
 
     def __init__(self):
         """Delegate then prepare to collect piece locations."""
@@ -880,6 +890,10 @@ class GameUpdatePieceLocation(_Game):
                     piece.name,  # Promote to piece not in initial position.
                 )
             )
+
+    def is_side_off_move_in_check(self):
+        """Override and return False."""
+        return False
 
 
 class GameUpdateEstimate(GameUpdate):
