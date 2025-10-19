@@ -19,7 +19,7 @@ repository.
 """
 import re
 
-import pgn.core.constants
+import pgn_read.core.constants
 
 from . import game_database
 
@@ -45,7 +45,7 @@ CASTLES = r"".join(
     )
 )
 
-# The pattern in pgn.core.constants is wrong here.
+# The pattern in pgn_read.core.constants is wrong here.
 ESCAPED = r"(?#Escaped)((?:\A|(?<=\n))%[^\n]*)(?=\n)"
 
 # Optional leading [{[<]? to catch incomplete [] {} and <> sequences.
@@ -53,16 +53,16 @@ TEXT = r"(?#Text)([{[<]?[^[;{<10*\n]+)"
 
 DATABASE_FORMAT = r"|".join(
     (
-        pgn.core.constants.TAG_PAIR,
+        pgn_read.core.constants.TAG_PAIR,
         MOVETEXT,
         CASTLES,
-        pgn.core.constants.GAME_TERMINATION,
-        pgn.core.constants.EOL_COMMENT,
-        pgn.core.constants.COMMENT,
-        pgn.core.constants.START_RAV,
-        pgn.core.constants.END_RAV,
-        pgn.core.constants.NAG,
-        pgn.core.constants.RESERVED,
+        pgn_read.core.constants.GAME_TERMINATION,
+        pgn_read.core.constants.EOL_COMMENT,
+        pgn_read.core.constants.COMMENT,
+        pgn_read.core.constants.START_RAV,
+        pgn_read.core.constants.END_RAV,
+        pgn_read.core.constants.NAG,
+        pgn_read.core.constants.RESERVED,
         ESCAPED,
         TEXT,
     )
@@ -194,7 +194,7 @@ def add_token_to_game(text, game, pos=0):
     Return None if no match found.
 
     """
-    dfg = pgn.core.constants
+    dfg = game_database
     match = database_format.search(text, pos)
     if not match:
         game.set_game_error()

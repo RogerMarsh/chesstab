@@ -23,11 +23,11 @@ from pgn_read.core.constants import (
     FEN_WHITE_ACTIVE,
     FEN_NULL,
     PGN_CAPTURE_MOVE,
-    EN_PASSANT_TARGET_SQUARES,
     PGN_O_O,
     OTHER_SIDE,
     PROMOTED_PIECE_NAME,
 )
+from pgn_read.core.squares import en_passant_target_squares
 
 DFG_TAG_NAME = 1
 DFG_TAG_VALUE = 2
@@ -326,7 +326,7 @@ class GameDatabase(pgn_read.core.gamedata.GameData):
         piece = self._piece_placement_data[source[1] + source[0]]
         if PGN_CAPTURE_MOVE in move:
             if destination not in self._piece_placement_data:
-                capture = EN_PASSANT_TARGET_SQUARES.get(move)
+                capture = en_passant_target_squares.get(move)
             else:
                 capture = destination
             self._modify_game_state_pawn_capture(
@@ -342,7 +342,7 @@ class GameDatabase(pgn_read.core.gamedata.GameData):
                 ((piece.square.name, piece),),
                 ((destination, piece),),
                 fullmove_number_for_next_halfmove,
-                EN_PASSANT_TARGET_SQUARES[OTHER_SIDE[self._active_color]].get(
+                en_passant_target_squares[OTHER_SIDE[self._active_color]].get(
                     (destination, piece.square.name), FEN_NULL
                 ),
             )
