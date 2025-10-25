@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=61.0",
+    "setuptools>=77.0.3",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
@@ -10,13 +10,12 @@ line-length = 79
 
 [project]
 name = "chesstab"
-version = "8.1.dev11"
+version = "8.1.dev12"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
 description = "Database for chess games."
 classifiers = [
-    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -25,14 +24,15 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "Development Status :: 3 - Alpha",
 ]
-license = {file = "LICENCE"}
+license = "BSD-3-Clause"
+license-files = ["LICENCE"]
 readme = "README"
 dependencies = [
-    "solentware-base==5.2.3.dev3",
-    "solentware-grid==3.0.1",
-    "pgn-read==2.5.dev2",
-    "solentware-misc==1.7.1",
-    "uci-net==1.2.7",
+    "solentware-base==5.2.3.dev4",
+    "solentware-grid==3.0.2",
+    "pgn-read==2.5.dev3",
+    "solentware-misc==1.7.2",
+    "uci-net==1.2.8",
 ]
 
 [project.urls]
