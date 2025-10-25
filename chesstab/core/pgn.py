@@ -950,19 +950,11 @@ class GameStore(GameIndicateCheck):
     """Add structures to support writing PGN moves to database."""
 
     def _append_decorated_text(self, movetext):
-        """Append movetext plus appropriate check indicator to self._text.
-
-        self._position_deltas[-1][0][0][-1] has the location and name of
-        the piece moving to the destination square in movetext.
-
-        """
-        delta = self._position_deltas[-1][0][0][-1]
-        source = "".join(reversed(delta[1].name + delta[0])) + movetext
+        """Append movetext plus appropriate check indicator to self._text."""
         self._text.append(movetext)
         self._append_check_indicator()
 
     def _append_decorated_castles_text(self, movetext):
         """Append movetext plus appropriate check indicator to self._text."""
-        source = "O" if self._active_color == FEN_WHITE_ACTIVE else "o"
         self._text.append(movetext)
         self._append_check_indicator()
