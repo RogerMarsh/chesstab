@@ -13,6 +13,7 @@ import tkinter.filedialog
 import queue
 import multiprocessing
 import multiprocessing.dummy
+import shutil
 
 from solentware_misc.gui.logtextbase import LogTextBase
 
@@ -26,6 +27,7 @@ from solentware_base.core.constants import (
 )
 
 from ..core import constants
+from ..core import utilities
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
@@ -691,21 +693,45 @@ class DeferredUpdateEstimateProcess:
         """
         if not self.estimate_data:
             return False
+        volfree = utilities.bytesize_to_str(
+            shutil.disk_usage(self.database.database_file).free
+        )
+        dbsize = utilities.bytesize_to_str(
+            os.path.getsize(self.database.database_file)
+        )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(
-            "'Import' will be quicker for small imports."
+            "'Import' is quicker for small imports, but slower for large."
         )
         self._report_to_log_text_only(
-            "'Merge Import' will be quicker for large imports."
+            "".join(
+                (
+                    "'Merge Import' is quicker by a few minutes at 1 ",
+                    "million games but by over 2 days at 10 million games.",
+                )
+            )
         )
         self._report_to_log_text_only(
-            "They take about the same time for 50,000 games."
+            "(3Ghz CPU, 1600Mhz memory, <WDC WDS250G2B0A-00SM50> SSD.)"
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log_text_only(
+            "".join((volfree, " is available for additions to database."))
         )
         self._report_to_log_text_only(
-            "'Merge Import' takes 2 days for 10,000,000 games."
+            "".join((dbsize, " is current size of database."))
         )
         self._report_to_log_text_only(
-            "'Import' takes 5 days for 10,000,000 games."
+            "".join(
+                (
+                    "'Merge Import' needs space for sorting.  200 Gigabytes ",
+                    "is enough for a 15 million game database, but not 30 ",
+                    "million games.",
+                )
+            )
+        )
+        self._report_to_log_text_only(
+            "'Import' is limited by available space."
         )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(

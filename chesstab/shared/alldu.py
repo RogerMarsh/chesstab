@@ -9,6 +9,7 @@
 import os
 import traceback
 import datetime
+import shutil
 
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import (
@@ -816,6 +817,20 @@ def dump_indicies(
         if reporter is not None:
             while not reporter.empty():
                 pass
+            volfree = utilities.bytesize_to_str(
+                shutil.disk_usage(cdb.database_file).free
+            )
+            dbsize = utilities.bytesize_to_str(
+                os.path.getsize(cdb.database_file)
+            )
+            reporter.append_text_only("")
+            reporter.append_text("Database size before index rebuild.")
+            reporter.append_text_only(
+                "".join((volfree, " is available after index dump."))
+            )
+            reporter.append_text_only(
+                "".join((dbsize, " is size of database before index reload."))
+            )
     else:
         if reporter is not None:
             while not reporter.empty():
@@ -1389,6 +1404,7 @@ def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Import finished.")
+        _report_database_size_on_import_finish(cdb, reporter)
 
 
 def do_reload_deferred_update(
@@ -1456,6 +1472,19 @@ def do_reload_deferred_update(
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Import and index reload finished.")
+        _report_database_size_on_import_finish(cdb, reporter)
+
+
+def _report_database_size_on_import_finish(cdb, reporter):
+    """Report database size on completing import."""
+    volfree = utilities.bytesize_to_str(
+        shutil.disk_usage(cdb.database_file).free
+    )
+    dbsize = utilities.bytesize_to_str(os.path.getsize(cdb.database_file))
+    reporter.append_text_only("")
+    reporter.append_text_only("Database size.")
+    reporter.append_text_only("".join((volfree, " is available.")))
+    reporter.append_text_only("".join((dbsize, " is size of database.")))
 
 
 def _du_report_increases(reporter, file, size_increases):

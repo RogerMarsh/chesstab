@@ -216,3 +216,14 @@ def is_import_with_index_reload_started_txn(database):
         return is_import_with_index_reload_started(database)
     finally:
         database.end_read_only_transaction()
+
+
+def bytesize_to_str(number):
+    """Return number as Gigabytes, Megabytes, Kilobytes, or bytes, string."""
+    if number > 1073741823:
+        return str(divmod(number, 1073741824)[0]) + " Gigabytes"
+    if number > 1048575:
+        return str(divmod(number, 1048576)[0]) + " Megabytes"
+    if number > 1023:
+        return str(divmod(number, 1024)[0]) + " Kilobytes"
+    return str(number) + " bytes"
