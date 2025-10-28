@@ -946,7 +946,7 @@ class GameMoveText(MoveText):
         return self.is_tag_roster_valid()
 
 
-class GameStore(GameIndicateCheck):
+class GameStore(_Game, GameIndicateCheck):
     """Add structures to support writing PGN moves to database."""
 
     def _append_decorated_text(self, movetext):
