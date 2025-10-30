@@ -384,6 +384,11 @@ class ChessDBvalueGameTags(ChessDBvalueGame):
         Added to support Find and Where classes.
 
         """
+        if fieldname in PLAYER_NAME_TAGS:
+            return tuple(
+                " ".join(re_normalize_player_name.findall(name))
+                for name in self.get_field_value(fieldname).split(":")
+            )
         return (self.get_field_value(fieldname),)
 
     def load(self, value):
