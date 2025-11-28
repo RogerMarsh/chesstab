@@ -711,13 +711,13 @@ class GameUpdate(_Game):
         pieces = [""] * 64
         bits = 0
         for piece in self._piece_placement_data.values():
-            pieces[piece.square.number] = piece.name
-            bits += piece.square.bit
-        pieces = "".join(pieces)
+            piece_square = piece.square
+            pieces[piece_square.number] = piece.name
+            bits += piece_square.bit
         delta_after = position_delta[1]
         self.positionkeys.append(
             bits.to_bytes(8, "big").decode("iso-8859-1")
-            + pieces
+            + "".join(pieces)
             + delta_after[1]
             + delta_after[3]
             + delta_after[2]
@@ -777,9 +777,8 @@ class GameUpdatePosition(_Game):
         pieces = [""] * 64
         bits = 0
         for piece in self._piece_placement_data.values():
-            piece_name = piece.name
             piece_square = piece.square
-            pieces[piece_square.number] = piece_name
+            pieces[piece_square.number] = piece.name
             bits += piece_square.bit
         delta_after = position_delta[1]
         self.positionkeys.append(
