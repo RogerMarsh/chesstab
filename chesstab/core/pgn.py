@@ -946,14 +946,4 @@ class GameMoveText(MoveText):
 
 
 class GameStore(_Game, GameIndicateCheck):
-    """Add structures to support writing PGN moves to database."""
-
-    def _append_decorated_text(self, movetext):
-        """Append movetext plus appropriate check indicator to self._text."""
-        self._text.append(movetext)
-        self._append_check_indicator()
-
-    def _append_decorated_castles_text(self, movetext):
-        """Append movetext plus appropriate check indicator to self._text."""
-        self._text.append(movetext)
-        self._append_check_indicator()
+    """Add check indicators when writing PGN moves to database."""
