@@ -58,6 +58,7 @@ def rundu(
     home_directory,
     database_module_name,
     resume,
+    sort_area,
 ):
     """Do the deferred update using the specified database engine.
 
@@ -74,6 +75,7 @@ def rundu(
         database_class=database_module.Database,
         home_directory=home_directory,
         resume=resume,
+        sort_area=sort_area,
     )
     try:
         deferred_update.root.mainloop()

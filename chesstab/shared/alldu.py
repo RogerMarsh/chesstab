@@ -20,6 +20,7 @@ from solentware_base.core.constants import (
 from ..core import filespec
 from ..core import chessrecord
 from ..core import utilities
+from ..core import constants
 from .. import ERROR_LOG, APPLICATION_NAME
 
 # Two million is chosen because it is close to the number of positions in
@@ -67,6 +68,25 @@ def du_extract(
 
     """
     del kwargs
+    cdb.start_read_only_transaction()
+    try:
+        expected_pgnpaths = cdb.get_import_pgn_file_tuple()
+        if expected_pgnpaths and set(expected_pgnpaths) != set(pgnpaths):
+            if reporter is not None:
+                reporter.append_text_only("")
+                reporter.append_text(
+                    "Unexpected PGN file names in import list"
+                )
+                reporter.append_text_only("")
+            return False
+    finally:
+        cdb.end_read_only_transaction()
+    if not expected_pgnpaths:
+        cdb.start_transaction()
+        try:
+            cdb.set_import_pgn_file_tuple(pgnpaths)
+        finally:
+            cdb.commit()
     importer = chessrecord.ChessDBrecordGameStore()
     for key in cdb.table.keys():
         if key == file:
@@ -743,7 +763,7 @@ def dump_indicies(
     if ignore is not None:
         indicies.difference_update(ignore)
     dump_directory = os.path.join(
-        cdb.home_directory,
+        cdb.get_merge_import_sort_area(),
         "_".join((os.path.basename(cdb.database_file), file)),
     )
     try:
@@ -939,7 +959,7 @@ def write_indicies_for_extracted_games(
             )
         )
     guard_file = os.path.join(
-        cdb.home_directory,
+        cdb.get_merge_import_sort_area(),
         "_".join(
             (os.path.basename(cdb.database_file), filespec.GAMES_FILE_DEF)
         ),
@@ -1088,10 +1108,14 @@ def load_indicies(
             )
             reporter.append_text_only("")
         return False
-    dump_directory = os.path.join(
-        cdb.home_directory,
-        "_".join((os.path.basename(cdb.database_file), file)),
-    )
+    cdb.start_read_only_transaction()
+    try:
+        dump_directory = os.path.join(
+            cdb.get_merge_import_sort_area(),
+            "_".join((os.path.basename(cdb.database_file), file)),
+        )
+    finally:
+        cdb.end_read_only_transaction()
     if not os.path.isdir(dump_directory):
         if reporter is not None:
             reporter.append_text_only("")
@@ -1230,6 +1254,18 @@ def load_indicies(
             os.rmdir(index_directory)
         except FileNotFoundError:
             pass
+        except OSError:
+            if reporter is not None:
+                reporter.append_text_only("")
+                reporter.append_text(
+                    "".join(
+                        (
+                            "Directory for '",
+                            index,
+                            "' not deleted: probably not empty.",
+                        )
+                    )
+                )
     try:
         os.remove(os.path.join(dump_directory, "0"))
     except FileNotFoundError:
@@ -1399,6 +1435,11 @@ def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
                 reporter.append_text_only("")
                 reporter.append_text("Import not completed.")
             return
+        cdb.start_transaction()
+        try:
+            cdb.delete_import_pgn_file_tuple()
+        finally:
+            cdb.commit()
     finally:
         cdb.close_database()
     if reporter is not None:
@@ -1449,6 +1490,11 @@ def do_reload_deferred_update(
                 )
             return
         if extract_done is None:
+            cdb.start_transaction()
+            try:
+                cdb.delete_import_pgn_file_tuple()
+            finally:
+                cdb.commit()
             if reporter is not None:
                 reporter.append_text_only("")
                 reporter.append_text("Import finished.")
@@ -1467,6 +1513,11 @@ def do_reload_deferred_update(
                 reporter.append_text_only("")
                 reporter.append_text("Load indicies not completed.")
             return
+        cdb.start_transaction()
+        try:
+            cdb.delete_import_pgn_file_tuple()
+        finally:
+            cdb.commit()
     finally:
         cdb.close_database()
     if reporter is not None:
@@ -1651,3 +1702,25 @@ class Alldu:
 
                 break
         del f, m
+
+    def get_merge_import_sort_area(self):
+        """Return sort area in application control or database directory."""
+        return self.get_application_control().get(
+            constants.SORT_AREA, super().get_merge_import_sort_area()
+        )
+
+    def get_import_pgn_file_tuple(self):
+        """Return PGN file list in application control or empty list."""
+        return self.get_application_control().get(constants.PGN_FILES, ())
+
+    def set_import_pgn_file_tuple(self, names):
+        """Return PGN file list in application control or empty list."""
+        appcontrol = self.get_application_control()
+        appcontrol[constants.PGN_FILES] = names
+        self.set_application_control(appcontrol)
+
+    def delete_import_pgn_file_tuple(self):
+        """Delete PGN file list from application control."""
+        appcontrol = self.get_application_control()
+        del appcontrol[constants.PGN_FILES]
+        self.set_application_control(appcontrol)

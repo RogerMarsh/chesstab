@@ -21,8 +21,6 @@ The *_txn version of each exists in case the test is done within an existing
 transaction.
 
 """
-import ast
-
 from ..core import filespec
 from ..core import constants
 
@@ -100,42 +98,28 @@ def is_import_in_progress_txn(database):
         database.end_read_only_transaction()
 
 
-def get_pgn_filename_of_an_import_in_progress(database):
+def get_pgn_filenames_of_an_import_in_progress(database):
     """Return file name of first game with incomplete import.
 
     database    Database instance containing the game.
 
     """
     if database is None:
-        return False
-    not_done = database.recordlist_all(
-        filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
-    )
-    try:
-        reference = not_done.recordset.first()
-        if reference is None:
-            return None
-        name = ast.literal_eval(
-            database.get_primary_record(
-                filespec.GAMES_FILE_DEF, key=reference[1]
-            )[1]
-        )[1][constants.FILE]
-        return name
-    finally:
-        not_done.close()
+        return ()
+    return database.get_application_control().get(constants.PGN_FILES, ())
 
 
-def get_pgn_filename_of_an_import_in_progress_txn(database):
-    """Return file name of first game with incomplete import.
+def get_pgn_filenames_of_an_import_in_progress_txn(database):
+    """Return file names of PGN files for incomplete import.
 
     database    Database instance containing the game.
 
     """
     if database is None:
-        return False
+        return ()
     database.start_read_only_transaction()
     try:
-        return get_pgn_filename_of_an_import_in_progress(database)
+        return get_pgn_filenames_of_an_import_in_progress(database)
     finally:
         database.end_read_only_transaction()
 

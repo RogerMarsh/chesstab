@@ -166,3 +166,10 @@ NULL_GAME_TEXT = "\n".join(
     )
 )
 del SEVEN_TAG_ROSTER_DEFAULTS, SEVEN_TAG_ROSTER
+
+# Key for sort area path in database control file application control record.
+SORT_AREA = b"_sort_area"
+
+# Key for PGN files being imported path in database control file application
+# control record.
+PGN_FILES = b"_pgn_files"

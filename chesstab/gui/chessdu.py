@@ -755,6 +755,7 @@ class DeferredUpdate(Bindings):
         database_class=None,
         home_directory=None,
         resume=None,
+        sort_area=None,
     ):
         """Create the database and User Interface objects.
 
@@ -899,7 +900,19 @@ class DeferredUpdate(Bindings):
         )
         self.tagstart = "1.0"
         self._report_to_log(
-            "".join(("Importing to database ", home_directory, "."))
+            "".join(
+                ("Importing to database in ", home_directory, " directory.")
+            )
+        )
+        self._report_to_log_text_only("")
+        self._report_to_log_text_only(
+            "".join(
+                (
+                    "Merge Import sort area is in ",
+                    home_directory if sort_area is None else sort_area,
+                    ".",
+                )
+            )
         )
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
@@ -1277,32 +1290,48 @@ class DeferredUpdate(Bindings):
                 ),
             )
             return
-        if self.resume is None:
-            title = "Select files containing games to import"
+        if not self.resume:
+            self.database.open_database()
+            try:
+                names = (
+                    utilities.get_pgn_filenames_of_an_import_in_progress_txn(
+                        self.database
+                    )
+                )
+            finally:
+                self.database.close_database()
+            if not names:
+                # Use askopenfilenames rather than askopenfilename with
+                # multiple=Tkinter.TRUE because in freebsd port of Tkinter a
+                # tuple is returned while at least some versions of the
+                # Microsoft Windows port return a space separated string
+                # (which looks a lot like a TCL list - curly brackets around
+                # path names containing spaces).
+                # Then only the dialogues intercept of askopenfilenames needs
+                # changing as askopenfilename with default multiple argument
+                # returns a string containg one path name in all cases.
+                #
+                # Under Wine multiple=Tkinter.TRUE has no effect at Python
+                # 2.6.2 so the dialogue supports selection of a single file
+                # only.
+                gamefiles = tkinter.filedialog.askopenfilenames(
+                    parent=self.root,
+                    title="Select files containing games to import",
+                    initialdir="~",
+                    filetypes=[("Portable Game Notation (chess)", ".pgn")],
+                )
+                if not gamefiles:
+                    return
+                self.pgnfiles = gamefiles
+            else:
+                tkinter.messagebox.showinfo(
+                    parent=self.root,
+                    title="Select PGN Files",
+                    message="Resuming an unfinished import",
+                )
+                self.pgnfiles = names
         else:
-            title = self.resume.join(
-                ("Select '", "' to resume import of this file")
-            )
-        # Use askopenfilenames rather than askopenfilename with
-        # multiple=Tkinter.TRUE because in freebsd port of Tkinter a tuple
-        # is returned while at least some versions of the Microsoft Windows
-        # port return a space separated string (which looks a lot like a
-        # TCL list - curly brackets around path names containing spaces).
-        # Then only the dialogues intercept of askopenfilenames needs
-        # changing as askopenfilename with default multiple argument
-        # returns a string containg one path name in all cases.
-        #
-        # Under Wine multiple=Tkinter.TRUE has no effect at Python 2.6.2 so
-        # the dialogue supports selection of a single file only.
-        gamefiles = tkinter.filedialog.askopenfilenames(
-            parent=self.root,
-            title=title,
-            initialdir="~",
-            filetypes=[("Portable Game Notation (chess)", ".pgn")],
-        )
-        if not gamefiles:
-            return
-        self.pgnfiles = gamefiles
+            self.pgnfiles = self.resume
         self._allow_job = False
         self._report_to_log_text_only("")
         self._report_to_log("Count games.")

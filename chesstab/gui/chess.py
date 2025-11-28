@@ -78,7 +78,7 @@ from ..core.filespec import (
     BLACK_FIELD_DEF,
     RESULT_FIELD_DEF,
 )
-from ..core.constants import UNKNOWN_RESULT
+from ..core.constants import UNKNOWN_RESULT, SORT_AREA
 from ..shared import rundu
 from ..cql import runcql
 from .chess_ui import ChessUI
@@ -219,6 +219,22 @@ class Chess(Bindings):
                 menu102.add_command(
                     label=accelerator[1],
                     command=self.try_command(function, menu102),
+                    underline=accelerator[3],
+                )
+            menu10201 = tkinter.Menu(menu102, name="mergesort", tearoff=False)
+            menu102.add_cascade(
+                label=EventSpec.menu_database_merge[1],
+                menu=menu10201,
+                underline=EventSpec.menu_database_merge[3],
+            )
+            for accelerator, function in (
+                (EventSpec.menu_database_merge_view, self._merge_view),
+                (EventSpec.menu_database_merge_set, self._merge_set),
+                (EventSpec.menu_database_merge_unset, self._merge_unset),
+            ):
+                menu10201.add_command(
+                    label=accelerator[1],
+                    command=self.try_command(function, menu10201),
                     underline=accelerator[3],
                 )
             menu10101 = tkinter.Menu(menu101, name="games", tearoff=False)
@@ -669,12 +685,7 @@ class Chess(Bindings):
 
     def _new_partial_position(self):
         """Enter a new CQL query."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="CQL Query",
-                message="No chess database open",
-            )
+        if self._no_chess_database_open("CQL Query"):
             return
         position = CQLInsert(
             master=self.ui.view_partials_pw,
@@ -1074,23 +1085,23 @@ class Chess(Bindings):
 
         # Prompt to complete an interrupted game import.
         # Assume only one interrepted import.
-        name = utilities.get_pgn_filename_of_an_import_in_progress_txn(
+        names = utilities.get_pgn_filenames_of_an_import_in_progress_txn(
             self.opendatabase
         )
-        if name is not None:
+        if names:
             if tkinter.messagebox.askyesno(
                 parent=self._get_toplevel(),
                 message="".join(
                     (
                         "Import games from\n\n",
-                        name,
+                        "\n".join(names),
                         "\n\nis not finished.\n\n",
                         "Do you want to continue the import now?",
                     )
                 ),
                 title="Open",
             ):
-                self._database_import(resume=name)
+                self._database_import(resume=names)
                 return
 
         # Avoid a probably pointless evaluation when a game or CQL query,
@@ -1391,13 +1402,9 @@ class Chess(Bindings):
 
     def _index_show(self):
         """Show list of stored stored selection rules."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="Show",
-                message="No chess database open",
-            )
-        elif self.ui.base_selections.is_visible():
+        if self._no_chess_database_open("Show"):
+            return
+        if self.ui.base_selections.is_visible():
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1428,12 +1435,7 @@ class Chess(Bindings):
 
         def index_changed():
             """Set the index used to display list of games."""
-            if self.opendatabase is None or self.opendatabase.dbenv is None:
-                tkinter.messagebox.showinfo(
-                    parent=self._get_toplevel(),
-                    title="Select Index for games database",
-                    message="No chess database open",
-                )
+            if self._no_chess_database_open("Select Index for games database"):
                 return
             if utilities.is_import_in_progress_txn(self.opendatabase):
                 if index not in (GAMES_FILE_DEF, PGN_ERROR_FIELD_DEF):
@@ -1481,13 +1483,9 @@ class Chess(Bindings):
 
     def _position_show(self):
         """Show list of stored CQL queries."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="Show",
-                message="No chess database open",
-            )
-        elif self.ui.base_partials.is_visible():
+        if self._no_chess_database_open("Show"):
+            return
+        if self.ui.base_partials.is_visible():
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1515,13 +1513,9 @@ class Chess(Bindings):
 
     def _repertoire_show(self):
         """Show list of stored repertoire games (opening variations)."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="Show",
-                message="No chess database open",
-            )
-        elif self.ui.base_repertoires.is_visible():
+        if self._no_chess_database_open("Show"):
+            return
+        if self.ui.base_repertoires.is_visible():
             tkinter.messagebox.showinfo(
                 parent=self._get_toplevel(),
                 title="Show",
@@ -1692,12 +1686,7 @@ class Chess(Bindings):
 
     def _database_import(self, resume=None):
         """Import games to open database."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="Import",
-                message="No chess database open to receive import",
-            )
+        if self._no_chess_database_open("Import"):
             return
         if self._database_class is None:
             tkinter.messagebox.showinfo(
@@ -1777,6 +1766,13 @@ class Chess(Bindings):
             )
             self.statusbar.set_status_text(text="")
             return
+        self.opendatabase.start_read_only_transaction()
+        try:
+            sort_area = self.opendatabase.get_application_control().get(
+                SORT_AREA
+            )
+        finally:
+            self.opendatabase.end_read_only_transaction()
         self.opendatabase.mark_games_evaluated()
         self.opendatabase.mark_all_cql_statements_not_evaluated()
         self.opendatabase.close_database_contexts()
@@ -1787,6 +1783,7 @@ class Chess(Bindings):
                     self.opendatabase.home_directory,
                     usedu,
                     resume,
+                    sort_area,
                 ),
             )
         )
@@ -2018,12 +2015,7 @@ class Chess(Bindings):
 
     def _show_query_engines(self):
         """Show list of CQL query engines available."""
-        if self.opendatabase is None or self.opendatabase.dbenv is None:
-            tkinter.messagebox.showinfo(
-                parent=self._get_toplevel(),
-                title="Show",
-                message="No chess database open",
-            )
+        if self._no_chess_database_open("Show"):
             return
         if self.show_query_engines_toplevel is not None:
             tkinter.messagebox.showinfo(
@@ -2039,6 +2031,152 @@ class Chess(Bindings):
             return
         self.show_query_engines_toplevel = patternengines.PatternEngines(self)
         self.show_query_engines_toplevel.populate_widget()
+
+    def _merge_view(self):
+        """View merge import directory path name."""
+        if self._no_chess_database_open("Show merge import path"):
+            return
+        self.opendatabase.start_read_only_transaction()
+        try:
+            directory = self.opendatabase.get_application_control().get(
+                SORT_AREA
+            )
+        finally:
+            self.opendatabase.end_read_only_transaction()
+        if directory is None:
+            message = "".join(
+                (
+                    "No directory recorded, the database directory ",
+                    "would be used for 'Merge Import' sorting",
+                )
+            )
+        else:
+            message = "".join(
+                (directory, " would be used for 'Merge Import' sorting")
+            )
+        tkinter.messagebox.showinfo(
+            parent=self._get_toplevel(),
+            title="View",
+            message=message,
+        )
+
+    def _merge_set(self):
+        """Set merge import directory path name.
+
+        Name directory for sorting instead of default database directory.
+
+        """
+        if self._no_chess_database_open("Set merge import path"):
+            return
+        if self._is_import_in_progress("set"):
+            return
+        self.opendatabase.start_read_only_transaction()
+        try:
+            directory = self.opendatabase.get_application_control().get(
+                SORT_AREA
+            )
+        finally:
+            self.opendatabase.end_read_only_transaction()
+        if directory is not None:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="View",
+                message="".join(
+                    (
+                        directory,
+                        " would be used for 'Merge Import' sorting ",
+                        "currently\n\nUse 'Unset' first then repeat 'Set' ",
+                        "to pick directory",
+                    )
+                ),
+            )
+            return
+        directory = tkinter.filedialog.askdirectory(
+            parent=self._get_toplevel(),
+            title="Select directory for 'Merge Import' sorting",
+            initialdir="/",
+        )
+        if not directory:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="Set",
+                message="No directory chosen",
+            )
+            return
+        self.opendatabase.start_transaction()
+        try:
+            application_control = self.opendatabase.get_application_control()
+            application_control[SORT_AREA] = directory
+            self.opendatabase.set_application_control(application_control)
+        finally:
+            self.opendatabase.commit()
+        tkinter.messagebox.showinfo(
+            parent=self._get_toplevel(),
+            title="Set",
+            message=directory + " set for 'Merge Import' sort",
+        )
+
+    def _merge_unset(self):
+        """Unset merge import directory path name.
+
+        Database directory is used for sorting.
+
+        """
+        if self._no_chess_database_open("Unset merge import path"):
+            return
+        if self._is_import_in_progress("unset"):
+            return
+        self.opendatabase.start_read_only_transaction()
+        try:
+            directory = self.opendatabase.get_application_control().get(
+                SORT_AREA
+            )
+        finally:
+            self.opendatabase.end_read_only_transaction()
+        if directory is None:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="Unset",
+                message="No directory to unset",
+            )
+            return
+        self.opendatabase.start_transaction()
+        try:
+            application_control = self.opendatabase.get_application_control()
+            if SORT_AREA in application_control:
+                del application_control[SORT_AREA]
+            self.opendatabase.set_application_control(application_control)
+        finally:
+            self.opendatabase.commit()
+        tkinter.messagebox.showinfo(
+            parent=self._get_toplevel(),
+            title="Unset",
+            message="Database directory is now for 'Merge Import' sort",
+        )
+
+    def _no_chess_database_open(self, title):
+        """Return True if a chess database is not open."""
+        if self.opendatabase is None or self.opendatabase.dbenv is None:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title=title,
+                message="No chess database open",
+            )
+            return True
+        return False
+
+    def _is_import_in_progress(self, title):
+        """Return True if an import to database is in progress."""
+        if utilities.is_import_in_progress_txn(self.opendatabase):
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title=title.title() + " path name",
+                message=title.join(
+                    ("Cannot ", " sort path because a merge is in progress")
+                ),
+            )
+            return True
+        return False
 
 
 class Statusbar:

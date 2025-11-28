@@ -742,6 +742,10 @@ class EventSpec:
     menu_database_games = ("", "Games", "", 0)
     menu_database_repertoires = ("", "Repertoires", "", 0)
     menu_database_positions = ("", "Positions", "", 0)
+    menu_database_merge = ("", "Merge sort area", "", 0)
+    menu_database_merge_view = ("", "View", "", 0)
+    menu_database_merge_set = ("", "Set", "", 0)
+    menu_database_merge_unset = ("", "Unset", "", 0)
 
     # Show and hide are used in the Select, Position, and Repertoire menus.
     menu_show = ("", "Show", "", 0)
