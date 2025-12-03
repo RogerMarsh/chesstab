@@ -29,6 +29,11 @@ from .. import ERROR_LOG, APPLICATION_NAME
 # done for each segment.
 _MERGE_COMMIT_INTERVAL = 2000000
 
+# The piecesquare index fills the chosen map size increment for Symas LMDB
+# well before 2000000 entries added.  It also takes about 10 times as long
+# to process these entries compared with most other indicies.
+_SHORT_MERGE_COMMIT_INTERVAL = 200000
+
 
 def du_extract(
     cdb,
@@ -1165,6 +1170,10 @@ def load_indicies(
             continue
         cdb.delete_index(file, index)
         writer = cdb.merge_writer(file, index)
+        if index == filespec.PIECESQUARE_FIELD_DEF:
+            commit_interval = _SHORT_MERGE_COMMIT_INTERVAL
+        else:
+            commit_interval = _MERGE_COMMIT_INTERVAL
         for count, item in enumerate(cdb.next_sorted_item(index_directory)):
             if quit_event and quit_event.is_set():
                 if reporter is not None:
@@ -1176,7 +1185,7 @@ def load_indicies(
                 writer.close_cursor()
                 cdb.backout()
                 return False
-            if not count % _MERGE_COMMIT_INTERVAL:
+            if not count % commit_interval:
                 if count:
                     if reporter is not None:
                         reporter.append_text(
@@ -1506,13 +1515,22 @@ def do_reload_deferred_update(
                 reporter.append_text_only("")
                 reporter.append_text("Dump existing indicies not completed.")
             return
-        if not load_indicies(
-            cdb, *args, reporter=reporter, file=file, ignore=ignore, **kwargs
-        ):
-            if reporter is not None:
-                reporter.append_text_only("")
-                reporter.append_text("Load indicies not completed.")
-            return
+        try:
+            if not load_indicies(
+                cdb,
+                *args,
+                reporter=reporter,
+                file=file,
+                ignore=ignore,
+                **kwargs,
+            ):
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Load indicies not completed.")
+                return
+        except Exception as exc:
+            _report_exception(cdb, reporter, exc)
+            raise
         cdb.start_transaction()
         try:
             cdb.delete_import_pgn_file_tuple()
