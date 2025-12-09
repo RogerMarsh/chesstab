@@ -36,6 +36,7 @@ from pgn_read.core.constants import (
     PGN_MAXIMUM_LINE_LENGTH,
     PGN_LINE_SEPARATOR,
     PGN_TOKEN_SEPARATOR,
+    DG_DESTINATION,
 )
 
 from .constants import (
@@ -748,6 +749,16 @@ class GameUpdate(_Game):
                 )
             )
 
+    def _append_fully_disambiguated_piece_move(self, match_, dtfm_match):
+        """Override, append fully disambiguated piece move with hyphen."""
+        self._append_decorated_text(
+            "-".join((match_.group(), dtfm_match.group(DG_DESTINATION)))
+        )
+
+    def _append_piece_move_with_from_square(self, name, from_, destination):
+        """Override, append fully disambiguated piece move with hyphen."""
+        self._append_decorated_text("".join((name, from_, "-", destination)))
+
 
 class GameMergeUpdate(GameUpdate):
     """Prepare indicies after each token has been processed.
@@ -947,3 +958,13 @@ class GameMoveText(MoveText):
 
 class GameStore(_Game, GameIndicateCheck):
     """Add check indicators when writing PGN moves to database."""
+
+    def _append_fully_disambiguated_piece_move(self, match_, dtfm_match):
+        """Override, append fully disambiguated piece move with hyphen."""
+        self._append_decorated_text(
+            "-".join((match_.group(), dtfm_match.group(DG_DESTINATION)))
+        )
+
+    def _append_piece_move_with_from_square(self, name, from_, destination):
+        """Override, append fully disambiguated piece move with hyphen."""
+        self._append_decorated_text("".join((name, from_, "-", destination)))
