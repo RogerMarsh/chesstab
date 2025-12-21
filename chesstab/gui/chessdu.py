@@ -498,7 +498,8 @@ class DeferredUpdateEstimateProcess:
         # not attempt to close the connection, hiding the problem.
         # The apsw module did not raise an exception, nor did modules providing
         # an interface to Berkeley DB or DPT.
-        self.database.open_database()
+        database = self.database
+        database.open_database()
         try:
             indicies = (
                 GAME_FIELD_DEF,
@@ -506,17 +507,22 @@ class DeferredUpdateEstimateProcess:
                 PIECESQUARE_FIELD_DEF,
             )
             game_count = 0
-            for index in indicies:
-                key = self.database.encode_record_selector(index)
-                index_games = self.database.recordlist_key(
-                    GAMES_FILE_DEF,
-                    IMPORT_FIELD_DEF,
-                    key=key,
-                )
-                try:
-                    game_count = max(game_count, index_games.count_records())
-                finally:
-                    index_games.close()
+            database.start_read_only_transaction()
+            try:
+                for index in indicies:
+                    index_games = database.recordlist_key(
+                        GAMES_FILE_DEF,
+                        IMPORT_FIELD_DEF,
+                        key=database.encode_record_selector(index),
+                    )
+                    try:
+                        game_count = max(
+                            game_count, index_games.count_records()
+                        )
+                    finally:
+                        index_games.close()
+            finally:
+                database.end_read_only_transaction()
             if game_count > 0:
                 self.estimate_data = True
                 self._report_to_log(
@@ -534,7 +540,7 @@ class DeferredUpdateEstimateProcess:
             self._report_to_log_text_only("")
             return False
         finally:
-            self.database.close_database()
+            database.close_database()
 
     def _estimate_games_in_import(self):
         """Estimate import size from file sizes reported by operating system.
