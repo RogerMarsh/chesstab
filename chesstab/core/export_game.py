@@ -7,9 +7,8 @@
 import ast
 
 from pgn_read.core.parser import PGN
-from pgn_read.core.movetext_parser import full_disambiguation_allowed
 
-from . import chessrecord, filespec
+from . import chessrecord, filespec, lexer, pgnify
 from .export_pgn_import_format import get_game_pgn_import_format
 
 # PGN specification states ascii but these export functions used the
@@ -1242,53 +1241,31 @@ def export_all_games_for_cql_scan(database, filename):
     """Export all database games in a PGN inport format for CQL scan."""
     if filename is None:
         return True
-    instance = chessrecord.ChessDBrecordGameCQLScan()
-    full_instance = chessrecord.ChessDBrecordGame()
-    all_games_output = None
+    literal_eval = ast.literal_eval
+    instance = chessrecord.ChessDBrecordGameText()
+    instance.set_database(database)
     database.start_read_only_transaction()
-    valid_games = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
-    valid_games.remove_recordset(
-        database.recordlist_all(
-            filespec.GAMES_FILE_DEF, filespec.PGN_ERROR_FIELD_DEF
-        )
-    )
     try:
         cursor = database.database_cursor(
-            filespec.GAMES_FILE_DEF,
-            filespec.GAMES_FILE_DEF,
-            recordset=valid_games,
+            filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
         )
         try:
             with open(filename, "w", encoding=_ENCODING) as gamesout:
+                pgnifier = pgnify.PGNify(gamesout)
+                tokenizer = lexer.Lexer(pgnifier)
+                pgnifier.set_lexer(tokenizer)
                 current_record = cursor.first()
                 while current_record:
                     instance.load_record(current_record)
-                    if full_disambiguation_allowed.search(
-                        instance.value.pgntext
-                    ):
-                        full_instance.load_record(current_record)
-                        gamesout.write(
-                            get_game_pgn_import_format(
-                                full_instance.value.collected_game,
-                                tag_separator="\n",
-                            )
-                        )
-                    else:
-                        for text in instance.value.collected_game.pgn_text:
-                            gamesout.write(text)
-                            if text[0] in "[%":
-                                gamesout.write("\n")
-                            else:
-                                gamesout.write(" ")
-                        gamesout.write("\n")
-                    if all_games_output is None:
-                        all_games_output = True
+                    tokenizer.generate_tokens(
+                        literal_eval(instance.get_srvalue()[0])
+                    )
                     current_record = cursor.next()
         finally:
             cursor.close()
     finally:
         database.end_read_only_transaction()
-    return all_games_output
+    return True
 
 
 def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
@@ -1299,9 +1276,9 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
     placed in recordmap.
 
     """
+    literal_eval = ast.literal_eval
     database = recordset.dbhome
-    instance = chessrecord.ChessDBrecordGameCQLScan()
-    full_instance = chessrecord.ChessDBrecordGame()
+    instance = chessrecord.ChessDBrecordGameText()
     record_map = {}
     if commit:
         database.start_read_only_transaction()
@@ -1313,29 +1290,17 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
         )
         try:
             with open(filename, "w", encoding=_ENCODING) as gamesout:
+                pgnifier = pgnify.PGNify(gamesout)
+                tokenizer = lexer.Lexer(pgnifier)
+                pgnifier.set_lexer(tokenizer)
                 current_record = cursor.first()
                 while current_record:
                     record_number = current_record[0]
                     record_map[len(record_map) + 1] = record_number
                     instance.load_record(current_record)
-                    if full_disambiguation_allowed.search(
-                        instance.value.pgntext
-                    ):
-                        full_instance.load_record(current_record)
-                        gamesout.write(
-                            get_game_pgn_import_format(
-                                full_instance.value.collected_game,
-                                tag_separator="\n",
-                            )
-                        )
-                    else:
-                        for text in instance.value.collected_game.pgn_text:
-                            gamesout.write(text)
-                            if text[0] in "[%":
-                                gamesout.write("\n")
-                            else:
-                                gamesout.write(" ")
-                        gamesout.write("\n")
+                    tokenizer.generate_tokens(
+                        literal_eval(instance.get_srvalue()[0])
+                    )
                     if len(record_map) > limit:
                         break
                     current_record = cursor.next()
