@@ -37,6 +37,9 @@ from ..core.filespec import (
     PGNFILE_FIELD_DEF,
     BTOD_FACTOR,
     IMPORT_FIELD_DEF,
+    GAME_FIELD_DEF,
+    POSITIONS_FIELD_DEF,
+    PIECESQUARE_FIELD_DEF,
 )
 
 _GAMECOUNT_REPORT_INTERVAL = 1000000
@@ -497,7 +500,32 @@ class DeferredUpdateEstimateProcess:
         # an interface to Berkeley DB or DPT.
         self.database.open_database()
         try:
-            if not self._estimate_games_in_import():
+            indicies = (
+                GAME_FIELD_DEF,
+                POSITIONS_FIELD_DEF,
+                PIECESQUARE_FIELD_DEF,
+            )
+            game_count = 0
+            for index in indicies:
+                key = self.database.encode_record_selector(index)
+                index_games = self.database.recordlist_key(
+                    GAMES_FILE_DEF,
+                    IMPORT_FIELD_DEF,
+                    key=key,
+                )
+                try:
+                    game_count = max(game_count, index_games.count_records())
+                finally:
+                    index_games.close()
+            if game_count > 0:
+                self.estimate_data = True
+                self._report_to_log(
+                    "Extract already done: skip count games scan."
+                )
+                self._report_to_log_text_only(
+                    str(game_count) + " games were extracted."
+                )
+            elif not self._estimate_games_in_import():
                 return None
             if self._allow_time():
                 self.quit_event.set()
