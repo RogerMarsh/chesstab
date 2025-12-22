@@ -982,6 +982,9 @@ def write_indicies_for_extracted_games(
             reporter.append_text_only(os.path.dirname(guard_file))
         cdb.commit()
         return True
+    _remove_games_in_sequential_files_from_index_games(
+        cdb, index_games, reporter=reporter
+    )
     if not importer.write_index_entries_to_sequential_files(
         cdb,
         index_games,
@@ -996,6 +999,60 @@ def write_indicies_for_extracted_games(
             pass
     cdb.commit()
     return True
+
+
+def _remove_games_in_sequential_files_from_index_games(
+    cdb, index_games, reporter=None
+):
+    """Remove games fully referenced in sequential files from index_games.
+
+    Assume no games are fully refernced if maximum number of files in an
+    index directory is 1.
+
+    """
+    sort_area = os.path.join(
+        cdb.get_merge_import_sort_area(),
+        "_".join(
+            (os.path.basename(cdb.database_file), filespec.GAMES_FILE_DEF)
+        ),
+    )
+    if not os.path.isdir(sort_area):
+        return
+    indicies = set(cdb.specification[filespec.GAMES_FILE_DEF][SECONDARY])
+    directories = os.listdir(sort_area)
+    if indicies.difference(
+        directories + ["pgnfile", "cqleval", "import", "pgnerror", "cqlquery"]
+    ):
+        if reporter is not None:
+            reporter.append_text(
+                "Writing index entries for first segment was not completed."
+            )
+            reporter.append_text_only("")
+        return
+    segments = set()
+    for index in directories:
+        segments |= set(os.listdir(os.path.join(sort_area, index)))
+    if len(segments) < 2:
+        if reporter is not None:
+            reporter.append_text(
+                "Writing index entries for second segment was not started."
+            )
+            reporter.append_text_only("")
+        return
+    written = cdb.recordlist_record_number_range(
+        filespec.GAMES_FILE_DEF,
+        keyend=max(int(i) for i in segments) * SegmentSize.db_segment_size - 1,
+    )
+    try:
+        index_games.remove_recordset(written)
+        if reporter is not None:
+            reporter.append_text_only(
+                "Index entries for first "
+                + str(written.count_records())
+                + " records already writtem to sequential files."
+            )
+    finally:
+        written.close()
 
 
 def _delete_sorted_index_directory(index_directory):
