@@ -8,7 +8,7 @@ import ast
 
 from pgn_read.core.parser import PGN
 
-from . import chessrecord, filespec, lexer, pgnify
+from . import chessrecord, filespec, lexer, pgnify, cqlpgnify
 from .export_pgn_import_format import get_game_pgn_import_format
 
 # PGN specification states ascii but these export functions used the
@@ -1260,7 +1260,7 @@ def export_all_games_for_cql_scan(database, filename):
         )
         try:
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                pgnifier = pgnify.PGNify(gamesout)
+                pgnifier = cqlpgnify.CQLPGNify(gamesout)
                 tokenizer = lexer.Lexer(pgnifier)
                 pgnifier.set_lexer(tokenizer)
                 current_record = cursor.first()
@@ -1299,7 +1299,7 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
         )
         try:
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                pgnifier = pgnify.PGNify(gamesout)
+                pgnifier = cqlpgnify.CQLPGNify(gamesout)
                 tokenizer = lexer.Lexer(pgnifier)
                 pgnifier.set_lexer(tokenizer)
                 current_record = cursor.first()
