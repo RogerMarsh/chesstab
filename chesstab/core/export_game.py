@@ -113,34 +113,36 @@ def export_all_games_pgn_import_format(database, filename):
     """Export all database games in a PGN inport format."""
     if filename is None:
         return True
-    instance = chessrecord.ChessDBrecordGame()
+    literal_eval = ast.literal_eval
+    instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
-    all_games_output = None
-    no_games_output = True
     database.start_read_only_transaction()
     try:
-        cursor = database.database_cursor(
-            filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
+        export_format = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
+        count = export_format.count_records()
+        all_games_output = bool(count > 0)
+        export_format.remove_recordset(
+            database.recordlist_all(
+                filespec.GAMES_FILE_DEF, filespec.PGN_ERROR_FIELD_DEF
+            )
         )
+        if all_games_output and count != export_format.count_records():
+            all_games_output = False
+        cursor = export_format.create_recordsetbase_cursor()
         try:
             with open(filename, "w", encoding=_ENCODING) as gamesout:
+                pgnifier = pgnify.PGNify(gamesout)
+                tokenizer = lexer.Lexer(pgnifier)
+                pgnifier.set_lexer(tokenizer)
                 current_record = cursor.first()
                 while current_record:
                     try:
                         instance.load_record(current_record)
                     except StopIteration:
                         break
-                    # Fix pycodestyle E501 (83 > 79 characters).
-                    # black formatting applied with line-length = 79.
-                    ivcg = instance.value.collected_game
-                    if ivcg.is_pgn_valid_export_format():
-                        gamesout.write(get_game_pgn_import_format(ivcg))
-                        if all_games_output is None:
-                            all_games_output = True
-                            no_games_output = False
-                    elif all_games_output:
-                        if not no_games_output:
-                            all_games_output = False
+                    tokenizer.generate_tokens(
+                        literal_eval(instance.get_srvalue()[0])
+                    )
                     current_record = cursor.next()
         finally:
             cursor.close()
@@ -415,104 +417,111 @@ def export_selected_games_pgn_import_format(grid, filename):
     if filename is None:
         return True
     database = grid.get_data_source().dbhome
+    primary = database.is_primary(
+        grid.get_data_source().dbset, grid.get_data_source().dbname
+    )
+    literal_eval = ast.literal_eval
+    instance = chessrecord.ChessDBrecordGameText()
+    instance.set_database(database)
     database.start_read_only_transaction()
     try:
-        primary = database.is_primary(
-            grid.get_data_source().dbset, grid.get_data_source().dbname
+        export_format = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
+        export_format.remove_recordset(
+            database.recordlist_all(
+                filespec.GAMES_FILE_DEF, filespec.PGN_ERROR_FIELD_DEF
+            )
         )
-        instance = chessrecord.ChessDBrecordGame()
-        instance.set_database(database)
-        games = []
-        all_games_output = True
-        if grid.bookmarks:
-            for bookmark in grid.bookmarks:
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.GAMES_FILE_DEF, bookmark[0 if primary else 1]
-                    )
-                )
-                if instance.value.collected_game.is_pgn_valid_export_format():
-                    games.append(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game
-                        )
-                    )
-                else:
-                    all_games_output = False
-        elif grid.partial:
-            cursor = grid.get_cursor()
-            try:
-                if primary:
-                    current_record = cursor.first()
-                else:
-                    current_record = cursor.nearest(
-                        database.encode_record_selector(grid.partial)
-                    )
-                while current_record:
-                    if not primary:
-                        if not current_record[0].startswith(grid.partial):
-                            break
-                    instance.load_record(
-                        database.get_primary_record(
-                            filespec.GAMES_FILE_DEF,
-                            current_record[0 if primary else 1],
-                        )
-                    )
-                    # Fix pycodestyle E501 (83 > 79 characters).
-                    # black formatting applied with line-length = 79.
-                    ivcg = instance.value.collected_game
-                    if ivcg.is_pgn_valid_export_format():
-                        games.append(get_game_pgn_import_format(ivcg))
-                    else:
-                        all_games_output = False
-                    current_record = cursor.next()
-            finally:
-                cursor.close()
-        else:
-            cursor = grid.get_cursor()
-
-            # For grids except ones displayed via 'Select | Rule | List Games'
-            # the 'current_record = cursor.next()' can be immediately after the
-            # 'while True:' statement, so the 'current_record = cursor.first()'
-            # statement is redundant.
-            # I think this implies a problem in the solentware_base
-            # RecordsetCursor classes for each database engine since the
-            # 'finally:' clause should kill the cursor.
-            # The problem is only the first request outputs all the records
-            # to the file.  Subsequent requests find no records to output,
-            # except that doing some scrolling action resets the cursor and
-            # the next request outputs all the records before the problem
-            # repeats.
-            # The other methods in this class with this construct are affected
-            # too, but this comment is not repeated.
-            try:
-                current_record = cursor.first()
-                while True:
-                    if current_record is None:
-                        break
-                    instance.load_record(
-                        database.get_primary_record(
-                            filespec.GAMES_FILE_DEF,
-                            current_record[0 if primary else 1],
-                        )
-                    )
-                    # Fix pycodestyle E501 (83 > 79 characters).
-                    # black formatting applied with line-length = 79.
-                    ivcg = instance.value.collected_game
-                    if ivcg.is_pgn_valid_export_format():
-                        games.append(get_game_pgn_import_format(ivcg))
-                    else:
-                        all_games_output = False
-                    current_record = cursor.next()
-            finally:
-                cursor.close()
-
-        if len(games) == 0:
-            return None
         with open(filename, "w", encoding=_ENCODING) as gamesout:
-            for game in games:
-                gamesout.write(game)
-                gamesout.write("\n\n")
+            pgnifier = pgnify.PGNify(gamesout)
+            tokenizer = lexer.Lexer(pgnifier)
+            pgnifier.set_lexer(tokenizer)
+            all_games_output = True
+            if grid.bookmarks:
+                for bookmark in grid.bookmarks:
+                    record_number = bookmark[0 if primary else 1]
+                    if not export_format.is_record_number_in_record_set(
+                        record_number
+                    ):
+                        all_games_output = False
+                        continue
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.GAMES_FILE_DEF, record_number
+                        )
+                    )
+                    tokenizer.generate_tokens(
+                        literal_eval(instance.get_srvalue()[0])
+                    )
+            elif grid.partial:
+                cursor = grid.get_cursor()
+                try:
+                    if primary:
+                        current_record = cursor.first()
+                    else:
+                        current_record = cursor.nearest(
+                            database.encode_record_selector(grid.partial)
+                        )
+                    while current_record:
+                        if not primary:
+                            if not current_record[0].startswith(grid.partial):
+                                break
+                        record_number = current_record[0 if primary else 1]
+                        if not export_format.is_record_number_in_record_set(
+                            record_number
+                        ):
+                            all_games_output = False
+                            continue
+                        instance.load_record(
+                            database.get_primary_record(
+                                filespec.GAMES_FILE_DEF, record_number
+                            )
+                        )
+                        tokenizer.generate_tokens(
+                            literal_eval(instance.get_srvalue()[0])
+                        )
+                        current_record = cursor.next()
+                finally:
+                    cursor.close()
+            else:
+                cursor = grid.get_cursor()
+
+                # Grids except ones displayed via 'Select | Rule | List Games'
+                # can have the 'current_record = cursor.next()' immediately
+                # after the 'while True:' statement, making the
+                # 'current_record = cursor.first()' statement is redundant.
+                # I think this implies a problem in the solentware_base
+                # RecordsetCursor classes for each database engine since the
+                # 'finally:' clause should kill the cursor.
+                # The problem is only the first request outputs all the records
+                # to the file.  Subsequent requests find no records to output,
+                # except that doing some scrolling action resets the cursor and
+                # the next request outputs all the records before the problem
+                # repeats.
+                # The other methods in this class with this construct are
+                # affected too, but this comment is not repeated.
+                try:
+                    current_record = cursor.first()
+                    while True:
+                        if current_record is None:
+                            break
+                        record_number = current_record[0 if primary else 1]
+                        if not export_format.is_record_number_in_record_set(
+                            record_number
+                        ):
+                            all_games_output = False
+                            continue
+                        instance.load_record(
+                            database.get_primary_record(
+                                filespec.GAMES_FILE_DEF, record_number
+                            )
+                        )
+                        tokenizer.generate_tokens(
+                            literal_eval(instance.get_srvalue()[0])
+                        )
+                        current_record = cursor.next()
+                finally:
+                    cursor.close()
+
         return all_games_output
     finally:
         database.end_read_only_transaction()
