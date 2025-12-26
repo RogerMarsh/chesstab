@@ -8,7 +8,7 @@ import os
 import shutil
 import ast
 
-from solentware_base.core import wherevalues
+from solentware_base.core import wherevalues, segmentsize
 
 from ..core.filespec import (
     GAMES_FILE_DEF,
@@ -26,7 +26,12 @@ from ..core import export_game
 from ..core import cqlstatement
 from .. import APPLICATION_NAME, ERROR_LOG
 
-_PGN_GAMES_MAX = 100  # 100000  # Evaluate this number of games per CQL run.
+# The *_TEST constants allow report generation for smaller number of games
+# likely in test environments.
+# Game numbers 0 to *_MAX are written to CQL input file.
+_PGN_GAMES_MAX = 99999  # Default maximum games for most segment sizes.
+_PGN_GAMES_MAX_TEST = 99  # Smaller maximum for 128 record segment size.
+_SEGMENT_SIZE_TEST = 128  # Number of records per segment for tests.
 
 
 class Database:
@@ -347,6 +352,16 @@ class Database:
             except:  # Backout for any exception, then re-raise.
                 self.backout()
                 raise
+
+        # pylint comparison-with-callable report is false positive.
+        # Perhaps because db_segment_size is a property and the last statement
+        # in segmentsize module is 'SegmentSize = SegmentSize()'.
+        pgn_games_max = (
+            _PGN_GAMES_MAX
+            if segmentsize.SegmentSize.db_segment_size != _SEGMENT_SIZE_TEST
+            else _PGN_GAMES_MAX_TEST
+        )
+
         while True:
             widget.update()
             self.start_read_only_transaction()
@@ -357,7 +372,7 @@ class Database:
                     pending.close()
                     break
                 record_map = export_game.export_games_for_cql_scan(
-                    pending, pgn_file, limit=_PGN_GAMES_MAX, commit=False
+                    pending, pgn_file, limit=pgn_games_max, commit=False
                 )
                 pending.close()
             finally:  # end_read_only_transaction() for any exception too.
