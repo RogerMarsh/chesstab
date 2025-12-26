@@ -294,6 +294,11 @@ class QueryEvaluator:
                     str(exc),
                 )
             )
+            reporter.append_text_only("*********************")
+            reporter.append_text_only("OSError while running CQL")
+            reporter.append_text_only(str(exc))
+            reporter.append_text_only("*********************")
+            reporter.append_text_only("Any matches found are not applied")
         except QueryEvaluatorError as exc:
             self.message = "".join(
                 (
@@ -304,6 +309,10 @@ class QueryEvaluator:
                     "'\n\ncaused exception\n\n",
                     str(exc),
                 )
+            )
+            reporter.append_text_only("Any matches found are not applied.")
+            reporter.append_text_only(
+                "A known cause is unmatched '{' like in '{{=}'."
             )
 
 
@@ -343,13 +352,24 @@ def _run_statement(
         check=False,
     )
     if completed.returncode:
-        raise QueryEvaluatorError(
-            " ".join(("Returncode is", str(completed.returncode)))
+        reporter.append_text_only("**************************")
+        reporter.append_text_only(
+            " ".join(
+                ("Returncode from CQL run is", str(completed.returncode))
+            )
         )
+        reporter.append_text_only("**************************")
+        raise QueryEvaluatorError("CQL run failed")
     if _version_re.match(completed.stdout) is None:
+        reporter.append_text_only("*********************")
+        reporter.append_text_only("CQL version not found")
+        reporter.append_text_only("*********************")
         raise QueryEvaluatorError("Version not found evaluating CQL")
     games = _game_count_re.search(completed.stdout)
     if games is None:
+        reporter.append_text_only("*******************************")
+        reporter.append_text_only("Match and game counts not found")
+        reporter.append_text_only("*******************************")
         raise QueryEvaluatorError("Game counts not found evaluating CQL")
     matches = int(games[1])
     game_count = int(games[2])
@@ -364,6 +384,11 @@ def _run_statement(
         )
     )
     if game_count != len(record_map):
+        reporter.append_text_only("**********************")
+        reporter.append_text_only(
+            "Expected game count is " + str(len(record_map))
+        )
+        reporter.append_text_only("**********************")
         raise QueryEvaluatorError(
             " ".join(
                 (
@@ -384,6 +409,11 @@ def _run_statement(
         for game in _game_number_re.finditer(completed.stdout):
             game_number = int(game.group(1))
             if game_number not in record_map:
+                reporter.append_text_only("**********************")
+                reporter.append_text_only(
+                    "Unexpected game number " + str(game_number)
+                )
+                reporter.append_text_only("**********************")
                 raise QueryEvaluatorError(
                     " ".join(
                         (
@@ -400,6 +430,11 @@ def _run_statement(
         recordset &= recordset.dbhome.recordlist_ebm(recordset.dbset)
         game_number_count = recordset.count_records()
         if matches != game_number_count:
+            reporter.append_text_only("***********************")
+            reporter.append_text_only(
+                "Expected match count is " + str(game_number_count)
+            )
+            reporter.append_text_only("***********************")
             raise QueryEvaluatorError(
                 " ".join(
                     (
