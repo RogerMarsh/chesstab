@@ -16,19 +16,23 @@ def export_all_positions(database, filename):
         return True
     instance = chessrecord.ChessDBrecordPartial()
     instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                gamesout.write(instance.get_srvalue())
-                gamesout.write("\n")
-                current_record = cursor.next()
+        cursor = database.database_cursor(
+            filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    gamesout.write(instance.get_srvalue())
+                    gamesout.write("\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return True
 
 
@@ -38,34 +42,46 @@ def export_selected_positions(grid, filename):
         return
     if grid.bookmarks:
         database = grid.get_data_source().dbhome
-        instance = chessrecord.ChessDBrecordPartial()
-        instance.set_database(database)
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            for bookmark in sorted(grid.bookmarks):
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.CQL_FILE_DEF, bookmark[0]
+        database.start_read_only_transaction()
+        try:
+            primary = database.is_primary(
+                grid.get_data_source().dbset, grid.get_data_source().dbname
+            )
+            instance = chessrecord.ChessDBrecordPartial()
+            instance.set_database(database)
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                for bookmark in sorted(grid.bookmarks):
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.CQL_FILE_DEF,
+                            bookmark[0 if primary else 1],
+                        )
                     )
-                )
-                gamesout.write(instance.get_srvalue())
-                gamesout.write("\n")
+                    gamesout.write(instance.get_srvalue())
+                    gamesout.write("\n")
+        finally:
+            database.end_read_only_transaction()
         return
     database = grid.get_data_source().dbhome
-    instance = chessrecord.ChessDBrecordPartial()
-    instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                gamesout.write(instance.get_srvalue())
-                gamesout.write("\n")
-                current_record = cursor.next()
+        instance = chessrecord.ChessDBrecordPartial()
+        instance.set_database(database)
+        cursor = database.database_cursor(
+            filespec.CQL_FILE_DEF, filespec.CQL_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    gamesout.write(instance.get_srvalue())
+                    gamesout.write("\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return
 
 

@@ -16,22 +16,26 @@ def export_all_repertoires_pgn(database, filename):
         return True
     instance = chessrecord.ChessDBrecordRepertoire()
     instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                if instance.value.collected_game.is_pgn_valid():
-                    gamesout.write(
-                        instance.value.collected_game.get_repertoire_pgn()
-                    )
-                    gamesout.write("\n\n")
-                current_record = cursor.next()
+        cursor = database.database_cursor(
+            filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    if instance.value.collected_game.is_pgn_valid():
+                        gamesout.write(
+                            instance.value.collected_game.get_repertoire_pgn()
+                        )
+                        gamesout.write("\n\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return True
 
 
@@ -41,23 +45,27 @@ def export_all_repertoires_pgn_no_comments(database, filename):
         return True
     instance = chessrecord.ChessDBrecordRepertoire()
     instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                game = (
-                    instance.value.collected_game
-                )  # pycodestyle line too long.
-                if game.is_pgn_valid():
-                    gamesout.write(game.get_repertoire_pgn_no_comments())
-                    gamesout.write("\n\n")
-                current_record = cursor.next()
+        cursor = database.database_cursor(
+            filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    game = (
+                        instance.value.collected_game
+                    )  # pycodestyle line too long.
+                    if game.is_pgn_valid():
+                        gamesout.write(game.get_repertoire_pgn_no_comments())
+                        gamesout.write("\n\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return True
 
 
@@ -67,24 +75,28 @@ def export_all_repertoires_pgn_import_format(database, filename):
         return True
     instance = chessrecord.ChessDBrecordRepertoire()
     instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                if instance.value.collected_game.is_pgn_valid():
-                    gamesout.write(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game
+        cursor = database.database_cursor(
+            filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    if instance.value.collected_game.is_pgn_valid():
+                        gamesout.write(
+                            get_game_pgn_import_format(
+                                instance.value.collected_game
+                            )
                         )
-                    )
-                    gamesout.write("\n\n")
-                current_record = cursor.next()
+                        gamesout.write("\n\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return True
 
 
@@ -94,19 +106,23 @@ def export_all_repertoires_text(database, filename):
         return True
     instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
-    cursor = database.database_cursor(
-        filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
-    )
+    database.start_read_only_transaction()
     try:
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            current_record = cursor.first()
-            while current_record:
-                instance.load_record(current_record)
-                gamesout.write(instance.get_srvalue())
-                gamesout.write("\n")
-                current_record = cursor.next()
+        cursor = database.database_cursor(
+            filespec.REPERTOIRE_FILE_DEF, filespec.REPERTOIRE_FILE_DEF
+        )
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                current_record = cursor.first()
+                while current_record:
+                    instance.load_record(current_record)
+                    gamesout.write(instance.get_srvalue())
+                    gamesout.write("\n")
+                    current_record = cursor.next()
+        finally:
+            cursor.close()
     finally:
-        cursor.close()
+        database.end_read_only_transaction()
     return True
 
 
@@ -121,19 +137,26 @@ def export_selected_repertoires_pgn(grid, filename):
         return True
     if grid.bookmarks:
         database = grid.get_data_source().dbhome
+        primary = database.is_primary(
+            grid.get_data_source().dbset, grid.get_data_source().dbname
+        )
         instance = chessrecord.ChessDBrecordRepertoire()
         instance.set_database(database)
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            for bookmark in sorted(grid.bookmarks):
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF, bookmark[0]
+        database.start_read_only_transaction()
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                for bookmark in sorted(grid.bookmarks):
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            bookmark[0 if primary else 1],
+                        )
                     )
-                )
-                if instance.value.collected_game.is_pgn_valid_export_format():
-                    gamesout.write(
-                        instance.value.collected_game.get_repertoire_pgn()
-                    )
+                    collected_game = instance.value.collected_game
+                    if collected_game.is_pgn_valid_export_format():
+                        gamesout.write(collected_game.get_repertoire_pgn())
+        finally:
+            database.end_read_only_transaction()
         return True
     export_all_repertoires_pgn(grid.get_data_source().dbhome, filename)
     return True
@@ -150,18 +173,28 @@ def export_selected_repertoires_pgn_no_comments(grid, filename):
         return
     if grid.bookmarks:
         database = grid.get_data_source().dbhome
+        primary = database.is_primary(
+            grid.get_data_source().dbset, grid.get_data_source().dbname
+        )
         instance = chessrecord.ChessDBrecordRepertoire()
         instance.set_database(database)
-        with open(filename, "w", encoding=_ENCODING) as gamesout:
-            for bookmark in sorted(grid.bookmarks):
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF, bookmark[0]
+        database.start_read_only_transaction()
+        try:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                for bookmark in sorted(grid.bookmarks):
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            bookmark[0 if primary else 1],
+                        )
                     )
-                )
-                if instance.value.collected_game.is_pgn_valid_export_format():
-                    rvcg = instance.value.collected_game  # For line length.
-                    gamesout.write(rvcg.get_repertoire_pgn_no_comments())
+                    collected_game = instance.value.collected_game
+                    if collected_game.is_pgn_valid_export_format():
+                        gamesout.write(
+                            collected_game.get_repertoire_pgn_no_comments()
+                        )
+        finally:
+            database.end_read_only_transaction()
         return
     export_all_repertoires_pgn_no_comments(
         grid.get_data_source().dbhome, filename
@@ -184,75 +217,80 @@ def export_selected_repertoires_pgn_import_format(grid, filename):
     )
     instance = chessrecord.ChessDBrecordRepertoire()
     instance.set_database(database)
-    games = []
-    all_games_output = True
-    if grid.bookmarks:
-        for bookmark in grid.bookmarks:
-            instance.load_record(
-                database.get_primary_record(
-                    filespec.REPERTOIRE_FILE_DEF, bookmark[0 if primary else 1]
+    database.start_read_only_transaction()
+    try:
+        games = []
+        all_games_output = True
+        if grid.bookmarks:
+            for bookmark in grid.bookmarks:
+                instance.load_record(
+                    database.get_primary_record(
+                        filespec.REPERTOIRE_FILE_DEF,
+                        bookmark[0 if primary else 1],
+                    )
                 )
-            )
-            if instance.value.collected_game.is_pgn_valid_export_format():
-                games.append(
-                    get_game_pgn_import_format(instance.value.collected_game)
-                )
-            else:
-                all_games_output = False
-    elif grid.partial:
-        cursor = grid.get_cursor()
-        try:
-            if primary:
+                if instance.value.collected_game.is_pgn_valid_export_format():
+                    games.append(
+                        get_game_pgn_import_format(
+                            instance.value.collected_game
+                        )
+                    )
+                else:
+                    all_games_output = False
+        elif grid.partial:
+            cursor = grid.get_cursor()
+            try:
+                if primary:
+                    current_record = cursor.first()
+                else:
+                    current_record = cursor.nearest(
+                        database.encode_record_selector(grid.partial)
+                    )
+                while current_record:
+                    if not primary:
+                        if not current_record[0].startswith(grid.partial):
+                            break
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            current_record[0 if primary else 1],
+                        )
+                    )
+                    collected_game = instance.value.collected_game
+                    if collected_game.is_pgn_valid_export_format():
+                        games.append(
+                            get_game_pgn_import_format(collected_game)
+                        )
+                    else:
+                        all_games_output = False
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+        else:
+            cursor = grid.get_cursor()
+            try:
                 current_record = cursor.first()
-            else:
-                current_record = cursor.nearest(
-                    database.encode_record_selector(grid.partial)
-                )
-            while current_record:
-                if not primary:
-                    if not current_record[0].startswith(grid.partial):
+                while True:
+                    if current_record is None:
                         break
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF,
-                        current_record[0 if primary else 1],
-                    )
-                )
-                if instance.value.collected_game.is_pgn_valid_export_format():
-                    games.append(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            current_record[0 if primary else 1],
                         )
                     )
-                else:
-                    all_games_output = False
-                current_record = cursor.next()
-        finally:
-            cursor.close()
-    else:
-        cursor = grid.get_cursor()
-        try:
-            current_record = cursor.first()
-            while True:
-                if current_record is None:
-                    break
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF,
-                        current_record[0 if primary else 1],
-                    )
-                )
-                if instance.value.collected_game.is_pgn_valid_export_format():
-                    games.append(
-                        get_game_pgn_import_format(
-                            instance.value.collected_game
+                    collected_game = instance.value.collected_game
+                    if collected_game.is_pgn_valid_export_format():
+                        games.append(
+                            get_game_pgn_import_format(collected_game)
                         )
-                    )
-                else:
-                    all_games_output = False
-                current_record = cursor.next()
-        finally:
-            cursor.close()
+                    else:
+                        all_games_output = False
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+    finally:
+        database.end_read_only_transaction()
     if len(games) == 0:
         return None
     with open(filename, "w", encoding=_ENCODING) as gamesout:
@@ -277,55 +315,60 @@ def export_selected_repertoires_text(grid, filename):
     )
     instance = chessrecord.ChessDBrecordRepertoire()
     instance.set_database(database)
-    games = []
-    if grid.bookmarks:
-        for bookmark in grid.bookmarks:
-            instance.load_record(
-                database.get_primary_record(
-                    filespec.REPERTOIRE_FILE_DEF, bookmark[0 if primary else 1]
+    database.start_read_only_transaction()
+    try:
+        games = []
+        if grid.bookmarks:
+            for bookmark in grid.bookmarks:
+                instance.load_record(
+                    database.get_primary_record(
+                        filespec.REPERTOIRE_FILE_DEF,
+                        bookmark[0 if primary else 1],
+                    )
                 )
-            )
-            games.append(instance.get_srvalue())
-    elif grid.partial:
-        cursor = grid.get_cursor()
-        try:
-            if primary:
+                games.append(instance.get_srvalue())
+        elif grid.partial:
+            cursor = grid.get_cursor()
+            try:
+                if primary:
+                    current_record = cursor.first()
+                else:
+                    current_record = cursor.nearest(
+                        database.encode_record_selector(grid.partial)
+                    )
+                while current_record:
+                    if not primary:
+                        if not current_record[0].startswith(grid.partial):
+                            break
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            current_record[0 if primary else 1],
+                        )
+                    )
+                    games.append(instance.get_srvalue())
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+        else:
+            cursor = grid.get_cursor()
+            try:
                 current_record = cursor.first()
-            else:
-                current_record = cursor.nearest(
-                    database.encode_record_selector(grid.partial)
-                )
-            while current_record:
-                if not primary:
-                    if not current_record[0].startswith(grid.partial):
+                while True:
+                    if current_record is None:
                         break
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF,
-                        current_record[0 if primary else 1],
+                    instance.load_record(
+                        database.get_primary_record(
+                            filespec.REPERTOIRE_FILE_DEF,
+                            current_record[0 if primary else 1],
+                        )
                     )
-                )
-                games.append(instance.get_srvalue())
-                current_record = cursor.next()
-        finally:
-            cursor.close()
-    else:
-        cursor = grid.get_cursor()
-        try:
-            current_record = cursor.first()
-            while True:
-                if current_record is None:
-                    break
-                instance.load_record(
-                    database.get_primary_record(
-                        filespec.REPERTOIRE_FILE_DEF,
-                        current_record[0 if primary else 1],
-                    )
-                )
-                games.append(instance.get_srvalue())
-                current_record = cursor.next()
-        finally:
-            cursor.close()
+                    games.append(instance.get_srvalue())
+                    current_record = cursor.next()
+            finally:
+                cursor.close()
+    finally:
+        database.end_read_only_transaction()
     if len(games) == 0:
         return None
     with open(filename, "w", encoding=_ENCODING) as gamesout:
