@@ -354,9 +354,7 @@ def _run_statement(
     if completed.returncode:
         reporter.append_text_only("**************************")
         reporter.append_text_only(
-            " ".join(
-                ("Returncode from CQL run is", str(completed.returncode))
-            )
+            " ".join(("Returncode from CQL run is", str(completed.returncode)))
         )
         reporter.append_text_only("**************************")
         raise QueryEvaluatorError("CQL run failed")
