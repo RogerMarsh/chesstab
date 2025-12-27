@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chesstab"
-version = "8.1.1.dev3"
+version = "8.2"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
@@ -28,9 +28,9 @@ license = "BSD-3-Clause"
 license-files = ["LICENCE"]
 readme = "README"
 dependencies = [
-    "solentware-base==5.3.dev0",
+    "solentware-base==5.3",
     "solentware-grid==3.0.2",
-    "pgn-read==2.5.1.dev2",
+    "pgn-read==2.6",
     "solentware-misc==1.7.2",
     "uci-net==1.2.8",
 ]
