@@ -1897,6 +1897,7 @@ class Chess(Bindings):
                 self.ui.get_export_filename(
                     "Games (reduced export format)", pgn=True
                 ),
+                self.statusbar,
             ),
             "Games (reduced export format)",
         )
@@ -1909,6 +1910,7 @@ class Chess(Bindings):
                 self.ui.get_export_filename(
                     "Games (no comments no ravs)", pgn=True
                 ),
+                self.statusbar,
             ),
             "Games (no comments no ravs)",
         )
@@ -1919,6 +1921,7 @@ class Chess(Bindings):
             export_game.export_all_games_pgn_no_comments(
                 self.opendatabase,
                 self.ui.get_export_filename("Games (no comments)", pgn=True),
+                self.statusbar,
             ),
             "Games (no comments)",
         )
@@ -1929,6 +1932,7 @@ class Chess(Bindings):
             export_game.export_all_games_pgn(
                 self.opendatabase,
                 self.ui.get_export_filename("Games", pgn=True),
+                self.statusbar,
             ),
             "Games",
         )
@@ -1939,6 +1943,7 @@ class Chess(Bindings):
             export_game.export_all_games_pgn_import_format(
                 self.opendatabase,
                 self.ui.get_export_filename("Games (import format)", pgn=True),
+                self.statusbar,
             ),
             "Games (import format)",
         )
@@ -1948,6 +1953,7 @@ class Chess(Bindings):
         export_game.export_all_games_text(
             self.opendatabase,
             self.ui.get_export_filename("Games (internal format)", pgn=False),
+            self.statusbar,
         )
 
     def export_all_games_for_cql_scan(self):
@@ -1958,6 +1964,7 @@ class Chess(Bindings):
                 self.ui.get_export_filename(
                     "Games (CQL scan format)", pgn=True
                 ),
+                self.statusbar,
             ),
             "Games (CQL scan format)",
         )
@@ -1970,6 +1977,7 @@ class Chess(Bindings):
                 self.ui.get_export_filename(
                     "Games (no {[%]} comments)", pgn=True
                 ),
+                self.statusbar,
             ),
             "Games (no {[%]} comments)",
         )
