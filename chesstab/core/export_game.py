@@ -93,6 +93,7 @@ def export_all_games_pgn(database, filename, statusbar):
                 while current_record:
                     counter += 1
                     if not counter % _UPDATE_FREQUENCY:
+                        statusbar.set_status_text(str(counter) + " collected")
                         statusbar.status.update()
                     if current_record[0] != prev_date:
                         for gfd in sorted(games_for_date):
@@ -102,13 +103,16 @@ def export_all_games_pgn(database, filename, statusbar):
                             gamesout.write("\n")
                             gamesout.write(gfd[1])
                             gamesout.write("\n\n")
-                            counter += 1
                             games_output += 1
                             if not games_output % _UPDATE_FREQUENCY:
                                 statusbar.set_status_text(
                                     str(games_output) + all_records_suffix
                                 )
                                 statusbar.status.update()
+                        statusbar.set_status_text(
+                            str(games_output) + all_records_suffix
+                        )
+                        statusbar.status.update()
                         prev_date = current_record[0]
                         games_for_date = []
                     game = database.get_primary_record(
@@ -137,7 +141,6 @@ def export_all_games_pgn(database, filename, statusbar):
                     gamesout.write("\n")
                     gamesout.write(gfd[1])
                     gamesout.write("\n\n")
-                    counter += 1
                     games_output += 1
                     if not games_output % _UPDATE_FREQUENCY:
                         statusbar.set_status_text(
@@ -244,6 +247,7 @@ def export_all_games_pgn_no_comments(database, filename, statusbar):
                 while current_record:
                     counter += 1
                     if not counter % _UPDATE_FREQUENCY:
+                        statusbar.set_status_text(str(counter) + " collected")
                         statusbar.status.update()
                     if current_record[0] != prev_date:
                         for gfd in sorted(games_for_date):
@@ -253,7 +257,6 @@ def export_all_games_pgn_no_comments(database, filename, statusbar):
                             gamesout.write("\n")
                             gamesout.write(gfd[1])
                             gamesout.write("\n\n")
-                            counter += 1
                             games_output += 1
                             if not games_output % _UPDATE_FREQUENCY:
                                 statusbar.set_status_text(
@@ -290,7 +293,6 @@ def export_all_games_pgn_no_comments(database, filename, statusbar):
                     gamesout.write("\n")
                     gamesout.write(gfd[1])
                     gamesout.write("\n\n")
-                    counter += 1
                     games_output += 1
                     if not games_output % _UPDATE_FREQUENCY:
                         statusbar.set_status_text(
@@ -339,6 +341,7 @@ def export_all_games_pgn_no_structured_comments(database, filename, statusbar):
                 while current_record:
                     counter += 1
                     if not counter % _UPDATE_FREQUENCY:
+                        statusbar.set_status_text(str(counter) + " collected")
                         statusbar.status.update()
                     if current_record[0] != prev_date:
                         for gfd in sorted(games_for_date):
@@ -348,7 +351,6 @@ def export_all_games_pgn_no_structured_comments(database, filename, statusbar):
                             gamesout.write("\n")
                             gamesout.write(gfd[1])
                             gamesout.write("\n\n")
-                            counter += 1
                             games_output += 1
                             if not games_output % _UPDATE_FREQUENCY:
                                 statusbar.set_status_text(
@@ -385,7 +387,6 @@ def export_all_games_pgn_no_structured_comments(database, filename, statusbar):
                     gamesout.write("\n")
                     gamesout.write(gfd[1])
                     gamesout.write("\n\n")
-                    counter += 1
                     games_output += 1
                     if not games_output % _UPDATE_FREQUENCY:
                         statusbar.set_status_text(
@@ -438,6 +439,7 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename, statusbar):
                 while current_record:
                     counter += 1
                     if not counter % _UPDATE_FREQUENCY:
+                        statusbar.set_status_text(str(counter) + " collected")
                         statusbar.status.update()
                     if current_record[0] != prev_date:
                         for gfd in sorted(games_for_date):
@@ -447,7 +449,6 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename, statusbar):
                             gamesout.write("\n")
                             gamesout.write(gfd[1])
                             gamesout.write("\n\n")
-                            counter += 1
                             games_output += 1
                             if not games_output % _UPDATE_FREQUENCY:
                                 statusbar.set_status_text(
@@ -486,7 +487,6 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename, statusbar):
                     gamesout.write("\n")
                     gamesout.write(gfd[1])
                     gamesout.write("\n\n")
-                    counter += 1
                     games_output += 1
                     if not games_output % _UPDATE_FREQUENCY:
                         statusbar.set_status_text(
@@ -533,6 +533,7 @@ def export_all_games_pgn_reduced_export_format(database, filename, statusbar):
                 while current_record:
                     counter += 1
                     if not counter % _UPDATE_FREQUENCY:
+                        statusbar.set_status_text(str(counter) + " collected")
                         statusbar.status.update()
                     if current_record[0] != prev_date:
                         for gfd in sorted(games_for_date):
@@ -540,7 +541,6 @@ def export_all_games_pgn_reduced_export_format(database, filename, statusbar):
                             gamesout.write("\n")
                             gamesout.write(gfd[1])
                             gamesout.write("\n\n")
-                            counter += 1
                             games_output += 1
                             if not games_output % _UPDATE_FREQUENCY:
                                 statusbar.set_status_text(
@@ -573,7 +573,6 @@ def export_all_games_pgn_reduced_export_format(database, filename, statusbar):
                     gamesout.write("\n")
                     gamesout.write(gfd[1])
                     gamesout.write("\n\n")
-                    counter += 1
                     games_output += 1
                     if not games_output % _UPDATE_FREQUENCY:
                         statusbar.set_status_text(
