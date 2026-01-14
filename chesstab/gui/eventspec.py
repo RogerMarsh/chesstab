@@ -706,12 +706,12 @@ class EventSpec:
         4,
     )
     text_internal_format = ("<Alt-KeyPress-Home>", "Text", "Alt Home", 0)
-    menu_database_export_games_cql = ("", "PGN CQL scan", "", 4)
+    menu_database_export_games_cql = ("", "PGN database order", "", 4)
     pgn_export_format_no_structured_comments = (
         "<Control-KeyPress-KP_Home>",
         "PGN no {[%]} comments",
         "Ctrl KP_Home",
-        8,
+        9,
     )
 
     # ButtonPress event definitions.

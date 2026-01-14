@@ -43,6 +43,7 @@ from .pgn import (
     GameUpdatePosition,
     GameUpdatePieceLocation,
     GameMoveText,
+    GameExport,
     GameStore,
     GameMergeUpdate,
 )
@@ -1423,21 +1424,19 @@ class ChessDBrecordGamePGNTags(Record):
         return True
 
 
-class ChessDBvalueCQLScan(PGNMoveText, _GameLoadPack):
+class ChessDBvalueExport(PGNMoveText, _GameLoadPack):
     """Chess game data with references to indicies to be applied."""
 
-    def __init__(self, game_class=GameMoveText):
+    def __init__(self, game_class=GameExport):
         """Delegate to superclass with game_class argument."""
         super().__init__(game_class=game_class)
         self.gamesource = None
 
 
-class ChessDBrecordGameCQLScan(Record):
+class ChessDBrecordGameExport(Record):
     """Customise chess game record to index games by PGN tags."""
 
-    def __init__(
-        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvalueCQLScan
-    ):
+    def __init__(self, keyclass=ChessDBkeyGame, valueclass=ChessDBvalueExport):
         """Customise Record with chess database key and value classes."""
         super().__init__(keyclass=keyclass, valueclass=valueclass)
 

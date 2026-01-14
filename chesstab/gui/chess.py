@@ -264,7 +264,7 @@ class Chess(Bindings):
                 (EventSpec.text_internal_format, self.export_all_games_text),
                 (
                     EventSpec.menu_database_export_games_cql,
-                    self.export_all_games_for_cql_scan,
+                    self.export_all_games_import_format_database_order,
                 ),
                 (
                     EventSpec.pgn_export_format_no_structured_comments,
@@ -1956,17 +1956,17 @@ class Chess(Bindings):
             self.statusbar,
         )
 
-    def export_all_games_for_cql_scan(self):
-        """Export all database games in a PGN import format for CQL scan."""
+    def export_all_games_import_format_database_order(self):
+        """Export all games in a PGN import format in database order."""
         self.ui.export_report(
-            export_game.export_all_games_for_cql_scan(
+            export_game.export_all_games_import_format_database_order(
                 self.opendatabase,
                 self.ui.get_export_filename(
-                    "Games (CQL scan format)", pgn=True
+                    "Games (import format database order)", pgn=True
                 ),
                 self.statusbar,
             ),
-            "Games (CQL scan format)",
+            "Games (import format database order)",
         )
 
     def export_all_games_pgn_no_structured_comments(self):

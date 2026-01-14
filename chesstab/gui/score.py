@@ -18,6 +18,10 @@ from pgn_read.core.constants import (
     SEVEN_TAG_ROSTER,
     FEN_WHITE_ACTIVE,
 )
+from pgn_read.core.pgndata import (
+    structured_comment_re,
+    NULL_PGN_COMMENT,
+)
 
 from .constants import (
     LINE_COLOR,
@@ -57,8 +61,6 @@ from ..core import export_game
 from ..core.pgn import (
     get_position_string,
     GameDisplayMoves,
-    structured_comment_re,
-    NULL_PGN_COMMENT,
 )
 from ._score_scaffold import _ScoreScaffold
 
