@@ -24,7 +24,11 @@ from .export_pgn_import_format import export_pgn_import_format
 _ENCODING = "utf-8"
 
 _UPDATE_FREQUENCY = 1000
-_MEMORY_SORT_LIMIT = 6000000
+
+# This value avoids swapping on 8Gb memory test box with TWIC 1-1500.
+# Values more than double this hit problems with games sorted by result
+# with the menu 'Select | Inndex | Result' option.
+_MEMORY_SORT_LIMIT = 300000
 
 
 class _Counter:

@@ -10,7 +10,6 @@ data structures from the game score for the various display and update uses.
 The ...Update classes allow editing of a, possibly incomplete, game score.
 
 """
-import os
 from ast import literal_eval
 
 from solentware_base.core.record import (
