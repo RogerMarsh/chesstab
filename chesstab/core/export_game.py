@@ -631,10 +631,7 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
                     game = database.get_primary_record(
                         filespec.GAMES_FILE_DEF, current_record[1]
                     )
-                    try:
-                        instance.load_record(game)
-                    except StopIteration:
-                        break
+                    instance.load_record(game)
                     # Fix pycodestyle E501 (83 > 79 characters).
                     # black formatting applied with line-length = 79.
                     ivcg = instance.value.collected_game
@@ -766,10 +763,7 @@ def _export_selected_games_recordset(
                 prev_date = current_record[0]
                 games_for_date = []
             counter.increment_games_read()
-            try:
-                instance.load_record(getrecord(filedef, current_record[0]))
-            except StopIteration:
-                break
+            instance.load_record(getrecord(filedef, current_record[0]))
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_date.append(ivcg)
@@ -1003,10 +997,7 @@ def _export_selected_games_index_order_value(
                     counter.increment_games_output()
                 break
             counter.increment_games_read()
-            try:
-                instance.load_record(getrecord(filedef, current_record[0]))
-            except StopIteration:
-                break
+            instance.load_record(getrecord(filedef, current_record[0]))
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_value.append(ivcg)
