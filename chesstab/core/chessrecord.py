@@ -769,32 +769,56 @@ class ChessDBrecordGameSequential(Record):
                             )
                         )
                     )
-            except FileExistsError:
+            except FileExistsError as exc:
                 if reporter is not None:
                     reporter.append_text(
                         "".join(
                             (
                                 "Unable to dump '",
                                 sorter.file,
-                                "' indicies because ",
-                                os.path.dirname(sorter.dump_file),
-                                " is not a directory.",
+                                "' indicies.  The reported error is ",
+                                str(exc),
+                            )
+                        )
+                    )
+                raise
+            except PermissionError as exc:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Unable to dump '",
+                                sorter.file,
+                                "' indicies.  The reported error is ",
+                                str(exc),
                             )
                         )
                     )
                 raise
         try:
             sorter.write_final_segments_to_sequential_file()
-        except FileExistsError:
+        except FileExistsError as exc:
             if reporter is not None:
                 reporter.append_text(
                     "".join(
                         (
                             "Unable to dump '",
                             sorter.file,
-                            "' indicies because ",
-                            os.path.dirname(sorter.dump_file),
-                            " is not a directory.",
+                            "' indicies.  The reported error is ",
+                            str(exc),
+                        )
+                    )
+                )
+            raise
+        except PermissionError as exc:
+            if reporter is not None:
+                reporter.append_text(
+                    "".join(
+                        (
+                            "Unable to dump '",
+                            sorter.file,
+                            "' indicies.  The reported error is ",
+                            str(exc),
                         )
                     )
                 )
