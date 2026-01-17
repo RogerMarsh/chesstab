@@ -712,7 +712,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
             dbset = grid.get_data_source().dbset
             selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values(valuespec, dbset):
+                for key in database.find_values_ascending(valuespec, dbset):
                     dateset = database.recordlist_key(
                         dbset, valuespec.field, key=selector(key)
                     )
@@ -838,7 +838,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
             dbset = grid.get_data_source().dbset
             selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values(valuespec, dbset):
+                for key in database.find_values_ascending(valuespec, dbset):
                     if not key.startswith(grid.partial):
                         break
                     keyset = database.recordlist_key(
@@ -876,7 +876,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
             dbset = grid.get_data_source().dbset
             selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values(valuespec, dbset):
+                for key in database.find_values_ascending(valuespec, dbset):
                     keyset = database.recordlist_key(
                         dbset, valuespec.field, key=selector(key)
                     )
@@ -958,7 +958,7 @@ def _export_selected_games_index_order_date(
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
     all_games_output = True
-    for key in database.find_values(valuespec, dbset):
+    for key in database.find_values_ascending(valuespec, dbset):
         dateset = (
             database.recordlist_key(dbset, valuespec.field, key=selector(key))
             & selected
