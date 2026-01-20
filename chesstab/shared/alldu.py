@@ -9,7 +9,6 @@
 import os
 import traceback
 import datetime
-import shutil
 
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import (
@@ -842,12 +841,7 @@ def dump_indicies(
         if reporter is not None:
             while not reporter.empty():
                 pass
-            volfree = utilities.bytesize_to_str(
-                shutil.disk_usage(cdb.database_file).free
-            )
-            dbsize = utilities.bytesize_to_str(
-                os.path.getsize(cdb.database_file)
-            )
+            volfree, dbsize = utilities.get_freespace_and_database_size(cdb)
             reporter.append_text_only("")
             reporter.append_text("Database size before index rebuild.")
             reporter.append_text_only(
@@ -1603,10 +1597,7 @@ def do_reload_deferred_update(
 
 def _report_database_size_on_import_finish(cdb, reporter):
     """Report database size on completing import."""
-    volfree = utilities.bytesize_to_str(
-        shutil.disk_usage(cdb.database_file).free
-    )
-    dbsize = utilities.bytesize_to_str(os.path.getsize(cdb.database_file))
+    volfree, dbsize = utilities.get_freespace_and_database_size(cdb)
     reporter.append_text_only("")
     reporter.append_text_only("Database size.")
     reporter.append_text_only("".join((volfree, " is available.")))

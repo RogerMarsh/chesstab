@@ -13,7 +13,6 @@ import tkinter.filedialog
 import queue
 import multiprocessing
 import multiprocessing.dummy
-import shutil
 
 from solentware_misc.gui.logtextbase import LogTextBase
 
@@ -533,14 +532,14 @@ class DeferredUpdateEstimateProcess:
                 )
             elif not self._estimate_games_in_import():
                 return None
-            if self._allow_time():
-                self.quit_event.set()
-                return True
-            self._report_to_log("Unable to verify import request.")
-            self._report_to_log_text_only("")
-            return False
+            if not self._allow_time():
+                self._report_to_log("Unable to verify import request.")
+                self._report_to_log_text_only("")
+                return False
         finally:
             database.close_database()
+        self.quit_event.set()
+        return True
 
     def _estimate_games_in_import(self):
         """Estimate import size from file sizes reported by operating system.
@@ -727,11 +726,8 @@ class DeferredUpdateEstimateProcess:
         """
         if not self.estimate_data:
             return False
-        volfree = utilities.bytesize_to_str(
-            shutil.disk_usage(self.database.database_file).free
-        )
-        dbsize = utilities.bytesize_to_str(
-            os.path.getsize(self.database.database_file)
+        volfree, dbsize = utilities.get_freespace_and_database_size(
+            self.database
         )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(

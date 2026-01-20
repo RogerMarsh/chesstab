@@ -21,6 +21,9 @@ The *_txn version of each exists in case the test is done within an existing
 transaction.
 
 """
+import os
+import shutil
+
 from ..core import filespec
 from ..core import constants
 
@@ -211,3 +214,28 @@ def bytesize_to_str(number):
     if number > 1023:
         return str(divmod(number, 1024)[0]) + " Kilobytes"
     return str(number) + " bytes"
+
+
+def get_freespace_and_database_size(database):
+    """Return volume free space and database size.
+
+    database    Database instance containing the database.
+
+    """
+    if database.database_file is not None:
+        volfree = bytesize_to_str(
+            shutil.disk_usage(database.database_file).free
+        )
+        dbsize = bytesize_to_str(os.path.getsize(database.database_file))
+    else:
+        home_directory = database.home_directory
+        volfree = bytesize_to_str(shutil.disk_usage(home_directory).free)
+        dbsize = bytesize_to_str(
+            sum(
+                [
+                    os.path.getsize(os.path.join(home_directory, filename))
+                    for filename in os.listdir(home_directory)
+                ]
+            )
+        )
+    return volfree, dbsize
