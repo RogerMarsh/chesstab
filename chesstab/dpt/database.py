@@ -116,7 +116,7 @@ class Database(dptnofistat.Database):
             # Assume all is well as file status is 0
             # Or just do nothing (as file_sizes_for_import may be removed)
             self.increase_database_size(files=None)
-            self.mark_all_cql_statements_for_evaluation()
+            # self.mark_all_cql_statements_for_evaluation()
             return True
         # At least one file is not in Normal state after Import.
         # Check the files that had imports applied
