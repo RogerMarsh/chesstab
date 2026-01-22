@@ -72,6 +72,22 @@ class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
     def _dptfileclass(self):
         return DPTFile
 
+    # The 'open database try ... finally close database' block in the
+    # litedu.Litedu.Database class version of this method causes a pickling
+    # error later in the DPT interface on Microsoft Windows.
+    # Do nothing, implicitly returning None, to prevent the pickling error
+    # at the cost of not being able to resume interrupted imports.
+    # The DPT version of this function cannot be implemented through the
+    # database because the data structure is incompatible.  A configuration
+    # file, not accessed via DPT, is needed.
+    def get_pgn_filenames_of_import_in_progress(self):
+        """Return names of PGN files in an import in progress."""
+
+    # Do nothing, rather than attempt to delete a non-existent dict entry
+    # as in the alldu.Alldu.Database class version of this method.
+    def delete_import_pgn_file_tuple(self):
+        """Delete PGN file list from application control."""
+
 
 class DPTFile(dptdu_database.DPTFile):
     """This class is used to access files in a DPT database.

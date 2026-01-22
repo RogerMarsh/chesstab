@@ -747,12 +747,9 @@ def _export_selected_games_recordset(
     counter,
 ):
     """Export selected games in PGN format in PGN collation order."""
-    getrecord = selected.recordset.dbhome.get_primary_record
-    all_games_output = None
-    no_games_output = True
+    all_games_output = True
     games_for_date = []
     prev_date = None
-    filedef = filespec.GAMES_FILE_DEF
     cursor = selected.create_recordsetbase_cursor()
     try:
         while True:
@@ -767,16 +764,12 @@ def _export_selected_games_recordset(
                 prev_date = current_record[0]
                 games_for_date = []
             counter.increment_games_read()
-            instance.load_record(getrecord(filedef, current_record[0]))
+            instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_date.append(ivcg)
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
+            else:
+                all_games_output = False
     finally:
         cursor.close()
     return all_games_output
@@ -985,11 +978,8 @@ def _export_selected_games_index_order_value(
     counter,
 ):
     """Export selected games in PGN format in PGN collation order."""
-    getrecord = selected.recordset.dbhome.get_primary_record
-    all_games_output = None
-    no_games_output = True
+    all_games_output = True
     games_for_value = []
-    filedef = filespec.GAMES_FILE_DEF
     cursor = selected.create_recordsetbase_cursor()
     try:
         while True:
@@ -1001,16 +991,12 @@ def _export_selected_games_index_order_value(
                     counter.increment_games_output()
                 break
             counter.increment_games_read()
-            instance.load_record(getrecord(filedef, current_record[0]))
+            instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_value.append(ivcg)
-                if all_games_output is None:
-                    all_games_output = True
-                    no_games_output = False
-            elif all_games_output:
-                if not no_games_output:
-                    all_games_output = False
+            else:
+                all_games_output = False
     finally:
         cursor.close()
     return all_games_output

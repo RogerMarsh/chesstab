@@ -13,6 +13,7 @@ determines how large the database can get before giving a 'full' error.
 
 """
 from .alldu import get_filespec
+from ..core import utilities
 
 
 class Litedu:
@@ -81,3 +82,13 @@ class Litedu:
 
         """
         return True
+
+    def get_pgn_filenames_of_import_in_progress(self):
+        """Return names of PGN files in an import in progress."""
+        self.open_database()
+        try:
+            return utilities.get_pgn_filenames_of_an_import_in_progress_txn(
+                self
+            )
+        finally:
+            self.close_database()

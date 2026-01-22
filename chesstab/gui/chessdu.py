@@ -1321,15 +1321,7 @@ class DeferredUpdate(Bindings):
             )
             return
         if not self.resume:
-            self.database.open_database()
-            try:
-                names = (
-                    utilities.get_pgn_filenames_of_an_import_in_progress_txn(
-                        self.database
-                    )
-                )
-            finally:
-                self.database.close_database()
+            names = self.database.get_pgn_filenames_of_import_in_progress()
             if not names:
                 # Use askopenfilenames rather than askopenfilename with
                 # multiple=Tkinter.TRUE because in freebsd port of Tkinter a
