@@ -692,13 +692,9 @@ def _export_selected_games(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         keyset.place_record_number(bookmark[0])
-                    all_games_output &= (
+                    all_games_output = all_games_output and (
                         _export_selected_games_index_order_date(
-                            keyset,
-                            gamesout,
-                            instance,
-                            exporter,
-                            counter,
+                            keyset, gamesout, instance, exporter, counter
                         )
                     )
             finally:
@@ -717,13 +713,27 @@ def _export_selected_games(grid, filename, report_text, exporter):
                         dbset, valuespec.field, key=selector(key)
                     )
                     try:
-                        all_games_output &= _export_selected_games_recordset(
-                            dateset,
-                            gamesout,
-                            instance,
-                            exporter,
-                            counter,
-                        )
+                        dateset_count = dateset.count_records()
+                        if dateset_count > _MEMORY_SORT_LIMIT:
+                            all_games_output = all_games_output and (
+                                _export_selected_games_index_order_event(
+                                    dateset,
+                                    gamesout,
+                                    instance,
+                                    exporter,
+                                    counter,
+                                )
+                            )
+                        else:
+                            all_games_output = all_games_output and (
+                                _export_selected_games_pgn_collation_order(
+                                    dateset,
+                                    gamesout,
+                                    instance,
+                                    exporter,
+                                    counter,
+                                )
+                            )
                     finally:
                         dateset.close()
         statusbar.set_status_text(
@@ -739,12 +749,8 @@ def _export_selected_games(grid, filename, report_text, exporter):
     return all_games_output
 
 
-def _export_selected_games_recordset(
-    selected,
-    gamesout,
-    instance,
-    exporter,
-    counter,
+def _export_selected_games_pgn_collation_order(
+    selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
     all_games_output = True
@@ -754,20 +760,50 @@ def _export_selected_games_recordset(
     try:
         while True:
             current_record = cursor.next()
-            if current_record is None or current_record[0] != prev_date:
-                games_for_date.sort(key=methodcaller("get_collation"))
-                for gfd in games_for_date:
-                    exporter(gamesout, gfd)
-                    counter.increment_games_output()
-                if current_record is None:
-                    break
-                prev_date = current_record[0]
-                games_for_date = []
+            if current_record is None:
+                break
             counter.increment_games_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
+                current_date = ivcg.pgn_tags["Date"]
+                if current_date != prev_date:
+                    games_for_date.sort(key=methodcaller("get_collation"))
+                    for gfd in games_for_date:
+                        exporter(gamesout, gfd)
+                        counter.increment_games_output()
+                    games_for_date = []
+                    prev_date = current_date
                 games_for_date.append(ivcg)
+            else:
+                all_games_output = False
+        if games_for_date:
+            games_for_date.sort(key=methodcaller("get_collation"))
+            for gfd in games_for_date:
+                exporter(gamesout, gfd)
+                counter.increment_games_output()
+    finally:
+        cursor.close()
+    return all_games_output
+
+
+def _export_selected_games_database_order(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in database order."""
+    all_games_output = True
+    cursor = selected.create_recordsetbase_cursor()
+    try:
+        while True:
+            current_record = cursor.next()
+            if current_record is None:
+                break
+            counter.increment_games_read()
+            instance.load_record(current_record)
+            ivcg = instance.value.collected_game
+            if ivcg.is_pgn_valid_export_format():
+                exporter(gamesout, ivcg)
+                counter.increment_games_output()
             else:
                 all_games_output = False
     finally:
@@ -797,7 +833,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         if prev_key != bookmark[0]:
-                            all_games_output &= (
+                            all_games_output = all_games_output and (
                                 _export_selected_games_index_order_bookmark(
                                     keyset,
                                     gamesout,
@@ -809,13 +845,9 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                             keyset.clear_recordset()
                             prev_key = bookmark[0]
                         keyset.place_record_number(bookmark[1])
-                    all_games_output &= (
+                    all_games_output = all_games_output and (
                         _export_selected_games_index_order_bookmark(
-                            keyset,
-                            gamesout,
-                            instance,
-                            exporter,
-                            counter,
+                            keyset, gamesout, instance, exporter, counter
                         )
                     )
                     keyset.clear_recordset()
@@ -839,7 +871,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output &= (
+                            all_games_output = all_games_output and (
                                 _export_selected_games_index_order_date(
                                     keyset,
                                     gamesout,
@@ -849,7 +881,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                 )
                             )
                         else:
-                            all_games_output &= (
+                            all_games_output = all_games_output and (
                                 _export_selected_games_index_order_value(
                                     keyset,
                                     gamesout,
@@ -875,7 +907,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output &= (
+                            all_games_output = all_games_output and (
                                 _export_selected_games_index_order_date(
                                     keyset,
                                     gamesout,
@@ -885,7 +917,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                 )
                             )
                         else:
-                            all_games_output &= (
+                            all_games_output = all_games_output and (
                                 _export_selected_games_index_order_value(
                                     keyset,
                                     gamesout,
@@ -910,39 +942,239 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
 
 
 def _export_selected_games_index_order_bookmark(
-    keyset,
-    gamesout,
-    instance,
-    exporter,
-    counter,
+    keyset, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
     count = keyset.count_records()
     if count > _MEMORY_SORT_LIMIT:
         return _export_selected_games_index_order_date(
-            keyset,
-            gamesout,
-            instance,
-            exporter,
-            counter,
+            keyset, gamesout, instance, exporter, counter
         )
     if count > 0:  # essential when prev_key is None.
         return _export_selected_games_index_order_value(
-            keyset,
-            gamesout,
-            instance,
-            exporter,
-            counter,
+            keyset, gamesout, instance, exporter, counter
         )
     return True
 
 
+def _export_selected_games_index_order_result(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.RESULT_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        resultset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            resultset_count = resultset.count_records()
+            if resultset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_database_order(
+                        resultset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif resultset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        resultset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            resultset.close()
+    return all_games_output
+
+
+def _export_selected_games_index_order_black(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.BLACK_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        blackset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            blackset_count = blackset.count_records()
+            if blackset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_result(
+                        blackset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif blackset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        blackset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            blackset.close()
+    return all_games_output
+
+
+def _export_selected_games_index_order_white(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.WHITE_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        whiteset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            whiteset_count = whiteset.count_records()
+            if whiteset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_black(
+                        whiteset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif whiteset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        whiteset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            whiteset.close()
+    return all_games_output
+
+
+def _export_selected_games_index_order_round(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.ROUND_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        roundset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            roundset_count = roundset.count_records()
+            if roundset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_white(
+                        roundset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif roundset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        roundset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            roundset.close()
+    return all_games_output
+
+
+def _export_selected_games_index_order_site(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.SITE_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        siteset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            siteset_count = siteset.count_records()
+            if siteset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_round(
+                        siteset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif siteset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        siteset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            siteset.close()
+    return all_games_output
+
+
+def _export_selected_games_index_order_event(
+    selected, gamesout, instance, exporter, counter
+):
+    """Export selected games in PGN format in PGN collation order."""
+    valuespec = ValuesClause()
+    valuespec.field = filespec.EVENT_FIELD_DEF
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    selector = database.encode_record_selector
+    all_games_output = True
+    for key in database.find_values_ascending(valuespec, dbset):
+        eventset = (
+            database.recordlist_key(dbset, valuespec.field, key=selector(key))
+            & selected
+        )
+        try:
+            eventset_count = eventset.count_records()
+            if eventset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_site(
+                        eventset, gamesout, instance, exporter, counter
+                    )
+                )
+            elif eventset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        eventset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            eventset.close()
+    return all_games_output
+
+
 def _export_selected_games_index_order_date(
-    selected,
-    gamesout,
-    instance,
-    exporter,
-    counter,
+    selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
     valuespec = ValuesClause()
@@ -956,26 +1188,29 @@ def _export_selected_games_index_order_date(
             database.recordlist_key(dbset, valuespec.field, key=selector(key))
             & selected
         )
-        if dateset.count_records() > 0:
-            try:
-                all_games_output &= _export_selected_games_recordset(
-                    dateset,
-                    gamesout,
-                    instance,
-                    exporter,
-                    counter,
+        try:
+            dateset_count = dateset.count_records()
+            if dateset_count > _MEMORY_SORT_LIMIT:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_index_order_event(
+                        dateset, gamesout, instance, exporter, counter
+                    )
                 )
-            finally:
-                dateset.close()
+            elif dateset_count > 0:
+                all_games_output = (
+                    all_games_output
+                    and _export_selected_games_pgn_collation_order(
+                        dateset, gamesout, instance, exporter, counter
+                    )
+                )
+        finally:
+            dateset.close()
     return all_games_output
 
 
 def _export_selected_games_index_order_value(
-    selected,
-    gamesout,
-    instance,
-    exporter,
-    counter,
+    selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
     all_games_output = True
