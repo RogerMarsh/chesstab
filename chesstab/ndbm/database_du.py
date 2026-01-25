@@ -35,3 +35,8 @@ class Database(alldu.Alldu, litedu.Litedu, ndbmdu_database.Database):
     def __init__(self, ndbmfile, **kargs):
         """Delegate with DbmNdbmDatabaseduError as exception class."""
         super().__init__(ndbmfile, DbmNdbmDatabaseduError, **kargs)
+
+    # Do nothing, rather than attempt to delete a non-existent dict entry
+    # as in the alldu.Alldu.Database class version of this method.
+    def delete_import_pgn_file_tuple(self):
+        """Delete PGN file list from application control."""
