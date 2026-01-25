@@ -62,22 +62,23 @@ class _Counter:
         self.games_output += 1
         if not self.games_output % _UPDATE_FREQUENCY:
             self._reportbar.set_status_text(self.output_report)
-            self._reportbar.status.update()
+            self._reportbar.status.update_idletasks()
 
     def increment_games_read(self):
         """Incremant read count of games to sort and show in reportbar."""
         self.games_read += 1
         if not self.games_read % _UPDATE_FREQUENCY:
             self._reportbar.set_status_text(self.read_report)
-            self._reportbar.status.update()
+            self._reportbar.status.update_idletasks()
 
 
 def export_all_games_text(database, filename, statusbar):
     """Export games in database to text file in internal record format."""
     if filename is None:
         return True
-    statusbar.set_status_text("Started: internal format")
     statusbar.status.update()
+    statusbar.set_status_text("Started: internal format")
+    statusbar.status.update_idletasks()
     literal_eval = ast.literal_eval
     instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
@@ -303,6 +304,7 @@ def export_selected_games_text(grid, filename):
         return True
     literal_eval = ast.literal_eval
     statusbar = grid.ui.statusbar
+    statusbar.status.update()
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
@@ -314,7 +316,7 @@ def export_selected_games_text(grid, filename):
         if grid.bookmarks:
             counter = _Counter(_bookmarked_records_count(grid), statusbar)
             statusbar.set_status_text("Started (bookmark): internal format")
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             with open(filename, "w", encoding=_ENCODING) as gamesout:
                 for bookmark in grid.bookmarks:
                     instance.load_record(
@@ -329,7 +331,7 @@ def export_selected_games_text(grid, filename):
         elif grid.partial:
             counter = _Counter(_selected_records_count(grid), statusbar)
             statusbar.set_status_text("Started (key): internal format")
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
             try:
                 if primary:
@@ -362,7 +364,7 @@ def export_selected_games_text(grid, filename):
         else:
             counter = _Counter(_all_records_count(database), statusbar)
             statusbar.set_status_text("Started (all): internal format")
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
             try:
                 current_record = cursor.first()
@@ -676,6 +678,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
     if filename is None:
         return True
     statusbar = grid.ui.statusbar
+    statusbar.status.update()
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
@@ -685,7 +688,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
         if grid.bookmarks:
             counter = _Counter(_bookmarked_records_count(grid), statusbar)
             statusbar.set_status_text("Started (bookmark): " + report_text)
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
             keyset = database.recordlist_nil(dbset)
             try:
@@ -702,7 +705,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
         else:
             counter = _Counter(_all_records_count(database), statusbar)
             statusbar.set_status_text("Started (all grid): " + report_text)
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             valuespec = ValuesClause()
             valuespec.field = filespec.PGN_DATE_FIELD_DEF
             dbset = grid.get_data_source().dbset
@@ -816,6 +819,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
     if filename is None:
         return True
     statusbar = grid.ui.statusbar
+    statusbar.status.update()
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
@@ -825,7 +829,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
         if grid.bookmarks:
             counter = _Counter(_bookmarked_records_count(grid), statusbar)
             statusbar.set_status_text("Started (bookmark): " + report_text)
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
             prev_key = None
             keyset = database.recordlist_nil(dbset)
@@ -856,7 +860,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
         elif grid.partial:
             counter = _Counter(_selected_records_count(grid), statusbar)
             statusbar.set_status_text("Started (key): " + report_text)
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             valuespec = ValuesClause()
             valuespec.field = grid.get_data_source().dbname
             valuespec.from_value = grid.partial
@@ -895,7 +899,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
         else:
             counter = _Counter(_all_records_count(database), statusbar)
             statusbar.set_status_text("Started (all grid): " + report_text)
-            statusbar.status.update()
+            statusbar.status.update_idletasks()
             valuespec = ValuesClause()
             valuespec.field = grid.get_data_source().dbname
             dbset = grid.get_data_source().dbset
