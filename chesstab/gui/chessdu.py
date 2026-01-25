@@ -23,6 +23,11 @@ from pgn_read.core.tagpair_parser import PGNTagPair, GameCount
 from solentware_base.core.constants import (
     BRECPPG,
     DEFAULT_RECORDS,
+    UNQLITE_MODULE,
+    VEDIS_MODULE,
+    GNU_MODULE,
+    NDBM_MODULE,
+    DPT_MODULE,
 )
 
 from ..core import constants
@@ -30,6 +35,7 @@ from ..core import utilities
 from .. import (
     ERROR_LOG,
     APPLICATION_NAME,
+    APPLICATION_DATABASE_MODULE,
 )
 from ..core.filespec import (
     GAMES_FILE_DEF,
@@ -814,6 +820,7 @@ class DeferredUpdate(Bindings):
             allowcreate=True,
             deferupdatefiles={GAMES_FILE_DEF},
         )
+        self._database_looks_like_nosql()
         self.deferred_update = None
         self.quit_thread = None
 
@@ -852,12 +859,15 @@ class DeferredUpdate(Bindings):
             underline=0,
             command=self.try_command(self._do_import, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
-        tkinter.Button(
-            master=self.buttonframe,
-            text="Merge Import",
-            underline=0,
-            command=self.try_command(self._do_merge_import, self.buttonframe),
-        ).pack(side=tkinter.RIGHT, padx=12)
+        if not self._database_looks_like_nosql():
+            tkinter.Button(
+                master=self.buttonframe,
+                text="Merge Import",
+                underline=0,
+                command=self.try_command(
+                    self._do_merge_import, self.buttonframe
+                ),
+            ).pack(side=tkinter.RIGHT, padx=12)
         tkinter.Button(
             master=self.buttonframe,
             text="Select PGN Files",
@@ -934,16 +944,17 @@ class DeferredUpdate(Bindings):
                 ("Importing to database in ", home_directory, " directory.")
             )
         )
-        self._report_to_log_text_only("")
-        self._report_to_log_text_only(
-            "".join(
-                (
-                    "Merge Import sort area is in ",
-                    home_directory if sort_area is None else sort_area,
-                    ".",
+        if not self._database_looks_like_nosql():
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                "".join(
+                    (
+                        "Merge Import sort area is in ",
+                        home_directory if sort_area is None else sort_area,
+                        ".",
+                    )
                 )
             )
-        )
         self.report.pack(
             side=tkinter.LEFT, fill=tkinter.BOTH, expand=tkinter.TRUE
         )
@@ -954,29 +965,18 @@ class DeferredUpdate(Bindings):
         self._add_queued_reports_to_log()
 
     def _database_looks_like_dpt(self):
-        """Return True if database attribute signature looks like DPT.
-
-        Check a few attriute names expected only in Database class in
-        solentware_base.core._dpt module.
-
-        """
-        # This describes situation before changes to resolve problem, but
-        # the return value remains relevant.
-        # An alternative implementation of this difference calls a method
-        # add_import_buttons() rather than add the buttons if the test
-        # here returns True.  Two versions of add_import_buttons() are
-        # defined in classes ..dpt.database_du.Database and
-        # ..shared.dptcompatdu.DptCompatdu and the class hierarchy does
-        # the test implemented here.  At present that implementation fails
-        # because module pickling errors occur for the import action if
-        # preceded by an increase action: but some solved problems in this
-        # implementation hint at changes which might allow the alternative
-        # implementation to succeed.  A practical benefit of the alternative
-        # is losing the process startup overhead in the two (quite quick)
-        # increase actions relevant only in DPT.
-        return hasattr(self.database, "parms") and hasattr(
-            self.database, "msgctl"
+        """Return True if database module is DPT."""
+        return self.database.__class__.__module__.startswith(
+            APPLICATION_DATABASE_MODULE[DPT_MODULE]
         )
+
+    def _database_looks_like_nosql(self):
+        """Return True if database module is in the _nosql set."""
+        module_name = self.database.__class__.__module__
+        for name in (UNQLITE_MODULE, VEDIS_MODULE, GNU_MODULE, NDBM_MODULE):
+            if module_name.startswith(APPLICATION_DATABASE_MODULE[name]):
+                return True
+        return False
 
     def _report_to_log(self, text):
         """Add text to report queue with timestamp."""
