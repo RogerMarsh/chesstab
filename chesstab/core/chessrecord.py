@@ -745,16 +745,14 @@ class ChessDBrecordGameSequential(Record):
         # self.set_database(database)
         database.set_int_to_bytes_lookup(lookup=True)
         cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
-        while True:
+        current_record = cursor.first()
+        while current_record:
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
                     reporter.append_text("Merge index stopped.")
                 database.set_int_to_bytes_lookup(lookup=False)
                 return False
-            current_record = cursor.next()
-            if current_record is None:
-                break
             self.load_record(current_record)
             try:
                 count = sorter.add_instance(self)
@@ -794,6 +792,7 @@ class ChessDBrecordGameSequential(Record):
                         )
                     )
                 raise
+            current_record = cursor.next()
         try:
             sorter.write_final_segments_to_sequential_file()
         except FileExistsError as exc:
@@ -1097,31 +1096,13 @@ class ChessDBrecordGameTransposition(Record):
         value = self.value
         old_segment = None
         cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
-        while True:
+        current_record = cursor.first()
+        while current_record:
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
                     reporter.append_text("Index positions stopped.")
                 return False
-            current_record = cursor.next()
-            if current_record is None:
-                # At this point do the final segement index updates.
-                # self.srindex has the indicies to update because these do
-                # not change from one record to another.
-                if self.srindex is not None and self.key.recno is not None:
-                    current_segment = self.key.recno // db_segment_size
-                    for secondary in self.srindex:
-                        database.sort_and_write(
-                            GAMES_FILE_DEF, secondary, current_segment
-                        )
-                        database.merge(GAMES_FILE_DEF, secondary)
-                if old_segment is not None:
-                    database.unfile_records_under(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        index_key,
-                    )
-                break
             self.load_record(current_record)
             current_segment = self.key.recno // db_segment_size
             if current_segment != old_segment:
@@ -1204,6 +1185,23 @@ class ChessDBrecordGameTransposition(Record):
                 )
                 continue
             database.index_instance(GAMES_FILE_DEF, self)
+            current_record = cursor.next()
+        # At this point do the final segement index updates.
+        # self.srindex has the indicies to update because these do
+        # not change from one record to another.
+        if self.srindex is not None and self.key.recno is not None:
+            current_segment = self.key.recno // db_segment_size
+            for secondary in self.srindex:
+                database.sort_and_write(
+                    GAMES_FILE_DEF, secondary, current_segment
+                )
+                database.merge(GAMES_FILE_DEF, secondary)
+        if old_segment is not None:
+            database.unfile_records_under(
+                GAMES_FILE_DEF,
+                IMPORT_FIELD_DEF,
+                index_key,
+            )
         return True
 
 
@@ -1252,31 +1250,13 @@ class ChessDBrecordGamePieceLocation(Record):
         value = self.value
         old_segment = None
         cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
-        while True:
+        current_record = cursor.first()
+        while current_record:
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
                     reporter.append_text("Index piece movement stopped.")
                 return False
-            current_record = cursor.next()
-            if current_record is None:
-                # At this point do the final segement index updates.
-                # self.srindex has the indicies to update because these do
-                # not change from one record to another.
-                if self.srindex is not None and self.key.recno is not None:
-                    current_segment = self.key.recno // db_segment_size
-                    for secondary in self.srindex:
-                        database.sort_and_write(
-                            GAMES_FILE_DEF, secondary, current_segment
-                        )
-                        database.merge(GAMES_FILE_DEF, secondary)
-                if old_segment is not None:
-                    database.unfile_records_under(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        index_key,
-                    )
-                break
             self.load_record(current_record)
             current_segment = self.key.recno // db_segment_size
             if current_segment != old_segment:
@@ -1315,6 +1295,23 @@ class ChessDBrecordGamePieceLocation(Record):
                 old_segment = current_segment
             value.gamesource = None
             database.index_instance(GAMES_FILE_DEF, self)
+            current_record = cursor.next()
+        # At this point do the final segement index updates.
+        # self.srindex has the indicies to update because these do
+        # not change from one record to another.
+        if self.srindex is not None and self.key.recno is not None:
+            current_segment = self.key.recno // db_segment_size
+            for secondary in self.srindex:
+                database.sort_and_write(
+                    GAMES_FILE_DEF, secondary, current_segment
+                )
+                database.merge(GAMES_FILE_DEF, secondary)
+        if old_segment is not None:
+            database.unfile_records_under(
+                GAMES_FILE_DEF,
+                IMPORT_FIELD_DEF,
+                index_key,
+            )
         return True
 
 
@@ -1366,31 +1363,13 @@ class ChessDBrecordGamePGNTags(Record):
         value = self.value
         old_segment = None
         cursor = index_games.create_recordsetbase_cursor(internalcursor=True)
-        while True:
+        current_record = cursor.first()
+        while current_record:
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
                     reporter.append_text("Index PGN Tags stopped.")
                 return False
-            current_record = cursor.next()
-            if current_record is None:
-                # At this point do the final segement index updates.
-                # self.srindex has the indicies to update because these do
-                # not change from one record to another.
-                if self.srindex is not None and self.key.recno is not None:
-                    current_segment = self.key.recno // db_segment_size
-                    for secondary in self.srindex:
-                        database.sort_and_write(
-                            GAMES_FILE_DEF, secondary, current_segment
-                        )
-                        database.merge(GAMES_FILE_DEF, secondary)
-                if old_segment is not None:
-                    database.unfile_records_under(
-                        GAMES_FILE_DEF,
-                        IMPORT_FIELD_DEF,
-                        database.encode_record_selector(IMPORT_FIELD_DEF),
-                    )
-                break
             self.load_record(current_record)
             current_segment = self.key.recno // db_segment_size
             if current_segment != old_segment:
@@ -1444,6 +1423,23 @@ class ChessDBrecordGamePGNTags(Record):
                 )
                 continue
             database.index_instance(GAMES_FILE_DEF, self)
+            current_record = cursor.next()
+        # At this point do the final segement index updates.
+        # self.srindex has the indicies to update because these do
+        # not change from one record to another.
+        if self.srindex is not None and self.key.recno is not None:
+            current_segment = self.key.recno // db_segment_size
+            for secondary in self.srindex:
+                database.sort_and_write(
+                    GAMES_FILE_DEF, secondary, current_segment
+                )
+                database.merge(GAMES_FILE_DEF, secondary)
+        if old_segment is not None:
+            database.unfile_records_under(
+                GAMES_FILE_DEF,
+                IMPORT_FIELD_DEF,
+                database.encode_record_selector(IMPORT_FIELD_DEF),
+            )
         return True
 
 

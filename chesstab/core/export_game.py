@@ -761,10 +761,8 @@ def _export_selected_games_pgn_collation_order(
     prev_date = None
     cursor = selected.create_recordsetbase_cursor()
     try:
-        while True:
-            current_record = cursor.next()
-            if current_record is None:
-                break
+        current_record = cursor.first()
+        while current_record:
             counter.increment_games_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
@@ -780,6 +778,7 @@ def _export_selected_games_pgn_collation_order(
                 games_for_date.append(ivcg)
             else:
                 all_games_output = False
+            current_record = cursor.next()
         if games_for_date:
             games_for_date.sort(key=methodcaller("get_collation"))
             for gfd in games_for_date:
@@ -797,10 +796,8 @@ def _export_selected_games_database_order(
     all_games_output = True
     cursor = selected.create_recordsetbase_cursor()
     try:
-        while True:
-            current_record = cursor.next()
-            if current_record is None:
-                break
+        current_record = cursor.first()
+        while current_record:
             counter.increment_games_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
@@ -809,6 +806,7 @@ def _export_selected_games_database_order(
                 counter.increment_games_output()
             else:
                 all_games_output = False
+            current_record = cursor.next()
     finally:
         cursor.close()
     return all_games_output
@@ -1221,14 +1219,8 @@ def _export_selected_games_index_order_value(
     games_for_value = []
     cursor = selected.create_recordsetbase_cursor()
     try:
-        while True:
-            current_record = cursor.next()
-            if current_record is None:
-                games_for_value.sort(key=methodcaller("get_collation"))
-                for gfv in games_for_value:
-                    exporter(gamesout, gfv)
-                    counter.increment_games_output()
-                break
+        current_record = cursor.first()
+        while current_record:
             counter.increment_games_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
@@ -1236,6 +1228,11 @@ def _export_selected_games_index_order_value(
                 games_for_value.append(ivcg)
             else:
                 all_games_output = False
+            current_record = cursor.next()
+        games_for_value.sort(key=methodcaller("get_collation"))
+        for gfv in games_for_value:
+            exporter(gamesout, gfv)
+            counter.increment_games_output()
     finally:
         cursor.close()
     return all_games_output
