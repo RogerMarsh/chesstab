@@ -223,10 +223,9 @@ def get_freespace_and_database_size(database):
 
     """
     if database.database_file is not None:
-        volfree = bytesize_to_str(
-            shutil.disk_usage(database.database_file).free
-        )
-        dbsize = bytesize_to_str(os.path.getsize(database.database_file))
+        name = database.generate_database_file_name(database.database_file)
+        volfree = bytesize_to_str(shutil.disk_usage(name).free)
+        dbsize = bytesize_to_str(os.path.getsize(name))
     else:
         home_directory = database.home_directory
         volfree = bytesize_to_str(shutil.disk_usage(home_directory).free)
