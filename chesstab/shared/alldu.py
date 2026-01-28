@@ -1788,5 +1788,6 @@ class Alldu:
     def delete_import_pgn_file_tuple(self):
         """Delete PGN file list from application control."""
         appcontrol = self.get_application_control()
-        del appcontrol[constants.PGN_FILES]
-        self.set_application_control(appcontrol)
+        if constants.PGN_FILES in appcontrol:
+            del appcontrol[constants.PGN_FILES]
+            self.set_application_control(appcontrol)

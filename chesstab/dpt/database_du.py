@@ -72,11 +72,6 @@ class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
     def _dptfileclass(self):
         return DPTFile
 
-    # Do nothing, rather than attempt to delete a non-existent dict entry
-    # as in the alldu.Alldu.Database class version of this method.
-    def delete_import_pgn_file_tuple(self):
-        """Delete PGN file list from application control."""
-
 
 class DPTFile(dptdu_database.DPTFile):
     """This class is used to access files in a DPT database.
