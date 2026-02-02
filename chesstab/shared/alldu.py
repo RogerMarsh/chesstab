@@ -15,6 +15,8 @@ from solentware_base.core.constants import (
     FILEDESC,
     SECONDARY,
 )
+from solentware_base.core import merge
+from solentware_base.core import sortsequential
 
 from ..core import filespec
 from ..core import chessrecord
@@ -26,12 +28,12 @@ from .. import ERROR_LOG, APPLICATION_NAME
 # the 32,000 games held in a single default sized segment, assuming each
 # game has nearly 40 moves (80 positions).  In direct imports a commit is
 # done for each segment.
-_MERGE_COMMIT_INTERVAL = 2000000
+MERGE_COMMIT_INTERVAL = 2000000
 
 # The piecesquare index fills the chosen map size increment for Symas LMDB
 # well before 2000000 entries added.  It also takes about 10 times as long
 # to process these entries compared with most other indicies.
-_SHORT_MERGE_COMMIT_INTERVAL = 200000
+SHORT_MERGE_COMMIT_INTERVAL = 200000
 
 
 def du_extract(
@@ -160,7 +162,7 @@ def du_extract(
         if indexing:
             cdb.do_final_segment_deferred_updates()
     except Exception as exc:
-        _report_exception(cdb, reporter, exc)
+        report_du_exception(cdb, reporter, exc)
         raise
     # Put games just stored on database on indexing queues, or on the
     # reload queue if the new games are being indexed by dump, sort new,
@@ -203,9 +205,9 @@ def du_extract(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -281,7 +283,7 @@ def du_index_pgn_tags(
             reporter.append_text_only("")
         cdb.backout()
         return True
-    error_games = _get_error_games(cdb, pgnpaths)
+    error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
         index_games.remove_recordset(error_games)
         index_games_count = index_games.count_records()
@@ -340,9 +342,9 @@ def du_index_pgn_tags(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -419,7 +421,7 @@ def du_index_positions(
             reporter.append_text_only("")
         cdb.backout()
         return True
-    error_games = _get_error_games(cdb, pgnpaths)
+    error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
         index_games.remove_recordset(error_games)
         index_games_count = index_games.count_records()
@@ -476,9 +478,9 @@ def du_index_positions(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -555,7 +557,7 @@ def du_index_piece_squares(
             reporter.append_text_only("")
         cdb.backout()
         return True
-    error_games = _get_error_games(cdb, pgnpaths)
+    error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
         index_games.remove_recordset(error_games)
         index_games_count = index_games.count_records()
@@ -614,9 +616,9 @@ def du_index_piece_squares(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -768,7 +770,9 @@ def dump_indicies(
         indicies.difference_update(ignore)
     dump_directory = os.path.join(
         cdb.get_merge_import_sort_area(),
-        "_".join((os.path.basename(cdb.database_file), file)),
+        "_".join(
+            (os.path.basename(cdb.generate_database_file_name(file)), file)
+        ),
     )
     try:
         os.mkdir(dump_directory)
@@ -835,9 +839,9 @@ def dump_indicies(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -864,6 +868,8 @@ def write_indicies_for_extracted_games(
     file=None,
     reporter=None,
     quit_event=None,
+    sorter=None,
+    ignore=None,
     **kwargs,
 ):
     """Dump indicies for new games in database cdb, except those in ignore.
@@ -881,6 +887,8 @@ def write_indicies_for_extracted_games(
                 None or an Event instance.
 
     """
+    if ignore is None:
+        ignore = set()
     del kwargs
     importer = chessrecord.ChessDBrecordGameSequential(
         valueclass=chessrecord.ChessDBvaluePGNMergeUpdate
@@ -904,7 +912,7 @@ def write_indicies_for_extracted_games(
 
     cdb.start_transaction()
     index_games = cdb.recordlist_key(
-        filespec.GAMES_FILE_DEF,
+        file,
         filespec.IMPORT_FIELD_DEF,
         key=cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
     )
@@ -917,13 +925,13 @@ def write_indicies_for_extracted_games(
             reporter.append_text_only("")
         cdb.backout()
         return None
-    error_games = _get_error_games(cdb, pgnpaths)
+    error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
         index_games.remove_recordset(error_games)
         index_games_count = index_games.count_records()
         if index_games_count == 0:
             cdb.unfile_records_under(
-                filespec.GAMES_FILE_DEF,
+                file,
                 filespec.IMPORT_FIELD_DEF,
                 cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
             )
@@ -940,7 +948,7 @@ def write_indicies_for_extracted_games(
             cdb.commit()
             return None
         cdb.file_records_under(
-            filespec.GAMES_FILE_DEF,
+            file,
             filespec.IMPORT_FIELD_DEF,
             index_games,
             cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
@@ -960,7 +968,7 @@ def write_indicies_for_extracted_games(
     guard_file = os.path.join(
         cdb.get_merge_import_sort_area(),
         "_".join(
-            (os.path.basename(cdb.database_file), filespec.GAMES_FILE_DEF)
+            (os.path.basename(cdb.generate_database_file_name(file)), file)
         ),
         "0",
     )
@@ -976,12 +984,15 @@ def write_indicies_for_extracted_games(
             reporter.append_text_only(os.path.dirname(guard_file))
         cdb.commit()
         return True
-    _remove_games_in_sequential_files_from_index_games(
+    remove_games_in_sequential_files_from_index_games(
         cdb, index_games, reporter=reporter
     )
+    if sorter is None:
+        sorter = sortsequential.SortIndiciesToSequentialFiles
     if not importer.write_index_entries_to_sequential_files(
         cdb,
         index_games,
+        sorter(cdb, file, ignore=ignore),
         reporter=reporter,
         quit_event=quit_event,
     ):
@@ -995,7 +1006,7 @@ def write_indicies_for_extracted_games(
     return True
 
 
-def _remove_games_in_sequential_files_from_index_games(
+def remove_games_in_sequential_files_from_index_games(
     cdb, index_games, reporter=None
 ):
     """Remove games fully referenced in sequential files from index_games.
@@ -1007,7 +1018,12 @@ def _remove_games_in_sequential_files_from_index_games(
     sort_area = os.path.join(
         cdb.get_merge_import_sort_area(),
         "_".join(
-            (os.path.basename(cdb.database_file), filespec.GAMES_FILE_DEF)
+            (
+                os.path.basename(
+                    cdb.generate_database_file_name(filespec.GAMES_FILE_DEF)
+                ),
+                filespec.GAMES_FILE_DEF,
+            )
         ),
     )
     if not os.path.isdir(sort_area):
@@ -1049,7 +1065,7 @@ def _remove_games_in_sequential_files_from_index_games(
         written.close()
 
 
-def _delete_sorted_index_directory(index_directory):
+def delete_sorted_index_directory(index_directory):
     """Delete sorted index files in index_directory.
 
     A "-1" file is assumed to contain sorted index entries.
@@ -1064,7 +1080,7 @@ def _delete_sorted_index_directory(index_directory):
                 pass
 
 
-def _delete_sorted_index_files(index_directory, reporter):
+def delete_sorted_index_files(index_directory, reporter):
     """Delete sorted index files if basename of index_directory is not '-1'.
 
     File '-1' is created on completion of load index.  If it exists delete
@@ -1087,10 +1103,10 @@ def _delete_sorted_index_files(index_directory, reporter):
                 "Files of sorted index entries are not deleted."
             )
         return
-    _delete_sorted_index_directory(index_directory)
+    delete_sorted_index_directory(index_directory)
 
 
-def _index_load_already_done(index_directory, reporter):
+def index_load_already_done(index_directory, reporter):
     """Return True if file '-1' is in index_directory and is not basename.
 
     Return False otherwise.
@@ -1112,7 +1128,7 @@ def _index_load_already_done(index_directory, reporter):
         return False
     if not os.path.exists(os.path.join(index_directory, "-1")):
         return False
-    _delete_sorted_index_files(index_directory, None)
+    delete_sorted_index_files(index_directory, None)
     if reporter is not None:
         reporter.append_text("Load is already done.")
     return True
@@ -1168,7 +1184,9 @@ def load_indicies(
     try:
         dump_directory = os.path.join(
             cdb.get_merge_import_sort_area(),
-            "_".join((os.path.basename(cdb.database_file), file)),
+            "_".join(
+                (os.path.basename(cdb.generate_database_file_name(file)), file)
+            ),
         )
     finally:
         cdb.end_read_only_transaction()
@@ -1217,15 +1235,15 @@ def load_indicies(
                     )
                 )
             continue
-        if _index_load_already_done(index_directory, reporter):
+        if index_load_already_done(index_directory, reporter):
             continue
         cdb.delete_index(file, index)
         writer = cdb.merge_writer(file, index)
         if index == filespec.PIECESQUARE_FIELD_DEF:
-            commit_interval = _SHORT_MERGE_COMMIT_INTERVAL
+            commit_interval = SHORT_MERGE_COMMIT_INTERVAL
         else:
-            commit_interval = _MERGE_COMMIT_INTERVAL
-        for count, item in enumerate(cdb.next_sorted_item(index_directory)):
+            commit_interval = MERGE_COMMIT_INTERVAL
+        for count, item in enumerate(merge.next_sorted_item(index_directory)):
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
@@ -1262,7 +1280,7 @@ def load_indicies(
                     pass
             except FileExistsError:
                 pass
-        _delete_sorted_index_files(index_directory, reporter)
+        delete_sorted_index_files(index_directory, reporter)
 
     # DPT database engine needs the test for empty queue because all the
     # deferred index updates are applied in the Close() method called when
@@ -1273,9 +1291,9 @@ def load_indicies(
     # The other database engines do not cause the GUI to become unresponsive
     # in the absence of the test for an empty queue.
     if indexing:
-        dsize = _pre_unset_file_records_under_reports(cdb, file, reporter)
+        dsize = pre_unset_file_records_under_reports(cdb, file, reporter)
         cdb.unset_defer_update()
-        _post_unset_file_records_under_reports(cdb, file, reporter, dsize)
+        post_unset_file_records_under_reports(cdb, file, reporter, dsize)
         if reporter is not None:
             while not reporter.empty():
                 pass
@@ -1304,7 +1322,7 @@ def load_indicies(
         if not os.path.isdir(index_directory):
             continue
         # '<index_directory>/-1' may be a guard or a file of index items.
-        _delete_sorted_index_directory(index_directory)
+        delete_sorted_index_directory(index_directory)
         try:
             os.remove(os.path.join(index_directory, "-1"))
         except FileNotFoundError:
@@ -1384,7 +1402,7 @@ def _try_file_encoding(pgnpath):
 # Problem is DPT does things in unset_defer_update which need before and
 # after reports, while other engines do different things which do not
 # need reports at all.
-def _pre_unset_file_records_under_reports(database, file, reporter):
+def pre_unset_file_records_under_reports(database, file, reporter):
     """Generate reports relevant to database engine before completion."""
     if reporter is None:
         return None
@@ -1423,7 +1441,7 @@ def _pre_unset_file_records_under_reports(database, file, reporter):
 # Problem is DPT does things in unset_defer_update which need before and
 # after reports, while other engines do different things which do not
 # need reports at all.
-def _post_unset_file_records_under_reports(database, file, reporter, dsize):
+def post_unset_file_records_under_reports(database, file, reporter, dsize):
     """Generate reports relevant to database engine after completion."""
     if reporter is None:
         return
@@ -1505,7 +1523,7 @@ def do_deferred_update(cdb, *args, reporter=None, file=None, **kwargs):
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Import finished.")
-        _report_database_size_on_import_finish(cdb, reporter)
+        report_database_size_on_import_finish(cdb, reporter)
 
 
 def do_reload_deferred_update(
@@ -1580,7 +1598,7 @@ def do_reload_deferred_update(
                     reporter.append_text("Load indicies not completed.")
                 return
         except Exception as exc:
-            _report_exception(cdb, reporter, exc)
+            report_du_exception(cdb, reporter, exc)
             raise
         cdb.start_transaction()
         try:
@@ -1592,10 +1610,10 @@ def do_reload_deferred_update(
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Import and index reload finished.")
-        _report_database_size_on_import_finish(cdb, reporter)
+        report_database_size_on_import_finish(cdb, reporter)
 
 
-def _report_database_size_on_import_finish(cdb, reporter):
+def report_database_size_on_import_finish(cdb, reporter):
     """Report database size on completing import."""
     volfree, dbsize = utilities.get_freespace_and_database_size(cdb)
     reporter.append_text_only("")
@@ -1632,7 +1650,7 @@ def _du_report_increases(reporter, file, size_increases):
         )
 
 
-def _report_exception(cdb, reporter, exception):
+def report_du_exception(cdb, reporter, exception):
     """Write exception to error log file, and reporter if available."""
     errorlog_written = True
     try:
@@ -1706,7 +1724,7 @@ def get_filespec(**kargs):
     return names
 
 
-def _get_error_games(database, pgnpaths):
+def get_error_games(database, pgnpaths):
     """Return recordlist of error records for paths in pgnpaths."""
     trimmed = database.recordlist_nil(filespec.GAMES_FILE_DEF)
     for name in pgnpaths:
@@ -1771,9 +1789,10 @@ class Alldu:
 
     def get_merge_import_sort_area(self):
         """Return sort area in application control or database directory."""
-        return self.get_application_control().get(
-            constants.SORT_AREA, super().get_merge_import_sort_area()
-        )
+        sort_area = self.get_application_control().get(constants.SORT_AREA)
+        if sort_area is None:
+            return super().get_merge_import_sort_area()
+        return sort_area
 
     def get_import_pgn_file_tuple(self):
         """Return PGN file list in application control or empty list."""

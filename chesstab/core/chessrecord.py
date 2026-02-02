@@ -20,7 +20,6 @@ from solentware_base.core.record import (
     Record,
 )
 from solentware_base.core.segmentsize import SegmentSize
-from solentware_base.core.merge import SortIndiciesToSequentialFiles
 
 from pgn_read.core.parser import PGN
 from pgn_read.core.movetext_parser import PGNMoveText
@@ -71,8 +70,6 @@ from .filespec import (
     PIECESQUARE_FIELD_DEF,
     GAME_FIELD_DEF,
     GAMES_FILE_DEF,
-    CQL_QUERY_FIELD_DEF,
-    CQL_EVALUATE_FIELD_DEF,
     REPERTOIRE_FILE_DEF,
     PGN_DATE_FIELD_DEF,
     VARIATION_FIELD_DEF,
@@ -722,25 +719,12 @@ class ChessDBrecordGameSequential(Record):
         super().__init__(keyclass=keyclass, valueclass=valueclass)
 
     def write_index_entries_to_sequential_files(
-        self, database, index_games, reporter=None, quit_event=None
+        self, database, index_games, sorter, reporter=None, quit_event=None
     ):
         """Write index entries for imported games to sequential file."""
         if reporter is not None:
             reporter.append_text_only("")
             reporter.append_text("Writing index entries to sorted files.")
-        sorter = SortIndiciesToSequentialFiles(
-            database,
-            GAMES_FILE_DEF,
-            ignore=set(
-                (
-                    IMPORT_FIELD_DEF,
-                    PGNFILE_FIELD_DEF,
-                    CQL_QUERY_FIELD_DEF,
-                    CQL_EVALUATE_FIELD_DEF,
-                    PGN_ERROR_FIELD_DEF,
-                )
-            ),
-        )
         # Not sure this is not needed yet: the sorter uses database though.
         # self.set_database(database)
         database.set_int_to_bytes_lookup(lookup=True)

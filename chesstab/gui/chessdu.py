@@ -45,6 +45,9 @@ from ..core.filespec import (
     GAME_FIELD_DEF,
     POSITIONS_FIELD_DEF,
     PIECESQUARE_FIELD_DEF,
+    CQL_QUERY_FIELD_DEF,
+    CQL_EVALUATE_FIELD_DEF,
+    PGN_ERROR_FIELD_DEF,
 )
 
 _GAMECOUNT_REPORT_INTERVAL = 1000000
@@ -446,7 +449,15 @@ class DeferredUpdateProcess:
             ),
             quit_event=self.quit_event,
             increases=self.increases,
-            ignore=set((IMPORT_FIELD_DEF, PGNFILE_FIELD_DEF)),
+            ignore=set(
+                (
+                    IMPORT_FIELD_DEF,
+                    PGNFILE_FIELD_DEF,
+                    CQL_QUERY_FIELD_DEF,
+                    CQL_EVALUATE_FIELD_DEF,
+                    PGN_ERROR_FIELD_DEF,
+                )
+            ),
         )
 
 

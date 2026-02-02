@@ -17,6 +17,7 @@ from solentware_base import dptdu_database
 
 from ..shared import litedu
 from ..shared import alldu
+from . import reloaddu
 
 
 class DPTDatabaseduError(Exception):
@@ -35,7 +36,7 @@ def database_du(dbpath, *args, **kwargs):
 def database_reload_du(dbpath, *args, **kwargs):
     """Open database, import games, reload indicies, and close database."""
     # sysfolder argument defaults to DPT_SYSDU_FOLDER in dptdu_database.
-    alldu.do_reload_deferred_update(
+    reloaddu.do_reload_deferred_update(
         Database(dbpath, allowcreate=True), *args, **kwargs
     )
 
