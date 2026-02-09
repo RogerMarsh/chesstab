@@ -425,7 +425,11 @@ def _run_statement(
                 )
             recordset.place_record_number(record_map[game_number])
             remove_games.discard(game_number)
-        recordset &= recordset.dbhome.recordlist_ebm(recordset.dbset)
+        recordlist_ebm = recordset.dbhome.recordlist_ebm(recordset.dbset)
+        try:
+            recordset &= recordlist_ebm
+        finally:
+            recordlist_ebm.close()
         game_number_count = recordset.count_records()
         if matches != game_number_count:
             reporter.append_text_only("***********************")
@@ -443,11 +447,15 @@ def _run_statement(
                     )
                 )
             )
-        recordset |= recordset.dbhome.recordlist_key(
+        recordlist_key = recordset.dbhome.recordlist_key(
             recordset.dbset,
             filespec.CQL_QUERY_FIELD_DEF,
             key=recordset.dbhome.encode_record_selector(statement_key),
         )
+        try:
+            recordset |= recordlist_key
+        finally:
+            recordlist_key.close()
         if not forget_old:
             for game_number in remove_games:
                 recordset.remove_record_number(record_map[game_number])

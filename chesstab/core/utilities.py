@@ -41,16 +41,19 @@ def is_game_import_in_progress(database, game):
         return False
     if is_import_with_index_reload_started(database):
         return True
-    return bool(
-        (
-            database.recordlist_record_number(
-                filespec.GAMES_FILE_DEF, key=game.key.recno
-            )
-            & database.recordlist_all(
-                filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
-            )
-        ).count_records()
+    recordlist_record_number = database.recordlist_record_number(
+        filespec.GAMES_FILE_DEF, key=game.key.recno
     )
+    recordlist_all = database.recordlist_all(
+        filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
+    )
+    recordlist_and = recordlist_record_number & recordlist_all
+    try:
+        return bool(recordlist_and.count_records())
+    finally:
+        recordlist_and.close()
+        recordlist_record_number.close()
+        recordlist_all.close()
 
 
 def is_game_import_in_progress_txn(database, game):
@@ -79,11 +82,13 @@ def is_import_in_progress(database):
     """
     if database is None:
         return False
-    return bool(
-        database.recordlist_all(
-            filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
-        ).count_records()
+    recordlist_all = database.recordlist_all(
+        filespec.GAMES_FILE_DEF, filespec.IMPORT_FIELD_DEF
     )
+    try:
+        return bool(recordlist_all.count_records())
+    finally:
+        recordlist_all.close()
 
 
 def is_import_in_progress_txn(database):

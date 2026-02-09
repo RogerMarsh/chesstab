@@ -578,7 +578,11 @@ def _all_records_count(database):
     Function must be called with a transaction 'try ... finally'.
 
     """
-    return database.recordlist_ebm(filespec.GAMES_FILE_DEF).count_records()
+    recordlist_ebm = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
+    try:
+        return recordlist_ebm.count_records()
+    finally:
+        recordlist_ebm.close()
 
 
 def _bookmarked_records_count(grid):
@@ -597,11 +601,15 @@ def _selected_records_count(grid):
 
     """
     database = grid.get_data_source().dbhome
-    return database.recordlist_key_startswith(
+    recordlist_key_startswith = database.recordlist_key_startswith(
         grid.datasource.dbset,
         grid.datasource.dbname,
         keystart=database.encode_record_selector(grid.partial),
-    ).count_records()
+    )
+    try:
+        return recordlist_key_startswith.count_records()
+    finally:
+        recordlist_key_startswith.close()
 
 
 def _export_all_games(database, filename, statusbar, report_text, exporter):
@@ -970,10 +978,13 @@ def _export_selected_games_index_order_result(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        resultset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            resultset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             resultset_count = resultset.count_records()
             if resultset_count > _MEMORY_SORT_LIMIT:
@@ -1006,10 +1017,13 @@ def _export_selected_games_index_order_black(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        blackset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            blackset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             blackset_count = blackset.count_records()
             if blackset_count > _MEMORY_SORT_LIMIT:
@@ -1042,10 +1056,13 @@ def _export_selected_games_index_order_white(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        whiteset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            whiteset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             whiteset_count = whiteset.count_records()
             if whiteset_count > _MEMORY_SORT_LIMIT:
@@ -1078,10 +1095,13 @@ def _export_selected_games_index_order_round(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        roundset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            roundset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             roundset_count = roundset.count_records()
             if roundset_count > _MEMORY_SORT_LIMIT:
@@ -1114,10 +1134,13 @@ def _export_selected_games_index_order_site(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        siteset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            siteset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             siteset_count = siteset.count_records()
             if siteset_count > _MEMORY_SORT_LIMIT:
@@ -1150,10 +1173,13 @@ def _export_selected_games_index_order_event(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        eventset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            eventset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             eventset_count = eventset.count_records()
             if eventset_count > _MEMORY_SORT_LIMIT:
@@ -1186,10 +1212,13 @@ def _export_selected_games_index_order_date(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        dateset = (
-            database.recordlist_key(dbset, valuespec.field, key=selector(key))
-            & selected
+        recordlist_key = recordlist_key(
+            dbset, valuespec.field, key=selector(key)
         )
+        try:
+            dateset = recordlist_key & selected
+        finally:
+            recordlist_key.close()
         try:
             dateset_count = dateset.count_records()
             if dateset_count > _MEMORY_SORT_LIMIT:

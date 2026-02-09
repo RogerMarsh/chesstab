@@ -281,6 +281,7 @@ def du_index_pgn_tags(
                 "No games need indexing by selected PGN tags."
             )
             reporter.append_text_only("")
+        index_games.close()
         cdb.backout()
         return True
     error_games = get_error_games(cdb, pgnpaths)
@@ -298,6 +299,8 @@ def du_index_pgn_tags(
                     "No games need indexing by selected PGN tags."
                 )
                 reporter.append_text_only("")
+            index_games.close()
+            error_games.close()
             cdb.commit()
             return True
         cdb.file_records_under(
@@ -306,6 +309,7 @@ def du_index_pgn_tags(
             index_games,
             cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
         )
+    error_games.close()
     if reporter is not None:
         reporter.append_text("Index PGN Tags started.")
         reporter.append_text(
@@ -324,8 +328,10 @@ def du_index_pgn_tags(
         reporter=reporter,
         quit_event=quit_event,
     ):
+        index_games.close()
         cdb.backout()
         return False
+    index_games.close()
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Finishing PGN tag indexing: please wait.")
@@ -419,6 +425,7 @@ def du_index_positions(
         if reporter is not None:
             reporter.append_text("No games need indexing by positions.")
             reporter.append_text_only("")
+        index_games.close()
         cdb.backout()
         return True
     error_games = get_error_games(cdb, pgnpaths)
@@ -434,6 +441,8 @@ def du_index_positions(
             if reporter is not None:
                 reporter.append_text("No games need indexing by positions.")
                 reporter.append_text_only("")
+            index_games.close()
+            error_games.close()
             cdb.commit()
             return True
         cdb.file_records_under(
@@ -442,6 +451,7 @@ def du_index_positions(
             index_games,
             cdb.encode_record_selector(filespec.POSITIONS_FIELD_DEF),
         )
+    error_games.close()
     if reporter is not None:
         reporter.append_text("Index positions started.")
         reporter.append_text(
@@ -460,8 +470,10 @@ def du_index_positions(
         reporter=reporter,
         quit_event=quit_event,
     ):
+        index_games.close()
         cdb.backout()
         return False
+    index_games.close()
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Finishing position indexing: please wait.")
@@ -555,6 +567,7 @@ def du_index_piece_squares(
         if reporter is not None:
             reporter.append_text("No games need indexing by piece squares.")
             reporter.append_text_only("")
+        index_games.close()
         cdb.backout()
         return True
     error_games = get_error_games(cdb, pgnpaths)
@@ -572,6 +585,8 @@ def du_index_piece_squares(
                     "No games need indexing by piece movement."
                 )
                 reporter.append_text_only("")
+            index_games.close()
+            error_games.close()
             cdb.commit()
             return True
         cdb.file_records_under(
@@ -580,6 +595,7 @@ def du_index_piece_squares(
             index_games,
             cdb.encode_record_selector(filespec.PIECESQUARE_FIELD_DEF),
         )
+    error_games.close()
     if reporter is not None:
         reporter.append_text("Index piece movement started.")
         reporter.append_text(
@@ -598,8 +614,10 @@ def du_index_piece_squares(
         reporter=reporter,
         quit_event=quit_event,
     ):
+        index_games.close()
         cdb.backout()
         return False
+    index_games.close()
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Finishing piece square indexing: please wait.")
@@ -923,6 +941,7 @@ def write_indicies_for_extracted_games(
                 "No games need indexing via merge index games."
             )
             reporter.append_text_only("")
+        index_games.close()
         cdb.backout()
         return None
     error_games = get_error_games(cdb, pgnpaths)
@@ -945,6 +964,8 @@ def write_indicies_for_extracted_games(
                     )
                 )
                 reporter.append_text_only("")
+            index_games.close()
+            error_games.close()
             cdb.commit()
             return None
         cdb.file_records_under(
@@ -953,6 +974,7 @@ def write_indicies_for_extracted_games(
             index_games,
             cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
         )
+    error_games.close()
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Dump indicies for extracted games started.")
@@ -982,6 +1004,7 @@ def write_indicies_for_extracted_games(
                 "Guard file '0' exists in dump directory:"
             )
             reporter.append_text_only(os.path.dirname(guard_file))
+        index_games.close()
         cdb.commit()
         return True
     remove_games_in_sequential_files_from_index_games(
@@ -996,8 +1019,10 @@ def write_indicies_for_extracted_games(
         reporter=reporter,
         quit_event=quit_event,
     ):
+        index_games.close()
         cdb.backout()
         return False
+    index_games.close()
     if reporter is not None:
         # Thought to be necessary with DPT in some circumstances.
         while not reporter.empty():
@@ -1728,11 +1753,15 @@ def get_error_games(database, pgnpaths):
     """Return recordlist of error records for paths in pgnpaths."""
     trimmed = database.recordlist_nil(filespec.GAMES_FILE_DEF)
     for name in pgnpaths:
-        trimmed |= database.recordlist_key(
+        recordlist_key = database.recordlist_key(
             filespec.GAMES_FILE_DEF,
             filespec.PGN_ERROR_FIELD_DEF,
             key=database.encode_record_selector(os.path.basename(name)),
         )
+        try:
+            trimmed |= recordlist_key
+        finally:
+            recordlist_key.close()
     return trimmed
 
 

@@ -85,6 +85,8 @@ class AnalysisIndex:
             self.dbset, ENGINE_FIELD_DEF, engine
         )
         self.set_recordset(engineset & fenset)
+        fenset.close()
+        engineset.close()
 
         self.engine = engine
         self.fen = fen

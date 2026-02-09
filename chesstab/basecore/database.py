@@ -136,9 +136,13 @@ class Database:
             allexcept = self.recordlist_ebm(GAMES_FILE_DEF)
             if allexceptkey is not None:
                 allexcept.remove_record_number(allexceptkey)
-            allexcept |= self.recordlist_all(
+            recordlist_all = self.recordlist_all(
                 GAMES_FILE_DEF, PGN_ERROR_FIELD_DEF
             )
+            try:
+                allexcept |= recordlist_all
+            finally:
+                recordlist_all.close()
             # The records which do not need evaluation.
             self.file_records_under(
                 GAMES_FILE_DEF,
@@ -201,11 +205,15 @@ class Database:
             allexcept = self.recordlist_ebm(CQL_FILE_DEF)
             if allexceptkey is not None:
                 allexcept.remove_record_number(allexceptkey)
-            allexcept |= self.recordlist_key(
+            recordlist_key = self.recordlist_key(
                 CQL_FILE_DEF,
                 QUERY_STATUS_FIELD_DEF,
                 key=self.encode_record_selector(STATUS_VALUE_ERROR),
             )
+            try:
+                allexcept |= recordlist_key
+            finally:
+                recordlist_key.close()
             # The records which do not need evaluation.
             self.file_records_under(
                 CQL_FILE_DEF,
@@ -219,13 +227,15 @@ class Database:
                 pending = self.recordlist_record_number(
                     CQL_FILE_DEF, key=allexceptkey
                 )
-                pending.remove_recordset(
-                    self.recordlist_key(
-                        CQL_FILE_DEF,
-                        QUERY_STATUS_FIELD_DEF,
-                        key=self.encode_record_selector(STATUS_VALUE_ERROR),
-                    )
+                recordlist_key = self.recordlist_key(
+                    CQL_FILE_DEF,
+                    QUERY_STATUS_FIELD_DEF,
+                    key=self.encode_record_selector(STATUS_VALUE_ERROR),
                 )
+                try:
+                    pending.remove_recordset(recordlist_key)
+                finally:
+                    recordlist_key.close()
                 if pending.count_records():
                     self.file_records_under(
                         CQL_FILE_DEF,
@@ -266,12 +276,16 @@ class Database:
                 self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
             # The records which do need evaluation.
+            recordlist_ebm = self.recordlist_ebm(CQL_FILE_DEF)
+            file_records = allrecords ^ recordlist_ebm
             self.file_records_under(
                 CQL_FILE_DEF,
                 QUERY_STATUS_FIELD_DEF,
-                allrecords ^ self.recordlist_ebm(CQL_FILE_DEF),
+                file_records,
                 self.encode_record_selector(STATUS_VALUE_PENDING),
             )
+            file_records.close()
+            recordlist_ebm.close()
             allrecords.close()
             if commit:
                 self.commit()
@@ -423,6 +437,7 @@ class Database:
                     not_pending,
                     self.encode_record_selector(CQL_EVALUATE_FIELD_VALUE),
                 )
+                not_pending.close()
                 self.commit()
             except:  # Backout for any exception, then re-raise.
                 self.backout()
@@ -488,17 +503,23 @@ class Database:
         pending = self.recordlist_ebm(GAMES_FILE_DEF)
 
         # Should not be needed if mark_all_games_not_evaluated() was called.
-        pending.remove_recordset(
-            self.recordlist_all(GAMES_FILE_DEF, PGN_ERROR_FIELD_DEF)
+        recordlist_all = self.recordlist_all(
+            GAMES_FILE_DEF, PGN_ERROR_FIELD_DEF
         )
+        try:
+            pending.remove_recordset(recordlist_all)
+        finally:
+            recordlist_all.close()
 
-        pending.remove_recordset(
-            self.recordlist_key(
-                GAMES_FILE_DEF,
-                CQL_EVALUATE_FIELD_DEF,
-                key=self.encode_record_selector(CQL_EVALUATE_FIELD_VALUE),
-            )
+        recordlist_key = self.recordlist_key(
+            GAMES_FILE_DEF,
+            CQL_EVALUATE_FIELD_DEF,
+            key=self.encode_record_selector(CQL_EVALUATE_FIELD_VALUE),
         )
+        try:
+            pending.remove_recordset(recordlist_key)
+        finally:
+            recordlist_key.close()
         return pending
 
     def any_games_pending_evaluation(self):
@@ -524,21 +545,25 @@ class Database:
 
         # Should not be needed if mark_all_cql_statements_not_evaluated()
         # was called.
-        pending.remove_recordset(
-            self.recordlist_key(
-                CQL_FILE_DEF,
-                QUERY_STATUS_FIELD_DEF,
-                key=self.encode_record_selector(STATUS_VALUE_ERROR),
-            )
+        recordlist_key = self.recordlist_key(
+            CQL_FILE_DEF,
+            QUERY_STATUS_FIELD_DEF,
+            key=self.encode_record_selector(STATUS_VALUE_ERROR),
         )
+        try:
+            pending.remove_recordset(recordlist_key)
+        finally:
+            recordlist_key.close()
 
-        pending.remove_recordset(
-            self.recordlist_key(
-                CQL_FILE_DEF,
-                QUERY_STATUS_FIELD_DEF,
-                key=self.encode_record_selector(STATUS_VALUE_NEWGAMES),
-            )
+        recordlist_key = self.recordlist_key(
+            CQL_FILE_DEF,
+            QUERY_STATUS_FIELD_DEF,
+            key=self.encode_record_selector(STATUS_VALUE_NEWGAMES),
         )
+        try:
+            pending.remove_recordset(recordlist_key)
+        finally:
+            recordlist_key.close()
         return pending
 
     def any_cql_queries_pending_evaluation(self):
@@ -562,17 +587,17 @@ class Database:
         self.start_read_only_transaction()
         try:
             queries = self.recordlist_ebm(CQL_FILE_DEF)
+            recordlist_key = self.recordlist_key(
+                CQL_FILE_DEF,
+                QUERY_STATUS_FIELD_DEF,
+                key=self.encode_record_selector(STATUS_VALUE_ERROR),
+            )
             try:
-                queries.remove_recordset(
-                    self.recordlist_key(
-                        CQL_FILE_DEF,
-                        QUERY_STATUS_FIELD_DEF,
-                        key=self.encode_record_selector(STATUS_VALUE_ERROR),
-                    )
-                )
+                queries.remove_recordset(recordlist_key)
                 return queries.count_records() != 0
             finally:
                 queries.close()
+                recordlist_key.close()
         finally:  # end_read_only_transaction() for any exception too.
             self.end_read_only_transaction()
 
@@ -611,10 +636,14 @@ class Database:
                 QUERY_STATUS_FIELD_DEF,
                 self.encode_record_selector(STATUS_VALUE_NEWGAMES),
             )
-            return (
-                pending_games.count_records() == 0
-                and pending_queries.count_records() == 0
-            )
+            try:
+                return (
+                    pending_games.count_records() == 0
+                    and pending_queries.count_records() == 0
+                )
+            finally:
+                pending_games.close()
+                pending_queries.close()
         finally:  # end_read_only_transaction() for any exception too.
             self.end_read_only_transaction()
 
@@ -641,6 +670,7 @@ class Database:
                     recordset,
                     self.encode_record_selector(key),
                 )
+                recordset.close()
             self.commit()
         except:  # Backout for any exception, then re-raise.
             self.backout()

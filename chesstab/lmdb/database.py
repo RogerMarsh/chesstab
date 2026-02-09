@@ -96,6 +96,7 @@ class Database(database.Database, lmdb_database.Database):
     #                recordset,
     #                self.encode_record_selector(key),
     #            )
+    #            recordset.close()
     #        self.commit()
     #    except:  # Backout for any exception, then re-raise.
     #        self.backout()
@@ -148,6 +149,7 @@ class Database(database.Database, lmdb_database.Database):
                         recordset,
                         self.encode_record_selector(key),
                     )
+                    recordset.close()
                 self.commit()
                 return
             # Database with exactly one key is a special case.
@@ -172,6 +174,7 @@ class Database(database.Database, lmdb_database.Database):
                         recordset,
                         key,  # key is already encoded.
                     )
+                    recordset.close()
             self.commit()
         except:  # Backout for any exception, then re-raise.
             self.backout()
