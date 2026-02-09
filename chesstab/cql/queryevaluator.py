@@ -16,12 +16,14 @@ from ..core import enginecommands
 from ..core import filespec
 
 # Search for items in response from CQL program.
-_version_re = re.compile(rb"CQL version .+ Gady Costeff and Lewis Stiller\n")
+_version_re = re.compile(
+    rb"CQL version .+ Gady Costeff and Lewis Stiller\r?\n"
+)
 _syntax_error_at_char_re = re.compile(
     rb"".join(
         (
             rb"(CQL syntax error:.*{Line\s(\d+),\sColumn\s(\d+)}.*\s",
-            rb'(?:(?:"([^"]*)")?|[^\n]*)>)\n\n$',
+            rb'(?:(?:"([^"]*)")?|[^\n]*)>)\r?\n\r?\n$',
         )
     ),
     flags=re.DOTALL,
