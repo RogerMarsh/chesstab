@@ -476,7 +476,7 @@ class Database:
         literal_eval = ast.literal_eval
         pending_query = self._get_cql_queries_pending_evaluation()
         try:
-            cursor = pending_query.dbhome.database_cursor(
+            cursor = self.database_cursor(
                 CQL_FILE_DEF, QUERY_STATUS_FIELD_DEF, recordset=pending_query
             )
             try:
