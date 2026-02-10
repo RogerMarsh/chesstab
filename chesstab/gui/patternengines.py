@@ -17,6 +17,7 @@ import tkinter.filedialog
 from solentware_bind.gui.bindings import Bindings
 
 from ..core import enginecommands
+from ..core import filespec
 
 EDIT = "edit"
 TITLE = "title"
@@ -50,7 +51,9 @@ class PatternEngines(Bindings):
         super().__init__()
         self._master = master
         self._engine_commands = enginecommands.EngineCommands(
-            master.opendatabase.database_file
+            master.opendatabase.generate_database_file_name(
+                filespec.GAMES_FILE_DEF
+            )
         )
         self.toplevel = tkinter.Toplevel(master=master.root)
         self.bind(self.toplevel, "<Destroy>", self._destroy)

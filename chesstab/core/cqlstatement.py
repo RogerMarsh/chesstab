@@ -82,7 +82,7 @@ class CQLStatement:
     @property
     def pgn_filename(self):
         """Return pgn filename for pattern engine command."""
-        name = os.path.basename(self._opendatabase.database_file)
+        name = os.path.basename(self.database_file)
         return os.path.join(
             self._opendatabase.home_directory,
             ".".join(("-".join((name, name)), "pgn")),
@@ -91,7 +91,7 @@ class CQLStatement:
     @property
     def cql_filename(self):
         """Return CQL query filename for pattern engine command."""
-        name = os.path.basename(self._opendatabase.database_file)
+        name = os.path.basename(self.database_file)
         return os.path.join(
             self._opendatabase.home_directory,
             ".".join(("-".join((name, name)), "cql")),
@@ -152,7 +152,7 @@ class CQLStatement:
     @property
     def database_file(self):
         """Return database file."""
-        return self._opendatabase.database_file
+        return self._opendatabase.generate_database_file_name(self._dbset)
 
     def prepare_cql_statement(self, text):
         """Verify CQL statement but do not evaluate."""

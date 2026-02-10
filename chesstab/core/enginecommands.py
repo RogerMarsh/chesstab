@@ -27,7 +27,7 @@ class EngineCommands:
     def __init__(self, database_file):
         """Create the engine command file accessor."""
         self._home_directory = os.path.dirname(database_file)
-        self._database_file = database_file
+        self._database_file = os.path.splitext(database_file)[0]
 
     @property
     def filename(self):

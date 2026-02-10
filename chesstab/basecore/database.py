@@ -325,19 +325,20 @@ class Database:
             reporter.append_text("Nothing to do.")
             return
         widget.update()
+        database_file = self.generate_database_file_name(GAMES_FILE_DEF)
         pgn_file = "".join(
             (
-                self.database_file,
+                database_file,
                 "-",
-                os.path.basename(self.database_file),
+                os.path.basename(database_file),
                 ".pgn",
             )
         )
         cql_dir = "".join(
             (
-                self.database_file,
+                database_file,
                 "-",
-                os.path.basename(self.database_file),
+                os.path.basename(database_file),
                 "-cql",
             )
         )
