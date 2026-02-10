@@ -390,7 +390,7 @@ class Database:
                     pending.close()
                     break
                 record_map = export_game.export_games_for_cql_scan(
-                    pending, pgn_file, limit=pgn_games_max, commit=False
+                    self, pending, pgn_file, limit=pgn_games_max, commit=False
                 )
                 pending.close()
             finally:  # end_read_only_transaction() for any exception too.
@@ -419,6 +419,7 @@ class Database:
                 statement.prepare_cql_statement(statement_text)
                 widget.update()
                 statement.query_container.evaluator.run_statement(
+                    self,
                     statement,
                     record_map,
                     reporter,

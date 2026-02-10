@@ -528,7 +528,9 @@ def export_all_games_import_format_database_order(
     return True
 
 
-def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
+def export_games_for_cql_scan(
+    database, recordset, filename, limit=100000, commit=True
+):
     """Export up to limit recordset games in recordmap in PGN format.
 
     A PGN import format accepted by CQL program is used.  The game numbers
@@ -537,7 +539,6 @@ def export_games_for_cql_scan(recordset, filename, limit=100000, commit=True):
 
     """
     literal_eval = ast.literal_eval
-    database = recordset.dbhome
     instance = chessrecord.ChessDBrecordGameText()
     record_map = {}
     if commit:

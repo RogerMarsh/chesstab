@@ -266,6 +266,7 @@ class QueryEvaluator:
 
     def run_statement(
         self,
+        database,
         statement,
         record_map,
         reporter,
@@ -277,6 +278,7 @@ class QueryEvaluator:
         self.message = None
         try:
             _run_statement(
+                database,
                 statement,
                 record_map,
                 reporter,
@@ -319,6 +321,7 @@ class QueryEvaluator:
 
 
 def _run_statement(
+    database,
     statement,
     record_map,
     reporter,
@@ -404,7 +407,7 @@ def _run_statement(
         remove_games.update(record_map)
     recordset = statement.recordset
     if commit:
-        recordset.dbhome.start_transaction()
+        database.start_transaction()
     try:
         for game in _game_number_re.finditer(completed.stdout):
             game_number = int(game.group(1))
@@ -427,7 +430,7 @@ def _run_statement(
                 )
             recordset.place_record_number(record_map[game_number])
             remove_games.discard(game_number)
-        recordlist_ebm = recordset.dbhome.recordlist_ebm(recordset.dbset)
+        recordlist_ebm = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
         try:
             recordset &= recordlist_ebm
         finally:
@@ -449,10 +452,10 @@ def _run_statement(
                     )
                 )
             )
-        recordlist_key = recordset.dbhome.recordlist_key(
-            recordset.dbset,
+        recordlist_key = database.recordlist_key(
+            filespec.GAMES_FILE_DEF,
             filespec.CQL_QUERY_FIELD_DEF,
-            key=recordset.dbhome.encode_record_selector(statement_key),
+            key=database.encode_record_selector(statement_key),
         )
         try:
             recordset |= recordlist_key
@@ -461,15 +464,15 @@ def _run_statement(
         if not forget_old:
             for game_number in remove_games:
                 recordset.remove_record_number(record_map[game_number])
-        recordset.dbhome.file_records_under(
-            recordset.dbset,
+        database.file_records_under(
+            filespec.GAMES_FILE_DEF,
             filespec.CQL_QUERY_FIELD_DEF,
             recordset,
-            recordset.dbhome.encode_record_selector(statement_key),
+            database.encode_record_selector(statement_key),
         )
         if commit:
-            recordset.dbhome.commit()
+            database.commit()
     except:  # Backout for any exception, then re-raise.
         if commit:
-            recordset.dbhome.backout()
+            database.backout()
         raise
