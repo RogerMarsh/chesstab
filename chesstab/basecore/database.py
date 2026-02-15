@@ -9,9 +9,6 @@ import shutil
 import ast
 
 from solentware_base.core import wherevalues, segmentsize
-from solentware_base.core.recordsetbasecursor import (
-    RecordSetBaseCursor as _RSBC,
-)
 
 from ..core.filespec import (
     GAMES_FILE_DEF,
@@ -480,24 +477,16 @@ class Database:
         literal_eval = ast.literal_eval
         pending_query = self._get_cql_queries_pending_evaluation()
         try:
-            cursor = self.database_cursor(
-                CQL_FILE_DEF, QUERY_STATUS_FIELD_DEF, recordset=pending_query
-            )
+            cursor = pending_query.create_recordsetbase_cursor()
             try:
-                dpt_cursor = not isinstance(cursor, _RSBC)
-                while True:
-                    query_record = cursor.next()
-                    if query_record is None:
-                        break
-                    if dpt_cursor:
-                        query_record = self.get_primary_record(
-                            CQL_FILE_DEF, query_record[1]
-                        )
+                query_record = cursor.first()
+                while query_record:
                     cql_file = os.path.join(cql_dir, str(query_record[0]))
                     statement.split_statement(literal_eval(query_record[1]))
                     with open(cql_file, "w", encoding="utf-8") as cqlout:
                         cqlout.write(statement.get_name_statement_text())
                     paths.append(cql_file)
+                    query_record = cursor.next()
             finally:
                 cursor.close()
         finally:
