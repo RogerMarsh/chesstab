@@ -303,7 +303,7 @@ class _GameListGridBase(
             "Games (internal format)",
         )
 
-    def export_pgn_import_format(self, event=None):
+    def _export_pgn_import_format(self, event=None):
         """Export selected games in a PGN import format."""
         del event
         self.ui.export_report(

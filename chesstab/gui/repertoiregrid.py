@@ -55,7 +55,7 @@ class RepertoireGrid(GameListGrid):
                     self._export_pgn_no_comments,
                 ),
                 (EventSpec.pgn_export_format, self._export_pgn),
-                (EventSpec.pgn_import_format, self.export_pgn_import_format),
+                (EventSpec.pgn_import_format, self._export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
             ),
         )
@@ -182,7 +182,7 @@ class RepertoireGrid(GameListGrid):
                     self._export_pgn_no_comments,
                 ),
                 (EventSpec.pgn_export_format, self._export_pgn),
-                (EventSpec.pgn_import_format, self.export_pgn_import_format),
+                (EventSpec.pgn_import_format, self._export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
             )
         )
@@ -386,8 +386,8 @@ class RepertoireGrid(GameListGrid):
             "Repertoires (internal format)",
         )
 
-    def export_pgn_import_format(self, event=None):
-        """Export selected games in a PGN import format."""
+    def _export_pgn_import_format(self, event=None):
+        """Export selected repertoires in a PGN import format."""
         self.ui.export_report(
             export_repertoire.export_selected_repertoires_pgn_import_format(
                 self,
@@ -506,7 +506,7 @@ class RepertoirePositionGames(GameListGrid):
                     self._export_pgn_no_comments,
                 ),
                 (EventSpec.pgn_export_format, self._export_pgn),
-                (EventSpec.pgn_import_format, self.export_pgn_import_format),
+                (EventSpec.pgn_import_format, self._export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
             ),
         )
@@ -636,7 +636,7 @@ class RepertoirePositionGames(GameListGrid):
                     self._export_pgn_no_comments,
                 ),
                 (EventSpec.pgn_export_format, self._export_pgn),
-                (EventSpec.pgn_import_format, self.export_pgn_import_format),
+                (EventSpec.pgn_import_format, self._export_pgn_import_format),
                 (EventSpec.text_internal_format, self._export_text),
             )
         )

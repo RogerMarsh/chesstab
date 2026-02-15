@@ -327,7 +327,7 @@ class AnalysisScore(Score):
     def _get_all_export_events(self):
         """Return tuple of keypress events and callbacks for PGN export."""
         return (
-            (EventSpec.pgn_import_format, self.export_pgn_import_format),
+            (EventSpec.pgn_import_format, self._export_pgn_import_format),
             (EventSpec.text_internal_format, self._export_text),
         )
 
