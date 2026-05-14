@@ -18,5 +18,6 @@ too.
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from ..ndbm.database_du import database_du
+    from ..core.filespec import GAMES_FILE_DEF
 
-    DirectoryWidget(database_du, "dbm.ndbm")
+    DirectoryWidget(database_du, "dbm.ndbm", file=GAMES_FILE_DEF)

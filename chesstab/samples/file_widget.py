@@ -16,7 +16,6 @@ import tkinter.messagebox
 import tkinter.filedialog
 
 from ..core.chessrecord import ChessDBrecordGameStore
-from ..core.filespec import GAMES_FILE_DEF
 
 
 def file_du(database, dbpath, pgnpath, **kwargs):

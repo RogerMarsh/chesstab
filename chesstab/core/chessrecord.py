@@ -1113,15 +1113,18 @@ class ChessDBrecordGameTransposition(Record):
                     database.commit()
                     database.deferred_update_housekeeping()
                     database.start_transaction()
-                    reporter.append_text(
-                        "".join(
-                            (
-                                "Games before ",
-                                format(current_segment * db_segment_size, ","),
-                                " indexed by positions.",
+                    if reporter is not None:
+                        reporter.append_text(
+                            "".join(
+                                (
+                                    "Games before ",
+                                    format(
+                                        current_segment * db_segment_size, ","
+                                    ),
+                                    " indexed by positions.",
+                                )
                             )
                         )
-                    )
                 old_segment = current_segment
             value.gamesource = None
             # Earlier import stages verified the syntax of movetext but did
@@ -1267,15 +1270,18 @@ class ChessDBrecordGamePieceLocation(Record):
                     database.commit()
                     database.deferred_update_housekeeping()
                     database.start_transaction()
-                    reporter.append_text(
-                        "".join(
-                            (
-                                "Games before ",
-                                format(current_segment * db_segment_size, ","),
-                                " indexed by piece movement.",
+                    if reporter is not None:
+                        reporter.append_text(
+                            "".join(
+                                (
+                                    "Games before ",
+                                    format(
+                                        current_segment * db_segment_size, ","
+                                    ),
+                                    " indexed by piece movement.",
+                                )
                             )
                         )
-                    )
                 old_segment = current_segment
             value.gamesource = None
             database.index_instance(GAMES_FILE_DEF, self)
@@ -1380,15 +1386,18 @@ class ChessDBrecordGamePGNTags(Record):
                     database.commit()
                     database.deferred_update_housekeeping()
                     database.start_transaction()
-                    reporter.append_text(
-                        "".join(
-                            (
-                                "Games before ",
-                                format(current_segment * db_segment_size, ","),
-                                " indexed by selected PGN tags.",
+                    if reporter is not None:
+                        reporter.append_text(
+                            "".join(
+                                (
+                                    "Games before ",
+                                    format(
+                                        current_segment * db_segment_size, ","
+                                    ),
+                                    " indexed by selected PGN tags.",
+                                )
                             )
                         )
-                    )
                 old_segment = current_segment
             value.gamesource = None
             if not value.collected_game.is_tag_roster_valid():

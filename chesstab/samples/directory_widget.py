@@ -35,7 +35,6 @@ class DirectoryWidget:
                     import_method(
                         dbdir,
                         [os.path.join(folder, p) for p in os.listdir(folder)],
-                        None,
                         **kwargs,
                     )
         root.destroy()

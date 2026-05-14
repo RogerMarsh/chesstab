@@ -8,5 +8,6 @@
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from ..sqlite.database_du import database_du
+    from ..core.filespec import GAMES_FILE_DEF
 
-    DirectoryWidget(database_du, "sqlite3")
+    DirectoryWidget(database_du, "sqlite3", file=GAMES_FILE_DEF)
