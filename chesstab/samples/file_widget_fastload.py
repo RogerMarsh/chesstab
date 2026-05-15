@@ -83,6 +83,35 @@ def file_du(database, dbpath, pgnpath, **kwargs):
     print(time.ctime(), "end")
 
 
+def directory_du(database, dbpath, pgnpath, **kwargs):
+    """Open database, import games and close database."""
+    pathlist = [os.path.join(pgnpath, p) for p in os.listdir(pgnpath)]
+    print(time.ctime(), "start")
+    cdb = database(dbpath, allowcreate=True, **kwargs)
+    print(
+        time.ctime(),
+        "create games database in",
+        dbpath,
+        "if it does not exist",
+    )
+    cdb.open_database()
+    cdb.close_database()
+    table = cdb.table
+    importer = ChessDBrecordGameDUSingleStep()
+    fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
+    fldb.set_defer_update()
+    print(
+        time.ctime(),
+        "get games from PGN file and write TAPED file for first segment",
+    )
+    for filepath in pathlist:
+        with open(filepath, "r", encoding="iso-8859-1") as pgn_file:
+            importer.import_pgn(fldb, pgn_file, os.path.basename(filepath))
+    fldb.do_final_segment_deferred_updates()
+    fldb.unset_defer_update()
+    print(time.ctime(), "end")
+
+
 class FileWidget:
     """Provide select PGN game file dialogue and import from selected file."""
 

@@ -50,35 +50,6 @@ class ChessdptfastloadError(Exception):
     """Exception class for chessdptfastload module."""
 
 
-def chess_dptfastload(
-    dbpath, pgnpaths, file_records=None, reporter=None, quit_event=None
-):
-    """Open database, import games and close database."""
-    cdb = Database(dbpath, allowcreate=True)
-    cdb.open_database(files=file_records)
-
-    # Intend to start a process, via multiprocessing, to do the database
-    # update.  That process will do the reporting, not the one running
-    # this method.
-    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
-
-    dbe = {}
-    for tbl in cdb.table:
-        dbe[tbl] = cdb.table[tbl]._dbe
-    cdb.close_database_contexts(files=file_records)
-    for tbl in dbe:
-        cdb.table[tbl]._dbe = dbe[tbl]
-    cdb.open_database_contexts(files=file_records)
-    status = True
-    for file in (
-        cdb.specification.keys() if file_records is None else file_records
-    ):
-        if cdb.table[file].get_file_parameters(cdb.dbenv)["FISTAT"][0]:
-            status = False
-    cdb.close_database_contexts()
-    return status
-
-
 class Database(dptfastload_database.Database):
     """Provide fast load deferred methods for a database of games of chess.
 
