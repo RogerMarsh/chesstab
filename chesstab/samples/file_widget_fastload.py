@@ -190,6 +190,18 @@ class FastloadDatabase:
             if name != table.dpt_field_names[table.primary]
         }
 
+    def start_transaction(self):
+        """Start transaction on target database."""
+        self.target_database.start_transaction()
+
+    def commit(self):
+        """Commit transaction on target database."""
+        self.target_database.commit()
+
+    def backout(self):
+        """Backout transaction on target database."""
+        self.target_database.backout()
+
     def set_defer_update(self):
         """Create first segment TAPE files and TAPEF field definitions."""
         print(
