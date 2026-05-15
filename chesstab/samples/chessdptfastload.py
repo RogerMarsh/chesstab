@@ -36,7 +36,7 @@ from ..core.filespec import (
     PIECES_PER_POSITION,
     POSITIONS_PER_GAME,
 )
-from ..shared.alldu import du_import
+from ..dpt.database_one_step_du import chess_du_import
 
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
 # the 8192 byte page are used for the bitmap.
@@ -60,9 +60,14 @@ def chess_dptfastload(
     # Intend to start a process, via multiprocessing, to do the database
     # update.  That process will do the reporting, not the one running
     # this method.
-    du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
+    chess_du_import(cdb, pgnpaths, reporter=reporter, quit_event=quit_event)
 
+    dbe = {}
+    for tbl in cdb.table:
+        dbe[tbl] = cdb.table[tbl]._dbe
     cdb.close_database_contexts(files=file_records)
+    for tbl in dbe:
+        cdb.table[tbl]._dbe = dbe[tbl]
     cdb.open_database_contexts(files=file_records)
     status = True
     for file in (
@@ -108,9 +113,9 @@ class Database(dptfastload_database.Database):
             dpt_records=dpt_records,
         )
         # Deferred update for games file only
-        for ddname in list(ddnames.keys()):
-            if ddname != GAMES_FILE_DEF:
-                del ddnames[ddname]
+        #for ddname in list(ddnames.keys()):
+        #    if ddname != GAMES_FILE_DEF:
+        #        del ddnames[ddname]
 
         if not kargs.get("allowcreate", False):
             try:

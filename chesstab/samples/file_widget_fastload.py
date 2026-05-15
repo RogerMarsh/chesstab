@@ -44,7 +44,7 @@ from dptdb.dptapi import FLOAD_DEFAULT
 
 from solentware_base.core.segmentsize import SegmentSize
 
-from ..core.chessrecord import ChessDBrecordGameStore
+from ..dpt.database_one_step_du import ChessDBrecordGameDUSingleStep
 
 _RECORD_SEPARATOR = b"\xff\xff"
 _SEGMENT_COUNT_UNKNOWN = b"\xff\xff"
@@ -69,7 +69,7 @@ def file_du(database, dbpath, pgnpath, **kwargs):
     cdb.open_database()
     cdb.close_database()
     table = cdb.table
-    importer = ChessDBrecordGameStore()
+    importer = ChessDBrecordGameDUSingleStep()
     fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
     fldb.set_defer_update()
     with open(pgnpath, "r", encoding="iso-8859-1") as pgn_file:
@@ -302,40 +302,40 @@ class FastloadDatabase:
                     ("File ", ", field definitions")
                 ),
             )
-            for name, file in self.target_database.table.items():
-                for field, code in file._field_codes.items():
-                    properties = []
-                    attribute = file._field_attributes[field]
+            file = self.target_database.table[self.target_database_file]
+            for field, code in file._field_codes.items():
+                properties = []
+                attribute = file._field_attributes[field]
 
-                    # Calculate each line as str then encode to write.
-                    if attribute.IsVisible():
-                        properties.append("VISIBLE")
-                    if attribute.IsInvisible():
-                        properties.append("INVISIBLE")
-                    if attribute.IsString():
-                        properties.append("STRING")
-                    if attribute.IsUpdateAtEnd():
-                        properties.append("UPDATE AT END")
-                    if attribute.IsUpdateInPlace():
-                        properties.append("UPDATE IN PLACE")
-                    if not attribute.IsOrdered():
-                        properties.append("NON-ORDERED")
-                    if attribute.IsOrdNum():
-                        properties.append("ORDERED NUMERIC")
-                    if attribute.IsOrdChar():
-                        properties.append("ORDERED CHARACTER")
-                    splitpct = attribute.Splitpct()
-                    if splitpct and attribute.IsOrdered():
-                        properties.append(
-                            " ".join(("SPLITPCT", str(splitpct)))
-                        )
-                    define = (
-                        "DEFINE FIELD",
-                        str(int.from_bytes(code, byteorder="little")),
-                        self.target_dpt_field_names[field].join(("'", "'")),
-                        ", ".join(properties).join(("(", ")\n")),
+                # Calculate each line as str then encode to write.
+                if attribute.IsVisible():
+                    properties.append("VISIBLE")
+                if attribute.IsInvisible():
+                    properties.append("INVISIBLE")
+                if attribute.IsString():
+                    properties.append("STRING")
+                if attribute.IsUpdateAtEnd():
+                    properties.append("UPDATE AT END")
+                if attribute.IsUpdateInPlace():
+                    properties.append("UPDATE IN PLACE")
+                if not attribute.IsOrdered():
+                    properties.append("NON-ORDERED")
+                if attribute.IsOrdNum():
+                    properties.append("ORDERED NUMERIC")
+                if attribute.IsOrdChar():
+                    properties.append("ORDERED CHARACTER")
+                splitpct = attribute.Splitpct()
+                if splitpct and attribute.IsOrdered():
+                    properties.append(
+                        " ".join(("SPLITPCT", str(splitpct)))
                     )
-                    tapef.write(" ".join(define).encode())
+                define = (
+                    "DEFINE FIELD",
+                    str(int.from_bytes(code, byteorder="little")),
+                    self.target_dpt_field_names[field].join(("'", "'")),
+                    ", ".join(properties).join(("(", ")\n")),
+                )
+                tapef.write(" ".join(define).encode())
 
     def _write_header(self, tape, description=None):
         """Write header comments to TAPE file including DPT format options.

@@ -8,6 +8,5 @@
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from .chessdptfastload import chess_dptfastload
-    from ..core.filespec import GAMES_FILE_DEF
 
-    DirectoryWidget(chess_dptfastload, "dpt fastload", file=GAMES_FILE_DEF)
+    DirectoryWidget(chess_dptfastload, "dpt fastload")
