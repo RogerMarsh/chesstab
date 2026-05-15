@@ -527,9 +527,9 @@ class ChessDatabase(dptdu_database.Database, ArchiveduDPT):
         """
         ddnames = get_filespec(**kargs)
         # Deferred update for games file only
-        for ddname in list(ddnames.keys()):
-            if ddname != GAMES_FILE_DEF:
-                del ddnames[ddname]
+        #for ddname in list(ddnames.keys()):
+        #    if ddname != GAMES_FILE_DEF:
+        #        del ddnames[ddname]
 
         if not kargs.get("allowcreate", False):
             try:
