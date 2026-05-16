@@ -55,34 +55,6 @@ class Litedu:
                 "unable to initialize database object"
             ) from error
 
-    @staticmethod
-    def get_file_sizes():
-        """Return an empty dictionary.
-
-        No sizes needed.  Method exists for DPT compatibility.
-
-        """
-        return {}
-
-    def report_plans_for_estimate(self, estimates, reporter, increases):
-        """Remind user to check estimated time to do import.
-
-        No planning needed.  Method exists for DPT compatibility.
-
-        """
-        del estimates, increases
-        reporter.append_text_only("")
-        reporter.append_text("Ready to start import.")
-
-    @staticmethod
-    def open_context_prepare_import():
-        """Return True.
-
-        No preparation actions that need database open for non-DPT databases.
-
-        """
-        return True
-
     def get_pgn_filenames_of_import_in_progress(self):
         """Return names of PGN files in an import in progress."""
         self.open_database()

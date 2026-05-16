@@ -15,7 +15,6 @@ See www.dptoolkit.com for details of DPT
 """
 import os
 import multiprocessing
-import sys
 import traceback
 import datetime
 
@@ -29,17 +28,13 @@ from dptdb.dptapi import (
     FISTAT_PHYS_BROKEN,
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
-    FLOAD_DEFAULT,
-    FUNLOAD_DEFAULT,
 )
 
-from solentware_base import dpt_database
 from solentware_base import dptdu_database
 from solentware_base.core.constants import (
     FILEDESC,
     BRECPPG,
     TABLE_B_SIZE,
-    DPT_SYSFL_FOLDER,
     BTOD_FACTOR,
     PRIMARY,
     SECONDARY,
@@ -49,14 +44,7 @@ from solentware_base.core.segmentsize import SegmentSize
 
 from .. import ERROR_LOG, APPLICATION_NAME
 from ..core import filespec
-from ..core.filespec import (
-    GAMES_FILE_DEF,
-    PIECES_PER_POSITION,
-    POSITIONS_PER_GAME,
-    PIECES_TYPES_PER_POSITION,
-    BYTES_PER_GAME,
-)
-from ..basecore import database as basecore_database
+from ..core.filespec import GAMES_FILE_DEF
 from ..core import chessrecord
 from ..shared.alldu import get_filespec
 from ..core.constants import FILE, GAME
@@ -160,52 +148,6 @@ def _report_exception(cdb, reporter, exception):
 
 
 # Restored from ChessTab-7.1.3 shared.alldu module and modified to fit.
-# This function is not absorbed in chess_du_import because the database
-# has to be open for DPT backup, but not in the mode used to do an
-# import.
-def chess_du_backup_before_import(
-    cdb,
-    file=None,
-    reporter=None,
-    **kwargs,
-):
-    """Backup database cdb before import."""
-    del kwargs
-    if reporter is not None:
-        reporter.append_text_only("")
-        reporter.append_text("Make backup before import.")
-    try:
-        cdb.archive(name=file)
-    except Exception as exc:
-        _report_exception(cdb, reporter, exc)
-        raise
-    if reporter is not None:
-        reporter.append_text("Backup completed.")
-
-
-# Restored from ChessTab-7.1.3 shared.alldu module and modified to fit.
-# This function is not absorbed in chess_du_import because in DPT the
-# absence of 'file full' conditions has to be confirmed before deleting
-# the backups.
-def chess_du_delete_backup_after_import(
-    cdb,
-    file=None,
-    reporter=None,
-    **kwargs,
-):
-    """Delete backup of database cdb after import."""
-    del kwargs
-    if reporter is not None:
-        reporter.append_text("Delete backup for import.")
-    cdb.delete_archive(name=file)
-    if reporter is not None:
-        reporter.append_text("Backup deleted.")
-        reporter.append_text_only("")
-        reporter.append_text("Import finished.")
-        reporter.append_text_only("")
-
-
-# Restored from ChessTab-7.1.3 shared.alldu module and modified to fit.
 def chess_du_import(
     cdb,
     pgnpaths,
@@ -274,100 +216,6 @@ class FileSpec(filespec.FileSpec):
             file[FIELDS] = {
                 key.upper(): value for key, value in file[FIELDS].items()
             }
-
-
-# Restored from SolentwareBase-5.1 core.archivedudpt module and modified
-# to fit.
-class ArchiveduDPTError(Exception):
-    """Raise for calls to _archive_zip or _delete_archive_zip."""
-
-
-# Restored from SolentwareBase-5.1 core.archivedudpt module and modified
-# to fit.
-class ArchiveduDPT:
-    """Provide deferred update archive methods for DPT interfaces.
-
-    The *_zip() methods are customised to handle the files used to
-    support DPT fastunload and fastload.
-
-    The *_bz2() methods raise an exception if called.
-    """
-
-    # Restored from SolentwareBase-5.1 core._dpt.Database class.
-    import_backup_directory = "__import_backup"
-
-    def archive(self, name=None):
-        """Write a backup of database file called name."""
-        if name not in self.table:
-            raise ArchiveduDPTError(
-                str(name).join(
-                    ("Import backups for file '", "' cannot be taken")
-                )
-            )
-        for file, table in self.table.items():
-            if name != file:
-                continue
-            # Unload accepts positional arguments only.
-            # Want 'dir' argument as '__import_backup' in self.home_directory,
-            # not the default '#FASTIO' via definition of FUNLOAD_DIR.
-            # So have to specify options where FUNLOAD_DEFAULT, itself defined
-            # via FUNLOAD_ALLINFO (at time of writing) which is required
-            # option, is the default option.
-            outputdir = os.path.join(
-                self.home_directory, self.import_backup_directory
-            )
-            table.opencontext.Unload(FUNLOAD_DEFAULT, None, None, outputdir)
-            with open(".".join((outputdir, "grd")), "wb"):
-                pass
-            break
-
-    def delete_archive(self, name=None):
-        """Delete a backup of database file called name."""
-        if name not in self.table:
-            raise ArchiveduDPTError(
-                str(name).join(
-                    ("Import backups for file '", "' cannot be deleted")
-                )
-            )
-        outputdir = os.path.join(
-            self.home_directory, self.import_backup_directory
-        )
-        expected_files = set(self._get_zip_archive_names_for_name(name))
-        if set(os.listdir(outputdir)) != expected_files:
-            raise ArchiveduDPTError(
-                str(name).join(
-                    ("Import backups for file '", "' are not those expected")
-                )
-            )
-        try:
-            os.remove(".".join((outputdir, "grd")))
-        except FileNotFoundError:
-            pass
-        for file in expected_files:
-            os.remove(os.path.join(outputdir, file))
-        os.rmdir(outputdir)
-
-    # Inverted lists and index trees are all in one file for DPT.
-    # Thus a bz2 backup would be expected but attempts to read the file via
-    # the open(...) built-in fail with a PermissionError.
-    # Try doing DPT fast dump to create the backup: a zip file is needed for
-    # the multiple files created, or perhaps a directory is best.  Confirm
-    # the technique will work first.
-    def _get_zip_archive_names_for_name(self, name):
-        """Return specified files and existing operating system files."""
-        name_list = []
-        for file, table in self.table.items():
-            if name != file:
-                continue
-            filename = table.ddname
-            name_list.append("".join((filename, "_TAPED", ".DAT")))
-            name_list.append("".join((filename, "_TAPEF", ".DAT")))
-            for field in table.fields:
-                if field == table.primary:
-                    continue
-                name_list.append("".join((filename, "_TAPEI_", field, ".DAT")))
-            break
-        return name_list
 
 
 class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
@@ -452,10 +300,6 @@ class DPTFistatError(Exception):
     """Attempt to open a file when not in deferred update mode."""
 
 
-class DPTSizingError(Exception):
-    """Unable to plan file size increases from PGN import estimates."""
-
-
 # Renamed from chess_database_du at ChessTab-7.1.3.
 def database_du(
     dbpath, *args, file=None, reporter=None, increases=None, **kwargs
@@ -481,19 +325,7 @@ def database_du(
     del import_process
 
 
-def _games_file_is_broken(dbpath, files, file=None):
-    """Return True if games file is broken, False otherwise."""
-    fistat_process = multiprocessing.Process(
-        target=chess_database_current_status,
-        args=(dbpath, files),
-        kwargs={"file": file},
-    )
-    fistat_process.start()
-    fistat_process.join()
-    return fistat_process.exitcode != 0
-
-
-class ChessDatabase(dptdu_database.Database, ArchiveduDPT):
+class ChessDatabase(dptdu_database.Database):
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
@@ -548,9 +380,6 @@ class ChessDatabase(dptdu_database.Database, ArchiveduDPT):
                 raise
             raise DPTFileSpecError("DPT description invalid") from error
 
-        # Retain import estimates for increase size by button actions
-        self._import_estimates = None
-        self._notional_record_counts = None
         # Methods passed by UI to populate report widgets
         self._reporter = None
 
@@ -579,225 +408,12 @@ class ChessDatabase(dptdu_database.Database, ArchiveduDPT):
         self.close_database()
         raise DPTFistatError("A file is not in deferred update mode")
 
-    def open_context_prepare_import(self, files=None):
-        """Open all files normally."""
-        super().open_database(files=files)
-
     def get_pages_for_record_counts(self, counts=(0, 0)):
         """Return Table B and Table D pages needed for record counts."""
         brecppg = self.table[GAMES_FILE_DEF].filedesc[BRECPPG]
         return (
             counts[0] // brecppg,
             (counts[1] * self.table[GAMES_FILE_DEF].btod_factor) // brecppg,
-        )
-
-    def _get_database_table_sizes(self, files=None):
-        """Return Table B and D size and usage in pages for files."""
-        if files is None:
-            files = {}
-        filesize = {}
-        for key, value in self.get_database_parameters(
-            files=list(files.keys())
-        ).items():
-            filesize[key] = (
-                value["BSIZE"],
-                value["BHIGHPG"],
-                value["DSIZE"],
-                value["DPGSUSED"],
-            )
-        increase = self.get_database_increase(files=files)
-        self.close_database_contexts()
-        return filesize, increase
-
-    def get_file_sizes(self):
-        """Return dictionary of notional record counts for data and index."""
-        return self._notional_record_counts
-
-    def report_plans_for_estimate(self, estimates, reporter, increases):
-        """Calculate and report file size adjustments to do import.
-
-        Note the reporter and headline methods for initial report and possible
-        later recalculations.
-
-        Pass estimates through to self._report_plans_for_estimate
-
-        """
-        # See comment near end of class definition Chess in relative module
-        # ..gui.chess for explanation of this change.
-        self._reporter = reporter
-        try:
-            self._report_plans_for_estimate(
-                estimates=estimates,
-                increases=increases,
-            )
-        except DPTSizingError:
-            if reporter:
-                reporter.append_text_only("")
-                reporter.append_text(
-                    "No estimates available to calculate file size increase."
-                )
-        reporter.append_text_only("")
-        reporter.append_text("Ready to start import.")
-
-    def _report_plans_for_estimate(self, estimates=None, increases=None):
-        """Recalculate and report file size adjustments to do import.
-
-        Create dictionary of effective game counts for sizing Games file.
-        This will be passed to the import job which will increase Table B and
-        Table D according to file specification.
-
-        The counts for Table B and Table D can be different.  If the average
-        data bytes per game is greater than Page size / Records per page the
-        count must be increased to allow for the unused record numbers.  If
-        the average positions per game or pieces per position are not the
-        values used to calculate the steady-state ratio of Table B to Table D
-        the count must be adjusted to compensate.
-
-        """
-        append_text = self._reporter.append_text
-        append_text_only = self._reporter.append_text_only
-        if estimates is not None:
-            self._import_estimates = estimates
-        try:
-            (
-                gamecount,
-                bytes_per_game,
-                positions_per_game,
-                pieces_per_game,
-                piecetypes_per_game,
-            ) = self._import_estimates[:5]
-        except TypeError as exc:
-            raise DPTSizingError("No estimates available for sizing") from exc
-        for item in self._import_estimates[:5]:
-            if not isinstance(item, int):
-                raise DPTSizingError("Value must be an 'int' instance")
-
-        # Calculate number of standard profile games needed to generate
-        # the number of index entries implied by the estimated profile
-        # and number of games.
-        d_count = (
-            gamecount
-            * (positions_per_game + pieces_per_game + piecetypes_per_game)
-        ) // (
-            POSITIONS_PER_GAME
-            * (1 + PIECES_PER_POSITION + PIECES_TYPES_PER_POSITION)
-        )
-
-        # Calculate number of standard profile games needed to generate
-        # the number of bytes implied by the estimated profile and number
-        # of games.
-        if bytes_per_game > BYTES_PER_GAME:
-            b_count = int((gamecount * bytes_per_game) / BYTES_PER_GAME)
-        else:
-            b_count = gamecount
-
-        # Use 'dict's because self._get_database_table_sizes() method
-        # needs them internally, even though this case uses one file only.
-        self._notional_record_counts = {
-            GAMES_FILE_DEF: (b_count, d_count),
-        }
-        free = {}
-        sizes, increments = self._get_database_table_sizes(
-            files=self._notional_record_counts
-        )
-
-        append_text_only("")
-        append_text("Standard profile game counts used in calculations.")
-        append_text_only(
-            " ".join(
-                (
-                    "Standard profile game count for data sizing:",
-                    str(b_count),
-                )
-            )
-        )
-        append_text_only(
-            " ".join(
-                (
-                    "Standard profile game count for index sizing:",
-                    str(d_count),
-                )
-            )
-        )
-        append_text_only("")
-        append_text_only(
-            "".join(
-                (
-                    "A standard profile game is defined to have ",
-                    str(POSITIONS_PER_GAME),
-                    " positions, ",
-                    str(PIECES_PER_POSITION),
-                    " pieces per position, ",
-                    str(PIECES_TYPES_PER_POSITION),
-                    " piece types per position, and occupy ",
-                    str(BYTES_PER_GAME),
-                    " bytes.",
-                )
-            )
-        )
-
-        # Loops on sizes, increases, and free, dict objects removed because
-        # this case does one file only.
-        append_text_only("")
-        append_text("Current file size and free space as pages.")
-        bdsize = sizes[GAMES_FILE_DEF]
-        bsize, bused, dsize, dused = bdsize
-        bused = max(0, bused)
-        free[GAMES_FILE_DEF] = (bsize - bused, dsize - dused)
-        append_text_only(" ".join(("Current data area size:", str(bsize))))
-        append_text_only(" ".join(("Current index area size:", str(dsize))))
-        append_text_only(
-            " ".join(("Current data area free:", str(bsize - bused)))
-        )
-        append_text_only(
-            " ".join(("Current index area free:", str(dsize - dused)))
-        )
-        nr_count = self._notional_record_counts[GAMES_FILE_DEF]
-        b_pages, d_pages = self.get_pages_for_record_counts(nr_count)
-        append_text_only("")
-        append_text("File space needed for import.")
-        append_text_only(
-            " ".join(("Estimated pages needed for data:", str(b_pages)))
-        )
-        append_text_only(
-            " ".join(("Estimated pages needed for indexing:", str(d_pages)))
-        )
-        b_incr, d_incr = increments[GAMES_FILE_DEF]
-        b_free, d_free = free[GAMES_FILE_DEF]
-
-        # Save table B and D increases for import process to do later.
-        # Save table B and D free for import process in case increase is not
-        # enough and an adjustment has to be estimated if increase is 0.
-        if increases is not None:
-            increases[0] = b_incr
-            increases[1] = d_incr
-            increases[2] = b_free
-            increases[3] = d_free
-
-        append_text_only("")
-        append_text("Planned file size increase and free space before import.")
-        append_text_only(
-            " ".join(("Planned increase in data pages:", str(b_incr)))
-        )
-        append_text_only(
-            " ".join(("Planned increase in index pages:", str(d_incr)))
-        )
-        append_text_only(
-            " ".join(("Free data pages before import:", str(b_incr + b_free)))
-        )
-        append_text_only(
-            " ".join(("Free index pages before import:", str(d_incr + d_free)))
-        )
-        append_text_only("")
-        append_text_only(
-            "".join(
-                (
-                    "Comparison of the required and free data or index ",
-                    "space may justify using the Increase Data and, or, ",
-                    "Increase Index actions to get more space immediately ",
-                    "given your knowledge of the PGN file being imported.",
-                )
-            )
         )
 
     # The attempt to generate a bz2 archive of the games database with
@@ -812,99 +428,6 @@ class ChessDatabase(dptdu_database.Database, ArchiveduDPT):
     # produce a reliable crafted 'fast load' implementation to do the
     # import.  Till then the algorithm derived from 'text export' will
     # have to do.
-
-
-# Restored from ChessTab-7.1.3 dpt.chessdptnofistat module and modified
-# to fit.
-class ChessdptError(Exception):
-    """Exception class for chessdptnofistat module."""
-
-
-# Restored from ChessTab-7.1.3 dpt.chessdptnofistat module and modified
-# to fit.
-class ChessDatabaseNoFistat(basecore_database.Database, dpt_database.Database):
-    """Provide access to a database of games of chess."""
-
-    _deferred_update_process = "chesstab.dpt.chessdptdu"
-
-    def __init__(
-        self,
-        databasefolder,
-        use_specification_items=None,
-        dpt_records=None,
-        **kargs,
-    ):
-        """Define chess database.
-
-        **kargs
-        allowcreate == False - remove file descriptions from FileSpec so
-        that superclass cannot create them.
-        Other arguments are passed through to superclass __init__.
-
-        """
-        try:
-            sysprint = kargs.pop("sysprint")
-        except KeyError:
-            sysprint = "CONSOLE"
-        ddnames = FileSpec(
-            use_specification_items=use_specification_items,
-            dpt_records=dpt_records,
-        )
-
-        if not kargs.get("allowcreate", False):
-            try:
-                for dd_name in ddnames:
-                    if FILEDESC in ddnames[dd_name]:
-                        del ddnames[dd_name][FILEDESC]
-            except Exception as error:
-                if __name__ == "__main__":
-                    raise
-                raise ChessdptError("DPT description invalid") from error
-
-        try:
-            super().__init__(
-                ddnames, databasefolder, sysprint=sysprint, **kargs
-            )
-        except ChessdptError as error:
-            if __name__ == "__main__":
-                raise
-            raise ChessdptError("DPT description invalid") from error
-
-        self._broken_sizes = {}
-
-
-class ChessDatabaseImportBackup(ChessDatabaseNoFistat, ArchiveduDPT):
-    """Access chess database to take backup before import."""
-
-    # Set default parameters for fastload and fastunload use.
-    def create_default_parms(self):
-        """Create default parms.ini file for fast load/unload normal mode.
-
-        This means transactions are disabled and a small number of buffers.
-
-        """
-        if not os.path.exists(self.parms):
-            with open(self.parms, "w", encoding="iso-8859-1") as parms:
-                parms.write("RCVOPT=X'00' " + os.linesep)
-                parms.write("MAXBUF=100 " + os.linesep)
-
-
-def chess_database_import_backup(
-    dbpath, files, file=None, reporter=None, increases=None
-):
-    """Backup file before import to file."""
-    budb = ChessDatabaseImportBackup(
-        dbpath,
-        allowcreate=True,
-        sysfolder=os.path.join(dbpath, DPT_SYSFL_FOLDER),
-    )
-    budb.open_database(files=files)
-    try:
-        chess_du_backup_before_import(
-            budb, file=file, reporter=reporter, increases=increases
-        )
-    finally:
-        budb.close_database()
 
 
 def chess_database_import(
@@ -1084,101 +607,3 @@ def chess_database_import(
                 reporter.append_text_only("")
     finally:
         cdb.close_database_contexts(files=files)
-
-
-def chess_database_status_after_import(
-    dbpath, files, file=None, reporter=None, increases=None, **kwargs
-):
-    """Recover games file from backup if file is broken."""
-    budb = ChessDatabaseImportBackup(
-        dbpath,
-        allowcreate=True,
-        sysfolder=os.path.join(dbpath, DPT_SYSFL_FOLDER),
-    )
-    if not os.path.exists(
-        ".".join((os.path.join(dbpath, budb.import_backup_directory), "grd"))
-    ):
-        if reporter is not None:
-            reporter.append_text("Backup '.grd' file does not exist.")
-            reporter.append_text_only("Is backup, if it exists, trusted?")
-            reporter.append_text_only("Backup, if it exists, is not deleted.")
-            reporter.append_text_only("Database not recovered from backup.")
-            reporter.append_text_only("")
-        sys.exit(2)
-    budb.open_database(files=files)
-    try:
-        games = budb.table[file]
-        opencontext = games.opencontext
-        viewer_resetter = budb.dbenv.Core().GetViewerResetter()
-        if viewer_resetter.ViewAsInt("FISTAT", opencontext) == 0:  # Normal
-            chess_du_delete_backup_after_import(
-                budb,
-                file=file,
-                reporter=reporter,
-                increases=increases,
-                **kwargs,
-            )
-            return
-        if reporter is not None:
-            reporter.append_text("Initialize broken file.")
-            reporter.append_text_only("")
-        opencontext.Initialize()
-        if reporter is not None:
-            reporter.append_text("Recovering file from backup.")
-            reporter.append_text_only("")
-
-        # Does this step, working or not, belong in archivedudpt module?
-        try:
-            games.opencontext.Load(
-                FLOAD_DEFAULT,
-                0,
-                None,
-                os.path.join(
-                    budb.home_directory, budb.import_backup_directory
-                ),
-            )
-        except RuntimeError:
-            fistat = viewer_resetter.ViewAsInt("FISTAT", games.opencontext)
-            if (fistat & FIFLAGS_FULL_TABLEB) or (
-                fistat & FIFLAGS_FULL_TABLED
-            ):
-                if reporter is not None:
-                    reporter.append_text(
-                        "File broken during recovery (status not '0x00')."
-                    )
-                    reporter.append_text_only("File status is now:")
-                    reporter.append_text_only(
-                        viewer_resetter.View(
-                            "FISTAT", budb.table[file].opencontext
-                        ),
-                    )
-                    reporter.append_text_only("")
-                return
-            raise
-
-        if reporter is not None:
-            reporter.append_text("File recovered.")
-    finally:
-        budb.close_database()
-
-
-def chess_database_current_status(dbpath, files, file=None):
-    """Exit process with non-zero code if games file is broken."""
-    exit_code = 2
-    budb = ChessDatabaseImportBackup(
-        dbpath,
-        allowcreate=True,
-        sysfolder=os.path.join(dbpath, DPT_SYSFL_FOLDER),
-    )
-    budb.open_database(files=files)
-    try:
-        games = budb.table[file]
-        opencontext = games.opencontext
-        viewer_resetter = budb.dbenv.Core().GetViewerResetter()
-        if viewer_resetter.ViewAsInt("FISTAT", opencontext) == 0:  # Normal
-            exit_code = 0
-        del opencontext
-        budb.close_database_contexts(files=files)
-    finally:
-        budb.close_database()
-    sys.exit(exit_code)
