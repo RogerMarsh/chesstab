@@ -367,9 +367,7 @@ class FastloadDatabase:
                     properties.append("ORDERED CHARACTER")
                 splitpct = attribute.Splitpct()
                 if splitpct and attribute.IsOrdered():
-                    properties.append(
-                        " ".join(("SPLITPCT", str(splitpct)))
-                    )
+                    properties.append(" ".join(("SPLITPCT", str(splitpct))))
                 define = (
                     "DEFINE FIELD",
                     str(int.from_bytes(code, byteorder="little")),
