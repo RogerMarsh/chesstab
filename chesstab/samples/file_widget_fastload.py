@@ -44,7 +44,11 @@ from dptdb.dptapi import FLOAD_DEFAULT
 
 from solentware_base.core.segmentsize import SegmentSize
 
+from pgn_read.core.tagpair_parser import PGNTagPair, GameCount
+
 from ..dpt.database_one_step_du import ChessDBrecordGameDUSingleStep
+from ..core import constants
+from ..core import filespec
 
 _RECORD_SEPARATOR = b"\xff\xff"
 _SEGMENT_COUNT_UNKNOWN = b"\xff\xff"
@@ -56,9 +60,46 @@ _STARS = b"*" * 70  # 70 because DPT's Unload method outputs 70 '*'s.
 _CRLF = b"\r\n"  # DPT newline sequence.
 
 
+def _count_games_in_import(file_list):
+    """Return count of games in files in file_list, or None.
+
+    This is a trimmed version of method _estimate_games_in_import in the
+    ..gui.chessdu.DeferredUpdateEstimateProcess class.
+
+    """
+    reader = PGNTagPair(game_class=GameCount)
+    gamecount = 0
+    for pgnfile in file_list:
+        for encoding in constants.ENCODINGS:
+            filechars = []
+            with open(pgnfile, mode="r", encoding=encoding) as source:
+                try:
+                    while True:
+                        chars = source.read(1024 * 1000)
+                        filechars.append(len(chars))
+                        if not chars:
+                            break
+                except UnicodeDecodeError:
+                    continue
+            with open(pgnfile, mode="r", encoding=encoding) as source:
+                for _ in reader.read_games(source):
+                    gamecount += 1
+            if filechars:
+                filechars.clear()
+                break
+        else:
+            return None
+    return gamecount
+
+
 def file_du(database, dbpath, pgnpath, **kwargs):
     """Open database, import games and close database."""
     print(time.ctime(), "start")
+    gamecount = _count_games_in_import([pgnpath])
+    if gamecount is None:
+        print(time.ctime(), "unable to read file - possible encoding problem")
+        return
+    print(time.ctime(), gamecount, "games found")
     cdb = database(dbpath, allowcreate=True, **kwargs)
     print(
         time.ctime(),
@@ -67,6 +108,9 @@ def file_du(database, dbpath, pgnpath, **kwargs):
         "if it does not exist",
     )
     cdb.open_database()
+    cdb.increase_database_size(
+        files={filespec.GAMES_FILE_DEF: (gamecount, gamecount)}
+    )
     cdb.close_database()
     table = cdb.table
     importer = ChessDBrecordGameDUSingleStep()
@@ -87,6 +131,14 @@ def directory_du(database, dbpath, pgnpath, **kwargs):
     """Open database, import games and close database."""
     pathlist = [os.path.join(pgnpath, p) for p in os.listdir(pgnpath)]
     print(time.ctime(), "start")
+    gamecount = _count_games_in_import(pathlist)
+    if gamecount is None:
+        print(
+            time.ctime(),
+            "found a file which cannot be read - possible encoding problem",
+        )
+        return
+    print(time.ctime(), gamecount, "games found")
     cdb = database(dbpath, allowcreate=True, **kwargs)
     print(
         time.ctime(),
@@ -95,6 +147,9 @@ def directory_du(database, dbpath, pgnpath, **kwargs):
         "if it does not exist",
     )
     cdb.open_database()
+    cdb.increase_database_size(
+        files={filespec.GAMES_FILE_DEF: (gamecount, gamecount)}
+    )
     cdb.close_database()
     table = cdb.table
     importer = ChessDBrecordGameDUSingleStep()
