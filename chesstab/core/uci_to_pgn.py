@@ -17,6 +17,7 @@ is usually the only legal PGN description because the starting position for a
 game has one queen per side. 'Qf3' is not necessarily a legal move.
 
 """
+
 import re
 
 from pgn_read.core.constants import (

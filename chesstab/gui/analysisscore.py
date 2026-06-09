@@ -296,7 +296,7 @@ class AnalysisScore(Score):
                 scaffold.end_latest_move,
             ) = self.score.tag_prevrange(ALL_CHOICES, tkinter.END)
         except TypeError:
-            (scaffold.start_latest_move, scaffold.end_latest_move) = (
+            scaffold.start_latest_move, scaffold.end_latest_move = (
                 tkinter.END,
                 tkinter.END,
             )

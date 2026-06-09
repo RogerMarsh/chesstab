@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Chess engine program definition."""
+
 import os.path
 from urllib.parse import urlsplit, parse_qs
 

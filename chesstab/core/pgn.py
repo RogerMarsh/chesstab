@@ -7,6 +7,7 @@
 Game* classes replace PGN* classes in ChessTab version 4.3.
 
 """
+
 from pgn_read.core.game import Game
 from pgn_read.core.game_indicate_check import GameIndicateCheck
 from pgn_read.core.movetext_parser import MoveText

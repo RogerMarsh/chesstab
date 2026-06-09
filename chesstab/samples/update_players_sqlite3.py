@@ -8,7 +8,6 @@ Update names in games_Black and games_White records where the name with
 ',' and '.' ripped out is not the name in the record.
 """
 
-
 if __name__ == "__main__":
     import os
     import ast

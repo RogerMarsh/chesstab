@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Create widgets to display tag roster details of games matching position."""
+
 # Put transposition moves in column 0 rather than column 4.
 # Display just the moves played in, and to reach, the position.
 

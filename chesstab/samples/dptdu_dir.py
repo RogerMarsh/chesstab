@@ -4,7 +4,6 @@
 
 """Import directory of PGN files with dpt.database_du to database."""
 
-
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from ..dpt.database_du import database_du

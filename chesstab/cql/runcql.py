@@ -7,6 +7,7 @@
 The queries and games marked evaluated are ignored in the run.
 
 """
+
 import os
 import datetime
 import traceback

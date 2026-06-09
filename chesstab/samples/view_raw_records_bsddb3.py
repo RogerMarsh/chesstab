@@ -4,7 +4,6 @@
 
 """Utility to show key value pairs in chesstab records in Berkeley DB."""
 
-
 if __name__ == "__main__":
     import os
     import ast

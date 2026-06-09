@@ -16,6 +16,7 @@ At time of writing available from:
 
 www.enpassant.dk/chess/fonteng.htm
 """
+
 import sys
 
 from pgn_read.core.constants import (

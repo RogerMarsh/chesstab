@@ -8,6 +8,7 @@ These two classes display games in their own Toplevel widget: they are used
 in the gamedbdelete, gamedbedit, and gamedbshow, modules.
 
 """
+
 from .game import Game
 from .gameedit import GameEdit
 from .toplevelpgn import ToplevelPGN

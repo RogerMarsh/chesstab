@@ -16,6 +16,7 @@ A number of PanedWindows display scrollable grids which show lists of records
 from the open database, and others display records selected from these grids
 in more detail.
 """
+
 # Split out of chess.py several years after it became clear ChessUI deserves a
 # module of it's own.
 

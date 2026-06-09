@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Customise edit toplevel to edit or insert chess engine definition."""
+
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit

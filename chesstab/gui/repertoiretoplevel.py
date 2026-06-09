@@ -9,6 +9,7 @@ used in the repertoiredbdelete, repertoiredbedit, and repertoiredbshow,
 modules.
 
 """
+
 from .repertoire import Repertoire
 from .repertoireedit import RepertoireEdit
 from .toplevelpgn import ToplevelPGN

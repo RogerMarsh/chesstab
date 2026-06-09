@@ -10,6 +10,7 @@ of dots.  Fully disambiguated piece moves are stored with a hyphen between
 the square moved from and the square moved to.
 
 """
+
 import re
 
 from pgn_read.core.constants import (

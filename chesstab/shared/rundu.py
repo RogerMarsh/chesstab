@@ -10,6 +10,7 @@ chess GUI.
 Spawn the deferred update process by the multiprocessing module.
 
 """
+
 import importlib
 import os
 import datetime

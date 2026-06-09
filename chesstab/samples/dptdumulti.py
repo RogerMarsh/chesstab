@@ -4,7 +4,6 @@
 
 """Import PGN file using DPT multi-step deferred update."""
 
-
 if __name__ == "__main__":
     import tkinter
 

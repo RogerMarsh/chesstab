@@ -8,6 +8,7 @@ ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
 Costeff).
 
 """
+
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit

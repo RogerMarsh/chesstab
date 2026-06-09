@@ -9,6 +9,7 @@ The number of characters is expected to be the one reported in the final
 was stopped.  The new file can be imported by ChessTab to complete the
 original import.
 """
+
 import os
 import tkinter
 import tkinter.ttk

@@ -8,6 +8,7 @@ The do_reload_deferred_update() method in shared.alldu module cannot be used
 because DPT manages segments internally.
 
 """
+
 import os
 
 from solentware_base.core.constants import (

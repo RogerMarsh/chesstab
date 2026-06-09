@@ -4,7 +4,6 @@
 
 """Demonstrate chess board class and methods to draw position on board."""
 
-
 if __name__ == "__main__":
     import tkinter
 

@@ -8,6 +8,7 @@
 
 See allgrid.AllGrid class for methods identical in EngineListGrid class too.
 """
+
 import tkinter
 
 from ..gui.eventspec import EventSpec

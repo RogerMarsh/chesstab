@@ -9,6 +9,7 @@
 See cql_gamelist_query.CQLGameListQuery class for methods identical in
 these classes except EngineListGrid
 """
+
 import tkinter
 
 

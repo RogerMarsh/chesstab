@@ -17,6 +17,7 @@ An instance of Game fits into the user interface in two ways: as an item in a
 panedwindow of the main widget, or as the only item in a new toplevel widget.
 
 """
+
 # Obsolete comment, but the idea is being realised through the displaypgn and
 # displaytext modules.  (partial has meanwhile become cql).
 # Game (game.py) and Partial (partial.py) should be

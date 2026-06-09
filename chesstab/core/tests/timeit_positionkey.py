@@ -16,6 +16,7 @@ the difference is less than a second per million positionkeys while changing
 from 3.10 to 3.11 saves 6 seconds per million.
 
 """
+
 import re
 
 from pgn_read.core import game

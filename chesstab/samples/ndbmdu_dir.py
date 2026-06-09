@@ -14,7 +14,6 @@ create the database with a segment size of 16 bytes.  A more reasonable size,
 too.
 """
 
-
 if __name__ == "__main__":
     from .directory_widget import DirectoryWidget
     from ..ndbm.database_du import database_du

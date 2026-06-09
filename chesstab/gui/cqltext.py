@@ -8,6 +8,7 @@ ChessQL statements obey the syntax published for CQL version 6.0.1 (by Gady
 Costeff).
 
 """
+
 # The previous CQL syntax partially supported was version 5.1 found at:
 # https://web.archive.org/web/20140130143815/http://www.rbnn.com/cql/
 # (www.rbnn.com is no longer availabable).

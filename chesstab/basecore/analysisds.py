@@ -10,6 +10,7 @@ interfaces to a database.
 See the ..dpt.analysisds module for the AnalysisDS class for DPT.
 
 """
+
 from solentware_grid.core.datasourcecursor import DataSourceCursor
 
 from .analysis_index import AnalysisIndex

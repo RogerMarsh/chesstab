@@ -8,7 +8,6 @@ Table names are changed and extra tables introduced in segment support.
 
 """
 
-
 if __name__ == "__main__":
     import os
 

@@ -4,7 +4,6 @@
 
 """Import PGN with db_tkinter.database_du to one file per database."""
 
-
 if __name__ == "__main__":
     from .file_widget import FileWidget
     from ..db_tkinter.database_du import Database

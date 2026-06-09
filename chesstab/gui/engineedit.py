@@ -10,6 +10,7 @@ An instance of this class fits into the user interface as the only item in a
 new toplevel widget.
 
 """
+
 import sys
 import os.path
 import tkinter.filedialog

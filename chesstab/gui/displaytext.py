@@ -39,6 +39,7 @@ successful choice of method resolution order in the classes in cqldisplay and
 querydisplay modules.
 
 """
+
 import tkinter
 import tkinter.messagebox
 

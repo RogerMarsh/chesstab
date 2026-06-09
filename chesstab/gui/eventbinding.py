@@ -17,6 +17,7 @@ both the game score and analysis of positions within the game.
 The AnalysisEventBinding class allows these to be covered by an entry in the
 ignored-classes list of a pylint configuration file too.
 """
+
 # The scorepgn module, and several others, were introduced to bundle shared
 # methods on a fairly large scale.  It turned out the classes in these
 # modules needed to be on the ignored-classes list for pylint.  It was not

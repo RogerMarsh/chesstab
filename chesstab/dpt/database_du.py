@@ -11,6 +11,7 @@ is no sure way to spot that module is running on Wine.
 See www.dptoolkit.com for details of DPT
 
 """
+
 import os
 
 from solentware_base import dptdu_database

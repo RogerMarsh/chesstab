@@ -10,6 +10,7 @@ interfaces to a database.
 See the ..dpt.fullpositionds module for the FullPositionDS class for DPT.
 
 """
+
 from solentware_grid.core.datasourcecursor import DataSourceCursor
 
 from .fullposition import FullPosition

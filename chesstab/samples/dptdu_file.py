@@ -4,7 +4,6 @@
 
 """Import PGN file with dpt.database_du module."""
 
-
 if __name__ == "__main__":
     from .file_widget import FileWidget
     from ..dpt.database_du import Database

@@ -20,6 +20,7 @@ does not matter whether the square is occupied because either white piece or
 black piece or empty square matches.
 
 """
+
 import os
 import re
 

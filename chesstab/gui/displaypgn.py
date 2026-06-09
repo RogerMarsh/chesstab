@@ -40,6 +40,7 @@ this depends on successful choice of method resolution order in the classes
 in gamedisplay and repertoiredisplay modules.
 
 """
+
 import tkinter
 import tkinter.messagebox
 

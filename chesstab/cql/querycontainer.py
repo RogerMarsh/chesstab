@@ -8,6 +8,7 @@ This module defines the QueryContainer class.  An instance of this class
 runs the CQL program using the *.cql file and *.pgn file associated with
 a database.  Both files are generated from the database as needed.
 """
+
 import os
 
 from ..core import constants

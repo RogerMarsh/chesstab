@@ -3,6 +3,7 @@
 # Licence: See LICENSE.txt (BSD licence)
 
 """Delete index references kept, not replaced, in deferred update runs."""
+
 import solentware_base.tools.berkeleydb_du_splice_fix
 
 from ..core import filespec

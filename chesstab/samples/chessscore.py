@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Demonstrate chess score class and methods to display PGN text."""
+
 # This module replaces one which used an obsolete version of Game class,
 # probably from around 2008.
 

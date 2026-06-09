@@ -4,7 +4,6 @@
 
 """Import PGN file with ndbm.database_du to database."""
 
-
 if __name__ == "__main__":
     from .file_widget import FileWidget
     from ..ndbm.database_du import Database

@@ -3,6 +3,7 @@
 # Licence: See LICENCE (BSD licence)
 
 """Customise edit toplevel to edit or insert game selection rule record."""
+
 import tkinter.messagebox
 
 from solentware_grid.gui.dataedit import DataEdit
