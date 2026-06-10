@@ -10,9 +10,9 @@ This module on Windows only.  Use multi-step module on Wine because Wine
 support for a critical function used by single-step is not reliable. There
 is no sure way to spot that module is running on Wine.
 
-See www.dptoolkit.com for details of DPT
-
+See www.dptoolkit.com for details of DPT.
 """
+
 import os
 import multiprocessing
 import traceback
@@ -226,7 +226,7 @@ class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
     not use this method in import processing but imports to DPT databases
     are a LOT faster if a non-ChessTab UI process uses this method.
 
-    It is a little faster for the other database engines.
+    It is a little faster than the other database engines.
 
     However an interrupted import has to be repeated in full to the
     database after restoring it to the state, from a backup copy, before
@@ -276,6 +276,75 @@ class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
                 database.commit()
                 database.deferred_update_housekeeping()
                 database.start_transaction()
+        if reporter is not None and value.collected_game is not None:
+            reporter.append_text(
+                "".join(
+                    (
+                        str(game_number),
+                        " games, to character ",
+                        str(value.collected_game.game_offset),
+                        " in PGN, read from ",
+                        sourcename,
+                    )
+                )
+            )
+            reporter.append_text_only("")
+        return True
+
+
+class ChessDBrecordGameFastload(chessrecord.ChessDBrecordGameSequential):
+    """Extend with version 7.1.3 import_pgn method.
+
+    The ChessDBrecordGameImport.import_pgn() method from ChessTab-7.1.3
+    is added and modified to support DPT fastload.  The UI does not use
+    this method in import processing but imports to DPT databases are a
+    LOT faster if a non-ChessTab UI process uses this method.
+
+    It is a little faster than the other database engines.
+
+    However an interrupted import has to be repeated in full to the
+    database after restoring it to the state, from a backup copy, before
+    the interrupted import started.
+    """
+
+    def import_pgn(
+        self, database, source, sourcename, reporter=None, quit_event=None
+    ):
+        """Update database with games read from source."""
+        self.set_database(database)
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Extracting games from " + sourcename)
+        db_segment_size = SegmentSize.db_segment_size * 8
+        value = self.value
+        value.reference = {}
+        reference = value.reference
+        reference[FILE] = sourcename
+        game_number = 0
+        for collected_game in value.read_games(source):
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Import stopped.")
+                return False
+            self.key.recno = None
+            value.collected_game = collected_game
+            game_number += 1
+            reference[GAME] = str(game_number)
+            self.put_record(self.database, GAMES_FILE_DEF)
+            if game_number % db_segment_size == 0:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Game ",
+                                str(game_number),
+                                ", to character ",
+                                str(collected_game.game_offset),
+                                " in PGN, added to fastload TAPED",
+                            )
+                        )
+                    )
         if reporter is not None and value.collected_game is not None:
             reporter.append_text(
                 "".join(

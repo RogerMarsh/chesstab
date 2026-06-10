@@ -16,6 +16,7 @@ understand.
 DPT Fastload driven by this module using field codes has been made to work
 only by changing the FileSpec to have all field names upper case.
 """
+
 # On the devopment box deferred update for a sample of 233768 games took
 # about 90 minutes: fastload took about 55 minutes.  (Modern boxes should
 # be significantly quicker for both.)
@@ -43,10 +44,11 @@ import tkinter.filedialog
 from dptdb.dptapi import FLOAD_DEFAULT
 
 from solentware_base.core.segmentsize import SegmentSize
+from solentware_base.core.constants import TABLE_B_SIZE, FILEDESC, BRECPPG
 
 from pgn_read.core.tagpair_parser import PGNTagPair, GameCount
 
-from ..dpt.database_one_step_du import ChessDBrecordGameDUSingleStep
+from ..dpt.database_one_step_du import ChessDBrecordGameFastload
 from ..core import constants
 from ..core import filespec
 
@@ -107,21 +109,39 @@ def file_du(database, dbpath, pgnpath, **kwargs):
         dbpath,
         "if it does not exist",
     )
+
+    # Create database to get codes for field names.
+    # Even though these are ignored in some fastload situations.
     cdb.open_database()
-    cdb.increase_database_size(
-        files={filespec.GAMES_FILE_DEF: (gamecount, gamecount)}
-    )
+
+    # Not needed while importer is putting all records in TAPED file.
+    # cdb.increase_database_size(
+    #     files={filespec.GAMES_FILE_DEF: (gamecount, gamecount)}
+    # )
+
     cdb.close_database()
-    table = cdb.table
-    importer = ChessDBrecordGameDUSingleStep()
+
+    importer = ChessDBrecordGameFastload()
     fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
     fldb.set_defer_update()
     with open(pgnpath, "r", encoding="iso-8859-1") as pgn_file:
         print(
             time.ctime(),
-            "get games from PGN file and write TAPED file for first segment",
+            "get games from PGN file and write TAPED file",
         )
         importer.import_pgn(fldb, pgn_file, os.path.basename(pgnpath))
+    recordcount = fldb.table_b_page_count * fldb.brecppg
+    cdb.open_database()
+    cdb.increase_database_size(
+        files={filespec.GAMES_FILE_DEF: (recordcount, recordcount)}
+    )
+    cdb.close_database()
+    print(
+        time.ctime(),
+        "datasize size is now enough for",
+        recordcount,
+        "records",
+    )
     fldb.do_final_segment_deferred_updates()
     fldb.unset_defer_update()
     print(time.ctime(), "end")
@@ -152,12 +172,12 @@ def directory_du(database, dbpath, pgnpath, **kwargs):
     )
     cdb.close_database()
     table = cdb.table
-    importer = ChessDBrecordGameDUSingleStep()
+    importer = ChessDBrecordGameFastload()
     fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
     fldb.set_defer_update()
     print(
         time.ctime(),
-        "get games from PGN file and write TAPED file for first segment",
+        "get games from PGN file and write TAPED file",
     )
     for filepath in pathlist:
         with open(filepath, "r", encoding="iso-8859-1") as pgn_file:
@@ -200,7 +220,7 @@ class FastloadDatabase:
 
     """
 
-    segment_size_bytes = 8160
+    segment_size_bytes = TABLE_B_SIZE
     deferred_update_points = (segment_size_bytes * 8 - 1,)
     _FLAT_FILE = "___flat_file"
 
@@ -232,18 +252,21 @@ class FastloadDatabase:
             table.dpt_field_names[table.primary]
         ]
         self.target_safe_length = table.dpt_primary_field_length
+        self.brecppg = self.target_database.specification[
+            filespec.GAMES_FILE_DEF
+        ][FILEDESC][BRECPPG]
+
+        # Two byte pointer per record on Table B page.
+        self._usable_space_per_page = TABLE_B_SIZE - self.brecppg * 2
 
         # These should be dicts keyed by DPT file name.
         # This sample assumes one DPT file is being loaded.
         self.pgn_file_game_number = 0
         self.segment_recno = -1
+        self.space_on_current_page = 0
+        self.table_b_page_count = 0
 
         self.flat_file = {name: None for name in self.target_field_codes}
-        self.inverted = {
-            name: {}
-            for name in self.target_field_codes
-            if name != table.dpt_field_names[table.primary]
-        }
 
     def start_transaction(self):
         """Start transaction on target database."""
@@ -258,47 +281,23 @@ class FastloadDatabase:
         self.target_database.backout()
 
     def set_defer_update(self):
-        """Create first segment TAPE files and TAPEF field definitions."""
+        """Create TAPED data file and TAPEF field definitions."""
         print(
             time.ctime(),
-            "create TAPED and TAPEI files for first segment and TAPEF file",
+            "create TAPED and TAPEF files",
         )
         os.mkdir(os.path.join(self.target_database_path, self._FLAT_FILE))
         self._create_tapef()
-        self._create_taped_and_tapei()
+        self._create_taped()
         self._write_header(
             self.flat_file[self.target_dpt_field_names[self.target_primary]],
             description=self.target_database_ddname.join(
                 ("File ", ", data records")
             ),
         )
-
-    def deferred_update_housekeeping(self):
-        """Apply TAPE files to DPT database and prepare for next segment."""
-        self._do_segment_fastload()
-        print(
-            time.ctime(),
-            "delete TAPED and TAPEI files then create new ones",
-        )
-        self._delete_tape_files(delete_tapef=False)
-        self._create_taped_and_tapei()
-        print(
-            time.ctime(),
-            "get games from PGN file and write TAPED file for next segment",
-        )
-        self._write_header(
-            self.flat_file[self.target_dpt_field_names[self.target_primary]],
-            description=self.target_database_ddname.join(
-                ("File ", ", data records")
-            ),
-        )
-
-        # Reset segment_recno implies this method is called only at
-        # segment boundaries.
-        self.segment_recno = -1
 
     def do_final_segment_deferred_updates(self):
-        """Apply final segment TAPE files to DPT database.
+        """Apply TAPED file to DPT database.
 
         Do DPT Fastload operation for segment.
 
@@ -315,7 +314,7 @@ class FastloadDatabase:
         """Delete TAPE files, and the directory containing them if empty."""
         print(
             time.ctime(),
-            "delete TAPED and TAPEI files for final segment and TAPEF file",
+            "delete TAPED and TAPEF files",
         )
         self._delete_tape_files(delete_tapef=True)
         os.rmdir(os.path.join(self.target_database_path, self._FLAT_FILE))
@@ -325,13 +324,17 @@ class FastloadDatabase:
         assert file == self.target_database_file
         instance.set_packed_value_and_indexes()
         srv = instance.srvalue
-        fieldcode = self.target_primary_field_code
         safe_length = self.target_safe_length
         self.pgn_file_game_number += 1
         self.segment_recno += 1
+        if self.segment_recno % self.brecppg == 0:
+            self.space_on_current_page = self._usable_space_per_page
+            self.table_b_page_count += 1
         recnum = self.segment_recno.to_bytes(4, byteorder="little")
-        segrecnum = self.segment_recno.to_bytes(2, byteorder="little")
         flat_file = self.flat_file
+        field_codes = self.target_field_codes
+        dpt_field_names = self.target_dpt_field_names
+        fieldname = dpt_field_names[self.target_primary].encode()
         field_values = flat_file[self.target_primary]
         field_values.write(recnum)
         # TAPED files created by DPT Unload() method have two bytes between
@@ -342,25 +345,28 @@ class FastloadDatabase:
         # mentioned in the DPT DBA Guide.
         for i in range(0, len(srv), safe_length):
             value = srv[i : i + safe_length].encode()
-            field_values.write(fieldcode)
-            field_values.write(len(value).to_bytes(1, byteorder="little"))
+            self.space_on_current_page -= len(value) + 1
+            if self.space_on_current_page < 0:
+                self.space_on_current_page = self._usable_space_per_page
+                self.table_b_page_count += 1
+            field_values.write(self.target_primary_field_code)
+            field_values.write(len(value).to_bytes(1))
             field_values.write(value)
-        field_values.write(_RECORD_SEPARATOR)
         sri = instance.srindex
         sec = self.target_table.secondary
         pcb = instance.putcallbacks
-        field_codes = self.target_field_codes
-        dpt_field_names = self.target_dpt_field_names
         for indexname in sri:
             if indexname not in pcb:
-                name = dpt_field_names[sec[indexname]]
-                inverted = self.inverted[name]
+                fieldcode = field_codes[dpt_field_names[sec[indexname]]]
                 for value in sri[indexname]:
-                    if value not in inverted:
-                        inverted[value] = []
-                    inverted[value].append(segrecnum)
-        instance.load_key(self.segment_recno)
+                    field_values.write(fieldcode)
+                    value = value.encode()
+                    field_values.write(len(value).to_bytes(1))
+                    field_values.write(value)
+        field_values.write(_RECORD_SEPARATOR)
+        # Attempting to do this probably makes no sense here.
         if len(pcb):
+            instance.load_key(self.segment_recno)
             for indexname in sri:
                 if indexname in pcb:
                     pcb[indexname](instance, sri[indexname])
@@ -456,8 +462,8 @@ class FastloadDatabase:
         tape.write(_STARS)
         tape.write(_CRLF)
 
-    def _create_taped_and_tapei(self):
-        """Create the data file and index files.
+    def _create_taped(self):
+        """Create the data file.
 
         DPT documentation suggests the index files, tapei for each field,
         are not needed if the field=value pairs are in the taped file.
@@ -478,19 +484,6 @@ class FastloadDatabase:
                     mode="wb",
                 )
                 continue
-            self.flat_file[name] = open(
-                os.path.join(
-                    self.target_database_path,
-                    self._FLAT_FILE,
-                    "".join(
-                        (
-                            self.target_database_ddname,
-                            name.join(_TAPEI_DAT),
-                        )
-                    ),
-                ),
-                mode="wb",
-            )
 
     def _delete_tape_files(self, delete_tapef=False):
         """Delete the 'TAPE' files retaining 'TAPEF' by default."""
@@ -501,7 +494,6 @@ class FastloadDatabase:
             if code == self.target_primary_field_code:
                 tape_files.append(_TAPED_DAT)
                 continue
-            tape_files.append(name.join(_TAPEI_DAT))
         for tapef in tape_files:
             os.remove(
                 os.path.join(
@@ -518,21 +510,21 @@ class FastloadDatabase:
         as 'File Full' for example, so backups are needed.
 
         """
-        print(time.ctime(), "write TAPEI files")
-        segment = int(
-            self.segment_recno // (self.segment_size_bytes * 8)
-        ).to_bytes(2, byteorder="little")
-        for name, values in self.inverted.items():
-            self._write_field_values_for_segment_to_tapei(
-                tapei=self.flat_file[name],
-                values=values,
-                segment=segment,
-                field=name,
-            )
-            values.clear()  # Here just in case write does not imply clear.
-        for name, tapef in self.flat_file.items():
-            tapef.close()
-            self.flat_file[name] = None
+        for tape in self.flat_file.values():
+            if tape is not None:
+                tape.close()
+        print(
+            time.ctime(),
+            "games up to",
+            self.pgn_file_game_number,
+            "in PGN file will be added to database",
+        )
+        print(
+            time.ctime(),
+            "records require",
+            self.table_b_page_count,
+            "Table B pages in database",
+        )
         print(
             time.ctime(),
             "add games to games database from TAPE files",
@@ -551,61 +543,4 @@ class FastloadDatabase:
         )
 
         cdb.close_database()
-        print(
-            time.ctime(),
-            "games up to",
-            self.pgn_file_game_number,
-            "in PGN file added to games database",
-        )
-
-    # Ignore DPT DBA Guide TAPEI format description when record count for
-    # a value in segment is 1 (one).
-    # TAPEI files created by DPT Unload() method have '\xff\xff' as the
-    # segment count bytes and '\xff\xff\xff\xff' bytes as the value
-    # terminator when there is more than one record in the segment.
-    # The two sets of '\xff' bytes are absent when the segment has one
-    # record and the inverted list format described in the DPT DBA Guide
-    # is not present: instead the format is segment number and full 4 byte
-    # record number.  So 6 bytes describes the segment in the one record
-    # case, and is everything but the list of segment record numbers in the
-    # multi-record case.
-    # The leading bytes in Positions (POSITIONS) index values are the utf-8
-    # representation of an 8 byte bitmap of occupied squares decoded with
-    # the iso-8859-1 map.
-    def _write_field_values_for_segment_to_tapei(
-        self, tapei, values, segment, field
-    ):
-        """Write field inverted list index for segment to 'TAPEI' file."""
-        self._write_header(
-            tapei,
-            description="".join(
-                (
-                    "File ",
-                    self.target_database_ddname,
-                    ", index information for field ",
-                    field,
-                )
-            ),
-        )
-        for value in sorted(values):
-            encoded_value = value.encode()
-            tapei.write(len(encoded_value).to_bytes(1, byteorder="little"))
-            tapei.write(encoded_value)
-            count = len(values[value])
-
-            # Omitting this shortcut when count == 1 is fine too.
-            if count == 1:
-                tapei.write(segment)
-
-                # Same outcome as reconstructing full record number as
-                # bytes (although '\x00\x00' as filler works too: not
-                # decidable at segment zero).
-                tapei.write(values[value][0])
-                tapei.write(segment)
-                continue
-
-            tapei.write(_SEGMENT_COUNT_UNKNOWN)
-            tapei.write(segment)
-            tapei.write(count.to_bytes(2, byteorder="little"))
-            tapei.write(b"".join(values[value]))
-            tapei.write(_VALUE_TERMINATOR)
+        print(time.ctime(), "games added to database")
