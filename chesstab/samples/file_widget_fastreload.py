@@ -19,7 +19,7 @@ import time
 import tkinter.messagebox
 import tkinter.filedialog
 
-import dptdb.dptapi
+import dpt_dbms.dptapi
 
 from solentware_base.core.constants import DPT_SYSFL_FOLDER
 
@@ -37,7 +37,9 @@ def file_fastreload(dbpath, inputdir):
         # definition of FUNLOAD_DIR.
         # So have to specify options where FLOAD_DEFAULT is the default
         # option.
-        table.opencontext.Load(dptdb.dptapi.FLOAD_DEFAULT, 0, None, inputdir)
+        table.opencontext.Load(
+            dpt_dbms.dptapi.FLOAD_DEFAULT, 0, None, inputdir
+        )
     cdb.close_database()
     print(time.ctime())
 

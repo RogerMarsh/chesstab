@@ -41,7 +41,7 @@ import time
 import tkinter.messagebox
 import tkinter.filedialog
 
-from dptdb.dptapi import FLOAD_DEFAULT
+from dpt_dbms.dptapi import FLOAD_DEFAULT
 
 from solentware_base.core.segmentsize import SegmentSize
 from solentware_base.core.constants import TABLE_B_SIZE, FILEDESC, BRECPPG

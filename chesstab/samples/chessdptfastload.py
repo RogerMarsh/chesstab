@@ -19,9 +19,9 @@ import tkinter.messagebox
 # pylint will always give import-error message on non-Microsoft Windows
 # systems.
 # Wine counts as a Microsft Windows system.
-# It is reasonable to not install 'dptdb.dptapi'.
+# It is reasonable to not install 'dpt_dbms.dptapi'.
 # The importlib module is used to import database_du if needed.
-from dptdb.dptapi import FISTAT_DEFERRED_UPDATES
+from dpt_dbms.dptapi import FISTAT_DEFERRED_UPDATES
 
 from solentware_base import dptfastload_database
 from solentware_base.core.constants import (

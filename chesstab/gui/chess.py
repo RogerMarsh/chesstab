@@ -24,7 +24,7 @@ was created is available.
 A new database is created using the first database engine interface available
 from the list in order:
 
-dptdb        DPT (an emulation of Model 204 on MS Windows) via SWIG interface
+dpt_dbms     DPT (an emulation of Model 204 on MS Windows) via SWIG interface
 lmdb         Symas LMDB
 berkeleydb   Berkeley DB
 apsw         Sqlite3

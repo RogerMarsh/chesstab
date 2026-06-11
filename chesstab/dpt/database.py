@@ -2,17 +2,17 @@
 # Copyright 2008 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess games database using DPT database via dptdb.dptapi."""
+"""Chess games database using DPT database via dpt_dbms.dptapi."""
 
 import os
 import tkinter.messagebox
 
 # pylint always gives import-error message, E0401, on non-Microsoft Windows
-# systems; or if dptdb is not installed.
+# systems; or if dpt_dbms is not installed.
 # Wine counts as a Microsft Windows system.
-# It is reasonable to not install dptdb.
-# The importlib module is used elsewhere to import dptdb if needed.
-from dptdb.dptapi import (
+# It is reasonable to not install dpt_dbms.
+# The importlib module is used elsewhere to import dpt_dbms if needed.
+from dpt_dbms.dptapi import (
     FIFLAGS_FULL_TABLEB,
     FIFLAGS_FULL_TABLED,
 )

@@ -21,9 +21,9 @@ import datetime
 # pylint will always give import-error message on non-Microsoft Windows
 # systems.
 # Wine counts as a Microsft Windows system.
-# It is reasonable to not install 'dptdb.dptapi'.
+# It is reasonable to not install 'dpt_dbms.dptapi'.
 # The importlib module is used to import chessdptdu if needed.
-from dptdb.dptapi import (
+from dpt_dbms.dptapi import (
     FISTAT_DEFERRED_UPDATES,
     FISTAT_PHYS_BROKEN,
     FIFLAGS_FULL_TABLEB,

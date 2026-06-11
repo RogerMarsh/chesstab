@@ -2,7 +2,7 @@
 # Copyright 2023 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess games database using DPT database via dptdb.dptapi."""
+"""Chess games database using DPT database via dpt_dbms.dptapi."""
 
 from solentware_base import dpt_database
 

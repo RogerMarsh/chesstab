@@ -19,7 +19,7 @@ import time
 import tkinter.messagebox
 import tkinter.filedialog
 
-import dptdb.dptapi
+import dpt_dbms.dptapi
 
 from ..dpt.database import Database
 
@@ -37,7 +37,7 @@ def file_fastunload(dbpath, outputdir):
         # via FUNLOAD_ALLINFO (at time of writing) which is required option,
         # is the default option.
         table.opencontext.Unload(
-            dptdb.dptapi.FUNLOAD_DEFAULT, None, None, outputdir
+            dpt_dbms.dptapi.FUNLOAD_DEFAULT, None, None, outputdir
         )
     cdb.close_database()
     print(time.ctime())
