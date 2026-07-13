@@ -18,6 +18,7 @@ from solentware_base import dptdu_database
 
 from ..shared import litedu
 from ..shared import alldu
+from ..dpt import database_one_step_du
 from . import reloaddu
 
 
@@ -33,12 +34,18 @@ def database_du(dbpath, *args, **kwargs):
     )
 
 
-# Possibly cannot doe this for DPT since segments are managed internally.
 def database_reload_du(dbpath, *args, **kwargs):
-    """Open database, import games, reload indicies, and close database."""
+    """Import games by single step deferred update.
+
+    The function name is retained for compatibility with the other database
+    engines.
+
+    """
     # sysfolder argument defaults to DPT_SYSDU_FOLDER in dptdu_database.
-    reloaddu.do_reload_deferred_update(
-        Database(dbpath, allowcreate=True), *args, **kwargs
+    reloaddu.do_single_step_deferred_update(
+        database_one_step_du.Database(dbpath, allowcreate=True),
+        *args,
+        **kwargs,
     )
 
 
@@ -53,14 +60,15 @@ class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
     # This is also in solentware_base.core._dpt.Database but overridden in
     # dptdu_database.Database class.
     def create_default_parms(self):
-        """Create default parms.ini file for normal mode.
+        """Override, create default parms.ini file for normal mode.
 
-        This means transactions are enabled and a large number of DPT buffers.
+        Delete an existing parms.ini and create the required file.
 
         """
-        if not os.path.exists(self.parms):
-            with open(self.parms, "w", encoding="iso-8859-1") as parms:
-                parms.write("MAXBUF=10000 " + os.linesep)
+        if os.path.exists(self.parms):
+            os.remove(self.parms)
+        with open(self.parms, "w", encoding="iso-8859-1") as parms:
+            parms.write("MAXBUF=10000 " + os.linesep)
 
     def edit_instance(self, dbset, instance):
         """Edit an instance is available in deferred update mode.

@@ -15,11 +15,10 @@ from solentware_base.core.constants import (
     SECONDARY,
 )
 from solentware_base.core import merge
-from solentware_base.core import sortsequential
 
-from ..core import utilities
 from ..shared import alldu
 from ..core import filespec
+from ..dpt import database_one_step_du
 
 
 def load_indicies(
@@ -258,94 +257,46 @@ def load_indicies(
     return True
 
 
-def do_reload_deferred_update(
-    cdb, *args, reporter=None, file=None, ignore=None, **kwargs
+def do_single_step_deferred_update(
+    cdb, *args, reporter=None, file=None, ignore=None, increases=None, **kwargs
 ):
-    """Open database, extract and index games, and close database."""
-    cdb.open_database()
-    try:
-        if utilities.is_import_without_index_reload_in_progress_txn(cdb):
-            if reporter is not None:
-                reporter.append_text_only("")
-                reporter.append_text("Cannot do requested merge import:")
-                reporter.append_text_only(
-                    "An import without index merge is being done."
+    """Import games by single step deferred update.
+
+    Replicating the algorithm used with other database engines is a lot
+    slower, especially when processing the position index.  Repeating
+    the whole import is quicker to the extent that several single step
+    deferred update runs can be done for a PGN file while one run with
+    the other database algorithm is done.
+
+    Repeatable runs when mid-run failures occur are achieved by taking a
+    copy of the database before the update starts: and deleting it on
+    successful completion.
+
+    """
+    del ignore
+    del increases
+    for key in cdb.specification.keys():
+        if key == file:
+            break
+    else:
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text(
+                repr(file).join(
+                    ("Unable to import to '", "': not found in specification.")
                 )
-            return
-        if utilities.is_import_with_index_reload_started_txn(cdb):
-            if reporter is not None:
-                reporter.append_text_only("")
-                reporter.append_text("A merge import is already in progress.")
-                reporter.append_text_only(
-                    "It continues without adding games from PGN files."
-                )
-        else:
-            if not alldu.du_extract(
-                cdb, *args, reporter=reporter, file=file, reload=True, **kwargs
-            ):
-                if reporter is not None:
-                    reporter.append_text_only("")
-                    reporter.append_text(
-                        "Import and index reload not completed."
-                    )
-                return
-        extract_done = alldu.write_indicies_for_extracted_games(
-            cdb,
-            *args,
-            reporter=reporter,
-            file=file,
-            ignore=ignore,
-            sorter=sortsequential.SortDPTIndiciesToSequentialFiles,
-            **kwargs,
-        )
-        if extract_done is False:
-            if reporter is not None:
-                reporter.append_text_only("")
-                reporter.append_text(
-                    "Write new indicies to sorted files not completed."
-                )
-            return
-        if extract_done is None:
-            cdb.start_transaction()
-            try:
-                cdb.delete_import_pgn_file_tuple()
-            finally:
-                cdb.commit()
-            if reporter is not None:
-                reporter.append_text_only("")
-                reporter.append_text("Import finished.")
-            return
-        # The existing indicies are not dumped because a convenient way of
-        # deleting an index does not exist: apart from reorganizing the
-        # file.
-        # The load_indicies method will merge new values for an existing
-        # key.  Many updates will insert keys in the middle of the B-tree
-        # slowing things down, despite the keys being added in ascending
-        # order.
-        try:
-            if not load_indicies(
-                cdb,
-                *args,
-                reporter=reporter,
-                file=file,
-                ignore=ignore,
-                **kwargs,
-            ):
-                if reporter is not None:
-                    reporter.append_text_only("")
-                    reporter.append_text("Load indicies not completed.")
-                return
-        except Exception as exc:
-            alldu.report_du_exception(cdb, reporter, exc)
-            raise
-        cdb.start_transaction()
-        try:
-            cdb.delete_import_pgn_file_tuple()
-        finally:
-            cdb.commit()
-    finally:
-        cdb.close_database()
+            )
+            reporter.append_text_only("")
+        return
+    database_one_step_du.database_du(
+        cdb.home_directory,
+        *args,
+        file=file,
+        reporter=reporter,
+        **kwargs,
+    )
     if reporter is not None:
-        reporter.append_text_only("")
         reporter.append_text("Import and index reload finished.")
         alldu.report_database_size_on_import_finish(cdb, reporter)
+        reporter.append_text_only("")
+        reporter.append_text("Delete the copy made before starting import.")

@@ -10,6 +10,6 @@ database structure.
 
 if __name__ == "__main__":
     from .file_widget_du_713 import FileWidget
-    from ..dpt.database_one_step_du import ChessDatabase
+    from ..dpt.database_one_step_du import Database
 
-    FileWidget(ChessDatabase, "dpt")
+    FileWidget(Database, "dpt")

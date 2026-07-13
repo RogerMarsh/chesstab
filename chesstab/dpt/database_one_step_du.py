@@ -17,6 +17,7 @@ import os
 import multiprocessing
 import traceback
 import datetime
+import shutil
 
 # pylint will always give import-error message on non-Microsoft Windows
 # systems.
@@ -41,6 +42,7 @@ from solentware_base.core.constants import (
     FIELDS,
 )
 from solentware_base.core.segmentsize import SegmentSize
+from solentware_base.core.record import Record
 
 from .. import ERROR_LOG, APPLICATION_NAME
 from ..core import filespec
@@ -88,7 +90,6 @@ def _chess_du_report_increases(reporter, file, size_increases):
 # Restored from ChessTab-7.1.3 shared.alldu module and modified to fit.
 def _report_exception(cdb, reporter, exception):
     """Write exception to error log file, and reporter if available."""
-    errorlog_written = True
     try:
         with open(
             os.path.join(cdb.home_directory, ERROR_LOG),
@@ -115,13 +116,18 @@ def _report_exception(cdb, reporter, exception):
                 )
             )
     except Exception:
-        errorlog_written = False
-    if reporter is not None:
-        reporter.append_text("An exception has occured during import:")
-        reporter.append_text_only("")
-        reporter.append_text_only(str(exception))
-        reporter.append_text_only("")
-        if errorlog_written:
+        if reporter is not None:
+            reporter.append_text(
+                "".join(
+                    (
+                        "An exception has occured while reporting ",
+                        "an exception during import:",
+                    )
+                )
+            )
+            reporter.append_text_only("")
+            reporter.append_text_only(str(exception))
+            reporter.append_text_only("")
             reporter.append_text_only(
                 "".join(
                     (
@@ -131,16 +137,25 @@ def _report_exception(cdb, reporter, exception):
                     )
                 )
             )
-        else:
-            reporter.append_text_only(
-                "".join(
-                    (
-                        "attempt to append detail to ",
-                        os.path.join(cdb.home_directory, ERROR_LOG),
-                        " file failed.",
-                    )
+            reporter.append_text_only("")
+            reporter.append_text(
+                "Import abandonned in way depending on database engine."
+            )
+        raise
+    if reporter is not None:
+        reporter.append_text("An exception has occured during import:")
+        reporter.append_text_only("")
+        reporter.append_text_only(str(exception))
+        reporter.append_text_only("")
+        reporter.append_text_only(
+            "".join(
+                (
+                    "attempt to append detail to ",
+                    os.path.join(cdb.home_directory, ERROR_LOG),
+                    " file failed.",
                 )
             )
+        )
         reporter.append_text_only("")
         reporter.append_text(
             "Import abandonned in way depending on database engine."
@@ -164,6 +179,7 @@ def chess_du_import(
                 counts = [0, 0]
             else:
                 counts = [increases[0], increases[1]]
+            # _synchronize_backup_for_du(cdb, file, create=True)
             cdb.increase_database_record_capacity(files={key: counts})
             _chess_du_report_increases(reporter, key, counts)
             break
@@ -198,6 +214,7 @@ def chess_du_import(
         _report_exception(cdb, reporter, exc)
         raise
     cdb.unset_defer_update()
+    # _synchronize_backup_for_du(cdb, file, delete=True)
 
 
 # Restored from ChessTab-7.1.3 dpt.filespec module and modified to fit.
@@ -218,13 +235,29 @@ class FileSpec(filespec.FileSpec):
             }
 
 
-class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
+class ChessDBvaluePGNDUSingleStep(chessrecord.ChessDBvaluePGNUpdate):
+    """Chess game data with references to indicies to be applied."""
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return (
+            self.collected_game.is_pgn_valid()
+            and self.collected_game.is_tag_roster_valid()
+        )
+
+
+class ChessDBrecordGameDUSingleStep(Record):
     """Extend with version 7.1.3 import_pgn method.
 
     The ChessDBrecordGameImport.import_pgn() method from ChessTab-7.1.3
-    is added to support DPT single-step deferred updates.  The UI does
-    not use this method in import processing but imports to DPT databases
-    are a LOT faster if a non-ChessTab UI process uses this method.
+    is added to support DPT single-step deferred updates.  The UI uses
+    this method for 'Merge Import' processing because it is a LOT faster
+    than following the style for other database engines.
 
     It is a little faster than the other database engines.
 
@@ -232,6 +265,14 @@ class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
     database after restoring it to the state, from a backup copy, before
     the interrupted import started.
     """
+
+    def __init__(
+        self,
+        keyclass=chessrecord.ChessDBkeyGame,
+        valueclass=ChessDBvaluePGNDUSingleStep,
+    ):
+        """Extend with move number encode and decode methods."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
 
     def import_pgn(
         self, database, source, sourcename, reporter=None, quit_event=None
@@ -241,53 +282,65 @@ class ChessDBrecordGameDUSingleStep(chessrecord.ChessDBrecordGameSequential):
         if reporter is not None:
             reporter.append_text_only("")
             reporter.append_text("Extracting games from " + sourcename)
-        ddup = database.deferred_update_points
         db_segment_size = SegmentSize.db_segment_size
         value = self.value
         value.reference = {}
         reference = value.reference
         reference[FILE] = sourcename
         game_number = 0
+        collected_game = None
         for collected_game in value.read_games(source):
             if quit_event and quit_event.is_set():
                 if reporter is not None:
                     reporter.append_text_only("")
                     reporter.append_text("Import stopped.")
                 return False
-            self.key.recno = None
-            value.collected_game = collected_game
             game_number += 1
             reference[GAME] = str(game_number)
+            self.key.recno = None
+            value.collected_game = collected_game
             self.put_record(self.database, GAMES_FILE_DEF)
-            if self.key.recno % db_segment_size in ddup:
+            if game_number % db_segment_size == 0:
                 if reporter is not None:
                     reporter.append_text(
                         "".join(
                             (
                                 "Game ",
-                                str(game_number),
+                                format(game_number, ","),
                                 ", to character ",
-                                str(collected_game.game_offset),
+                                format(collected_game.game_offset, ","),
                                 " in PGN, is record ",
-                                str(self.key.recno),
+                                format(self.key.recno, ","),
                             )
                         )
                     )
                 database.commit()
                 database.deferred_update_housekeeping()
                 database.start_transaction()
-        if reporter is not None and value.collected_game is not None:
-            reporter.append_text(
-                "".join(
-                    (
-                        str(game_number),
-                        " games, to character ",
-                        str(value.collected_game.game_offset),
-                        " in PGN, read from ",
-                        sourcename,
+        if reporter is not None:
+            reporter.append_text_only("")
+            if game_number and collected_game is not None:
+                reporter.append_text(
+                    "".join(
+                        (
+                            format(game_number, ","),
+                            " games, to character ",
+                            format(collected_game.game_offset, ","),
+                            " in PGN, read from ",
+                            sourcename,
+                        )
                     )
                 )
-            )
+            else:
+                reporter.append_text(
+                    "".join(
+                        (
+                            format(game_number, ","),
+                            " games read from ",
+                            sourcename,
+                        )
+                    )
+                )
             reporter.append_text_only("")
         return True
 
@@ -362,7 +415,7 @@ class ChessDBrecordGameFastload(chessrecord.ChessDBrecordGameSequential):
 
 
 class DPTFileSpecError(Exception):
-    """File definition problem in ChessDatabase initialisation."""
+    """File definition problem in Database initialisation."""
 
 
 class DPTFistatError(Exception):
@@ -394,15 +447,14 @@ def database_du(
     del import_process
 
 
-class ChessDatabase(dptdu_database.Database):
+class Database(dptdu_database.Database):
     """Provide deferred update methods for a database of games of chess.
 
     Subclasses must include a subclass of dptbase.Database as a superclass.
 
     """
 
-    # ChessDatabase.deferred_update_points is not needed in DPT, like
-    # the similar attribute in chessdbbitdu.ChessDatabase for example, because
+    # Database.deferred_update_points is not needed in DPT because
     # DPT does it's own memory management for deferred updates.
     # The same attribute is provided to allow the import_pgn method called in
     # this module's chess_database_du function to report progress at regular
@@ -426,6 +478,8 @@ class ChessDatabase(dptdu_database.Database):
         Other arguments are passed through to superclass __init__.
 
         """
+        del use_specification_items
+        del dpt_records
         ddnames = get_filespec(**kargs)
         # Deferred update for games file only
         # for ddname in list(ddnames.keys()):
@@ -451,6 +505,18 @@ class ChessDatabase(dptdu_database.Database):
 
         # Methods passed by UI to populate report widgets
         self._reporter = None
+
+    # Set default parameters for single-step deferred update use.
+    def create_default_parms(self):
+        """Create default parms.ini file for single step mode.
+
+        Delete an existing parms.ini file and allow superclass to create
+        the required file.
+
+        """
+        if os.path.exists(self.parms):
+            os.remove(self.parms)
+        super().create_default_parms()
 
     def open_database(self, files=None):
         """Delegate then raise DPTFistatError if database not in DU mode.
@@ -503,7 +569,7 @@ def chess_database_import(
     dbpath, files, *args, file=None, reporter=None, increases=None, **kwargs
 ):
     """Import to file."""
-    cdb = ChessDatabase(dbpath, allowcreate=True)
+    cdb = Database(dbpath, allowcreate=True)
     cdb.open_database(files=files)
 
     # Running out of table B pages gets a RuntimeError exception.
@@ -523,6 +589,8 @@ def chess_database_import(
             raise
 
     # Necessary to update 'FISTAT' and 'FIFLAGS' information.
+    # Tolerate the two W0212 protected-access reports generated by pylint
+    # for the '_dbe' attribute.
     dbe = {}
     for tbl in cdb.table:
         dbe[tbl] = cdb.table[tbl]._dbe
@@ -676,3 +744,31 @@ def chess_database_import(
                 reporter.append_text_only("")
     finally:
         cdb.close_database_contexts(files=files)
+
+
+# Commented calls fail because file is being used by another process.
+# Workaround is tell user to take, and later restore or delete, a backup
+# using 'copy and paste' in File Explorer.
+def _synchronize_backup_for_du(cdb, file, create=False, delete=False):
+    """Ensure backups exist if create is True, or not if delete is True.
+
+    delete argument is ignored if create is True.
+
+    """
+    home_directory = cdb.home_directory
+    file_name = cdb.specification[file]["file"]
+    original = os.path.join(home_directory, file_name)
+    retained = os.path.join(home_directory, ".".join((file_name, "retained")))
+    backup = os.path.join(home_directory, ".".join((file_name, "backup")))
+    if create:
+        if os.path.isfile(backup):
+            os.replace(original, retained)
+            shutil.copy2(backup, original)
+        else:
+            shutil.copy2(original, backup)
+        return
+    if delete:
+        if os.path.isfile(retained):
+            os.remove(retained)
+        if os.path.isfile(backup):
+            os.remove(backup)

@@ -26,6 +26,7 @@ from solentware_base.core.constants import (
     GNU_MODULE,
     NDBM_MODULE,
     DPT_MODULE,
+    FILE,
 )
 
 from ..core import constants
@@ -407,6 +408,7 @@ class DeferredUpdateEstimateProcess:
                 )
             )
         )
+        games_exist_on_dpt_database = False
         database = self.database
         database.start_read_only_transaction()
         try:
@@ -432,11 +434,27 @@ class DeferredUpdateEstimateProcess:
                             )
                         )
                     )
-                    self._report_to_log_text_only(
-                        "(Only missing game numbers will be copied)"
-                    )
+                    if _looks_like_dpt(database):
+                        games_exist_on_dpt_database = True
+                    else:
+                        self._report_to_log_text_only(
+                            "(Only missing game numbers will be copied)"
+                        )
         finally:
             database.end_read_only_transaction()
+        if _looks_like_dpt(database) and games_exist_on_dpt_database:
+            self._report_to_log_text_only("")
+            self._report_to_log("Import abandoned.")
+            self._report_to_log_text_only(
+                " ".join(
+                    (
+                        "Existence on database of games from file or",
+                        "files named above implies successful",
+                        "completion of an earlier import.",
+                    )
+                )
+            )
+            return False
         self.estimate_data = True
         return True
 
@@ -451,21 +469,23 @@ class DeferredUpdateEstimateProcess:
         volfree, dbsize = utilities.get_freespace_and_database_size(
             self.database
         )
-        self._report_to_log_text_only("")
-        self._report_to_log_text_only(
-            "'Import' is quicker for small imports, but slower for large."
-        )
-        self._report_to_log_text_only(
-            "".join(
-                (
-                    "'Merge Import' is quicker by a few minutes at 1 ",
-                    "million games but by over 2 days at 10 million games.",
+        if not _looks_like_dpt(self.database):
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                "'Import' is quicker for small imports, but slower for large."
+            )
+            self._report_to_log_text_only(
+                "".join(
+                    (
+                        "'Merge Import' is quicker by a few minutes at 1 ",
+                        "million games but by over 2 days at 10 ",
+                        "million games.",
+                    )
                 )
             )
-        )
-        self._report_to_log_text_only(
-            "(3Ghz CPU, 1600Mhz memory, <WDC WDS250G2B0A-00SM50> SSD.)"
-        )
+            self._report_to_log_text_only(
+                "(3Ghz CPU, 1600Mhz memory, <WDC WDS250G2B0A-00SM50> SSD.)"
+            )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(
             "".join((volfree, " is available for additions to database."))
@@ -482,15 +502,44 @@ class DeferredUpdateEstimateProcess:
                 )
             )
         )
-        self._report_to_log_text_only(
-            "'Import' is limited by available space."
-        )
+        if not _looks_like_dpt(self.database):
+            self._report_to_log_text_only(
+                "'Import' is limited by available space."
+            )
         self._report_to_log_text_only("")
         self._report_to_log_text_only(
             "Games with PGN tag or movetext errors will not be indexed."
         )
         self._report_to_log_text_only("")
         self._report_to_log("Ready to start import.")
+        if _looks_like_dpt(self.database):
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                "Use 'copy and paste' in File Explorer to make a copy of"
+            )
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                os.path.join(
+                    self.database.home_directory,
+                    self.database.specification[GAMES_FILE_DEF][FILE],
+                )
+            )
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only("before starting the import.")
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                "You will be told to delete the copy when it is safe to do so."
+            )
+            self._report_to_log_text_only("")
+            self._report_to_log_text_only(
+                "".join(
+                    (
+                        "If something goes wrong after starting the ",
+                        "import overwrite the original with the copy ",
+                        "and repeat the import or delete the copy.",
+                    )
+                )
+            )
         return True
 
     def _get_pgn_file_estimates(self):
@@ -569,12 +618,13 @@ class DeferredUpdate(Bindings):
             underline=0,
             command=self.try_command(self._stop_task, self.buttonframe),
         ).pack(side=tkinter.RIGHT, padx=12)
-        tkinter.Button(
-            master=self.buttonframe,
-            text="Import",
-            underline=0,
-            command=self.try_command(self._do_import, self.buttonframe),
-        ).pack(side=tkinter.RIGHT, padx=12)
+        if not _looks_like_dpt(self.database):
+            tkinter.Button(
+                master=self.buttonframe,
+                text="Import",
+                underline=0,
+                command=self.try_command(self._do_import, self.buttonframe),
+            ).pack(side=tkinter.RIGHT, padx=12)
         if not self._database_looks_like_nosql():
             tkinter.Button(
                 master=self.buttonframe,
@@ -597,16 +647,18 @@ class DeferredUpdate(Bindings):
             logfile=self.home_directory,
         )
         self.report.focus_set()
-        self.bind(
-            self.report,
-            "<Alt-i>",
-            function=self.try_event(self._do_import),
-        )
-        self.bind(
-            self.report,
-            "<Alt-m>",
-            function=self.try_event(self._do_merge_import),
-        )
+        if not _looks_like_dpt(self.database):
+            self.bind(
+                self.report,
+                "<Alt-i>",
+                function=self.try_event(self._do_import),
+            )
+        if not self._database_looks_like_nosql():
+            self.bind(
+                self.report,
+                "<Alt-m>",
+                function=self.try_event(self._do_merge_import),
+            )
         self.bind(
             self.report,
             "<Alt-d>",
@@ -632,7 +684,9 @@ class DeferredUpdate(Bindings):
                 ("Importing to database in ", home_directory, " directory.")
             )
         )
-        if not self._database_looks_like_nosql():
+        if not self._database_looks_like_nosql() and not _looks_like_dpt(
+            self.database
+        ):
             self._report_to_log_text_only("")
             self._report_to_log_text_only(
                 "".join(
@@ -651,12 +705,6 @@ class DeferredUpdate(Bindings):
         self.root.deiconify()
         self._allow_job = True
         self._add_queued_reports_to_log()
-
-    def _database_looks_like_dpt(self):
-        """Return True if database module is DPT."""
-        return self.database.__class__.__module__.startswith(
-            APPLICATION_DATABASE_MODULE[DPT_MODULE]
-        )
 
     def _database_looks_like_nosql(self):
         """Return True if database module is in the _nosql set."""
@@ -987,3 +1035,10 @@ class DeferredUpdate(Bindings):
         )
         self.quit_thread.start()
         self._add_queued_reports_to_log()
+
+
+def _looks_like_dpt(database):
+    """Return True if database module is DPT."""
+    return database.__class__.__module__.startswith(
+        APPLICATION_DATABASE_MODULE[DPT_MODULE]
+    )
