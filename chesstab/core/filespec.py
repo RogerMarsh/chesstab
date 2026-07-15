@@ -31,21 +31,33 @@ from solentware_base.core.constants import (
 )
 import solentware_base.core.filespec
 
+import pgn_read.core.constants
+
+# Seven Tag Roster games file fields.
+EVENT_FIELD_DEF = pgn_read.core.constants.TAG_EVENT
+SITE_FIELD_DEF = pgn_read.core.constants.TAG_SITE
+DATE_FIELD_DEF = pgn_read.core.constants.TAG_DATE
+ROUND_FIELD_DEF = pgn_read.core.constants.TAG_ROUND
+WHITE_FIELD_DEF = pgn_read.core.constants.TAG_WHITE
+BLACK_FIELD_DEF = pgn_read.core.constants.TAG_BLACK
+RESULT_FIELD_DEF = pgn_read.core.constants.TAG_RESULT
+
 # PGN Tag fields.
 # These are the names recommended in the PGN specification plus others
 # commonly used.
 # All are well-known PGN Tags: those which are intentionally not indexed
 # are commented in PGN_TAG_NAMES.
+# pgn_read.core.constants defines some names in addition to Seven Tag Roster.
 PGN_TAG_NAMES = frozenset(
     (
         # These are the Seven Tag Roster in the PGN specification.
-        "Event",  # EVENT_FIELD_DEF.
-        "Site",  # SITE_FIELD_DEF.
-        "Date",  # DATE_FIELD_DEF.
-        "Round",  # ROUND_FIELD_DEF.
-        "White",  # WHITE_FIELD_DEF.
-        "Black",  # BLACK_FIELD_DEF.
-        "Result",  # RESULT_FIELD_DEF.
+        EVENT_FIELD_DEF,
+        SITE_FIELD_DEF,
+        DATE_FIELD_DEF,
+        ROUND_FIELD_DEF,
+        WHITE_FIELD_DEF,
+        BLACK_FIELD_DEF,
+        RESULT_FIELD_DEF,
         # These are the other tags in the PGN specification.
         "WhiteTitle",
         "BlackTitle",
@@ -112,26 +124,12 @@ IDENTITY_FILE_DEF = "identity"
 # Names used to refer to field descriptions
 # DPT fields or Berkeley DB secondary databases
 
-# games file fields.
+# Other games file fields.
 GAME_FIELD_DEF = "Game"
 PGN_ERROR_FIELD_DEF = "pgnerror"
 PGNFILE_FIELD_DEF = "pgnfile"
 # NUMBER_FIELD_DEF = "number"
-EVENT_FIELD_DEF = "Event"
-SITE_FIELD_DEF = "Site"
-DATE_FIELD_DEF = "Date"
-ROUND_FIELD_DEF = "Round"
-WHITE_FIELD_DEF = "White"
-BLACK_FIELD_DEF = "Black"
-RESULT_FIELD_DEF = "Result"
 POSITIONS_FIELD_DEF = "positions"
-assert EVENT_FIELD_DEF in PGN_TAG_NAMES
-assert SITE_FIELD_DEF in PGN_TAG_NAMES
-assert DATE_FIELD_DEF in PGN_TAG_NAMES
-assert ROUND_FIELD_DEF in PGN_TAG_NAMES
-assert WHITE_FIELD_DEF in PGN_TAG_NAMES
-assert BLACK_FIELD_DEF in PGN_TAG_NAMES
-assert RESULT_FIELD_DEF in PGN_TAG_NAMES
 PIECESQUARE_FIELD_DEF = "piecesquare"
 IMPORT_FIELD_DEF = "import"
 CQL_QUERY_FIELD_DEF = "cqlquery"

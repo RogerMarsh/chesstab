@@ -756,15 +756,6 @@ class EventSpec:
     menu_select_index = ("", "Index", "", 0)
     menu_select_error = ("", "Error", "", 0)
 
-    # Submenu for menu_select_index.
-    menu_select_index_black = ("", "Black", "", 0)
-    menu_select_index_white = ("", "White", "", 0)
-    menu_select_index_event = ("", "Event", "", 0)
-    menu_select_index_date = ("", "Date", "", 0)
-    menu_select_index_result = ("", "Result", "", 0)
-    menu_select_index_site = ("", "Site", "", 0)
-    menu_select_index_round = ("", "Round", "", 4)
-
     menu_game_new_game = ("", "New Game", "", 0)
     menu_position_partial = ("", "Query", "", 0)
     menu_position_show_query_engines = ("", "Show Query Engines", "", 11)

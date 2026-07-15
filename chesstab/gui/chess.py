@@ -52,6 +52,7 @@ from solentware_bind.gui.bindings import Bindings
 from solentware_bind.gui.exceptionhandler import ExceptionHandler
 
 from pgn_read.core.parser import PGN
+from pgn_read.core.constants import SEVEN_TAG_ROSTER
 
 from ..core import export_game
 from ..core import export_repertoire
@@ -70,13 +71,8 @@ from ..core.filespec import (
     make_filespec,
     GAMES_FILE_DEF,
     PGN_ERROR_FIELD_DEF,
-    EVENT_FIELD_DEF,
-    SITE_FIELD_DEF,
-    DATE_FIELD_DEF,
     ROUND_FIELD_DEF,
-    WHITE_FIELD_DEF,
-    BLACK_FIELD_DEF,
-    RESULT_FIELD_DEF,
+    PGN_TAG_NAMES,
 )
 from ..core.constants import UNKNOWN_RESULT, SORT_AREA
 from ..shared import rundu
@@ -349,21 +345,38 @@ class Chess(Bindings):
             )
             for index in (5, 4, 3, 1, 0):
                 menu2.insert_separator(index)
-            for accelerator, field in (
-                (EventSpec.menu_select_index_black, BLACK_FIELD_DEF),
-                (EventSpec.menu_select_index_white, WHITE_FIELD_DEF),
-                (EventSpec.menu_select_index_event, EVENT_FIELD_DEF),
-                (EventSpec.menu_select_index_date, DATE_FIELD_DEF),
-                (EventSpec.menu_select_index_result, RESULT_FIELD_DEF),
-                (EventSpec.menu_select_index_site, SITE_FIELD_DEF),
-                (EventSpec.menu_select_index_round, ROUND_FIELD_DEF),
-            ):
+            for field in SEVEN_TAG_ROSTER:
+                # Items for Round and Result fields are in same menu, and
+                # no items for field names starting 'N'.
+                if field == ROUND_FIELD_DEF:
+                    underline = field.find("n")
+                    label = field.lower().replace("n", "N", count=1)
+                else:
+                    underline = 0
+                    label = field
                 menu201.add_command(
-                    label=accelerator[1],
+                    label=label,
                     command=self.try_command(
                         self._create_options_index_callback(field), menu201
                     ),
-                    underline=accelerator[3],
+                    underline=underline,
+                )
+            menu20101 = tkinter.Menu(menu201, name="other", tearoff=False)
+            menu201.add_cascade(
+                label="Others",
+                menu=menu20101,
+                underline=0,
+            )
+            for serial, field in enumerate(
+                sorted(PGN_TAG_NAMES.difference(SEVEN_TAG_ROSTER))
+            ):
+                quotient, remainder = divmod(serial, 10)
+                menu20101.add_command(
+                    label=field,
+                    command=self.try_command(
+                        self._create_options_index_callback(field), menu201
+                    ),
+                    columnbreak=0 if remainder or not quotient else 1,
                 )
 
             self._create_menu3_game(menus, menubar)
