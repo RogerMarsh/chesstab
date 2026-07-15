@@ -25,6 +25,8 @@ transaction.
 import os
 import shutil
 
+from solentware_base.core.constants import SECONDARY
+
 from ..core import filespec
 from ..core import constants
 
@@ -244,3 +246,29 @@ def get_freespace_and_database_size(database):
             )
         )
     return volfree, dbsize
+
+
+# Listing Games file fields one per line, as in report, can produce a dialogue
+# which is taller than the display.  This method returns the report with the
+# fields on one line separated by spaces and assumes the long line is wrapped
+# sensibly when the dialogue is generated.
+def reformat_where_error_report(report, datasource):
+    """Return report with space delimiter between file's field names.
+
+    It is assumed where.WhereStatementError.get_error_report() generates
+    the error report
+
+    report        error_report text.
+    datasource    datasource referenced when generating error report.
+
+    """
+    fields = sorted(
+        [
+            k if v else k
+            for k, v in datasource.dbhome.specification[
+                datasource.dbset
+            ][SECONDARY].items()
+        ]
+    )
+    return "  ".join(fields).join(report.split("\n".join(fields)))
+

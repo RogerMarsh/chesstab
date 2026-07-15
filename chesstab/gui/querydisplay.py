@@ -244,8 +244,11 @@ class _QueryDisplay(
                         "named:\n\n",
                         updater.value.get_name_text(),
                         "\n\nto database.\n\n",
-                        updater.value.where_error.get_error_report(
-                            self.ui.base_games.get_data_source()
+                        utilities.reformat_where_error_report(
+                            updater.value.where_error.get_error_report(
+                                self.ui.base_games.get_data_source()
+                            ),
+                            self.ui.base_games.get_data_source(),
                         ),
                     )
                 ),
@@ -678,8 +681,11 @@ class QueryDisplayEdit(EditText, QueryDisplayInsert):
                         "named:\n\n",
                         updater.value.get_name_text(),
                         "\n\nto database.\n\n",
-                        updater.value.where_error.get_error_report(
-                            self.ui.base_games.get_data_source()
+                        utilities.reformat_where_error_report(
+                            updater.value.where_error.get_error_report(
+                                self.ui.base_games.get_data_source()
+                            ),
+                            self.ui.base_games.get_data_source(),
                         ),
                     )
                 ),

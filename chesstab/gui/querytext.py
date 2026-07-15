@@ -12,6 +12,7 @@ from .gamerow import chess_db_row_game
 from ..core.chessrecord import ChessDBrecordGameTags
 from .blanktext import NonTagBind, BlankText
 from .sharedtext import SharedText, SharedTextEngineText, SharedTextScore
+from ..core import utilities
 
 
 class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
@@ -106,14 +107,18 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         )
         statement = self.query_statement
         if statement.where_error:
+            error_report = utilities.reformat_where_error_report(
+                statement.where_error.get_error_report(
+                    grid.get_data_source()
+                ),
+                grid.get_data_source(),
+            )
             self.ui.base_games.datasource.get_selection_rule_games(None)
             self.ui.base_games.load_new_index()
             tkinter.messagebox.showerror(
                 parent=self.ui.get_toplevel(),
                 title="Display Game Selection Rule",
-                message=statement.where_error.get_error_report(
-                    grid.datasource
-                ),
+                message=error_report,
             )
         elif statement.where:
             grid.datasource.dbhome.start_read_only_transaction()

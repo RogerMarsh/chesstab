@@ -10,6 +10,7 @@ from solentware_grid.gui.dataedit import DataEdit
 
 from .querytoplevel import QueryToplevel, QueryToplevelEdit
 from .topleveltext import EditText
+from ..core import utilities
 
 
 class QueryDbEdit(EditText, DataEdit):
@@ -131,6 +132,12 @@ class QueryDbEdit(EditText, DataEdit):
             )
             return False
         if self.newobject.value.where_error:
+            error_report = utilities.reformat_where_error_report(
+                self.newobject.value.where_error.get_error_report(
+                    self.ui.base_games.get_data_source()
+                ),
+                self.ui.base_games.get_data_source(),
+            )
             if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
                 parent=self.parent,
                 title=title,
@@ -140,9 +147,7 @@ class QueryDbEdit(EditText, DataEdit):
                         "named:\n\n",
                         self.newobject.value.get_name_text(),
                         "\n\non database.\n\n",
-                        self.newobject.value.where_error.get_error_report(
-                            self.ui.base_games.get_data_source()
-                        ),
+                        error_report,
                     )
                 ),
             ):
