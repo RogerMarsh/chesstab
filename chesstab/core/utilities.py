@@ -265,10 +265,9 @@ def reformat_where_error_report(report, datasource):
     fields = sorted(
         [
             k if v else k
-            for k, v in datasource.dbhome.specification[
-                datasource.dbset
-            ][SECONDARY].items()
+            for k, v in datasource.dbhome.specification[datasource.dbset][
+                SECONDARY
+            ].items()
         ]
     )
     return "  ".join(fields).join(report.split("\n".join(fields)))
-

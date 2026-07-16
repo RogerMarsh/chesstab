@@ -91,7 +91,5 @@ def export_single_position(partialposition, filename):
         return
     cql_statement = CQLStatement()
     cql_statement.prepare_cql_statement(partialposition)
-    if not cql_statement.is_statement():
-        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         gamesout.write(cql_statement.get_statement_text())

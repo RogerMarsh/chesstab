@@ -101,12 +101,9 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
 
     def _get_partial_key_cql_statement(self):
         """Return ChessQL statement for use as partial key."""
-        if self.cql_statement.is_statement():
-            # Things must be arranged so a tuple, not a list, can be returned.
-            # return tuple(self.cql_statement.position)
-            return self.cql_statement.get_statement_text()  # Maybe!
-
-        return False
+        # Things must be arranged so a tuple, not a list, can be returned.
+        # return tuple(self.cql_statement.position)
+        return self.cql_statement.get_statement_text()  # Maybe!
 
     def refresh_game_list(self, key_recno=None):
         """Display games with position matching selected ChessQL statement."""
@@ -128,58 +125,39 @@ class CQLText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
             )
             return
         cqls = self.cql_statement
-        if cqls.cql_error:
-            grid.datasource.get_cql_statement_games(None, None)
-        else:
-            try:
-                grid.datasource.get_cql_statement_games(cqls, key_recno)
-            except AttributeError as exc:
-                if str(exc) == "'NoneType' object has no attribute 'answer'":
-                    msg = "".join(
-                        (
-                            "Unable to list games for ChessQL statement, ",
-                            "probably because an 'empty square' is in the ",
-                            "query (eg '.a2-3'):\n\n",
-                            "The reported  error is:\n\n",
-                            str(exc),
-                        )
+        try:
+            grid.datasource.get_cql_statement_games(cqls, key_recno)
+        except AttributeError as exc:
+            if str(exc) == "'NoneType' object has no attribute 'answer'":
+                msg = "".join(
+                    (
+                        "Unable to list games for ChessQL statement, ",
+                        "probably because an 'empty square' is in the ",
+                        "query (eg '.a2-3'):\n\n",
+                        "The reported  error is:\n\n",
+                        str(exc),
                     )
-                else:
-                    msg = "".join(
-                        (
-                            "Unable to list games for ChessQL statement:\n\n",
-                            "The reported error is:\n\n",
-                            str(exc),
-                        )
-                    )
-                grid.datasource.get_cql_statement_games(None, None)
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="ChessQL Statement",
-                    message=msg,
                 )
+            else:
+                msg = "".join(
+                    (
+                        "Unable to list games for ChessQL statement:\n\n",
+                        "The reported error is:\n\n",
+                        str(exc),
+                    )
+                )
+            grid.datasource.get_cql_statement_games(None, None)
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title="ChessQL Statement",
+                message=msg,
+            )
         grid.partial = self._get_partial_key_cql_statement()
         # grid.rows = 1
         grid.load_new_index()
 
         # Get rid of the 'Please wait ...' status text.
         self.ui.statusbar.set_status_text()
-
-        if cqls.cql_error:
-            if self.ui.is_database_access_inhibited():
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="ChessQL Statement Error",
-                    message=cqls.cql_error.get_error_report(),
-                )
-            else:
-                tkinter.messagebox.showinfo(
-                    parent=self.ui.get_toplevel(),
-                    title="ChessQL Statement Error",
-                    message=cqls.cql_error.add_error_report_to_message(
-                        ("An empty game list will be displayed.")
-                    ),
-                )
 
     def _tag_match_text(self, match_, tag):
         """Add match_.text in self.score to tag.

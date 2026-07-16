@@ -117,44 +117,17 @@ class CQLDbEdit(EditText, DataEdit):
         )
         title = self._get_title_for_object()
         if not self.newobject.value.get_name_text():
-            if not self.newobject.value.cql_error:
-                tkinter.messagebox.showerror(
-                    parent=self.parent,
-                    title=title,
-                    message="".join(
-                        (
-                            "The ChessQL statement has no name.\n\nPlease ",
-                            "enter it's name as the first line of text.'",
-                        )
-                    ),
-                )
-            else:
-                tkinter.messagebox.showerror(
-                    parent=self.parent,
-                    title=title,
-                    message="".join(
-                        (
-                            "The text does not contain a valid ChessQL ",
-                            "statement. ",
-                        )
-                    ),
-                )
-            return False
-        if self.newobject.value.cql_error:
-            if tkinter.messagebox.YES != tkinter.messagebox.askquestion(
+            tkinter.messagebox.showerror(
                 parent=self.parent,
                 title=title,
                 message="".join(
                     (
-                        "Confirm request to update ChessQL statement ",
-                        "named:\n\n",
-                        self.newobject.value.get_name_text(),
-                        "\n\non database.\n\n",
-                        self.newobject.value.cql_error.get_error_report(),
+                        "The ChessQL statement has no name.\n\nPlease ",
+                        "enter it's name as the first line of text.'",
                     )
                 ),
-            ):
-                return False
+            )
+            return False
         if self.ui.partial_items.active_item:
             if self.ui.partial_items.active_item.sourceobject is None:
                 tkinter.messagebox.showinfo(

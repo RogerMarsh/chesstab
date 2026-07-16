@@ -103,15 +103,6 @@ class CQLStatement:
         """Return self._recordset."""
         return self._recordset
 
-    @property
-    def cql_error(self):
-        """Return the error information for the CQL statement."""
-        return None
-
-    def is_statement(self):
-        """Return True if the statement has no errors."""
-        return not self.cql_error
-
     def set_database(self, database=None):
         """Set Database instance to which ChessQL query is applied."""
         self._opendatabase = database

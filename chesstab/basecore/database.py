@@ -25,6 +25,7 @@ from ..core.filespec import (
 from ..core import export_game
 from ..core import cqlstatement
 from .. import APPLICATION_NAME, ERROR_LOG
+from ..cql.queryevaluator import QueryEvaluatorError
 
 # The *_TEST constants allow report generation for smaller number of games
 # likely in test environments.
@@ -413,7 +414,14 @@ class Database:
                 with open(cql_file, "r", encoding="utf-8") as cqlin:
                     statement_text = cqlin.read()
                 widget.update()
-                statement.prepare_cql_statement(statement_text)
+                try:
+                    statement.prepare_cql_statement(statement_text)
+                except QueryEvaluatorError as exc:
+                    exc_lines = str(exc).split("\n")
+                    reporter.append_text(exc_lines[0])
+                    for line in exc_lines[1:]:
+                        reporter.append_text_only(line)
+                    continue
                 widget.update()
                 statement.query_container.evaluator.run_statement(
                     self,
@@ -465,6 +473,16 @@ class Database:
             raise
         widget.update()
         shutil.rmtree(cql_dir)
+        os.remove(
+            "".join(
+                (
+                    database_file,
+                    "-",
+                    os.path.basename(database_file),
+                    ".cql",
+                )
+            )
+        )
         os.remove(pgn_file)
         reporter.append_text_only("")
         reporter.append_text("Database update completed.")

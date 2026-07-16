@@ -108,9 +108,7 @@ class QueryText(SharedText, SharedTextEngineText, SharedTextScore, BlankText):
         statement = self.query_statement
         if statement.where_error:
             error_report = utilities.reformat_where_error_report(
-                statement.where_error.get_error_report(
-                    grid.get_data_source()
-                ),
+                statement.where_error.get_error_report(grid.get_data_source()),
                 grid.get_data_source(),
             )
             self.ui.base_games.datasource.get_selection_rule_games(None)
