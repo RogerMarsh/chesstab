@@ -350,7 +350,7 @@ class Chess(Bindings):
                 # no items for field names starting 'N'.
                 if field == ROUND_FIELD_DEF:
                     underline = field.find("n")
-                    label = field.lower().replace("n", "N", count=1)
+                    label = field.lower().replace("n", "N", 1)
                 else:
                     underline = 0
                     label = field
