@@ -903,11 +903,11 @@ def _export_selected_games(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         keyset.place_record_number(bookmark[0])
-                    all_games_output = all_games_output and (
+                    all_games_output = (
                         _export_selected_games_index_order_date(
                             keyset, gamesout, instance, exporter, counter
                         )
-                    )
+                    ) and all_games_output
             finally:
                 keyset.close()
         else:
@@ -926,7 +926,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
                     try:
                         dateset_count = dateset.count_records()
                         if dateset_count > _MEMORY_SORT_LIMIT:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_event(
                                     dateset,
                                     gamesout,
@@ -934,9 +934,9 @@ def _export_selected_games(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                         else:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_pgn_collation_order(
                                     dateset,
                                     gamesout,
@@ -944,7 +944,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                     finally:
                         dateset.close()
         statusbar.set_status_text(
@@ -986,11 +986,11 @@ def _export_games(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         keyset.place_record_number(bookmark[0])
-                    all_games_output = all_games_output and (
+                    all_games_output = (
                         _export_selected_games_index_order_date(
                             keyset, gamesout, instance, exporter, counter
                         )
-                    )
+                    ) and all_games_output
             finally:
                 keyset.close()
         else:
@@ -1018,7 +1018,7 @@ def _export_games(grid, filename, report_text, exporter):
                         try:
                             dateset_count = dateset.count_records()
                             if dateset_count > _MEMORY_SORT_LIMIT:
-                                all_games_output = all_games_output and (
+                                all_games_output = (
                                     _export_selected_games_index_order_event(
                                         dateset,
                                         gamesout,
@@ -1026,9 +1026,9 @@ def _export_games(grid, filename, report_text, exporter):
                                         exporter,
                                         counter,
                                     )
-                                )
+                                ) and all_games_output
                             else:
-                                all_games_output = all_games_output and (
+                                all_games_output = (
                                     _export_selected_games_pgn_collation_order(
                                         dateset,
                                         gamesout,
@@ -1036,11 +1036,11 @@ def _export_games(grid, filename, report_text, exporter):
                                         exporter,
                                         counter,
                                     )
-                                )
+                                ) and all_games_output
                         finally:
                             dateset.close()
                 else:
-                    all_games_output = all_games_output and (
+                    all_games_output = (
                         _export_selected_games_pgn_collation_order(
                             recordset,
                             gamesout,
@@ -1048,7 +1048,7 @@ def _export_games(grid, filename, report_text, exporter):
                             exporter,
                             counter,
                         )
-                    )
+                    ) and all_games_output
         statusbar.set_status_text(
             "Completed: "
             + counter.output_report
@@ -1145,7 +1145,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         if prev_key != bookmark[0]:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_bookmark(
                                     keyset,
                                     gamesout,
@@ -1153,15 +1153,15 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                             keyset.clear_recordset()
                             prev_key = bookmark[0]
                         keyset.place_record_number(bookmark[1])
-                    all_games_output = all_games_output and (
+                    all_games_output = (
                         _export_selected_games_index_order_bookmark(
                             keyset, gamesout, instance, exporter, counter
                         )
-                    )
+                    ) and all_games_output
                     keyset.clear_recordset()
             finally:
                 keyset.close()
@@ -1183,7 +1183,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_date(
                                     keyset,
                                     gamesout,
@@ -1191,9 +1191,9 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                         else:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_value(
                                     keyset,
                                     gamesout,
@@ -1201,7 +1201,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                     finally:
                         keyset.close()
         else:
@@ -1219,7 +1219,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_date(
                                     keyset,
                                     gamesout,
@@ -1227,9 +1227,9 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                         else:
-                            all_games_output = all_games_output and (
+                            all_games_output = (
                                 _export_selected_games_index_order_value(
                                     keyset,
                                     gamesout,
@@ -1237,7 +1237,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                                     exporter,
                                     counter,
                                 )
-                            )
+                            ) and all_games_output
                     finally:
                         keyset.close()
         statusbar.set_status_text(
@@ -1291,18 +1291,16 @@ def _export_selected_games_index_order_result(
             resultset_count = resultset.count_records()
             if resultset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_database_order(
+                    _export_selected_games_database_order(
                         resultset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif resultset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         resultset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             resultset.close()
     return all_games_output
@@ -1330,18 +1328,16 @@ def _export_selected_games_index_order_black(
             blackset_count = blackset.count_records()
             if blackset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_result(
+                    _export_selected_games_index_order_result(
                         blackset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif blackset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         blackset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             blackset.close()
     return all_games_output
@@ -1369,18 +1365,16 @@ def _export_selected_games_index_order_white(
             whiteset_count = whiteset.count_records()
             if whiteset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_black(
+                    _export_selected_games_index_order_black(
                         whiteset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif whiteset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         whiteset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             whiteset.close()
     return all_games_output
@@ -1408,18 +1402,16 @@ def _export_selected_games_index_order_round(
             roundset_count = roundset.count_records()
             if roundset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_white(
+                    _export_selected_games_index_order_white(
                         roundset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif roundset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         roundset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             roundset.close()
     return all_games_output
@@ -1447,18 +1439,16 @@ def _export_selected_games_index_order_site(
             siteset_count = siteset.count_records()
             if siteset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_round(
+                    _export_selected_games_index_order_round(
                         siteset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif siteset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         siteset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             siteset.close()
     return all_games_output
@@ -1486,18 +1476,16 @@ def _export_selected_games_index_order_event(
             eventset_count = eventset.count_records()
             if eventset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_site(
+                    _export_selected_games_index_order_site(
                         eventset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif eventset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         eventset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             eventset.close()
     return all_games_output
@@ -1525,18 +1513,16 @@ def _export_selected_games_index_order_date(
             dateset_count = dateset.count_records()
             if dateset_count > _MEMORY_SORT_LIMIT:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_index_order_event(
+                    _export_selected_games_index_order_event(
                         dateset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
             elif dateset_count > 0:
                 all_games_output = (
-                    all_games_output
-                    and _export_selected_games_pgn_collation_order(
+                    _export_selected_games_pgn_collation_order(
                         dateset, gamesout, instance, exporter, counter
                     )
-                )
+                ) and all_games_output
         finally:
             dateset.close()
     return all_games_output
