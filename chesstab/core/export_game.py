@@ -1280,7 +1280,7 @@ def _export_selected_games_index_order_result(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1319,7 +1319,7 @@ def _export_selected_games_index_order_black(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1358,7 +1358,7 @@ def _export_selected_games_index_order_white(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1397,7 +1397,7 @@ def _export_selected_games_index_order_round(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1436,7 +1436,7 @@ def _export_selected_games_index_order_site(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1475,7 +1475,7 @@ def _export_selected_games_index_order_event(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
@@ -1514,7 +1514,7 @@ def _export_selected_games_index_order_date(
     selector = database.encode_record_selector
     all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = recordlist_key(
+        recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
         )
         try:
