@@ -12,7 +12,7 @@ from solentware_base.core.wherevalues import ValuesClause
 
 from pgn_read.core.parser import PGN
 
-from . import chessrecord, filespec, lexer, pgnify, cqlpgnify
+from . import chessrecord, filespec, lexer, pgnify, cqlpgnify, count_export
 from .export_pgn_import_format import export_pgn_import_format
 from ..basecore.selectionds import SelectionDS
 
@@ -24,68 +24,29 @@ from ..basecore.selectionds import SelectionDS
 # _ENCODING = "iso-8859-1"
 _ENCODING = "utf-8"
 
-_UPDATE_FREQUENCY = 1000
-
 # This value avoids swapping on 8Gb memory test box with TWIC 1-1500.
 # Values more than double this hit problems with games sorted by result
 # with the menu 'Select | Inndex | Result' option.
 _MEMORY_SORT_LIMIT = 300000
 
 
-class _Counter:
-    """Count and report records read, sorted, and output."""
-
-    def __init__(self, total, reportbar):
-        """Initialize counts and report strings."""
-        formatter = str(len(str(total))).join(("{: ", "}"))
-        self._reportbar = reportbar
-        self.games_read = 0
-        self.games_output = 0
-        self._read_report = "".join(
-            (formatter, " read for sort of ", str(total))
-        )
-        self._output_report = "".join(
-            (formatter, " output sorted of ", str(total))
-        )
-
-    @property
-    def read_report(self):
-        """Get report count of records read for sorting."""
-        return self._read_report.format(self.games_read)
-
-    @property
-    def output_report(self):
-        """Get report count of sorted records output."""
-        return self._output_report.format(self.games_output)
-
-    def increment_games_output(self):
-        """Incremant output count of sorted games and show in reportbar."""
-        self.games_output += 1
-        if not self.games_output % _UPDATE_FREQUENCY:
-            self._reportbar.set_status_text(self.output_report)
-            self._reportbar.status.update_idletasks()
-
-    def increment_games_read(self):
-        """Incremant read count of games to sort and show in reportbar."""
-        self.games_read += 1
-        if not self.games_read % _UPDATE_FREQUENCY:
-            self._reportbar.set_status_text(self.read_report)
-            self._reportbar.status.update_idletasks()
-
-
 def export_all_games_text(database, filename, statusbar):
     """Export games in database to text file in internal record format."""
     if filename is None:
-        return True
+        return
     statusbar.status.update()
     statusbar.set_status_text("Started: internal format")
     statusbar.status.update_idletasks()
     literal_eval = ast.literal_eval
     instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
+    counter = count_export.create_counter(statusbar)
     database.start_read_only_transaction()
     try:
-        counter = _Counter(_all_records_count(database), statusbar)
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
+        counter.items_selected = counter.items_database
         cursor = database.database_cursor(
             filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
         )
@@ -96,32 +57,32 @@ def export_all_games_text(database, filename, statusbar):
                     instance.load_record(current_record)
                     gamesout.write(literal_eval(instance.get_srvalue()[0]))
                     gamesout.write("\n")
-                    counter.increment_games_output()
+                    counter.increment_items_output()
                     current_record = cursor.next()
         finally:
             cursor.close()
             statusbar.set_status_text(
                 "Completed: "
-                + counter.output_report
+                + counter.completed_report()
                 + " to "
                 + os.path.basename(filename)
                 + " in internal format"
             )
     finally:
         database.end_read_only_transaction()
-    return True
+    return
 
 
 def export_all_games_pgn(database, filename, statusbar):
     """Export all database games in PGN export format."""
-    return _export_all_games(
+    _export_all_games(
         database, filename, statusbar, "export format", _export_pgn_elements
     )
 
 
 def export_all_games_pgn_import_format(database, filename, statusbar):
     """Export all database games in a PGN inport format."""
-    return _export_all_games(
+    _export_all_games(
         database,
         filename,
         statusbar,
@@ -132,7 +93,7 @@ def export_all_games_pgn_import_format(database, filename, statusbar):
 
 def export_all_games_pgn_no_comments(database, filename, statusbar):
     """Export all database games in PGN export format excluding comments."""
-    return _export_all_games(
+    _export_all_games(
         database,
         filename,
         statusbar,
@@ -143,7 +104,7 @@ def export_all_games_pgn_no_comments(database, filename, statusbar):
 
 def export_all_games_pgn_no_structured_comments(database, filename, statusbar):
     """Export database games in PGN export format without {[%]} comments."""
-    return _export_all_games(
+    _export_all_games(
         database,
         filename,
         statusbar,
@@ -158,18 +119,18 @@ def export_all_games_pgn_no_comments_no_ravs(database, filename, statusbar):
     Comments and RAVs are excluded from the export.
 
     """
-    return _export_all_games(
+    _export_all_games(
         database,
         filename,
         statusbar,
-        "export format no comments or variations",
+        "export format tags and moves played",
         _export_pgn_no_comments_no_ravs,
     )
 
 
 def export_all_games_pgn_reduced_export_format(database, filename, statusbar):
     """Export all database games in PGN reduced export format."""
-    return _export_all_games(
+    _export_all_games(
         database,
         filename,
         statusbar,
@@ -187,8 +148,9 @@ def export_selected_games_pgn_import_format(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn_import_format(grid, filename)
-    return (
+        export_games_pgn_import_format(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
@@ -204,8 +166,9 @@ def export_selected_games_pgn(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn(grid, filename)
-    return (
+        export_games_pgn(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
@@ -221,8 +184,9 @@ def export_selected_games_pgn_no_comments(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn_no_comments(grid, filename)
-    return (
+        export_games_pgn_no_comments(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
@@ -243,8 +207,9 @@ def export_selected_games_pgn_no_structured_comments(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn_no_structured_comments(grid, filename)
-    return (
+        export_games_pgn_no_structured_comments(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
@@ -265,15 +230,16 @@ def export_selected_games_pgn_no_comments_no_ravs(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn_no_comments_no_ravs(grid, filename)
-    return (
+        export_games_pgn_no_comments_no_ravs(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
     )(
         grid,
         filename,
-        "export format no comments or variations",
+        "export format tags and moves played",
         _export_pgn_no_comments_no_ravs,
     )
 
@@ -287,8 +253,9 @@ def export_selected_games_pgn_reduced_export_format(grid, filename):
     """
     data_source = grid.get_data_source()
     if isinstance(data_source, SelectionDS):
-        return export_games_pgn_reduced_export_format(grid, filename)
-    return (
+        export_games_pgn_reduced_export_format(grid, filename)
+        return
+    (
         _export_selected_games
         if data_source.dbhome.is_primary(data_source.dbset, data_source.dbname)
         else _export_selected_games_index_order
@@ -308,19 +275,23 @@ def export_selected_games_text(grid, filename):
 
     """
     if filename is None:
-        return True
+        return
     literal_eval = ast.literal_eval
     statusbar = grid.ui.statusbar
     statusbar.status.update()
     data_source = grid.get_data_source()
     database = data_source.dbhome
+    counter = count_export.create_counter(statusbar)
     database.start_read_only_transaction()
     try:
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
         primary = database.is_primary(data_source.dbset, data_source.dbname)
         instance = chessrecord.ChessDBrecordGame()
         instance.set_database(database)
         if grid.bookmarks:
-            counter = _Counter(_bookmarked_records_count(grid), statusbar)
+            counter.items_selected = len(grid.bookmarks)
             statusbar.set_status_text("Started (bookmark): internal format")
             statusbar.status.update_idletasks()
             with open(filename, "w", encoding=_ENCODING) as gamesout:
@@ -333,9 +304,9 @@ def export_selected_games_text(grid, filename):
                     )
                     gamesout.write(literal_eval(instance.get_srvalue()[0]))
                     gamesout.write("\n")
-                    counter.increment_games_output()
+                    counter.increment_items_output()
         elif grid.partial:
-            counter = _Counter(_selected_records_count(grid), statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (key): internal format")
             statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
@@ -343,13 +314,13 @@ def export_selected_games_text(grid, filename):
                 if primary:
                     current_record = cursor.first()
                     if current_record is None:
-                        return None
+                        return
                 else:
                     current_record = cursor.nearest(
                         database.encode_record_selector(grid.partial)
                     )
                     if not current_record[0].startswith(grid.partial):
-                        return None
+                        return
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     while current_record:
                         if not primary:
@@ -363,23 +334,19 @@ def export_selected_games_text(grid, filename):
                         )
                         gamesout.write(literal_eval(instance.get_srvalue()[0]))
                         gamesout.write("\n")
-                        counter.increment_games_output()
+                        counter.increment_items_output()
                         current_record = cursor.next()
             finally:
                 cursor.close()
         else:
-            if isinstance(data_source, SelectionDS):
-                record_count = data_source.recordset.count_records()
-            else:
-                record_count = _all_records_count(database)
-            counter = _Counter(record_count, statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all): internal format")
             statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
             try:
                 current_record = cursor.first()
                 if current_record is None:
-                    return None
+                    return
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     while True:
                         instance.load_record(
@@ -390,7 +357,7 @@ def export_selected_games_text(grid, filename):
                         )
                         gamesout.write(literal_eval(instance.get_srvalue()[0]))
                         gamesout.write("\n")
-                        counter.increment_games_output()
+                        counter.increment_items_output()
                         current_record = cursor.next()
                         if current_record is None:
                             break
@@ -398,14 +365,14 @@ def export_selected_games_text(grid, filename):
                 cursor.close()
         statusbar.set_status_text(
             "Completed: "
-            + counter.output_report
+            + counter.completed_report()
             + " to "
             + os.path.basename(filename)
             + " in internal format"
         )
     finally:
         database.end_read_only_transaction()
-    return True
+    return
 
 
 def export_games_pgn_import_format(grid, filename):
@@ -415,9 +382,7 @@ def export_games_pgn_import_format(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(
-        grid, filename, "import format", _export_pgn_import_format
-    )
+    _export_games(grid, filename, "import format", _export_pgn_import_format)
 
 
 def export_games_pgn(grid, filename):
@@ -427,7 +392,7 @@ def export_games_pgn(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(grid, filename, "export format", _export_pgn_elements)
+    _export_games(grid, filename, "export format", _export_pgn_elements)
 
 
 def export_games_pgn_no_comments(grid, filename):
@@ -437,7 +402,7 @@ def export_games_pgn_no_comments(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(
+    _export_games(
         grid,
         filename,
         "export format without comments",
@@ -452,7 +417,7 @@ def export_games_pgn_no_structured_comments(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(
+    _export_games(
         grid,
         filename,
         "export format without '[%]' in comments",
@@ -467,10 +432,10 @@ def export_games_pgn_no_comments_no_ravs(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(
+    _export_games(
         grid,
         filename,
-        "export format no comments or variations",
+        "export format tags and moves played",
         _export_pgn_no_comments_no_ravs,
     )
 
@@ -482,7 +447,7 @@ def export_games_pgn_reduced_export_format(grid, filename):
     otherwise all records selected for display in the grid are exported.
 
     """
-    return _export_games(
+    _export_games(
         grid,
         filename,
         "reduced export format",
@@ -498,20 +463,24 @@ def export_games_text(grid, filename):
 
     """
     if filename is None:
-        return True
+        return
     literal_eval = ast.literal_eval
     statusbar = grid.ui.statusbar
     statusbar.status.update()
+    counter = count_export.create_counter(statusbar)
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
         primary = database.is_primary(
             grid.get_data_source().dbset, grid.get_data_source().dbname
         )
         instance = chessrecord.ChessDBrecordGame()
         instance.set_database(database)
         if grid.bookmarks:
-            counter = _Counter(_bookmarked_records_count(grid), statusbar)
+            counter.items_selected = len(grid.bookmarks)
             statusbar.set_status_text("Started (bookmark): internal format")
             statusbar.status.update_idletasks()
             with open(filename, "w", encoding=_ENCODING) as gamesout:
@@ -524,11 +493,9 @@ def export_games_text(grid, filename):
                     )
                     gamesout.write(literal_eval(instance.get_srvalue()[0]))
                     gamesout.write("\n")
-                    counter.increment_games_output()
+                    counter.increment_items_output()
         elif grid.partial:
-            counter = _Counter(
-                grid.get_data_source().recordset.count_records(), statusbar
-            )
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (key): internal format")
             statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
@@ -536,13 +503,13 @@ def export_games_text(grid, filename):
                 if primary:
                     current_record = cursor.first()
                     if current_record is None:
-                        return None
+                        return
                 else:
                     current_record = cursor.nearest(
                         database.encode_record_selector(grid.partial)
                     )
                     if not current_record[0].startswith(grid.partial):
-                        return None
+                        return
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     while current_record:
                         if not primary:
@@ -556,19 +523,19 @@ def export_games_text(grid, filename):
                         )
                         gamesout.write(literal_eval(instance.get_srvalue()[0]))
                         gamesout.write("\n")
-                        counter.increment_games_output()
+                        counter.increment_items_output()
                         current_record = cursor.next()
             finally:
                 cursor.close()
         else:
-            counter = _Counter(_all_records_count(database), statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all): internal format")
             statusbar.status.update_idletasks()
             cursor = grid.get_cursor()
             try:
                 current_record = cursor.first()
                 if current_record is None:
-                    return None
+                    return
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     while True:
                         instance.load_record(
@@ -579,7 +546,7 @@ def export_games_text(grid, filename):
                         )
                         gamesout.write(literal_eval(instance.get_srvalue()[0]))
                         gamesout.write("\n")
-                        counter.increment_games_output()
+                        counter.increment_items_output()
                         current_record = cursor.next()
                         if current_record is None:
                             break
@@ -587,14 +554,14 @@ def export_games_text(grid, filename):
                 cursor.close()
         statusbar.set_status_text(
             "Completed: "
-            + counter.output_report
+            + counter.completed_report()
             + " to "
             + os.path.basename(filename)
             + " in internal format"
         )
     finally:
         database.end_read_only_transaction()
-    return True
+    return
 
 
 def export_single_game_pgn_reduced_export_format(collected_game, filename):
@@ -631,10 +598,10 @@ def export_single_game_pgn_no_comments_no_ravs(collected_game, filename):
 
     """
     if filename is None:
-        return None
+        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         _export_pgn_no_comments_no_ravs(gamesout, collected_game)
-    return True
+    return
 
 
 def export_single_game_pgn_no_comments(collected_game, filename):
@@ -644,10 +611,10 @@ def export_single_game_pgn_no_comments(collected_game, filename):
 
     """
     if filename is None:
-        return None
+        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         _export_pgn_rav_elements(gamesout, collected_game)
-    return True
+    return
 
 
 def export_single_game_pgn_no_structured_comments(collected_game, filename):
@@ -657,10 +624,10 @@ def export_single_game_pgn_no_structured_comments(collected_game, filename):
 
     """
     if filename is None:
-        return None
+        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         _export_pgn_rav_no_structured_comments(gamesout, collected_game)
-    return True
+    return
 
 
 def export_single_game_pgn_import_format(collected_game, filename):
@@ -688,15 +655,19 @@ def export_all_games_import_format_database_order(
 ):
     """Export all database games in a PGN inport format for CQL scan."""
     if filename is None:
-        return True
+        return
     statusbar.set_status_text("Started: import format for CQL scan")
     statusbar.status.update()
     literal_eval = ast.literal_eval
     instance = chessrecord.ChessDBrecordGameText()
     instance.set_database(database)
+    counter = count_export.create_counter(statusbar)
     database.start_read_only_transaction()
     try:
-        counter = _Counter(_all_records_count(database), statusbar)
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
+        counter.items_selected = counter.items_database
         cursor = database.database_cursor(
             filespec.GAMES_FILE_DEF, filespec.GAMES_FILE_DEF
         )
@@ -711,20 +682,20 @@ def export_all_games_import_format_database_order(
                     tokenizer.generate_tokens(
                         literal_eval(instance.get_srvalue()[0])
                     )
-                    counter.increment_games_output()
+                    counter.increment_items_output()
                     current_record = cursor.next()
         finally:
             cursor.close()
             statusbar.set_status_text(
                 "Completed: "
-                + counter.output_report
+                + counter.completed_report()
                 + " to "
                 + os.path.basename(filename)
                 + " in import format for CQL scan"
             )
     finally:
         database.end_read_only_transaction()
-    return True
+    return
 
 
 def export_games_for_cql_scan(
@@ -772,61 +743,23 @@ def export_games_for_cql_scan(
     return record_map
 
 
-def _all_records_count(database):
-    """Return total records for statusbar reports.
-
-    Function must be called with a transaction 'try ... finally'.
-
-    """
-    recordlist_ebm = database.recordlist_ebm(filespec.GAMES_FILE_DEF)
-    try:
-        return recordlist_ebm.count_records()
-    finally:
-        recordlist_ebm.close()
-
-
-def _bookmarked_records_count(grid):
-    """Return total records for statusbar reports.
-
-    Function must be called with a transaction 'try ... finally'.
-
-    """
-    return len(grid.bookmarks)
-
-
-def _selected_records_count(grid):
-    """Return total records for statusbar reports.
-
-    Function must be called with a transaction 'try ... finally'.
-
-    """
-    database = grid.get_data_source().dbhome
-    recordlist_key_startswith = database.recordlist_key_startswith(
-        grid.datasource.dbset,
-        grid.datasource.dbname,
-        keystart=database.encode_record_selector(grid.partial),
-    )
-    try:
-        return recordlist_key_startswith.count_records()
-    finally:
-        recordlist_key_startswith.close()
-
-
 def _export_all_games(database, filename, statusbar, report_text, exporter):
     """Export all database games in PGN export format."""
     if filename is None:
-        return True
+        return
     statusbar.set_status_text("Started: " + report_text)
     statusbar.status.update()
     instance = chessrecord.ChessDBrecordGameExport()
     instance.set_database(database)
-    all_games_output = None
-    no_games_output = True
     games_for_date = []
     prev_date = None
+    counter = count_export.create_counter(statusbar)
     database.start_read_only_transaction()
     try:
-        counter = _Counter(_all_records_count(database), statusbar)
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
+        counter.items_selected = counter.items_database
         cursor = database.database_cursor(
             filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
         )
@@ -838,10 +771,10 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
                         games_for_date.sort(key=methodcaller("get_collation"))
                         for gfd in games_for_date:
                             exporter(gamesout, gfd)
-                            counter.increment_games_output()
+                            counter.increment_items_output()
                         prev_date = current_record[0]
                         games_for_date = []
-                    counter.increment_games_read()
+                    counter.increment_items_read()
                     game = database.get_primary_record(
                         filespec.GAMES_FILE_DEF, current_record[1]
                     )
@@ -851,22 +784,16 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
                     ivcg = instance.value.collected_game
                     if ivcg.is_pgn_valid_export_format():
                         games_for_date.append(ivcg)
-                        if all_games_output is None:
-                            all_games_output = True
-                            no_games_output = False
-                    elif all_games_output:
-                        if not no_games_output:
-                            all_games_output = False
                     current_record = cursor.next()
                 games_for_date.sort(key=methodcaller("get_collation"))
                 for gfd in games_for_date:
                     exporter(gamesout, gfd)
-                    counter.increment_games_output()
+                    counter.increment_items_output()
         finally:
             cursor.close()
             statusbar.set_status_text(
                 "Completed: "
-                + counter.output_report
+                + counter.completed_report()
                 + " to "
                 + os.path.basename(filename)
                 + " in "
@@ -874,7 +801,7 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
             )
     finally:
         database.end_read_only_transaction()
-    return all_games_output
+    return
 
 
 def _export_selected_games(grid, filename, report_text, exporter):
@@ -884,17 +811,20 @@ def _export_selected_games(grid, filename, report_text, exporter):
 
     """
     if filename is None:
-        return True
+        return
     statusbar = grid.ui.statusbar
     statusbar.status.update()
+    counter = count_export.create_counter(statusbar)
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
         instance = chessrecord.ChessDBrecordGameExport()
         instance.set_database(database)
-        all_games_output = True
         if grid.bookmarks:
-            counter = _Counter(_bookmarked_records_count(grid), statusbar)
+            counter.items_selected = len(grid.bookmarks)
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
@@ -903,15 +833,13 @@ def _export_selected_games(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         keyset.place_record_number(bookmark[0])
-                    all_games_output = (
-                        _export_selected_games_index_order_date(
-                            keyset, gamesout, instance, exporter, counter
-                        )
-                    ) and all_games_output
+                    _export_selected_games_index_order_date(
+                        keyset, gamesout, instance, exporter, counter
+                    )
             finally:
                 keyset.close()
         else:
-            counter = _Counter(_all_records_count(database), statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all grid): " + report_text)
             statusbar.status.update_idletasks()
             valuespec = ValuesClause()
@@ -926,30 +854,26 @@ def _export_selected_games(grid, filename, report_text, exporter):
                     try:
                         dateset_count = dateset.count_records()
                         if dateset_count > _MEMORY_SORT_LIMIT:
-                            all_games_output = (
-                                _export_selected_games_index_order_event(
-                                    dateset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_event(
+                                dateset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                         else:
-                            all_games_output = (
-                                _export_selected_games_pgn_collation_order(
-                                    dateset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_pgn_collation_order(
+                                dateset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                     finally:
                         dateset.close()
         statusbar.set_status_text(
             "Completed: "
-            + counter.output_report
+            + counter.completed_report()
             + " to "
             + os.path.basename(filename)
             + " in "
@@ -957,7 +881,7 @@ def _export_selected_games(grid, filename, report_text, exporter):
         )
     finally:
         database.end_read_only_transaction()
-    return all_games_output
+    return
 
 
 def _export_games(grid, filename, report_text, exporter):
@@ -967,17 +891,20 @@ def _export_games(grid, filename, report_text, exporter):
 
     """
     if filename is None:
-        return True
+        return
     statusbar = grid.ui.statusbar
     statusbar.status.update()
+    counter = count_export.create_counter(statusbar)
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
         instance = chessrecord.ChessDBrecordGameExport()
         instance.set_database(database)
-        all_games_output = True
         if grid.bookmarks:
-            counter = _Counter(_bookmarked_records_count(grid), statusbar)
+            counter.items_selected = len(grid.bookmarks)
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
@@ -986,17 +913,15 @@ def _export_games(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         keyset.place_record_number(bookmark[0])
-                    all_games_output = (
-                        _export_selected_games_index_order_date(
-                            keyset, gamesout, instance, exporter, counter
-                        )
-                    ) and all_games_output
+                    _export_selected_games_index_order_date(
+                        keyset, gamesout, instance, exporter, counter
+                    )
             finally:
                 keyset.close()
         else:
             recordset = grid.get_data_source().recordset
             recordset_count = recordset.count_records()
-            counter = _Counter(recordset_count, statusbar)
+            counter.items_selected = recordset_count
             statusbar.set_status_text("Started (all grid): " + report_text)
             statusbar.status.update_idletasks()
             valuespec = ValuesClause()
@@ -1018,40 +943,34 @@ def _export_games(grid, filename, report_text, exporter):
                         try:
                             dateset_count = dateset.count_records()
                             if dateset_count > _MEMORY_SORT_LIMIT:
-                                all_games_output = (
-                                    _export_selected_games_index_order_event(
-                                        dateset,
-                                        gamesout,
-                                        instance,
-                                        exporter,
-                                        counter,
-                                    )
-                                ) and all_games_output
+                                _export_selected_games_index_order_event(
+                                    dateset,
+                                    gamesout,
+                                    instance,
+                                    exporter,
+                                    counter,
+                                )
                             else:
-                                all_games_output = (
-                                    _export_selected_games_pgn_collation_order(
-                                        dateset,
-                                        gamesout,
-                                        instance,
-                                        exporter,
-                                        counter,
-                                    )
-                                ) and all_games_output
+                                _export_selected_games_pgn_collation_order(
+                                    dateset,
+                                    gamesout,
+                                    instance,
+                                    exporter,
+                                    counter,
+                                )
                         finally:
                             dateset.close()
                 else:
-                    all_games_output = (
-                        _export_selected_games_pgn_collation_order(
-                            recordset,
-                            gamesout,
-                            instance,
-                            exporter,
-                            counter,
-                        )
-                    ) and all_games_output
+                    _export_selected_games_pgn_collation_order(
+                        recordset,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                    )
         statusbar.set_status_text(
             "Completed: "
-            + counter.output_report
+            + counter.completed_report()
             + " to "
             + os.path.basename(filename)
             + " in "
@@ -1059,21 +978,20 @@ def _export_games(grid, filename, report_text, exporter):
         )
     finally:
         database.end_read_only_transaction()
-    return all_games_output
+    return
 
 
 def _export_selected_games_pgn_collation_order(
     selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
-    all_games_output = True
     games_for_date = []
     prev_date = None
     cursor = selected.create_recordsetbase_cursor()
     try:
         current_record = cursor.first()
         while current_record:
-            counter.increment_games_read()
+            counter.increment_items_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
@@ -1082,60 +1000,56 @@ def _export_selected_games_pgn_collation_order(
                     games_for_date.sort(key=methodcaller("get_collation"))
                     for gfd in games_for_date:
                         exporter(gamesout, gfd)
-                        counter.increment_games_output()
+                        counter.increment_items_output()
                     games_for_date = []
                     prev_date = current_date
                 games_for_date.append(ivcg)
-            else:
-                all_games_output = False
             current_record = cursor.next()
         if games_for_date:
             games_for_date.sort(key=methodcaller("get_collation"))
             for gfd in games_for_date:
                 exporter(gamesout, gfd)
-                counter.increment_games_output()
+                counter.increment_items_output()
     finally:
         cursor.close()
-    return all_games_output
 
 
 def _export_selected_games_database_order(
     selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in database order."""
-    all_games_output = True
     cursor = selected.create_recordsetbase_cursor()
     try:
         current_record = cursor.first()
         while current_record:
-            counter.increment_games_read()
+            counter.increment_items_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 exporter(gamesout, ivcg)
-                counter.increment_games_output()
-            else:
-                all_games_output = False
+                counter.increment_items_output()
             current_record = cursor.next()
     finally:
         cursor.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order(grid, filename, report_text, exporter):
     """Export selected games in PGN format in index order."""
     if filename is None:
-        return True
+        return
     statusbar = grid.ui.statusbar
     statusbar.status.update()
+    counter = count_export.create_counter(statusbar)
     database = grid.get_data_source().dbhome
     database.start_read_only_transaction()
     try:
+        counter.items_database = database.count_all_records(
+            filespec.GAMES_FILE_DEF
+        )
         instance = chessrecord.ChessDBrecordGameExport()
         instance.set_database(database)
-        all_games_output = True
         if grid.bookmarks:
-            counter = _Counter(_bookmarked_records_count(grid), statusbar)
+            counter.items_selected = len(grid.bookmarks)
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
@@ -1145,28 +1059,24 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
                         if prev_key != bookmark[0]:
-                            all_games_output = (
-                                _export_selected_games_index_order_bookmark(
-                                    keyset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_bookmark(
+                                keyset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                             keyset.clear_recordset()
                             prev_key = bookmark[0]
                         keyset.place_record_number(bookmark[1])
-                    all_games_output = (
-                        _export_selected_games_index_order_bookmark(
-                            keyset, gamesout, instance, exporter, counter
-                        )
-                    ) and all_games_output
+                    _export_selected_games_index_order_bookmark(
+                        keyset, gamesout, instance, exporter, counter
+                    )
                     keyset.clear_recordset()
             finally:
                 keyset.close()
         elif grid.partial:
-            counter = _Counter(_selected_records_count(grid), statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (key): " + report_text)
             statusbar.status.update_idletasks()
             valuespec = ValuesClause()
@@ -1183,29 +1093,25 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output = (
-                                _export_selected_games_index_order_date(
-                                    keyset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_date(
+                                keyset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                         else:
-                            all_games_output = (
-                                _export_selected_games_index_order_value(
-                                    keyset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_value(
+                                keyset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                     finally:
                         keyset.close()
         else:
-            counter = _Counter(_all_records_count(database), statusbar)
+            counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all grid): " + report_text)
             statusbar.status.update_idletasks()
             valuespec = ValuesClause()
@@ -1219,30 +1125,26 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     )
                     try:
                         if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            all_games_output = (
-                                _export_selected_games_index_order_date(
-                                    keyset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_date(
+                                keyset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                         else:
-                            all_games_output = (
-                                _export_selected_games_index_order_value(
-                                    keyset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            ) and all_games_output
+                            _export_selected_games_index_order_value(
+                                keyset,
+                                gamesout,
+                                instance,
+                                exporter,
+                                counter,
+                            )
                     finally:
                         keyset.close()
         statusbar.set_status_text(
             "Completed: "
-            + counter.output_report
+            + counter.completed_report()
             + " to "
             + os.path.basename(filename)
             + " in "
@@ -1250,7 +1152,7 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
         )
     finally:
         database.end_read_only_transaction()
-    return all_games_output
+    return
 
 
 def _export_selected_games_index_order_bookmark(
@@ -1259,14 +1161,13 @@ def _export_selected_games_index_order_bookmark(
     """Export selected games in PGN format in PGN collation order."""
     count = keyset.count_records()
     if count > _MEMORY_SORT_LIMIT:
-        return _export_selected_games_index_order_date(
+        _export_selected_games_index_order_date(
             keyset, gamesout, instance, exporter, counter
         )
-    if count > 0:  # essential when prev_key is None.
-        return _export_selected_games_index_order_value(
+    elif count > 0:  # essential when prev_key is None.
+        _export_selected_games_index_order_value(
             keyset, gamesout, instance, exporter, counter
         )
-    return True
 
 
 def _export_selected_games_index_order_result(
@@ -1278,7 +1179,6 @@ def _export_selected_games_index_order_result(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1290,20 +1190,15 @@ def _export_selected_games_index_order_result(
         try:
             resultset_count = resultset.count_records()
             if resultset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_database_order(
-                        resultset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_database_order(
+                    resultset, gamesout, instance, exporter, counter
+                )
             elif resultset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        resultset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    resultset, gamesout, instance, exporter, counter
+                )
         finally:
             resultset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_black(
@@ -1315,7 +1210,6 @@ def _export_selected_games_index_order_black(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1327,20 +1221,15 @@ def _export_selected_games_index_order_black(
         try:
             blackset_count = blackset.count_records()
             if blackset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_result(
-                        blackset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_result(
+                    blackset, gamesout, instance, exporter, counter
+                )
             elif blackset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        blackset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    blackset, gamesout, instance, exporter, counter
+                )
         finally:
             blackset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_white(
@@ -1352,7 +1241,6 @@ def _export_selected_games_index_order_white(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1364,20 +1252,15 @@ def _export_selected_games_index_order_white(
         try:
             whiteset_count = whiteset.count_records()
             if whiteset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_black(
-                        whiteset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_black(
+                    whiteset, gamesout, instance, exporter, counter
+                )
             elif whiteset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        whiteset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    whiteset, gamesout, instance, exporter, counter
+                )
         finally:
             whiteset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_round(
@@ -1389,7 +1272,6 @@ def _export_selected_games_index_order_round(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1401,20 +1283,15 @@ def _export_selected_games_index_order_round(
         try:
             roundset_count = roundset.count_records()
             if roundset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_white(
-                        roundset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_white(
+                    roundset, gamesout, instance, exporter, counter
+                )
             elif roundset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        roundset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    roundset, gamesout, instance, exporter, counter
+                )
         finally:
             roundset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_site(
@@ -1426,7 +1303,6 @@ def _export_selected_games_index_order_site(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1438,20 +1314,15 @@ def _export_selected_games_index_order_site(
         try:
             siteset_count = siteset.count_records()
             if siteset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_round(
-                        siteset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_round(
+                    siteset, gamesout, instance, exporter, counter
+                )
             elif siteset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        siteset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    siteset, gamesout, instance, exporter, counter
+                )
         finally:
             siteset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_event(
@@ -1463,7 +1334,6 @@ def _export_selected_games_index_order_event(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1475,20 +1345,15 @@ def _export_selected_games_index_order_event(
         try:
             eventset_count = eventset.count_records()
             if eventset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_site(
-                        eventset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_site(
+                    eventset, gamesout, instance, exporter, counter
+                )
             elif eventset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        eventset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    eventset, gamesout, instance, exporter, counter
+                )
         finally:
             eventset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_date(
@@ -1500,7 +1365,6 @@ def _export_selected_games_index_order_date(
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     selector = database.encode_record_selector
-    all_games_output = True
     for key in database.find_values_ascending(valuespec, dbset):
         recordlist_key = database.recordlist_key(
             dbset, valuespec.field, key=selector(key)
@@ -1512,47 +1376,38 @@ def _export_selected_games_index_order_date(
         try:
             dateset_count = dateset.count_records()
             if dateset_count > _MEMORY_SORT_LIMIT:
-                all_games_output = (
-                    _export_selected_games_index_order_event(
-                        dateset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_index_order_event(
+                    dateset, gamesout, instance, exporter, counter
+                )
             elif dateset_count > 0:
-                all_games_output = (
-                    _export_selected_games_pgn_collation_order(
-                        dateset, gamesout, instance, exporter, counter
-                    )
-                ) and all_games_output
+                _export_selected_games_pgn_collation_order(
+                    dateset, gamesout, instance, exporter, counter
+                )
         finally:
             dateset.close()
-    return all_games_output
 
 
 def _export_selected_games_index_order_value(
     selected, gamesout, instance, exporter, counter
 ):
     """Export selected games in PGN format in PGN collation order."""
-    all_games_output = True
     games_for_value = []
     cursor = selected.create_recordsetbase_cursor()
     try:
         current_record = cursor.first()
         while current_record:
-            counter.increment_games_read()
+            counter.increment_items_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_value.append(ivcg)
-            else:
-                all_games_output = False
             current_record = cursor.next()
         games_for_value.sort(key=methodcaller("get_collation"))
         for gfv in games_for_value:
             exporter(gamesout, gfv)
-            counter.increment_games_output()
+            counter.increment_items_output()
     finally:
         cursor.close()
-    return all_games_output
 
 
 def _export_pgn_elements(gamesout, collected_game):

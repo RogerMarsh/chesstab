@@ -293,169 +293,119 @@ class _GameListGridBase(
     def _export_selected_text(self, event=None):
         """Export selected games as text."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_text(
-                self,
-                self.ui.get_export_filename(
-                    "Games (internal format)", pgn=False
-                ),
-            ),
-            "Games (internal format)",
+        export_game.export_selected_games_text(
+            self,
+            self.ui.get_export_filename("Games (internal format)", pgn=False),
         )
 
     def _export_selected_pgn_import_format(self, event=None):
         """Export selected games in a PGN import format."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn_import_format(
-                self,
-                self.ui.get_export_filename("Games (import format)", pgn=True),
-            ),
-            "Games (import format)",
+        export_game.export_selected_games_pgn_import_format(
+            self,
+            self.ui.get_export_filename("Games (import format)", pgn=True),
         )
 
     def _export_selected_pgn(self, event=None):
         """Export selected games in PGN export format."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn(
-                self, self.ui.get_export_filename("Games", pgn=True)
-            ),
-            "Games",
+        export_game.export_selected_games_pgn(
+            self, self.ui.get_export_filename("Games", pgn=True)
         )
 
     def _export_selected_pgn_reduced_export_format(self, event=None):
         """Export selected games in PGN Reduced Export Format."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn_reduced_export_format(
-                self,
-                self.ui.get_export_filename(
-                    "Games (reduced export format)", pgn=True
-                ),
+        export_game.export_selected_games_pgn_reduced_export_format(
+            self,
+            self.ui.get_export_filename(
+                "Games (reduced export format)", pgn=True
             ),
-            "Games (reduced export format)",
         )
 
     def _export_selected_pgn_no_comments_no_ravs(self, event=None):
         """Export selected games as PGN excluding all comments and RAVs."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn_no_comments_no_ravs(
-                self,
-                self.ui.get_export_filename(
-                    "Games (no comments no ravs)", pgn=True
-                ),
+        export_game.export_selected_games_pgn_no_comments_no_ravs(
+            self,
+            self.ui.get_export_filename(
+                "Games (no comments no ravs)", pgn=True
             ),
-            "Games (no comments no ravs)",
         )
 
     def _export_selected_pgn_no_comments(self, event=None):
         """Export selected games as PGN excluding all commentary tokens."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn_no_comments(
-                self,
-                self.ui.get_export_filename("Games (no comments)", pgn=True),
-            ),
-            "Games (no comments)",
+        export_game.export_selected_games_pgn_no_comments(
+            self,
+            self.ui.get_export_filename("Games (no comments)", pgn=True),
         )
 
     def _export_selected_pgn_no_structured_comments(self, event=None):
         """Export selected games as PGN excluding {[%]} commentary tokens."""
         del event
-        self.ui.export_report(
-            export_game.export_selected_games_pgn_no_structured_comments(
-                self,
-                self.ui.get_export_filename(
-                    "Games (no {[%]} comments)", pgn=True
-                ),
-            ),
-            "Games (no {[%]} comments)",
+        export_game.export_selected_games_pgn_no_structured_comments(
+            self,
+            self.ui.get_export_filename("Games (no {[%]} comments)", pgn=True),
         )
 
     def _export_text(self, event=None):
         """Export games as text."""
         del event
-        self.ui.export_report(
-            export_game.export_games_text(
-                self,
-                self.ui.get_export_filename(
-                    "Games (internal format)", pgn=False
-                ),
-            ),
-            "Games (internal format)",
+        export_game.export_games_text(
+            self,
+            self.ui.get_export_filename("Games (internal format)", pgn=False),
         )
 
     def _export_pgn_import_format(self, event=None):
         """Export games in a PGN import format."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn_import_format(
-                self,
-                self.ui.get_export_filename("Games (import format)", pgn=True),
-            ),
-            "Games (import format)",
+        export_game.export_games_pgn_import_format(
+            self,
+            self.ui.get_export_filename("Games (import format)", pgn=True),
         )
 
     def _export_pgn(self, event=None):
         """Export games in PGN export format."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn(
-                self, self.ui.get_export_filename("Games", pgn=True)
-            ),
-            "Games",
+        export_game.export_games_pgn(
+            self, self.ui.get_export_filename("Games", pgn=True)
         )
 
     def _export_pgn_reduced_export_format(self, event=None):
         """Export games in PGN Reduced Export Format."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn_reduced_export_format(
-                self,
-                self.ui.get_export_filename(
-                    "Games (reduced export format)", pgn=True
-                ),
+        export_game.export_games_pgn_reduced_export_format(
+            self,
+            self.ui.get_export_filename(
+                "Games (reduced export format)", pgn=True
             ),
-            "Games (reduced export format)",
         )
 
     def _export_pgn_no_comments_no_ravs(self, event=None):
         """Export games as PGN excluding all comments and RAVs."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn_no_comments_no_ravs(
-                self,
-                self.ui.get_export_filename(
-                    "Games (no comments no ravs)", pgn=True
-                ),
+        export_game.export_games_pgn_no_comments_no_ravs(
+            self,
+            self.ui.get_export_filename(
+                "Games (no comments no ravs)", pgn=True
             ),
-            "Games (no comments no ravs)",
         )
 
     def _export_pgn_no_comments(self, event=None):
         """Export games as PGN excluding all commentary tokens."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn_no_comments(
-                self,
-                self.ui.get_export_filename("Games (no comments)", pgn=True),
-            ),
-            "Games (no comments)",
+        export_game.export_games_pgn_no_comments(
+            self,
+            self.ui.get_export_filename("Games (no comments)", pgn=True),
         )
 
     def _export_pgn_no_structured_comments(self, event=None):
         """Export games as PGN excluding {[%]} commentary tokens."""
         del event
-        self.ui.export_report(
-            export_game.export_games_pgn_no_structured_comments(
-                self,
-                self.ui.get_export_filename(
-                    "Games (no {[%]} comments)", pgn=True
-                ),
-            ),
-            "Games (no {[%]} comments)",
+        export_game.export_games_pgn_no_structured_comments(
+            self,
+            self.ui.get_export_filename("Games (no {[%]} comments)", pgn=True),
         )
 
     def _score_map_exception_dialogue(self, exception_instance, title):

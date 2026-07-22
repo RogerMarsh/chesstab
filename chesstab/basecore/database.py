@@ -710,3 +710,20 @@ class Database:
         except:  # Backout for any exception, then re-raise.
             self.backout()
             raise
+
+    # This method will be moved to solentware_base.core._database.Database
+    # class at a convenient time.
+    def count_all_records(self, file_def):
+        """Return count of records on existence bitmap for file_def.
+
+        file_def must be a file description name defined in core.filespec
+        module.
+
+        Function must be called with a transaction 'try ... finally'.
+
+        """
+        recordlist_ebm = self.recordlist_ebm(file_def)
+        try:
+            return recordlist_ebm.count_records()
+        finally:
+            recordlist_ebm.close()

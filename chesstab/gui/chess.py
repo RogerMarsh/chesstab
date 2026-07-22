@@ -1904,61 +1904,46 @@ class Chess(Bindings):
 
     def export_all_games_pgn_reduced_export_format(self):
         """Export all database games in PGN reduced export format."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn_reduced_export_format(
-                self.opendatabase,
-                self.ui.get_export_filename(
-                    "Games (reduced export format)", pgn=True
-                ),
-                self.statusbar,
+        export_game.export_all_games_pgn_reduced_export_format(
+            self.opendatabase,
+            self.ui.get_export_filename(
+                "Games (reduced export format)", pgn=True
             ),
-            "Games (reduced export format)",
+            self.statusbar,
         )
 
     def export_all_games_pgn_no_comments_no_ravs(self):
         """Export games in PGN export format excluding comments and RAVs."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn_no_comments_no_ravs(
-                self.opendatabase,
-                self.ui.get_export_filename(
-                    "Games (no comments no ravs)", pgn=True
-                ),
-                self.statusbar,
+        export_game.export_all_games_pgn_no_comments_no_ravs(
+            self.opendatabase,
+            self.ui.get_export_filename(
+                "Games (no comments no ravs)", pgn=True
             ),
-            "Games (no comments no ravs)",
+            self.statusbar,
         )
 
     def export_all_games_pgn_no_comments(self):
         """Export all games in PGN export format excluding comments."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn_no_comments(
-                self.opendatabase,
-                self.ui.get_export_filename("Games (no comments)", pgn=True),
-                self.statusbar,
-            ),
-            "Games (no comments)",
+        export_game.export_all_games_pgn_no_comments(
+            self.opendatabase,
+            self.ui.get_export_filename("Games (no comments)", pgn=True),
+            self.statusbar,
         )
 
     def export_all_games_pgn(self):
         """Export all database games in PGN export format."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn(
-                self.opendatabase,
-                self.ui.get_export_filename("Games", pgn=True),
-                self.statusbar,
-            ),
-            "Games",
+        export_game.export_all_games_pgn(
+            self.opendatabase,
+            self.ui.get_export_filename("Games", pgn=True),
+            self.statusbar,
         )
 
     def export_all_games_pgn_import_format(self):
         """Export all database games in a PGN import format."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn_import_format(
-                self.opendatabase,
-                self.ui.get_export_filename("Games (import format)", pgn=True),
-                self.statusbar,
-            ),
-            "Games (import format)",
+        export_game.export_all_games_pgn_import_format(
+            self.opendatabase,
+            self.ui.get_export_filename("Games (import format)", pgn=True),
+            self.statusbar,
         )
 
     def export_all_games_text(self):
@@ -1971,28 +1956,20 @@ class Chess(Bindings):
 
     def export_all_games_import_format_database_order(self):
         """Export all games in a PGN import format in database order."""
-        self.ui.export_report(
-            export_game.export_all_games_import_format_database_order(
-                self.opendatabase,
-                self.ui.get_export_filename(
-                    "Games (import format database order)", pgn=True
-                ),
-                self.statusbar,
+        export_game.export_all_games_import_format_database_order(
+            self.opendatabase,
+            self.ui.get_export_filename(
+                "Games (import format database order)", pgn=True
             ),
-            "Games (import format database order)",
+            self.statusbar,
         )
 
     def export_all_games_pgn_no_structured_comments(self):
         """Export all games in PGN export format excluding {[%]} comments."""
-        self.ui.export_report(
-            export_game.export_all_games_pgn_no_structured_comments(
-                self.opendatabase,
-                self.ui.get_export_filename(
-                    "Games (no {[%]} comments)", pgn=True
-                ),
-                self.statusbar,
-            ),
-            "Games (no {[%]} comments)",
+        export_game.export_all_games_pgn_no_structured_comments(
+            self.opendatabase,
+            self.ui.get_export_filename("Games (no {[%]} comments)", pgn=True),
+            self.statusbar,
         )
 
     def export_all_repertoires_pgn_no_comments(self):
@@ -2000,6 +1977,7 @@ class Chess(Bindings):
         export_repertoire.export_all_repertoires_pgn_no_comments(
             self.opendatabase,
             self.ui.get_export_filename("Repertoires (no comments)", pgn=True),
+            self.statusbar,
         )
 
     def export_all_repertoires_pgn(self):
@@ -2007,6 +1985,7 @@ class Chess(Bindings):
         export_repertoire.export_all_repertoires_pgn(
             self.opendatabase,
             self.ui.get_export_filename("Repertoires", pgn=True),
+            self.statusbar,
         )
 
     def export_all_repertoires_pgn_import_format(self):
@@ -2016,6 +1995,7 @@ class Chess(Bindings):
             self.ui.get_export_filename(
                 "Repertoires (import format)", pgn=True
             ),
+            self.statusbar,
         )
 
     def export_all_repertoires_text(self):
@@ -2025,6 +2005,7 @@ class Chess(Bindings):
             self.ui.get_export_filename(
                 "Repertoires (internal format)", pgn=False
             ),
+            self.statusbar,
         )
 
     def _export_positions(self):
@@ -2032,6 +2013,7 @@ class Chess(Bindings):
         export_chessql.export_all_positions(
             self.opendatabase,
             self.ui.get_export_filename("Partial Positions", pgn=False),
+            self.statusbar,
         )
 
     def _show_query_engines(self):

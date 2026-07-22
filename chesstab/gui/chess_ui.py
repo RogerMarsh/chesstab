@@ -57,13 +57,7 @@ from ..core.filespec import (
     VARIATION_FIELD_DEF,
     SELECTION_FILE_DEF,
     RULE_FIELD_DEF,
-    EVENT_FIELD_DEF,
-    SITE_FIELD_DEF,
-    DATE_FIELD_DEF,
-    ROUND_FIELD_DEF,
-    WHITE_FIELD_DEF,
-    BLACK_FIELD_DEF,
-    RESULT_FIELD_DEF,
+    PGN_TAG_NAMES,
     OPENING_FIELD_DEF,
     QUERY_NAME_FIELD_DEF,
 )
@@ -82,15 +76,7 @@ class ChessUIError(Exception):
 class ChessUI(Bindings):
     """Define widgets which form the User Interface."""
 
-    allow_filter = {
-        EVENT_FIELD_DEF,
-        SITE_FIELD_DEF,
-        DATE_FIELD_DEF,
-        ROUND_FIELD_DEF,
-        WHITE_FIELD_DEF,
-        BLACK_FIELD_DEF,
-        RESULT_FIELD_DEF,
-    }
+    allow_filter = set(PGN_TAG_NAMES)
 
     def __init__(self, panel, statusbar=None, uci=None, toolbarframe=None):
         """Create the elements of the chess GUI.
@@ -1994,31 +1980,6 @@ class ChessUI(Bindings):
                     exceptions.append(item, items)
         for item, items in exceptions:
             items.remove(item)
-
-    def export_report(self, result, title):
-        """Show a report dialogue if some game scores could not be exported."""
-        if result is None:
-            tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
-                title=title,
-                message="".join(
-                    (
-                        "No games scores output because none are ",
-                        "PGN export format compliant",
-                    )
-                ),
-            )
-        elif result is False:
-            tkinter.messagebox.showinfo(
-                parent=self.get_toplevel(),
-                title=title,
-                message="".join(
-                    (
-                        "Some games scores are not output because they are ",
-                        "not PGN export format compliant",
-                    )
-                ),
-            )
 
     def _create_tag_roster_grid(self):
         """Return TagRosterGrid instance."""

@@ -683,7 +683,7 @@ class EventSpec:
     )
     pgn_export_format_no_comments_no_ravs = (
         "<Control-KeyPress-Home>",
-        "PGN all tags moves played",
+        "PGN tags and moves played",
         "Ctrl Home",
         4,
     )
