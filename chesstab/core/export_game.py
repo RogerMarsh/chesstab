@@ -7,6 +7,7 @@
 import ast
 import os
 from operator import methodcaller
+import io
 
 from solentware_base.core.wherevalues import ValuesClause
 
@@ -784,6 +785,10 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
                     ivcg = instance.value.collected_game
                     if ivcg.is_pgn_valid_export_format():
                         games_for_date.append(ivcg)
+                    else:
+                        ivcg = _full_parse(instance)
+                        if ivcg.is_pgn_valid_export_format():
+                            games_for_date.append(ivcg)
                     current_record = cursor.next()
                 games_for_date.sort(key=methodcaller("get_collation"))
                 for gfd in games_for_date:
@@ -994,16 +999,20 @@ def _export_selected_games_pgn_collation_order(
             counter.increment_items_read()
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
+            current_date = ivcg.pgn_tags.get("Date")
+            if current_date != prev_date:
+                games_for_date.sort(key=methodcaller("get_collation"))
+                for gfd in games_for_date:
+                    exporter(gamesout, gfd)
+                    counter.increment_items_output()
+                games_for_date = []
+                prev_date = current_date
             if ivcg.is_pgn_valid_export_format():
-                current_date = ivcg.pgn_tags["Date"]
-                if current_date != prev_date:
-                    games_for_date.sort(key=methodcaller("get_collation"))
-                    for gfd in games_for_date:
-                        exporter(gamesout, gfd)
-                        counter.increment_items_output()
-                    games_for_date = []
-                    prev_date = current_date
                 games_for_date.append(ivcg)
+            else:
+                ivcg = _full_parse(instance)
+                if ivcg.is_pgn_valid_export_format():
+                    games_for_date.append(ivcg)
             current_record = cursor.next()
         if games_for_date:
             games_for_date.sort(key=methodcaller("get_collation"))
@@ -1028,6 +1037,11 @@ def _export_selected_games_database_order(
             if ivcg.is_pgn_valid_export_format():
                 exporter(gamesout, ivcg)
                 counter.increment_items_output()
+            else:
+                ivcg = _full_parse(instance)
+                if ivcg.is_pgn_valid_export_format():
+                    exporter(gamesout, ivcg)
+                    counter.increment_items_output()
             current_record = cursor.next()
     finally:
         cursor.close()
@@ -1401,6 +1415,10 @@ def _export_selected_games_index_order_value(
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
                 games_for_value.append(ivcg)
+            else:
+                ivcg = _full_parse(instance)
+                if ivcg.is_pgn_valid_export_format():
+                    games_for_value.append(ivcg)
             current_record = cursor.next()
         games_for_value.sort(key=methodcaller("get_collation"))
         for gfv in games_for_value:
@@ -1481,3 +1499,28 @@ def _export_pgn_import_format(gamesout, collected_game):
     gamesout.write("\n\n")
     gamesout.write(" ".join(collected_game.get_movetext()))
     gamesout.write("\n\n")
+
+
+def _full_parse(instance):
+    """Return game extracted from instance by full parse.
+
+    This function is used to resolve cases where the default parse of
+    instance gave an error due to the presence of movetext like 'Qa7-c5'
+    in the database record.  Such movetext is present only where more
+    than two pieces of the same kind can legally move to a square.
+
+    Movetext like 'Qa7-c5' is changed to 'Qa7c5' which is acceptable
+    in export format PGN.
+
+    """
+    strio = io.StringIO()
+    try:
+        pgnifier = pgnify.PGNify(strio)
+        tokenizer = lexer.Lexer(pgnifier)
+        pgnifier.set_lexer(tokenizer)
+        tokenizer.generate_tokens(ast.literal_eval(instance.get_srvalue()[0]))
+        return next(
+            chessrecord.ChessDBvalueGame().read_games(strio.getvalue())
+        )
+    finally:
+        strio.close()

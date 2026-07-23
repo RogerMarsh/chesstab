@@ -153,7 +153,7 @@ def export_all_repertoires_pgn_import_format(database, filename, statusbar):
 def export_all_repertoires_text(database, filename, statusbar):
     """Export repertoires in database to text file in internal format."""
     if filename is None:
-        return True
+        return
     statusbar.status.update()
     statusbar.set_status_text("Started: repertoire internal format")
     statusbar.status.update_idletasks()
@@ -189,7 +189,7 @@ def export_all_repertoires_text(database, filename, statusbar):
         )
     finally:
         database.end_read_only_transaction()
-    return True
+    return
 
 
 def export_selected_repertoires_pgn(grid, filename):
@@ -397,8 +397,6 @@ def export_selected_repertoires_pgn_import_format(grid, filename):
                 cursor.close()
     finally:
         database.end_read_only_transaction()
-    if len(games) == 0:
-        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
@@ -494,8 +492,6 @@ def export_selected_repertoires_text(grid, filename):
                 cursor.close()
     finally:
         database.end_read_only_transaction()
-    if len(games) == 0:
-        return
     with open(filename, "w", encoding=_ENCODING) as gamesout:
         for game in games:
             gamesout.write(game)
