@@ -2,7 +2,15 @@
 # Copyright 2013 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess game exporters."""
+"""Chess game exporters.
+
+THe exporters do not, yet, resort to temporary files for sorting so
+the size of an output is limited by memory.
+
+A box with 8Gb memory will likely cope with sorting 50 million games
+for output, and possibly up to 100 million games depending on how much
+memory other processes need.
+"""
 
 import ast
 import os
@@ -25,10 +33,37 @@ from ..basecore.selectionds import SelectionDS
 # _ENCODING = "iso-8859-1"
 _ENCODING = "utf-8"
 
+# A convenient way of testing the path through code for the three cases
+# defined by _MEMORY_SORT_LIMIT is set it to a low value, such as 1.
+# Games with moves like Qa7c5 are not output for low values: these are
+# the games which have to be reparsed to generate Qa7c5 from the Qa7-c5
+# stored on the database record.
+# This occurs for the databases tried: one set each for games in
+# twic1372g.zip and twic1397g.zip with about 10,000 and 5,000 games
+# respectively.  In both sets these games are not output for
+# _MEMORY_SORT_LIMIT <= 17 but are for _MEMORY_SORT_LIMIT >= 18.
+# The Qa7c5-like games are output for _MEMORY_SORT_LIMIT = 10 if
+# _BYTESIO_FACTOR is set to 300000 so it seems the product matters.
+# _MEMORY_SORT_LIMIT * _BYTESIO_FACTOR > 173 seems to be the codition
+# for including games with moves like Qa7c5 in the output.
+
 # This value avoids swapping on 8Gb memory test box with TWIC 1-1500.
 # Values more than double this hit problems with games sorted by result
-# with the menu 'Select | Inndex | Result' option.
+# with the menu 'Select | Index | Result' option.
 _MEMORY_SORT_LIMIT = 300000
+
+# When more than _MEMORY_SORT_LIMIT games need processing the sorted
+# game keys are output to a BytesIO object which is allowed to hold up to
+# _MEMORY_SORT_LIMIT * _BYTESIO_FACTOR keys.
+# A list of these BytesIO objects increases the number of game keys
+# supported, limited by available memory.
+_BYTESIO_FACTOR = 10
+
+# Encoding the integer keys in 4 bytes allows, at present, for a database
+# containing about four years of monthly game files from LiChess.
+# If there is room for a larger database change _KEY_SIZE_BYTES to 5,
+# which is enough for 1000 years of games at current rate of play.
+_KEY_SIZE_BYTES = 4
 
 
 def export_all_games_text(database, filename, statusbar):
@@ -654,10 +689,10 @@ def export_single_game_text(collected_game, filename):
 def export_all_games_import_format_database_order(
     database, filename, statusbar
 ):
-    """Export all database games in a PGN inport format for CQL scan."""
+    """Export all games in database order in a PGN inport format."""
     if filename is None:
         return
-    statusbar.set_status_text("Started: import format for CQL scan")
+    statusbar.set_status_text("Started: import format in database order")
     statusbar.status.update()
     literal_eval = ast.literal_eval
     instance = chessrecord.ChessDBrecordGameText()
@@ -692,7 +727,7 @@ def export_all_games_import_format_database_order(
                 + counter.completed_report()
                 + " to "
                 + os.path.basename(filename)
-                + " in import format for CQL scan"
+                + " in import format in database order"
             )
     finally:
         database.end_read_only_transaction()
@@ -748,62 +783,97 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
     """Export all database games in PGN export format."""
     if filename is None:
         return
+    record_limit_exceeded = False
     statusbar.set_status_text("Started: " + report_text)
     statusbar.status.update()
     instance = chessrecord.ChessDBrecordGameExport()
     instance.set_database(database)
+    dbset = filespec.GAMES_FILE_DEF
+    valuespec = ValuesClause()
+    valuespec.field = filespec.PGN_DATE_FIELD_DEF
+    selector = database.encode_record_selector
     games_for_date = []
     prev_date = None
     counter = count_export.create_counter(statusbar)
     database.start_read_only_transaction()
     try:
-        counter.items_database = database.count_all_records(
-            filespec.GAMES_FILE_DEF
-        )
+        counter.items_database = database.count_all_records(dbset)
         counter.items_selected = counter.items_database
-        cursor = database.database_cursor(
-            filespec.GAMES_FILE_DEF, filespec.PGN_DATE_FIELD_DEF
-        )
-        try:
-            with open(filename, "w", encoding=_ENCODING) as gamesout:
-                current_record = cursor.first()
-                while current_record:
-                    if current_record[0] != prev_date:
-                        games_for_date.sort(key=methodcaller("get_collation"))
-                        for gfd in games_for_date:
-                            exporter(gamesout, gfd)
-                            counter.increment_items_output()
-                        prev_date = current_record[0]
-                        games_for_date = []
-                    counter.increment_items_read()
-                    game = database.get_primary_record(
-                        filespec.GAMES_FILE_DEF, current_record[1]
-                    )
-                    instance.load_record(game)
-                    # Fix pycodestyle E501 (83 > 79 characters).
-                    # black formatting applied with line-length = 79.
-                    ivcg = instance.value.collected_game
-                    if ivcg.is_pgn_valid_export_format():
-                        games_for_date.append(ivcg)
-                    else:
-                        ivcg = _full_parse(instance)
+        if counter.items_database > _MEMORY_SORT_LIMIT:
+            for key in database.find_values_ascending(valuespec, dbset):
+                selected = database.recordlist_key(
+                    dbset, valuespec.field, key=selector(key)
+                )
+                try:
+                    selected_count = selected.count_records()
+                    if selected_count > _MEMORY_SORT_LIMIT:
+                        record_limit_exceeded = True
+                        break
+                finally:
+                    selected.close()
+        if not record_limit_exceeded:
+            cursor = database.database_cursor(
+                dbset, filespec.PGN_DATE_FIELD_DEF
+            )
+            try:
+                with open(filename, "w", encoding=_ENCODING) as gamesout:
+                    current_record = cursor.first()
+                    while current_record:
+                        if current_record[0] != prev_date:
+                            games_for_date.sort(
+                                key=methodcaller("get_collation")
+                            )
+                            for gfd in games_for_date:
+                                exporter(gamesout, gfd)
+                                counter.increment_items_output()
+                            prev_date = current_record[0]
+                            games_for_date = []
+                        counter.increment_items_read()
+                        game = database.get_primary_record(
+                            dbset, current_record[1]
+                        )
+                        instance.load_record(game)
+                        # Fix pycodestyle E501 (83 > 79 characters).
+                        # black formatting applied with line-length = 79.
+                        ivcg = instance.value.collected_game
                         if ivcg.is_pgn_valid_export_format():
                             games_for_date.append(ivcg)
-                    current_record = cursor.next()
-                games_for_date.sort(key=methodcaller("get_collation"))
-                for gfd in games_for_date:
-                    exporter(gamesout, gfd)
-                    counter.increment_items_output()
-        finally:
-            cursor.close()
-            statusbar.set_status_text(
-                "Completed: "
-                + counter.completed_report()
-                + " to "
-                + os.path.basename(filename)
-                + " in "
-                + report_text
-            )
+                        else:
+                            ivcg = _full_parse(instance)
+                            if ivcg.is_pgn_valid_export_format():
+                                games_for_date.append(ivcg)
+                        current_record = cursor.next()
+                    games_for_date.sort(key=methodcaller("get_collation"))
+                    for gfd in games_for_date:
+                        exporter(gamesout, gfd)
+                        counter.increment_items_output()
+            finally:
+                cursor.close()
+        else:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                for key in database.find_values_ascending(valuespec, dbset):
+                    selected = database.recordlist_key(
+                        dbset, valuespec.field, key=selector(key)
+                    )
+                    try:
+                        _export_all_games_tag_order(
+                            selected,
+                            gamesout,
+                            instance,
+                            exporter,
+                            counter,
+                            None,
+                        )
+                    finally:
+                        selected.close()
+        statusbar.set_status_text(
+            "Completed: "
+            + counter.completed_report()
+            + " to "
+            + os.path.basename(filename)
+            + " in "
+            + report_text
+        )
     finally:
         database.end_read_only_transaction()
     return
@@ -833,49 +903,39 @@ def _export_selected_games(grid, filename, report_text, exporter):
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
-            keyset = database.recordlist_nil(dbset)
+            selected = database.recordlist_nil(dbset)
             try:
                 with open(filename, "w", encoding=_ENCODING) as gamesout:
                     for bookmark in grid.bookmarks:
-                        keyset.place_record_number(bookmark[0])
-                    _export_selected_games_index_order_date(
-                        keyset, gamesout, instance, exporter, counter
+                        selected.place_record_number(bookmark[0])
+                    _export_all_games_tag_order(
+                        selected,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                        None,
                     )
             finally:
-                keyset.close()
+                selected.close()
         else:
             counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all grid): " + report_text)
             statusbar.status.update_idletasks()
-            valuespec = ValuesClause()
-            valuespec.field = filespec.PGN_DATE_FIELD_DEF
             dbset = grid.get_data_source().dbset
-            selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values_ascending(valuespec, dbset):
-                    dateset = database.recordlist_key(
-                        dbset, valuespec.field, key=selector(key)
+                selected = database.recordlist_ebm(dbset)
+                try:
+                    _export_all_games_tag_order(
+                        selected,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                        None,
                     )
-                    try:
-                        dateset_count = dateset.count_records()
-                        if dateset_count > _MEMORY_SORT_LIMIT:
-                            _export_selected_games_index_order_event(
-                                dateset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                        else:
-                            _export_selected_games_pgn_collation_order(
-                                dateset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                    finally:
-                        dateset.close()
+                finally:
+                    selected.close()
         statusbar.set_status_text(
             "Completed: "
             + counter.completed_report()
@@ -913,66 +973,37 @@ def _export_games(grid, filename, report_text, exporter):
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
-            keyset = database.recordlist_nil(dbset)
-            try:
-                with open(filename, "w", encoding=_ENCODING) as gamesout:
-                    for bookmark in grid.bookmarks:
-                        keyset.place_record_number(bookmark[0])
-                    _export_selected_games_index_order_date(
-                        keyset, gamesout, instance, exporter, counter
-                    )
-            finally:
-                keyset.close()
-        else:
-            recordset = grid.get_data_source().recordset
-            recordset_count = recordset.count_records()
-            counter.items_selected = recordset_count
-            statusbar.set_status_text("Started (all grid): " + report_text)
-            statusbar.status.update_idletasks()
-            valuespec = ValuesClause()
-            valuespec.field = filespec.PGN_DATE_FIELD_DEF
-            dbset = grid.get_data_source().dbset
-            selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                if recordset_count > _MEMORY_SORT_LIMIT:
-                    for key in database.find_values_ascending(
-                        valuespec, dbset
-                    ):
-                        key_recordset = database.recordlist_key(
-                            dbset, valuespec.field, key=selector(key)
-                        )
-                        try:
-                            dateset = key_recordset & recordset
-                        finally:
-                            key_recordset.close()
-                        try:
-                            dateset_count = dateset.count_records()
-                            if dateset_count > _MEMORY_SORT_LIMIT:
-                                _export_selected_games_index_order_event(
-                                    dateset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                            else:
-                                _export_selected_games_pgn_collation_order(
-                                    dateset,
-                                    gamesout,
-                                    instance,
-                                    exporter,
-                                    counter,
-                                )
-                        finally:
-                            dateset.close()
-                else:
-                    _export_selected_games_pgn_collation_order(
-                        recordset,
+                selected = database.recordlist_nil(dbset)
+                try:
+                    for bookmark in grid.bookmarks:
+                        selected.place_record_number(bookmark[0])
+                    _export_all_games_tag_order(
+                        selected,
                         gamesout,
                         instance,
                         exporter,
                         counter,
+                        None,
                     )
+                finally:
+                    selected.close()
+        else:
+            selected = grid.get_data_source().recordset
+            selected_count = selected.count_records()
+            counter.items_selected = selected_count
+            statusbar.set_status_text("Started (all grid): " + report_text)
+            statusbar.status.update_idletasks()
+            dbset = grid.get_data_source().dbset
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                _export_all_games_tag_order(
+                    selected,
+                    gamesout,
+                    instance,
+                    exporter,
+                    counter,
+                    None,
+                )
         statusbar.set_status_text(
             "Completed: "
             + counter.completed_report()
@@ -984,43 +1015,6 @@ def _export_games(grid, filename, report_text, exporter):
     finally:
         database.end_read_only_transaction()
     return
-
-
-def _export_selected_games_pgn_collation_order(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    games_for_date = []
-    prev_date = None
-    cursor = selected.create_recordsetbase_cursor()
-    try:
-        current_record = cursor.first()
-        while current_record:
-            counter.increment_items_read()
-            instance.load_record(current_record)
-            ivcg = instance.value.collected_game
-            current_date = ivcg.pgn_tags.get("Date")
-            if current_date != prev_date:
-                games_for_date.sort(key=methodcaller("get_collation"))
-                for gfd in games_for_date:
-                    exporter(gamesout, gfd)
-                    counter.increment_items_output()
-                games_for_date = []
-                prev_date = current_date
-            if ivcg.is_pgn_valid_export_format():
-                games_for_date.append(ivcg)
-            else:
-                ivcg = _full_parse(instance)
-                if ivcg.is_pgn_valid_export_format():
-                    games_for_date.append(ivcg)
-            current_record = cursor.next()
-        if games_for_date:
-            games_for_date.sort(key=methodcaller("get_collation"))
-            for gfd in games_for_date:
-                exporter(gamesout, gfd)
-                counter.increment_items_output()
-    finally:
-        cursor.close()
 
 
 def _export_selected_games_database_order(
@@ -1067,95 +1061,61 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
             statusbar.set_status_text("Started (bookmark): " + report_text)
             statusbar.status.update_idletasks()
             dbset = grid.get_data_source().dbset
-            prev_key = None
-            keyset = database.recordlist_nil(dbset)
-            try:
-                with open(filename, "w", encoding=_ENCODING) as gamesout:
+            with open(filename, "w", encoding=_ENCODING) as gamesout:
+                selected = database.recordlist_nil(dbset)
+                try:
                     for bookmark in grid.bookmarks:
-                        if prev_key != bookmark[0]:
-                            _export_selected_games_index_order_bookmark(
-                                keyset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                            keyset.clear_recordset()
-                            prev_key = bookmark[0]
-                        keyset.place_record_number(bookmark[1])
-                    _export_selected_games_index_order_bookmark(
-                        keyset, gamesout, instance, exporter, counter
+                        selected.place_record_number(bookmark[1])
+                    _export_all_games_tag_order(
+                        selected,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                        grid.get_data_source().dbname,
                     )
-                    keyset.clear_recordset()
-            finally:
-                keyset.close()
+                finally:
+                    selected.close()
         elif grid.partial:
             counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (key): " + report_text)
             statusbar.status.update_idletasks()
-            valuespec = ValuesClause()
-            valuespec.field = grid.get_data_source().dbname
-            valuespec.from_value = grid.partial
             dbset = grid.get_data_source().dbset
-            selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values_ascending(valuespec, dbset):
-                    if not key.startswith(grid.partial):
-                        break
-                    keyset = database.recordlist_key(
-                        dbset, valuespec.field, key=selector(key)
+                selected = database.recordlist_key_startswith(
+                    dbset,
+                    grid.get_data_source().dbname,
+                    keystart=database.encode_record_selector(grid.partial),
+                )
+                try:
+                    _export_all_games_tag_order(
+                        selected,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                        grid.get_data_source().dbname,
                     )
-                    try:
-                        if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            _export_selected_games_index_order_date(
-                                keyset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                        else:
-                            _export_selected_games_index_order_value(
-                                keyset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                    finally:
-                        keyset.close()
+                finally:
+                    selected.close()
         else:
             counter.items_selected = grid.record_count
             statusbar.set_status_text("Started (all grid): " + report_text)
             statusbar.status.update_idletasks()
-            valuespec = ValuesClause()
-            valuespec.field = grid.get_data_source().dbname
             dbset = grid.get_data_source().dbset
-            selector = database.encode_record_selector
             with open(filename, "w", encoding=_ENCODING) as gamesout:
-                for key in database.find_values_ascending(valuespec, dbset):
-                    keyset = database.recordlist_key(
-                        dbset, valuespec.field, key=selector(key)
+                selected = database.recordlist_ebm(dbset)
+                try:
+                    _export_all_games_tag_order(
+                        selected,
+                        gamesout,
+                        instance,
+                        exporter,
+                        counter,
+                        grid.get_data_source().dbname,
                     )
-                    try:
-                        if keyset.count_records() > _MEMORY_SORT_LIMIT:
-                            _export_selected_games_index_order_date(
-                                keyset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                        else:
-                            _export_selected_games_index_order_value(
-                                keyset,
-                                gamesout,
-                                instance,
-                                exporter,
-                                counter,
-                            )
-                    finally:
-                        keyset.close()
+                finally:
+                    selected.close()
         statusbar.set_status_text(
             "Completed: "
             + counter.completed_report()
@@ -1169,243 +1129,35 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
     return
 
 
-def _export_selected_games_index_order_bookmark(
-    keyset, gamesout, instance, exporter, counter
+def _export_selected_games_movetext_order(
+    selected, gamesout, instance, exporter, counter, tag
 ):
-    """Export selected games in PGN format in PGN collation order."""
-    count = keyset.count_records()
-    if count > _MEMORY_SORT_LIMIT:
-        _export_selected_games_index_order_date(
-            keyset, gamesout, instance, exporter, counter
-        )
-    elif count > 0:  # essential when prev_key is None.
-        _export_selected_games_index_order_value(
-            keyset, gamesout, instance, exporter, counter
-        )
+    """Export selected games in PGN format in database order.
+
+    The PGN specification requires a movetext order sort but this is
+    not implemented.
+
+    """
+    del tag
+    _export_selected_games_database_order(
+        selected, gamesout, instance, exporter, counter
+    )
 
 
-def _export_selected_games_index_order_result(
-    selected, gamesout, instance, exporter, counter
+def _export_all_games_tag_order(
+    selected, gamesout, instance, exporter, counter, tag
 ):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.RESULT_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            resultset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            resultset_count = resultset.count_records()
-            if resultset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_database_order(
-                    resultset, gamesout, instance, exporter, counter
-                )
-            elif resultset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    resultset, gamesout, instance, exporter, counter
-                )
-        finally:
-            resultset.close()
+    """Export selected games in PGN format in PGN collation order.
 
+    Game references are put in a list and sorted for output order.  When
+    the list is too large the keys are written to a BytesIO stream and
+    the list is discarded.  The next level, writing the io streams to
+    files and discarding the io streams, is not implemented (yet).
 
-def _export_selected_games_index_order_black(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.BLACK_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            blackset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            blackset_count = blackset.count_records()
-            if blackset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_result(
-                    blackset, gamesout, instance, exporter, counter
-                )
-            elif blackset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    blackset, gamesout, instance, exporter, counter
-                )
-        finally:
-            blackset.close()
-
-
-def _export_selected_games_index_order_white(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.WHITE_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            whiteset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            whiteset_count = whiteset.count_records()
-            if whiteset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_black(
-                    whiteset, gamesout, instance, exporter, counter
-                )
-            elif whiteset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    whiteset, gamesout, instance, exporter, counter
-                )
-        finally:
-            whiteset.close()
-
-
-def _export_selected_games_index_order_round(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.ROUND_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            roundset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            roundset_count = roundset.count_records()
-            if roundset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_white(
-                    roundset, gamesout, instance, exporter, counter
-                )
-            elif roundset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    roundset, gamesout, instance, exporter, counter
-                )
-        finally:
-            roundset.close()
-
-
-def _export_selected_games_index_order_site(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.SITE_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            siteset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            siteset_count = siteset.count_records()
-            if siteset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_round(
-                    siteset, gamesout, instance, exporter, counter
-                )
-            elif siteset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    siteset, gamesout, instance, exporter, counter
-                )
-        finally:
-            siteset.close()
-
-
-def _export_selected_games_index_order_event(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.EVENT_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            eventset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            eventset_count = eventset.count_records()
-            if eventset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_site(
-                    eventset, gamesout, instance, exporter, counter
-                )
-            elif eventset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    eventset, gamesout, instance, exporter, counter
-                )
-        finally:
-            eventset.close()
-
-
-def _export_selected_games_index_order_date(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    valuespec = ValuesClause()
-    valuespec.field = filespec.PGN_DATE_FIELD_DEF
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
-    selector = database.encode_record_selector
-    for key in database.find_values_ascending(valuespec, dbset):
-        recordlist_key = database.recordlist_key(
-            dbset, valuespec.field, key=selector(key)
-        )
-        try:
-            dateset = recordlist_key & selected
-        finally:
-            recordlist_key.close()
-        try:
-            dateset_count = dateset.count_records()
-            if dateset_count > _MEMORY_SORT_LIMIT:
-                _export_selected_games_index_order_event(
-                    dateset, gamesout, instance, exporter, counter
-                )
-            elif dateset_count > 0:
-                _export_selected_games_pgn_collation_order(
-                    dateset, gamesout, instance, exporter, counter
-                )
-        finally:
-            dateset.close()
-
-
-def _export_selected_games_index_order_value(
-    selected, gamesout, instance, exporter, counter
-):
-    """Export selected games in PGN format in PGN collation order."""
-    games_for_value = []
+    """
+    large_sort_limit = _MEMORY_SORT_LIMIT * _BYTESIO_FACTOR
+    sorted_references = []
+    references = []
     cursor = selected.create_recordsetbase_cursor()
     try:
         current_record = cursor.first()
@@ -1414,18 +1166,121 @@ def _export_selected_games_index_order_value(
             instance.load_record(current_record)
             ivcg = instance.value.collected_game
             if ivcg.is_pgn_valid_export_format():
-                games_for_value.append(ivcg)
+                references.append(
+                    (
+                        ivcg.pgn_tags.get(tag),
+                        ivcg.get_collation()[:-2],
+                        instance.key.recno,
+                    )
+                )
             else:
                 ivcg = _full_parse(instance)
                 if ivcg.is_pgn_valid_export_format():
-                    games_for_value.append(ivcg)
+                    references.append(
+                        (
+                            ivcg.pgn_tags.get(tag),
+                            ivcg.get_collation()[:-2],
+                            instance.key.recno,
+                        )
+                    )
+            if len(references) > large_sort_limit:
+                sorted_references.append(
+                    _bytesio_stream_of_game_keys(references)
+                )
+                references.clear()
             current_record = cursor.next()
-        games_for_value.sort(key=methodcaller("get_collation"))
-        for gfv in games_for_value:
-            exporter(gamesout, gfv)
-            counter.increment_items_output()
     finally:
         cursor.close()
+    if sorted_references:
+        sorted_references.append(_bytesio_stream_of_game_keys(references))
+        references.clear()
+        _export_all_games_sorted_references_order(
+            selected,
+            sorted_references,
+            gamesout,
+            instance,
+            exporter,
+            counter,
+            tag,
+        )
+    else:
+        references.sort()
+        database = selected.recordset.dbhome
+        dbset = selected.recordset.dbset
+        for reference in references:
+            current_record = database.get_primary_record(dbset, reference[-1])
+            instance.load_record(current_record)
+            ivcg = instance.value.collected_game
+            if ivcg.is_pgn_valid_export_format():
+                exporter(gamesout, ivcg)
+                counter.increment_items_output()
+            else:
+                ivcg = _full_parse(instance)
+                if ivcg.is_pgn_valid_export_format():
+                    exporter(gamesout, ivcg)
+                    counter.increment_items_output()
+
+
+def _bytesio_stream_of_game_keys(references):
+    """Write encoded sorted game keys to BytesIO stream."""
+    references.sort()
+    byteio = io.BytesIO()
+    for item in references:
+        byteio.write(item[-1].to_bytes(_KEY_SIZE_BYTES, byteorder="big"))
+    return byteio
+
+
+def _export_all_games_sorted_references_order(
+    selected, sorted_references, gamesout, instance, exporter, counter, tag
+):
+    """Export selected games in PGN format in PGN collation order."""
+    database = selected.recordset.dbhome
+    dbset = selected.recordset.dbset
+    items = []
+    for stream in sorted_references:
+        stream.seek(0, os.SEEK_SET)
+        current_record = database.get_primary_record(
+            dbset,
+            int.from_bytes(stream.read(_KEY_SIZE_BYTES), byteorder="big"),
+        )
+        instance.load_record(current_record)
+        ivcg = instance.value.collected_game
+        items.append(
+            (
+                ivcg.pgn_tags.get(tag),
+                ivcg.get_collation(),
+                ivcg,
+                stream,
+            )
+        )
+    items.sort()
+    while True:
+        try:
+            ivcg, stream = items.pop(0)[-2:]
+        except IndexError:
+            break
+        if ivcg.is_pgn_valid_export_format():
+            exporter(gamesout, ivcg)
+            counter.increment_items_output()
+        else:
+            ivcg = _full_parse(instance)
+            if ivcg.is_pgn_valid_export_format():
+                exporter(gamesout, ivcg)
+                counter.increment_items_output()
+        key_bytes = stream.read(_KEY_SIZE_BYTES)
+        if not key_bytes:
+            stream.close()
+            continue
+        current_record = database.get_primary_record(
+            dbset, int.from_bytes(key_bytes, byteorder="big")
+        )
+        instance.load_record(current_record)
+        ivcg = instance.value.collected_game
+        items.insert(
+            0,
+            (ivcg.pgn_tags.get(tag), ivcg.get_collation(), ivcg, stream),
+        )
+        items.sort()
 
 
 def _export_pgn_elements(gamesout, collected_game):
