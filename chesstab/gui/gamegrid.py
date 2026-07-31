@@ -574,6 +574,8 @@ class GameGridBaseTagRoster:
     datagrid module.
     """
 
+    y_scroll_limit = 9999
+
     def _set_initial_bindings(self):
         """Set the event bindings in __init__() method."""
         # pylint: disable=no-member
@@ -876,6 +878,98 @@ class GameGridBaseTagRoster:
             if isinstance(key, str):
                 key = " ".join(re_normalize_player_name.findall(key))
         super().load_new_partial_key(key)
+
+    def get_client_item_and_record_counts(self):
+        """Return scrollbar slider positioning information.
+
+        For non-primary datasources (indicies) where self.record_count
+        is None and the primary datasource has more than some number of
+        records, self.record_count is set to the number of records on
+        the primary datasource and the returned object is generated
+        without calling the superclass method.
+
+        Otherwise delegate to superclass method.
+
+        """
+        # pylint: disable=no-member
+        if not self.datasource.primary:
+            record_count = self.record_count
+            if record_count is None:
+                self.datasource.dbhome.start_read_only_transaction()
+                try:
+                    record_count = self.datasource.dbhome.count_all_records(
+                        self.datasource.dbset
+                    )
+                finally:
+                    self.datasource.dbhome.end_read_only_transaction()
+            if record_count > self.y_scroll_limit:
+                self.record_count = record_count
+                return (
+                    self.record_count,
+                    self.get_client_item_count(),
+                    0,
+                )
+        return super().get_client_item_and_record_counts()
+
+    def move_slider(self, event=None):
+        """Filter cases where vertical scrolling is allowed.
+
+        Pointer events on the scrollbar are ignored for non-primary
+        datasources (indicies) with more than some number of records,
+        except for setting the record_count for this instance to the
+        number of records on the primary database and informing user
+        the event has been ignored.
+
+        Otherwise delegate to superclass method.
+
+        """
+        # pylint: disable=no-member
+        if not self.datasource.primary:
+            record_count = self.record_count
+            if record_count is None:
+                self.datasource.dbhome.start_read_only_transaction()
+                try:
+                    record_count = self.datasource.dbhome.count_all_records(
+                        self.datasource.dbset
+                    )
+                finally:
+                    self.datasource.dbhome.end_read_only_transaction()
+            if record_count > self.y_scroll_limit:
+                tkinter.messagebox.showinfo(
+                    parent=self.parent,
+                    title="Vertical Scrollbar Actions",
+                    message="".join(
+                        (
+                            "Pointer actions are inhibited because games ",
+                            "are sorted by a PGN Tag and there are more ",
+                            "than ",
+                            str(self.y_scroll_limit),
+                            " games in the database.\n\n",
+                            "Use keyboard scrolling, 'Move to', ",
+                            "or 'Filter', actions instead.",
+                        )
+                    ),
+                )
+                self.record_count = record_count
+                return
+        super().move_slider(event=event)
+
+    def set_yview(self, scroll=None, number=None, scrollunit=None):
+        """Filter cases where vertical scrolling is allowed.
+
+        Pointer events on the scrollbar are ignored for non-primary
+        datasources (indicies) with more than some number of records.
+
+        Otherwise delegate to superclass method.
+
+        """
+        # pylint: disable=no-member
+        if (
+            not self.datasource.primary
+            and self.record_count > self.y_scroll_limit
+        ):
+            return
+        super().set_yview(scroll=scroll, number=number, scrollunit=scrollunit)
 
 
 class PartialPositionGames(
