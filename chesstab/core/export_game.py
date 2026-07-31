@@ -42,6 +42,8 @@ _ENCODING = "utf-8"
 # twic1372g.zip and twic1397g.zip with about 10,000 and 5,000 games
 # respectively.  In both sets these games are not output for
 # _MEMORY_SORT_LIMIT <= 17 but are for _MEMORY_SORT_LIMIT >= 18.
+# The previous game is repeated.
+# The behaviour is seen with file IO and bytes IO.
 # The Qa7c5-like games are output for _MEMORY_SORT_LIMIT = 10 if
 # _BYTESIO_FACTOR is set to 300000 so it seems the product matters.
 # _MEMORY_SORT_LIMIT * _BYTESIO_FACTOR > 173 seems to be the codition
@@ -64,6 +66,10 @@ _BYTESIO_FACTOR = 10
 # If there is room for a larger database change _KEY_SIZE_BYTES to 5,
 # which is enough for 1000 years of games at current rate of play.
 _KEY_SIZE_BYTES = 4
+
+# Name of directory, relative to database directory, for temporary files
+# when sorting large numbers of records in PGN collation order.
+_EXPORT_SORT_DIRECTORY = "_export_sort_directory"
 
 
 def export_all_games_text(database, filename, statusbar):
@@ -1156,6 +1162,15 @@ def _export_all_games_tag_order(
 
     """
     large_sort_limit = _MEMORY_SORT_LIMIT * _BYTESIO_FACTOR
+    if counter.items_selected > large_sort_limit * _BYTESIO_FACTOR:
+        streamer = _fileio_stream_of_game_keys
+        sort_directory = os.path.join(
+            selected.recordset.dbhome.home_directory, _EXPORT_SORT_DIRECTORY
+        )
+        os.mkdir(sort_directory)
+    else:
+        streamer = _bytesio_stream_of_game_keys
+        sort_directory = None
     sorted_references = []
     references = []
     cursor = selected.create_recordsetbase_cursor()
@@ -1185,14 +1200,22 @@ def _export_all_games_tag_order(
                     )
             if len(references) > large_sort_limit:
                 sorted_references.append(
-                    _bytesio_stream_of_game_keys(references)
+                    streamer(
+                        references,
+                        _temporary_file_name(sort_directory),
+                    )
                 )
                 references.clear()
             current_record = cursor.next()
     finally:
         cursor.close()
     if sorted_references:
-        sorted_references.append(_bytesio_stream_of_game_keys(references))
+        sorted_references.append(
+            streamer(
+                references,
+                _temporary_file_name(sort_directory),
+            )
+        )
         references.clear()
         _export_all_games_sorted_references_order(
             selected,
@@ -1221,8 +1244,16 @@ def _export_all_games_tag_order(
                     counter.increment_items_output()
 
 
-def _bytesio_stream_of_game_keys(references):
-    """Write encoded sorted game keys to BytesIO stream."""
+def _temporary_file_name(directory):
+    """Return new file name in directory or None if directory is None."""
+    if directory is None:
+        return None
+    return os.path.join(directory, str(len(os.listdir(directory))))
+
+
+def _bytesio_stream_of_game_keys(references, filename):
+    """Write encoded sorted game keys to BytesIO stream and return stream."""
+    del filename
     references.sort()
     byteio = io.BytesIO()
     for item in references:
@@ -1230,14 +1261,32 @@ def _bytesio_stream_of_game_keys(references):
     return byteio
 
 
+def _fileio_stream_of_game_keys(references, filename):
+    """Write encoded sorted game keys to file and return filename."""
+    references.sort()
+    fileio = open(filename, "xb")
+    for item in references:
+        fileio.write(item[-1].to_bytes(_KEY_SIZE_BYTES, byteorder="big"))
+    fileio.close()
+    return fileio.name
+
+
 def _export_all_games_sorted_references_order(
     selected, sorted_references, gamesout, instance, exporter, counter, tag
 ):
-    """Export selected games in PGN format in PGN collation order."""
+    """Export selected games in PGN format in PGN collation order.
+
+    Items in sorted_references are deleted when all keys in the item have
+    been processed.  If item is a file name it is deleted, and when the
+    last file is deleted the directory is deleted too.
+
+    """
     database = selected.recordset.dbhome
     dbset = selected.recordset.dbset
     items = []
     for stream in sorted_references:
+        if isinstance(stream, str):
+            stream = open(stream, "rb")
         stream.seek(0, os.SEEK_SET)
         current_record = database.get_primary_record(
             dbset,
@@ -1270,6 +1319,13 @@ def _export_all_games_sorted_references_order(
         key_bytes = stream.read(_KEY_SIZE_BYTES)
         if not key_bytes:
             stream.close()
+            if isinstance(stream, io.BufferedReader):
+                os.remove(stream.name)
+                sorted_references.remove(stream.name)
+                if not sorted_references:
+                    os.rmdir(os.path.dirname(stream.name))
+            else:
+                sorted_references.remove(stream)
             continue
         current_record = database.get_primary_record(
             dbset, int.from_bytes(key_bytes, byteorder="big")
