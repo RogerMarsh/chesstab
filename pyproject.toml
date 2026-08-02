@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chesstab"
-version = "8.3.3.dev11"
+version = "8.3.3.dev12"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
@@ -30,7 +30,7 @@ readme = "README"
 dependencies = [
     "solentware-base==5.5",
     "solentware-grid==3.0.3",
-    "pgn-read==2.7.1",
+    "pgn-read==2.7.2",
     "solentware-misc==1.7.3",
     "uci-net==1.2.9",
 ]
