@@ -10,7 +10,7 @@ import tkinter
 from solentware_grid.gui.datadelete import DataDelete
 
 from pgn_read.core.parser import PGN
-from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
+from pgn_read.core.constants import TAG_WHITE, TAG_BLACK, TAG_FEN
 
 from .gametoplevel import GameToplevel
 from .toplevelpgn import DeletePGNToplevel
@@ -139,6 +139,19 @@ class GameDbDelete(DeletePGNToplevel, DataDelete):
         CQL queries on the changes.
 
         """
+        collected_game = self.object.value.collected_game
+        if not collected_game.piece_placement_data:
+            fen = collected_game.pgn_tags.get(TAG_FEN)
+            if fen:
+                message = "".join(("Cannot delete game with FEN\n\n", fen))
+            else:
+                message = "Cannot delete game with initial empty board"
+            tkinter.messagebox.showinfo(
+                parent=self.parent,
+                title="Delete Game",
+                message=message,
+            )
+            return
         dbhome = self.datasource.dbhome
         dbhome.mark_games_evaluated(
             allexceptkey=(

@@ -10,7 +10,7 @@ import tkinter
 from solentware_grid.gui.dataedit import DataEdit
 
 from pgn_read.core.parser import PGN
-from pgn_read.core.constants import TAG_WHITE, TAG_BLACK
+from pgn_read.core.constants import TAG_WHITE, TAG_BLACK, TAG_FEN
 
 from ..core import constants
 from .gametoplevel import GameToplevel, GameToplevelEdit
@@ -198,6 +198,19 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
         CQL queries on the changes.
 
         """
+        collected_game = self.oldobject.value.collected_game
+        if not collected_game.piece_placement_data:
+            fen = collected_game.pgn_tags.get(TAG_FEN)
+            if fen:
+                message = "".join(("Cannot edit game with FEN\n\n", fen))
+            else:
+                message = "Cannot edit game with initial empty board"
+            tkinter.messagebox.showinfo(
+                parent=self.parent,
+                title="Edit Game",
+                message=message,
+            )
+            return
         self.datasource.dbhome.mark_games_evaluated(
             allexceptkey=(
                 self.oldobject.key.recno

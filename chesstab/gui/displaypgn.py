@@ -47,6 +47,8 @@ import tkinter.messagebox
 from solentware_grid.gui.dataedit import RecordEdit
 from solentware_grid.gui.datadelete import RecordDelete
 
+from pgn_read.core.constants import TAG_FEN
+
 from .score import NonTagBind, ScoreNoGameException
 from .scorepgn import ScorePGN
 from .displaytext import ShowText, DisplayText, EditText, InsertText
@@ -151,9 +153,7 @@ class ShowPGN(ShowText, ScorePGN):
     # and method mark_cql_statements_evaluated, and property
     # ui_base_table.  The clarity of both common bits and differences
     # seems to justify the extra syntactic complexity.
-
-    # Probably becomes _insert_item_database(), but stays here rather than
-    # moved to each subclass: see displaytext.ShowText version.
+    # Renamed _insert_item_database().
     def _insert_item_database(self, event=None):
         """Add PGN score to database on request from item display."""
         del event
@@ -248,6 +248,19 @@ class ShowPGN(ShowText, ScorePGN):
             ):
                 return None
             updater.value.gamesource = self.pgn_score_source
+        collected_game = updater.value.collected_game
+        if not collected_game.piece_placement_data:
+            fen = collected_game.pgn_tags.get(TAG_FEN)
+            if fen:
+                message = "".join(("Cannot insert game with FEN\n\n", fen))
+            else:
+                message = "Cannot insert game with initial empty board"
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message=message,
+            )
+            return None
         editor = RecordEdit(updater, None)
         editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
@@ -355,6 +368,19 @@ class DisplayPGN(DisplayText):
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )
+        collected_game = original.value.collected_game
+        if not collected_game.piece_placement_data:
+            fen = collected_game.pgn_tags.get(TAG_FEN)
+            if fen:
+                message = "".join(("Cannot delete game with FEN\n\n", fen))
+            else:
+                message = "Cannot delete game with initial empty board"
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message=message,
+            )
+            return
         self.pgn_score_original_value(original.value)
         editor = RecordDelete(original)
         editor.set_data_source(source=datasource)
@@ -538,6 +564,19 @@ class EditPGN(EditText):
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )
+        collected_game = original.value.collected_game
+        if not collected_game.piece_placement_data:
+            fen = collected_game.pgn_tags.get(TAG_FEN)
+            if fen:
+                message = "".join(("Cannot edit game with FEN\n\n", fen))
+            else:
+                message = "Cannot edit game with initial empty board"
+            tkinter.messagebox.showinfo(
+                parent=self.ui.get_toplevel(),
+                title=title,
+                message=message,
+            )
+            return
         self.pgn_score_original_value(original.value)
 
         # is it better to use DataClient directly?
