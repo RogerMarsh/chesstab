@@ -368,19 +368,6 @@ class DisplayPGN(DisplayText):
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )
-        collected_game = original.value.collected_game
-        if not collected_game.piece_placement_data:
-            fen = collected_game.pgn_tags.get(TAG_FEN)
-            if fen:
-                message = "".join(("Cannot delete game with FEN\n\n", fen))
-            else:
-                message = "Cannot delete game with initial empty board"
-            tkinter.messagebox.showinfo(
-                parent=self.ui.get_toplevel(),
-                title=title,
-                message=message,
-            )
-            return
         self.pgn_score_original_value(original.value)
         editor = RecordDelete(original)
         editor.set_data_source(source=datasource)
