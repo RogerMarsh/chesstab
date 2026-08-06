@@ -1250,7 +1250,7 @@ class Score(SharedTextScore, BlankText):
             raise ScoreMapToBoardException(
                 "Unable to map text to board"
             ) from error
-        assert len(game.pgn_text) >= len(game.position_deltas)
+        assert len(game.pgn_text) == len(game.position_deltas)
         tags_displayed = self._map_tags_display_order()
         for text, position in zip(game.pgn_text, game.position_deltas):
             first_char = text[0]
