@@ -198,11 +198,17 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
         CQL queries on the changes.
 
         """
-        collected_game = self.oldobject.value.collected_game
+        collected_game = self.newobject.value.collected_game
         if not collected_game.piece_placement_data:
             fen = collected_game.pgn_tags.get(TAG_FEN)
             if fen:
-                message = "".join(("Cannot edit game with FEN\n\n", fen))
+                message = "".join(
+                    (
+                        "Cannot edit game with FEN\n\n",
+                        fen,
+                        "\n\nor perhaps SetUp tag is missing"
+                    )
+                )
             else:
                 message = "Cannot edit game with initial empty board"
             tkinter.messagebox.showinfo(

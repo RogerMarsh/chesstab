@@ -218,7 +218,7 @@ class ShowPGN(ShowText, ScorePGN):
                 ".",
             ]
             if not updater.value.collected_game.is_movetext_valid():
-                msg.extend(["\n\nErrors exist in the Movetext."])
+                msg.extend(["\n\nErrors exist in the PGN text."])
             if not updater.value.collected_game.is_tag_roster_valid():
                 # Get repertoire distiguished first, then figure how to
                 # implement in existing subclasses.
@@ -252,7 +252,13 @@ class ShowPGN(ShowText, ScorePGN):
         if not collected_game.piece_placement_data:
             fen = collected_game.pgn_tags.get(TAG_FEN)
             if fen:
-                message = "".join(("Cannot insert game with FEN\n\n", fen))
+                message = "".join(
+                    (
+                        "Cannot insert game with FEN\n\n",
+                        fen,
+                        "\n\nor perhaps SetUp tag is missing"
+                    )
+                )
             else:
                 message = "Cannot insert game with initial empty board"
             tkinter.messagebox.showinfo(
@@ -551,11 +557,23 @@ class EditPGN(EditText):
         original.load_record(
             (self.sourceobject.key.recno, self.sourceobject.srvalue)
         )
-        collected_game = original.value.collected_game
+        self.pgn_score_original_value(original.value)
+
+        # is it better to use DataClient directly?
+        # Then original would not be used. Instead DataSource.new_row
+        # gets record keyed by sourceobject and update is used to edit this.
+        updater = self._game_updater(self._construct_record_value())
+        collected_game = updater.value.collected_game
         if not collected_game.piece_placement_data:
             fen = collected_game.pgn_tags.get(TAG_FEN)
             if fen:
-                message = "".join(("Cannot edit game with FEN\n\n", fen))
+                message = "".join(
+                    (
+                        "Cannot edit game with FEN\n\n",
+                        fen,
+                        "\n\nor perhaps SetUp tag is missing"
+                    )
+                )
             else:
                 message = "Cannot edit game with initial empty board"
             tkinter.messagebox.showinfo(
@@ -564,12 +582,6 @@ class EditPGN(EditText):
                 message=message,
             )
             return
-        self.pgn_score_original_value(original.value)
-
-        # is it better to use DataClient directly?
-        # Then original would not be used. Instead DataSource.new_row
-        # gets record keyed by sourceobject and update is used to edit this.
-        updater = self._game_updater(self._construct_record_value())
         editor = RecordEdit(updater, original)
         editor.set_data_source(source=datasource)
         updater.set_database(editor.get_data_source().dbhome)
@@ -580,7 +592,7 @@ class EditPGN(EditText):
                 ".",
             ]
             if not updater.value.collected_game.is_movetext_valid():
-                msg.extend(["\n\nErrors exist in the Movetext."])
+                msg.extend(["\n\nErrors exist in the PGN text."])
             if not updater.value.collected_game.is_tag_roster_valid():
                 # Get repertoire distiguished first, then figure how to
                 # implement in existing subclasses.

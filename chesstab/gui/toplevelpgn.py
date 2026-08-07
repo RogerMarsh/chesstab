@@ -122,7 +122,7 @@ class EditPGNToplevel(_ToplevelPGN, EditText):
                 ".",
             ]
             if not self.newobject.value.collected_game.is_movetext_valid():
-                msg.extend(["\n\nErrors exist in the Movetext."])
+                msg.extend(["\n\nErrors exist in the PGN text."])
             if not self.newobject.value.collected_game.is_tag_roster_valid():
                 # Get repertoire distiguished first, then figure how to
                 # implement in existing subclasses.
