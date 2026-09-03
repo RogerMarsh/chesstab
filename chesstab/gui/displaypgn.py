@@ -256,7 +256,7 @@ class ShowPGN(ShowText, ScorePGN):
                     (
                         "Cannot insert game with FEN\n\n",
                         fen,
-                        "\n\nor perhaps SetUp tag is missing"
+                        "\n\nor perhaps SetUp tag is missing",
                     )
                 )
             else:
@@ -571,7 +571,7 @@ class EditPGN(EditText):
                     (
                         "Cannot edit game with FEN\n\n",
                         fen,
-                        "\n\nor perhaps SetUp tag is missing"
+                        "\n\nor perhaps SetUp tag is missing",
                     )
                 )
             else:

@@ -48,7 +48,7 @@ from solentware_base.core.constants import TABLE_B_SIZE, FILEDESC, BRECPPG
 
 from pgn_read.core.tagpair_parser import PGNTagPair, GameCount
 
-from ..dpt.database_one_step_du import ChessDBrecordGameFastload
+from ..core import chessrecord
 from ..core import constants
 from ..core import filespec
 
@@ -121,7 +121,7 @@ def file_du(database, dbpath, pgnpath, **kwargs):
 
     cdb.close_database()
 
-    importer = ChessDBrecordGameFastload()
+    importer = chessrecord.ChessDBrecordGameFastload()
     fldb = FastloadDatabase(cdb, dbpath, "games", **kwargs)
     fldb.set_defer_update()
     with open(pgnpath, "r", encoding="iso-8859-1") as pgn_file:

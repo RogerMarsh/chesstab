@@ -824,13 +824,12 @@ class ChessDBvaluePGNStore(PGN, _GameLoadPack):
     def pack_detail(self, index):
         """Add PGN file reference and indexing flag for game to index.
 
-        Replace indexing flag by an error flag if errors are found.
+        Add error indexing flag if errors are found.
 
         """
         index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
-        if self.do_full_indexing():
-            index[IMPORT_FIELD_DEF] = [IMPORT_FIELD_DEF]
-        else:
+        index[IMPORT_FIELD_DEF] = [IMPORT_FIELD_DEF]
+        if not self.do_full_indexing():
             index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
 
     def do_full_indexing(self):
@@ -1401,21 +1400,6 @@ class ChessDBrecordGamePGNTags(Record):
                         )
                 old_segment = current_segment
             value.gamesource = None
-            if not value.collected_game.is_tag_roster_valid():
-                # Re-index as an error.
-                new_instance = self.__class__(
-                    keyclass=self.key.__class__,
-                    valueclass=self.value.__class__,
-                )
-                new_instance.load_record(current_record)
-                new_instance.set_database(database)
-                new_instance.value.gamesource = value.reference[FILE]
-                new_instance.value.collected_game.pgn_tags.clear()
-                self.srkey = None
-                self.edit_record(
-                    database, GAMES_FILE_DEF, GAME_FIELD_DEF, new_instance
-                )
-                continue
             database.index_instance(GAMES_FILE_DEF, self)
             current_record = cursor.next()
         # At this point do the final segement index updates.
@@ -1452,6 +1436,200 @@ class ChessDBrecordGameExport(Record):
     def __init__(self, keyclass=ChessDBkeyGame, valueclass=ChessDBvalueExport):
         """Customise Record with chess database key and value classes."""
         super().__init__(keyclass=keyclass, valueclass=valueclass)
+
+
+class ChessDBvaluePGNDUSingleStep(ChessDBvaluePGNUpdate):
+    """Chess game data with references to indicies to be applied."""
+
+    def do_full_indexing(self):
+        """Return True if full indexing is to be done.
+
+        Detected PGN errors are wrapped in a comment starting 'Error: ' so
+        method is_pgn_valid() is not used to decide what indexing to do.
+
+        """
+        return (
+            self.collected_game.is_pgn_valid()
+            and self.collected_game.is_tag_roster_valid()
+        )
+
+    def pack_detail(self, index):
+        """Fill index with detail from game's PGN Tags."""
+        index[PGNFILE_FIELD_DEF] = [self.reference[FILE]]
+        # index[NUMBER_FIELD_DEF] = [self.reference[GAME]]
+        game = self.collected_game
+        if not self.do_full_indexing():
+            index[PGN_ERROR_FIELD_DEF] = [self.reference[FILE]]
+        else:
+            index[POSITIONS_FIELD_DEF] = game.positionkeys
+            index[PIECESQUARE_FIELD_DEF] = game.piecesquarekeys
+            try:
+                index[PGN_DATE_FIELD_DEF] = [
+                    game.pgn_tags[TAG_DATE].replace(*SPECIAL_TAG_DATE)
+                ]
+            except KeyError:
+                index[PGN_DATE_FIELD_DEF] = []
+        _pack_tags_into_index(game.pgn_tags, index)
+
+
+class ChessDBrecordGameDUSingleStep(Record):
+    """Extend with version 7.1.3 import_pgn method.
+
+    The ChessDBrecordGameImport.import_pgn() method from ChessTab-7.1.3
+    is added to support DPT single-step deferred updates.  The UI uses
+    this method for 'Merge Import' processing because it is a LOT faster
+    than following the style for other database engines.
+
+    It is a little faster than the other database engines.
+
+    However an interrupted import has to be repeated in full to the
+    database after restoring it, from a backup copy, to the state before
+    the interrupted import started.
+    """
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNDUSingleStep
+    ):
+        """Extend with DPT single step deferred update."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
+
+    def import_pgn(
+        self, database, source, sourcename, reporter=None, quit_event=None
+    ):
+        """Update database with games read from source."""
+        self.set_database(database)
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Extracting games from " + sourcename)
+        db_segment_size = SegmentSize.db_segment_size
+        value = self.value
+        value.reference = {}
+        reference = value.reference
+        reference[FILE] = sourcename
+        game_number = 0
+        collected_game = None
+        for collected_game in value.read_games(source):
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Import stopped.")
+                return False
+            game_number += 1
+            reference[GAME] = str(game_number)
+            self.key.recno = None
+            value.collected_game = collected_game
+            self.put_record(self.database, GAMES_FILE_DEF)
+            if game_number % db_segment_size == 0:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Game ",
+                                format(game_number, ","),
+                                ", to character ",
+                                format(collected_game.game_offset, ","),
+                                " in PGN, is record ",
+                                format(self.key.recno, ","),
+                            )
+                        )
+                    )
+                database.commit()
+                database.deferred_update_housekeeping()
+                database.start_transaction()
+        if reporter is not None:
+            reporter.append_text_only("")
+            if game_number and collected_game is not None:
+                reporter.append_text(
+                    "".join(
+                        (
+                            format(game_number, ","),
+                            " games, to character ",
+                            format(collected_game.game_offset, ","),
+                            " in PGN, read from ",
+                            sourcename,
+                        )
+                    )
+                )
+            else:
+                reporter.append_text(
+                    "".join(
+                        (
+                            format(game_number, ","),
+                            " games read from ",
+                            sourcename,
+                        )
+                    )
+                )
+            reporter.append_text_only("")
+        return True
+
+
+class ChessDBrecordGameFastload(ChessDBrecordGameSequential):
+    """Extend with version 7.1.3 import_pgn method.
+
+    The ChessDBrecordGameImport.import_pgn() method from ChessTab-7.1.3
+    is added and modified to support DPT fastload.
+
+    """
+
+    def __init__(
+        self, keyclass=ChessDBkeyGame, valueclass=ChessDBvaluePGNDUSingleStep
+    ):
+        """Customise Record with chess database key and value classes."""
+        super().__init__(keyclass=keyclass, valueclass=valueclass)
+
+    def import_pgn(
+        self, database, source, sourcename, reporter=None, quit_event=None
+    ):
+        """Update database with games read from source."""
+        self.set_database(database)
+        if reporter is not None:
+            reporter.append_text_only("")
+            reporter.append_text("Extracting games from " + sourcename)
+        db_segment_size = SegmentSize.db_segment_size * 8
+        value = self.value
+        value.reference = {}
+        reference = value.reference
+        reference[FILE] = sourcename
+        game_number = 0
+        for collected_game in value.read_games(source):
+            if quit_event and quit_event.is_set():
+                if reporter is not None:
+                    reporter.append_text_only("")
+                    reporter.append_text("Import stopped.")
+                return False
+            self.key.recno = None
+            value.collected_game = collected_game
+            game_number += 1
+            reference[GAME] = str(game_number)
+            self.put_record(self.database, GAMES_FILE_DEF)
+            if game_number % db_segment_size == 0:
+                if reporter is not None:
+                    reporter.append_text(
+                        "".join(
+                            (
+                                "Game ",
+                                str(game_number),
+                                ", to character ",
+                                str(collected_game.game_offset),
+                                " in PGN, added to fastload TAPED",
+                            )
+                        )
+                    )
+        if reporter is not None and value.collected_game is not None:
+            reporter.append_text(
+                "".join(
+                    (
+                        str(game_number),
+                        " games, to character ",
+                        str(value.collected_game.game_offset),
+                        " in PGN, read from ",
+                        sourcename,
+                    )
+                )
+            )
+            reporter.append_text_only("")
+        return True
 
 
 class ChessDBkeyPartial(KeyData):

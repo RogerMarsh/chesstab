@@ -206,7 +206,7 @@ class GameDbEdit(EditPGNToplevel, DataEdit):
                     (
                         "Cannot edit game with FEN\n\n",
                         fen,
-                        "\n\nor perhaps SetUp tag is missing"
+                        "\n\nor perhaps SetUp tag is missing",
                     )
                 )
             else:

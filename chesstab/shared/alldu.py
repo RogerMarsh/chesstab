@@ -270,26 +270,30 @@ def du_index_pgn_tags(
         cdb.set_defer_update()
     else:
         cdb.start_transaction()
-    index_games = cdb.recordlist_key(
+    pgn_tag_games = cdb.recordlist_key(
         filespec.GAMES_FILE_DEF,
         filespec.IMPORT_FIELD_DEF,
         key=cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
     )
-    index_games_count = index_games.count_records()
-    if index_games_count == 0:
+    pgn_tag_games_count = pgn_tag_games.count_records()
+    if pgn_tag_games_count == 0:
         if reporter is not None:
             reporter.append_text(
                 "No games need indexing by selected PGN tags."
             )
             reporter.append_text_only("")
-        index_games.close()
+        pgn_tag_games.close()
         cdb.backout()
         return True
     error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
+        index_games = cdb.recordlist_key(
+            filespec.GAMES_FILE_DEF,
+            filespec.IMPORT_FIELD_DEF,
+            key=cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
+        )
         index_games.remove_recordset(error_games)
-        index_games_count = index_games.count_records()
-        if index_games_count == 0:
+        if index_games.count_records() == 0:
             cdb.unfile_records_under(
                 filespec.GAMES_FILE_DEF,
                 filespec.IMPORT_FIELD_DEF,
@@ -297,9 +301,10 @@ def du_index_pgn_tags(
             )
             if reporter is not None:
                 reporter.append_text(
-                    "No games need indexing by selected PGN tags."
+                    "No games without errors need indexing by PGN Tags."
                 )
                 reporter.append_text_only("")
+            pgn_tag_games.close()
             index_games.close()
             error_games.close()
             cdb.commit()
@@ -310,14 +315,19 @@ def du_index_pgn_tags(
             index_games,
             cdb.encode_record_selector(filespec.IMPORT_FIELD_DEF),
         )
+        index_games.close()
     error_games.close()
     if reporter is not None:
         reporter.append_text("Index PGN Tags started.")
         reporter.append_text(
             "".join(
                 (
-                    str(index_games_count),
-                    " game needs" if index_games_count == 1 else " games need",
+                    str(pgn_tag_games_count),
+                    (
+                        " game needs"
+                        if pgn_tag_games_count == 1
+                        else " games need"
+                    ),
                     " indexing by selected PGN tags.",
                 )
             )
@@ -325,14 +335,14 @@ def du_index_pgn_tags(
         reporter.append_text_only("")
     if not importer.index_pgn_tags(
         cdb,
-        index_games,
+        pgn_tag_games,
         reporter=reporter,
         quit_event=quit_event,
     ):
-        index_games.close()
+        pgn_tag_games.close()
         cdb.backout()
         return False
-    index_games.close()
+    pgn_tag_games.close()
     if reporter is not None:
         reporter.append_text_only("")
         reporter.append_text("Finishing PGN tag indexing: please wait.")
@@ -930,26 +940,30 @@ def write_indicies_for_extracted_games(
         return False
 
     cdb.start_transaction()
-    index_games = cdb.recordlist_key(
+    pgn_tag_games = cdb.recordlist_key(
         file,
         filespec.IMPORT_FIELD_DEF,
         key=cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
     )
-    index_games_count = index_games.count_records()
-    if index_games_count == 0:
+    pgn_tag_games_count = pgn_tag_games.count_records()
+    if pgn_tag_games_count == 0:
         if reporter is not None:
             reporter.append_text(
                 "No games need indexing via merge index games."
             )
             reporter.append_text_only("")
-        index_games.close()
+        pgn_tag_games.close()
         cdb.backout()
         return None
     error_games = get_error_games(cdb, pgnpaths)
     if error_games.count_records():
+        index_games = cdb.recordlist_key(
+            file,
+            filespec.IMPORT_FIELD_DEF,
+            key=cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
+        )
         index_games.remove_recordset(error_games)
-        index_games_count = index_games.count_records()
-        if index_games_count == 0:
+        if index_games.count_records() == 0:
             cdb.unfile_records_under(
                 file,
                 filespec.IMPORT_FIELD_DEF,
@@ -967,6 +981,7 @@ def write_indicies_for_extracted_games(
                 reporter.append_text_only("")
             index_games.close()
             error_games.close()
+            pgn_tag_games.close()
             cdb.commit()
             return None
         cdb.file_records_under(
@@ -975,6 +990,7 @@ def write_indicies_for_extracted_games(
             index_games,
             cdb.encode_record_selector(filespec.GAME_FIELD_DEF),
         )
+        index_games.close()
     error_games.close()
     if reporter is not None:
         reporter.append_text_only("")
@@ -982,8 +998,12 @@ def write_indicies_for_extracted_games(
         reporter.append_text(
             "".join(
                 (
-                    str(index_games_count),
-                    " game needs" if index_games_count == 1 else " games need",
+                    str(pgn_tag_games_count),
+                    (
+                        " game needs"
+                        if pgn_tag_games_count == 1
+                        else " games need"
+                    ),
                     " indexing via merge index.",
                 )
             )
@@ -1005,25 +1025,25 @@ def write_indicies_for_extracted_games(
                 "Guard file '0' exists in dump directory:"
             )
             reporter.append_text_only(os.path.dirname(guard_file))
-        index_games.close()
+        pgn_tag_games.close()
         cdb.commit()
         return True
     remove_games_in_sequential_files_from_index_games(
-        cdb, index_games, reporter=reporter
+        cdb, pgn_tag_games, reporter=reporter
     )
     if sorter is None:
         sorter = sortsequential.SortIndiciesToSequentialFiles
     if not importer.write_index_entries_to_sequential_files(
         cdb,
-        index_games,
+        pgn_tag_games,
         sorter(cdb, file, ignore=ignore),
         reporter=reporter,
         quit_event=quit_event,
     ):
-        index_games.close()
+        pgn_tag_games.close()
         cdb.backout()
         return False
-    index_games.close()
+    pgn_tag_games.close()
     if reporter is not None:
         # Thought to be necessary with DPT in some circumstances.
         while not reporter.empty():
