@@ -863,6 +863,8 @@ def _export_all_games(database, filename, statusbar, report_text, exporter):
                     )
                     try:
                         _export_all_games_tag_order(
+                            database,
+                            dbset,
                             selected,
                             gamesout,
                             instance,
@@ -915,6 +917,8 @@ def _export_selected_games(grid, filename, report_text, exporter):
                     for bookmark in grid.bookmarks:
                         selected.place_record_number(bookmark[0])
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -933,6 +937,8 @@ def _export_selected_games(grid, filename, report_text, exporter):
                 selected = database.recordlist_ebm(dbset)
                 try:
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -985,6 +991,8 @@ def _export_games(grid, filename, report_text, exporter):
                     for bookmark in grid.bookmarks:
                         selected.place_record_number(bookmark[0])
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -1003,6 +1011,8 @@ def _export_games(grid, filename, report_text, exporter):
             dbset = grid.get_data_source().dbset
             with open(filename, "w", encoding=_ENCODING) as gamesout:
                 _export_all_games_tag_order(
+                    database,
+                    dbset,
                     selected,
                     gamesout,
                     instance,
@@ -1073,6 +1083,8 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                     for bookmark in grid.bookmarks:
                         selected.place_record_number(bookmark[1])
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -1095,6 +1107,8 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                 )
                 try:
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -1113,6 +1127,8 @@ def _export_selected_games_index_order(grid, filename, report_text, exporter):
                 selected = database.recordlist_ebm(dbset)
                 try:
                     _export_all_games_tag_order(
+                        database,
+                        dbset,
                         selected,
                         gamesout,
                         instance,
@@ -1151,7 +1167,7 @@ def _export_selected_games_movetext_order(
 
 
 def _export_all_games_tag_order(
-    selected, gamesout, instance, exporter, counter, tag
+    database, dbset, selected, gamesout, instance, exporter, counter, tag
 ):
     """Export selected games in PGN format in PGN collation order.
 
@@ -1165,7 +1181,7 @@ def _export_all_games_tag_order(
     if counter.items_selected > large_sort_limit * _BYTESIO_FACTOR:
         streamer = _fileio_stream_of_game_keys
         sort_directory = os.path.join(
-            selected.recordset.dbhome.home_directory, _EXPORT_SORT_DIRECTORY
+            database.home_directory, _EXPORT_SORT_DIRECTORY
         )
         os.mkdir(sort_directory)
     else:
@@ -1218,7 +1234,8 @@ def _export_all_games_tag_order(
         )
         references.clear()
         _export_all_games_sorted_references_order(
-            selected,
+            database,
+            dbset,
             sorted_references,
             gamesout,
             instance,
@@ -1228,8 +1245,6 @@ def _export_all_games_tag_order(
         )
     else:
         references.sort()
-        database = selected.recordset.dbhome
-        dbset = selected.recordset.dbset
         for reference in references:
             current_record = database.get_primary_record(dbset, reference[-1])
             instance.load_record(current_record)
@@ -1272,7 +1287,14 @@ def _fileio_stream_of_game_keys(references, filename):
 
 
 def _export_all_games_sorted_references_order(
-    selected, sorted_references, gamesout, instance, exporter, counter, tag
+    database,
+    dbset,
+    sorted_references,
+    gamesout,
+    instance,
+    exporter,
+    counter,
+    tag,
 ):
     """Export selected games in PGN format in PGN collation order.
 
@@ -1281,8 +1303,6 @@ def _export_all_games_sorted_references_order(
     last file is deleted the directory is deleted too.
 
     """
-    database = selected.recordset.dbhome
-    dbset = selected.recordset.dbset
     items = []
     for stream in sorted_references:
         if isinstance(stream, str):
