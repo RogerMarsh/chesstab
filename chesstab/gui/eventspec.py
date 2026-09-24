@@ -794,3 +794,9 @@ class EventSpec:
     menu_help_file_size = ("", "File size", "", 0)
     menu_help_notes = ("", "Notes", "", 0)
     menu_help_about = ("", "About", "", 0)
+
+    # Select index key actions. No need for underlined character index.
+    select_index_first = ("<Shift-KeyPress-Up>", "First", "Shift Up")
+    select_index_previous = ("<KeyPress-Up>", "Previous", "Up")
+    select_index_next = ("<KeyPress-Down>", "Next", "Down")
+    select_index_last = ("<Shift-KeyPress-Down>", "Last", "Shift Down")

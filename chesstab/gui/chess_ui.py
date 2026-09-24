@@ -67,6 +67,7 @@ from .querygrid import QueryGrid
 from .queryrow import chess_db_row_query
 from .score import ScoreNoGameException, ScoreNoInitialPositionException
 from ..core import utilities
+from .eventspec import EventSpec
 
 
 class ChessUIError(Exception):
@@ -102,6 +103,7 @@ class ChessUI(Bindings):
         self.suppress_structured_comment = False
 
         # Create widgets for toolbarframe (to left of Statusbar set by Chess).
+        self._tb_entry_popup = None
         if toolbarframe is not None:
             self.tb_entry = tkinter.ttk.Entry(toolbarframe, width=20)
             self.tb_entry.pack(side=tkinter.LEFT)
@@ -845,6 +847,7 @@ class ChessUI(Bindings):
         # list below.
         if self.base_games.is_visible():
             self.base_games.frame.focus_set()
+            self._set_base_games_tb_entry_navigation()
         elif self.base_partials.is_visible():
             self.base_partials.frame.focus_set()
         elif self.base_repertoires.is_visible():
@@ -1039,7 +1042,7 @@ class ChessUI(Bindings):
         if self.database is not None:
             if self.base_games.datasource.dbname in self.allow_filter:
                 self.set_toolbarframe_normal(
-                    self.move_to_game, self.filter_game
+                    self.move_to_game, self.filter_game, enable_popup=True
                 )
             else:
                 self.set_toolbarframe_disabled()
@@ -1059,7 +1062,7 @@ class ChessUI(Bindings):
         del event
         if self.database is not None:
             self.set_toolbarframe_normal(
-                self._move_to_partial, self._filter_partial
+                self.move_to_partial, self.filter_partial
             )
             self.base_partials.set_focus()
             self.base_partials.set_selection_text()
@@ -1381,7 +1384,7 @@ class ChessUI(Bindings):
         self._calculate_payload_availability()
         self._configure_panedwindows()
         self._show_base_partials()
-        self.base_partials.set_focus()
+        self.base_partials.focus_set_frame()
 
     def _create_repertoire_datasource(self, database):
         """Create a new DataSource for list of repertoires."""
@@ -1425,7 +1428,7 @@ class ChessUI(Bindings):
         self._calculate_payload_availability()
         self._configure_panedwindows()
         self._show_base_repertoires()
-        self.base_repertoires.set_focus()
+        self.base_repertoires.focus_set_frame()
 
     def set_import_subprocess(self, subprocess_id=None):
         """Set the import subprocess object if not already active."""
@@ -1847,7 +1850,7 @@ class ChessUI(Bindings):
         self._calculate_payload_availability()
         self._configure_panedwindows()
         self._show_base_selection_rules()
-        self.base_selections.set_focus()
+        self.base_selections.focus_set_frame()
 
     def set_find_selection_name_games(self, index):
         """Set status text to selection rule name being searched."""
@@ -1860,18 +1863,23 @@ class ChessUI(Bindings):
         self.tb_entry.configure(state=tkinter.DISABLED)
         for widget in (self.tb_moveto, self.tb_filter):
             widget.configure(state=tkinter.DISABLED, command="")
+        self._disable_tb_entry_navigation()
 
-    def set_toolbarframe_normal(self, move_to, filter_):
+    def set_toolbarframe_normal(self, move_to, filter_, enable_popup=False):
         """Set state for widgets in toolbar frame."""
         self.tb_entry.configure(state=tkinter.NORMAL)
         self.tb_moveto.configure(state=tkinter.NORMAL, command=move_to)
         self.tb_filter.configure(state=tkinter.NORMAL, command=filter_)
+        if enable_popup:
+            self._enable_tb_entry_navigation()
+        else:
+            self._disable_tb_entry_navigation()
 
     def move_to_game(self):
         """Move to first game with PGN Tag value starting text in filter."""
         self.base_games.move_to_row_in_grid(self.tb_entry.get())
 
-    def _move_to_partial(self):
+    def move_to_partial(self):
         """Move to first ChessQL statement with name starting filter text."""
         self.base_partials.move_to_row_in_grid(self.tb_entry.get())
 
@@ -1924,7 +1932,7 @@ class ChessUI(Bindings):
                     ),
                 )
 
-    def _filter_partial(self):
+    def filter_partial(self):
         """Show ChessQL statements with name starting text in filter."""
         text = self.tb_entry.get()
         self.base_partials.load_new_partial_key(text if len(text) else None)
@@ -2012,3 +2020,108 @@ class ChessUI(Bindings):
         if utilities.is_import_in_progress_txn(self.database):
             return True
         return False
+
+    def _tb_entry_first(self, event=None):
+        """Process the tb_entry <Shift Up> event."""
+        del event
+        self._tb_entry_not_implemented("First")
+
+    def _tb_entry_last(self, event=None):
+        """Process the tb_entry <Shift Down> event."""
+        del event
+        self._tb_entry_not_implemented("Last")
+
+    def _tb_entry_prev(self, event=None):
+        """Process the tb_entry <Up> event."""
+        del event
+        self._tb_entry_not_implemented("Previous")
+
+    def _tb_entry_next(self, event=None):
+        """Process the tb_entry <Down> event."""
+        del event
+        self._tb_entry_not_implemented("Next")
+
+    def _post_tb_entry_popup_menu(self, event):
+        """Post the tb_entry popup menu."""
+        del event
+        if self._tb_entry_popup is None:
+            self._tb_entry_popup = tkinter.Menu(
+                master=self.tb_entry, tearoff=False
+            )
+            for (
+                _,  # sequence,
+                label,
+                accelerator,
+                function,
+            ) in self._tb_entry_bindings():
+                self._tb_entry_popup.insert_command(
+                    index=tkinter.END,
+                    label=label,
+                    command=self.try_command(function, self._tb_entry_popup),
+                    accelerator=accelerator,
+                )
+        self._tb_entry_popup.tk_popup(*self.tb_entry.winfo_pointerxy())
+
+    def _tb_entry_bindings(self):
+        """Return binding specification for selection entry widget."""
+        return (
+            EventSpec.select_index_first + (self._tb_entry_first,),
+            EventSpec.select_index_previous + (self._tb_entry_prev,),
+            EventSpec.select_index_next + (self._tb_entry_next,),
+            EventSpec.select_index_last + (self._tb_entry_last,),
+        )
+
+    def _disable_tb_entry_navigation(self):
+        """Disable tb_entry popup menu and equivalent keypresses.
+
+        These events are available only for PGN Tag index processing.
+
+        """
+        for (
+            sequence,
+            _,  # label,
+            _,  # accelerator,
+            _,  # function,
+        ) in self._tb_entry_bindings() + (EventSpec.buttonpress_3 + (None,),):
+            self.bind(
+                self.tb_entry,
+                sequence,
+                function="",
+            )
+
+    def _enable_tb_entry_navigation(self):
+        """Enable tb_entry popup menu and equivalent keypresses.
+
+        These events are available only for PGN Tag index processing.
+
+        """
+        for (
+            sequence,
+            _,  # label,
+            _,  # accelerator,
+            function,
+        ) in self._tb_entry_bindings() + (
+            EventSpec.buttonpress_3 + (self._post_tb_entry_popup_menu,),
+        ):
+            self.bind(
+                self.tb_entry,
+                sequence,
+                function=self.try_event(function),
+            )
+
+    def _set_base_games_tb_entry_navigation(self):
+        """Enable select entry index navigation or disable for no index."""
+        if self.base_games.datasource.dbname in self.allow_filter:
+            self.set_toolbarframe_normal(
+                self.move_to_game, self.filter_game, enable_popup=True
+            )
+        else:
+            self.set_toolbarframe_disabled()
+
+    def _tb_entry_not_implemented(self, action):
+        """Show not implemented dialogue."""
+        tkinter.messagebox.showinfo(
+            parent=self.get_toplevel(),
+            title=action,
+            message="Not implemented",
+        )

@@ -661,7 +661,7 @@ class CQLGrid(CQLListGrid):
         # pylint: disable=no-member
         super().focus_set_frame(event=event)
         self.ui.set_toolbarframe_normal(
-            self.ui.move_to_selection, self.ui.filter_selection
+            self.ui.move_to_partial, self.ui.filter_partial
         )
 
     def set_selection(self, key):

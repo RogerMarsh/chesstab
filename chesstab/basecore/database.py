@@ -473,16 +473,19 @@ class Database:
             raise
         widget.update()
         shutil.rmtree(cql_dir)
-        os.remove(
-            "".join(
-                (
-                    database_file,
-                    "-",
-                    os.path.basename(database_file),
-                    ".cql",
+        try:  # File will not exist if CQL program is not available.
+            os.remove(
+                "".join(
+                    (
+                        database_file,
+                        "-",
+                        os.path.basename(database_file),
+                        ".cql",
+                    )
                 )
             )
-        )
+        except FileNotFoundError:
+            pass
         os.remove(pgn_file)
         reporter.append_text_only("")
         reporter.append_text("Database update completed.")

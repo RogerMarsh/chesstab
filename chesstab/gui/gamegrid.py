@@ -832,11 +832,7 @@ class GameGridBaseTagRoster:
         """Delegate to superclass then set toolbar widget states."""
         # pylint: disable=no-member
         super().focus_set_frame(event=event)
-        ui = self.ui
-        if ui.base_games.datasource.dbname in ui.allow_filter:
-            ui.set_toolbarframe_normal(ui.move_to_game, ui.filter_game)
-        else:
-            ui.set_toolbarframe_disabled()
+        self.ui._set_base_games_tb_entry_navigation()
 
     def set_selection(self, key):
         """Hack to fix edge case when inserting records using apsw or sqlite3.
