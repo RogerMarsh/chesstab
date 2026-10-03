@@ -500,7 +500,9 @@ class Score(SharedTextScore, BlankText):
     # Repertoire subclasses override method to exclude the first two items.
     def _populate_export_submenu(self, submenu):
         """Populate export submenu with export event bindings."""
-        self._set_popup_bindings(submenu, self._get_all_export_events())
+        self._set_popup_bindings_at_index(
+            submenu, bindings=self._get_all_export_events()
+        )
 
     def _create_primary_activity_popup(self):
         """Delegate then add export submenu and return popup menu."""
@@ -521,7 +523,9 @@ class Score(SharedTextScore, BlankText):
         """Create and return select move popup menu."""
         assert self.select_move_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self._set_popup_bindings(popup, self._get_select_move_events())
+        self._set_popup_bindings_at_index(
+            popup, bindings=self._get_select_move_events()
+        )
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self._populate_export_submenu(export_submenu)
         popup.add_cascade(label="Export", menu=export_submenu)

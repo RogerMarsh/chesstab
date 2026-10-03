@@ -26,23 +26,21 @@ class CQLGameListQuery:
                 accelerator=accelerator[2],
             )
 
-    def _add_cascade_menu_to_popup(self, index, popup, bindings=None):
+    def _add_cascade_menu_to_popup(self, label, popup, bindings=None):
         """Add cascade_menu, and bindings, to popup if not already present.
-
-        The index is used as the label on the popup menu when visible.
 
         The bindings are not applied if cascade_menu is alreay in popup menu.
 
         """
         # Cannot see a way of asking 'Does entry exist?' other than:
         try:
-            popup.index(index)
+            popup.index(label)
         except tkinter.TclError:
             cascade_menu = tkinter.Menu(master=popup, tearoff=False)
-            popup.add_cascade(label=index, menu=cascade_menu)
+            popup.add_cascade(label=label, menu=cascade_menu)
             if bindings is None:
                 return
-            self._set_popup_bindings(cascade_menu, bindings)
+            self._set_popup_bindings(cascade_menu, bindings=bindings)
 
     def traverse_backward(self, event=None):
         """Give focus to previous widget type in traversal order."""

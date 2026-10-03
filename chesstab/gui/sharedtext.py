@@ -401,12 +401,10 @@ class SharedTextScore:
     widget.
     """
 
-    def _add_cascade_menu_to_popup(
+    def _add_cascade_menu_to_popup_in_order(
         self, label, popup, bindings=None, order=None, index=tkinter.END
     ):
         """Add cascade_menu, and bindings, to popup if not already present.
-
-        The index is used as the label on the popup menu when visible.
 
         The bindings are not applied if cascade_menu is alreay in popup menu.
 
@@ -443,7 +441,7 @@ class SharedTextScore:
         """
         navigation_map, local_map = self.generate_popup_navigation_maps()
         local_map.update(navigation_map)
-        self._add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup_in_order(
             "Navigation", popup, bindings=local_map, order=self.binding_labels
         )
 
@@ -454,13 +452,17 @@ class SharedTextScore:
         Subclasses must provide a delete_item_view method.
 
         """
-        self._set_popup_bindings(popup, self._get_close_item_events())
+        self._set_popup_bindings_at_index(
+            popup, bindings=self._get_close_item_events()
+        )
 
     def _create_inactive_popup(self):
         """Create popup menu for an inactive widget."""
         assert self.inactive_popup is None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self._set_popup_bindings(popup, self._get_inactive_events())
+        self._set_popup_bindings_at_index(
+            popup, bindings=self._get_inactive_events()
+        )
         self._init_inactive_popup(popup)
         return popup
 

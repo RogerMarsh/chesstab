@@ -794,7 +794,7 @@ class GameEdit(Game):
         assert popup is None
         assert move_navigation is not None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self._set_popup_bindings(popup, move_navigation())
+        self._set_popup_bindings_at_index(popup, bindings=move_navigation())
         export_submenu = tkinter.Menu(master=popup, tearoff=False)
         self._populate_export_submenu(export_submenu)
         popup.add_cascade(label="Export", menu=export_submenu)
@@ -1033,7 +1033,9 @@ class GameEdit(Game):
 
     def _populate_navigate_score_submenu(self, submenu):
         """Populate popup menu with commands for navigating PGN."""
-        self._set_popup_bindings(submenu, self._get_navigate_score_events())
+        self._set_popup_bindings_at_index(
+            submenu, bindings=self._get_navigate_score_events()
+        )
 
     # O-O-O is available to avoid ambiguity if both O-O and O-O-O are legal
     # when typing moves in.  When move editing is not allowed the O-O-O menu
@@ -1052,27 +1054,27 @@ class GameEdit(Game):
         """Populate popup menu with commands for inserting PGN."""
         assert not (include_rav_start_rav and include_move_rav)
         if include_movetext:
-            self._set_popup_bindings(
-                submenu, self._get_insert_pgn_in_movetext_events()
+            self._set_popup_bindings_at_index(
+                submenu, bindings=self._get_insert_pgn_in_movetext_events()
             )
         if include_rav_start_rav:
-            self._set_popup_bindings(
-                submenu, self._get_insert_pgn_rav_in_movetext_events()
+            self._set_popup_bindings_at_index(
+                submenu, bindings=self._get_insert_pgn_rav_in_movetext_events()
             )
         if include_move_rav:
-            self._set_popup_bindings(
-                submenu, self._get_insert_rav_in_movetext_events()
+            self._set_popup_bindings_at_index(
+                submenu, bindings=self._get_insert_rav_in_movetext_events()
             )
         if include_tags:
-            self._set_popup_bindings(
-                submenu, self._get_insert_pgn_in_tags_events()
+            self._set_popup_bindings_at_index(
+                submenu, bindings=self._get_insert_pgn_in_tags_events()
             )
         if not include_ooo:
             return
         function = self._insert_castle_queenside_command  # Line count.
-        self._set_popup_bindings(
+        self._set_popup_bindings_at_index(
             submenu,
-            ((EventSpec.gameedit_insert_castle_queenside, function),),
+            bindings=((EventSpec.gameedit_insert_castle_queenside, function),),
         )
 
     # This method should be in GameEdit, the nearest subclass of Score which

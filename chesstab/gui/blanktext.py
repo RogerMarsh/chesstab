@@ -159,7 +159,9 @@ class BlankText(BlankTextEventBinding, Bindings):
     # This method arose when seeking clarity in the way popup menus were set,
     # and replaces lots of 'add_command' calls scattered all over.
     # Long term, either this method or _add_cascade_menu_to_popup will do all.
-    def _set_popup_bindings(self, popup, bindings=(), index=tkinter.END):
+    def _set_popup_bindings_at_index(
+        self, popup, bindings=(), index=tkinter.END
+    ):
         """Insert bindings in popup before index in popup."""
         # Default index is tkinter.END which seems to mean insert at end of
         # popup, not before last entry in popup as might be expected from the

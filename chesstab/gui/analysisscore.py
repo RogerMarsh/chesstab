@@ -338,7 +338,9 @@ class AnalysisScore(Score):
         game = self.owned_by_game
         assert self.inactive_popup is None and game is not None
         popup = tkinter.Menu(master=self.score, tearoff=False)
-        self._set_popup_bindings(popup, self._get_inactive_events())
+        self._set_popup_bindings_at_index(
+            popup, bindings=self._get_inactive_events()
+        )
         self.inactive_popup = popup
         return popup
 
@@ -380,7 +382,7 @@ class AnalysisScore(Score):
             self.owned_by_game.current_item
         )
         local_map.update(navigation_map)
-        self._add_cascade_menu_to_popup(
+        self._add_cascade_menu_to_popup_in_order(
             "Navigation",
             popup,
             bindings=local_map,

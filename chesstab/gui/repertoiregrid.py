@@ -38,7 +38,7 @@ class RepertoireGrid(GameListGrid):
         self.__bind_on()
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_game_from_popup,
@@ -49,7 +49,7 @@ class RepertoireGrid(GameListGrid):
         self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.pgn_export_format_no_comments,
                     self._export_pgn_no_comments,
@@ -97,9 +97,11 @@ class RepertoireGrid(GameListGrid):
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def bind_off(self):
@@ -425,7 +427,12 @@ class RepertoireGrid(GameListGrid):
         """Delegate to superclass then set toolbar widget states."""
         super().focus_set_frame(event=event)
         self.ui.set_toolbarframe_normal(
-            self.ui.move_to_repertoire, self.ui.filter_repertoire
+            (
+                self.ui.base_repertoires.datasource.dbset,
+                self.ui.base_repertoires.datasource.dbname,
+            ),
+            self.ui.move_to_repertoire,
+            self.ui.filter_repertoire,
         )
 
     def set_selection(self, key):
@@ -471,7 +478,7 @@ class RepertoirePositionGames(GameListGrid):
         self.__bind_on()
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_game_from_popup,
@@ -482,7 +489,7 @@ class RepertoirePositionGames(GameListGrid):
         self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.pgn_reduced_export_format,
                     self._export_pgn_reduced_export_format,
@@ -534,9 +541,11 @@ class RepertoirePositionGames(GameListGrid):
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def bind_off(self):
@@ -719,4 +728,4 @@ class RepertoirePositionGames(GameListGrid):
     def focus_set_frame(self, event=None):
         """Delegate to superclass then set toolbar widget states."""
         super().focus_set_frame(event=event)
-        self.ui.set_toolbarframe_disabled()
+        self.ui.set_toolbarframe_disabled(None)

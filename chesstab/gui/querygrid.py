@@ -240,7 +240,7 @@ class QueryGrid(QueryListGrid):
         self.__bind_on()
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_selection_rule_from_popup,
@@ -289,9 +289,11 @@ class QueryGrid(QueryListGrid):
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def bind_off(self):
@@ -518,7 +520,12 @@ class QueryGrid(QueryListGrid):
         """Delegate to superclass then set toolbar widget states."""
         super().focus_set_frame(event=event)
         self.ui.set_toolbarframe_normal(
-            self.ui.move_to_selection, self.ui.filter_selection
+            (
+                self.ui.base_selections.datasource.dbset,
+                self.ui.base_selections.datasource.dbname,
+            ),
+            self.ui.move_to_selection,
+            self.ui.filter_selection,
         )
 
     def set_selection(self, key):

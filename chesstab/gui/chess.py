@@ -1489,10 +1489,21 @@ class Chess(Bindings):
             ui.base_games.load_new_index()
             if ui.base_games.datasource.dbname in ui.allow_filter:
                 ui.set_toolbarframe_normal(
-                    ui.move_to_game, ui.filter_game, enable_popup=True
+                    (
+                        ui.base_games.datasource.dbset,
+                        ui.base_games.datasource.dbname,
+                    ),
+                    ui.move_to_game,
+                    ui.filter_game,
+                    enable_popup=True,
                 )
             else:
-                ui.set_toolbarframe_disabled()
+                ui.set_toolbarframe_disabled(
+                    (
+                        ui.base_games.datasource.dbset,
+                        ui.base_games.datasource.dbname,
+                    )
+                )
 
         return index_changed
 

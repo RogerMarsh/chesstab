@@ -121,7 +121,7 @@ class GameGridBasePosition:
         """Delegate to superclass then set toolbar widget states."""
         # pylint: disable=no-member
         super().focus_set_frame(event=event)
-        self.ui.set_toolbarframe_disabled()
+        self.ui.set_toolbarframe_disabled(None)
 
 
 class GameGridBasePartial:
@@ -137,7 +137,7 @@ class GameGridBasePartial:
         # pylint: disable=no-member
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_game_from_popup,
@@ -148,7 +148,7 @@ class GameGridBasePartial:
         self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.pgn_reduced_export_format,
                     self._export_pgn_reduced_export_format,
@@ -208,9 +208,11 @@ class GameGridBasePartial:
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def _set_bindings_in__bind_on(self):
@@ -355,7 +357,7 @@ class GameGridBaseTransposition:
         # pylint: disable=no-member
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_game_from_popup,
@@ -366,7 +368,7 @@ class GameGridBaseTransposition:
         self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.pgn_reduced_export_format,
                     self._export_pgn_reduced_export_format,
@@ -426,9 +428,11 @@ class GameGridBaseTransposition:
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def _set_bindings_in__bind_on(self):
@@ -581,7 +585,7 @@ class GameGridBaseTagRoster:
         # pylint: disable=no-member
         self._set_popup_bindings(
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.display_record_from_grid,
                     self._display_game_from_popup,
@@ -592,7 +596,7 @@ class GameGridBaseTagRoster:
         self._add_cascade_menu_to_popup(
             "Export",
             self.menupopup,
-            (
+            bindings=(
                 (
                     EventSpec.pgn_reduced_export_format,
                     self._export_selected_pgn_reduced_export_format,
@@ -658,9 +662,11 @@ class GameGridBaseTagRoster:
             (EventSpec.tab_traverse_backward, self.traverse_backward),
             (EventSpec.tab_traverse_forward, self.traverse_forward),
         )
-        self._add_cascade_menu_to_popup("Navigation", self.menupopup, bindings)
         self._add_cascade_menu_to_popup(
-            "Navigation", self.menupopupnorow, bindings
+            "Navigation", self.menupopup, bindings=bindings
+        )
+        self._add_cascade_menu_to_popup(
+            "Navigation", self.menupopupnorow, bindings=bindings
         )
 
     def _set_bindings_in__bind_on(self):
@@ -832,7 +838,7 @@ class GameGridBaseTagRoster:
         """Delegate to superclass then set toolbar widget states."""
         # pylint: disable=no-member
         super().focus_set_frame(event=event)
-        self.ui._set_base_games_tb_entry_navigation()
+        self.ui.set_base_games_tb_entry_navigation()
 
     def set_selection(self, key):
         """Hack to fix edge case when inserting records using apsw or sqlite3.

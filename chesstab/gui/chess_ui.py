@@ -48,7 +48,7 @@ from .repertoiregrid import (
 )
 from .game import Game
 from .board import Board
-from . import constants, fonts
+from . import constants, fonts, indexentry
 from ..core.filespec import (
     GAMES_FILE_DEF,
     CQL_FILE_DEF,
@@ -103,23 +103,16 @@ class ChessUI(Bindings):
         self.suppress_structured_comment = False
 
         # Create widgets for toolbarframe (to left of Statusbar set by Chess).
-        self._tb_entry_popup = None
         if toolbarframe is not None:
-            self.tb_entry = tkinter.ttk.Entry(toolbarframe, width=20)
+            self.tb_entry = indexentry.IndexEntry(toolbarframe, width=20)
             self.tb_entry.pack(side=tkinter.LEFT)
-            self.tb_moveto = tkinter.ttk.Button(
-                toolbarframe, text="Move to", underline=0
+            self.set_toolbarframe_disabled(None)
+            self._tb_entry_popup = tkinter.Menu(
+                master=self.tb_entry, tearoff=False
             )
-            self.tb_moveto.pack(side=tkinter.LEFT)
-            self.tb_filter = tkinter.ttk.Button(
-                toolbarframe, text="Filter", underline=0
-            )
-            self.tb_filter.pack(side=tkinter.LEFT)
-            self.set_toolbarframe_disabled()
         else:
             self.tb_entry = None
-            self.tb_moveto = None
-            self.tb_filter = None
+            self._tb_entry_popup = None
 
         # All panes or just one with focus visible.
         self.single_view = False
@@ -847,7 +840,7 @@ class ChessUI(Bindings):
         # list below.
         if self.base_games.is_visible():
             self.base_games.frame.focus_set()
-            self._set_base_games_tb_entry_navigation()
+            self.set_base_games_tb_entry_navigation()
         elif self.base_partials.is_visible():
             self.base_partials.frame.focus_set()
         elif self.base_repertoires.is_visible():
@@ -1033,7 +1026,7 @@ class ChessUI(Bindings):
     def set_focus_gamepanel_item(self, event=None):
         """Give game at top of stack the focus."""
         del event
-        self.set_toolbarframe_disabled()
+        self.set_toolbarframe_disabled(None)
         self.game_items.set_focus()
 
     def set_focus_game_grid(self, event=None):
@@ -1042,10 +1035,21 @@ class ChessUI(Bindings):
         if self.database is not None:
             if self.base_games.datasource.dbname in self.allow_filter:
                 self.set_toolbarframe_normal(
-                    self.move_to_game, self.filter_game, enable_popup=True
+                    (
+                        self.base_games.datasource.dbset,
+                        self.base_games.datasource.dbname,
+                    ),
+                    self.move_to_game,
+                    self.filter_game,
+                    enable_popup=True,
                 )
             else:
-                self.set_toolbarframe_disabled()
+                self.set_toolbarframe_disabled(
+                    (
+                        self.base_games.datasource.dbset,
+                        self.base_games.datasource.dbname,
+                    ),
+                )
             self.base_games.set_focus()
             self.base_games.set_selection_text()
 
@@ -1053,7 +1057,7 @@ class ChessUI(Bindings):
         """Give widget displaying list of games for CQL query focus."""
         del event
         if self.database is not None:
-            self.set_toolbarframe_disabled()
+            self.set_toolbarframe_disabled(None)
             self.partial_games.set_focus()
             self.partial_games.set_selection_text()
 
@@ -1062,7 +1066,12 @@ class ChessUI(Bindings):
         del event
         if self.database is not None:
             self.set_toolbarframe_normal(
-                self.move_to_partial, self.filter_partial
+                (
+                    self.base_partials.datasource.dbset,
+                    self.base_partials.datasource.dbname,
+                ),
+                self.move_to_partial,
+                self.filter_partial,
             )
             self.base_partials.set_focus()
             self.base_partials.set_selection_text()
@@ -1070,14 +1079,14 @@ class ChessUI(Bindings):
     def set_focus_partialpanel_item(self, event=None):
         """Give CQL query at top of stack the focus."""
         del event
-        self.set_toolbarframe_disabled()
+        self.set_toolbarframe_disabled(None)
         self.partial_items.set_focus()
 
     def set_focus_position_grid(self, event=None):
         """Give widget displaying list of games matching position the focus."""
         del event
         if self.database is not None:
-            self.set_toolbarframe_disabled()
+            self.set_toolbarframe_disabled(None)
             self.game_games.set_focus()
             self.game_games.set_selection_text()
 
@@ -1085,7 +1094,7 @@ class ChessUI(Bindings):
         """Give widget displaying list of games for repertoire focus."""
         del event
         if self.database is not None:
-            self.set_toolbarframe_disabled()
+            self.set_toolbarframe_disabled(None)
             self.repertoire_games.set_focus()
             self.repertoire_games.set_selection_text()
 
@@ -1094,7 +1103,12 @@ class ChessUI(Bindings):
         del event
         if self.database is not None:
             self.set_toolbarframe_normal(
-                self.move_to_repertoire, self.filter_repertoire
+                (
+                    self.base_repertoires.datasource.dbset,
+                    self.base_repertoires.datasource.dbname,
+                ),
+                self.move_to_repertoire,
+                self.filter_repertoire,
             )
             self.base_repertoires.set_focus()
             self.base_repertoires.set_selection_text()
@@ -1102,7 +1116,7 @@ class ChessUI(Bindings):
     def set_focus_repertoirepanel_item(self, event=None):
         """Give repertoire game at top of stack the focus."""
         del event
-        self.set_toolbarframe_disabled()
+        self.set_toolbarframe_disabled(None)
         self.repertoire_items.set_focus()
 
     def set_focus_selection_rule_grid(self, event=None):
@@ -1110,7 +1124,12 @@ class ChessUI(Bindings):
         del event
         if self.database is not None:
             self.set_toolbarframe_normal(
-                self.move_to_selection, self.filter_selection
+                (
+                    self.base_selections.datasource.dbset,
+                    self.base_selections.datasource.dbname,
+                ),
+                self.move_to_selection,
+                self.filter_selection,
             )
             self.base_selections.set_focus()
             self.base_selections.set_selection_text()
@@ -1118,7 +1137,7 @@ class ChessUI(Bindings):
     def set_focus_selectionpanel_item(self, event=None):
         """Give selection rule at top of stack the focus."""
         del event
-        self.set_toolbarframe_disabled()
+        self.set_toolbarframe_disabled(None)
         self.selection_items.set_focus()
 
     def _set_game_position_data_source(self):
@@ -1858,41 +1877,102 @@ class ChessUI(Bindings):
             self.selection_items.get_stack_item(index).get_text_for_statusbar()
         )
 
-    def set_toolbarframe_disabled(self):
-        """Set state for widgets in toolbar frame."""
-        self.tb_entry.configure(state=tkinter.DISABLED)
-        for widget in (self.tb_moveto, self.tb_filter):
-            widget.configure(state=tkinter.DISABLED, command="")
-        self._disable_tb_entry_navigation()
-
-    def set_toolbarframe_normal(self, move_to, filter_, enable_popup=False):
+    def set_toolbarframe_disabled(self, index_context):
         """Set state for widgets in toolbar frame."""
         self.tb_entry.configure(state=tkinter.NORMAL)
-        self.tb_moveto.configure(state=tkinter.NORMAL, command=move_to)
-        self.tb_filter.configure(state=tkinter.NORMAL, command=filter_)
+        self.tb_entry.apply_index_context(index_context)
+        self.tb_entry.configure(state=tkinter.DISABLED)
+        # self._tb_entry_popup.delete("0", tkinter.END)
+        for spec in (
+            self._tb_entry_range_bindings("", "")
+            + self._tb_entry_bindings()
+            + (EventSpec.buttonpress_3,)
+        ):
+            self.bind(
+                self.tb_entry,
+                spec[0],
+                function="",
+            )
+
+    def set_toolbarframe_normal(
+        self, index_context, move_to, filter_, enable_popup=False
+    ):
+        """Set state for widgets in toolbar frame."""
+        self._tb_entry_popup.delete("0", tkinter.END)
+        self.tb_entry.configure(state=tkinter.NORMAL)
+        for (
+            sequence,
+            label,
+            accelerator,
+            underline,
+            function,
+        ) in self._tb_entry_range_bindings(move_to, filter_):
+            self.bind(
+                self.tb_entry,
+                sequence,
+                function=self.try_event(function),
+            )
+            self._tb_entry_popup.insert_command(
+                index=tkinter.END,
+                label=label,
+                command=self.try_command(function, self._tb_entry_popup),
+                accelerator=accelerator,
+                underline=underline,
+            )
+        self.bind(
+            self.tb_entry,
+            EventSpec.buttonpress_3[0],
+            function=self.try_event(self._post_tb_entry_popup_menu),
+        )
+        self.tb_entry.apply_index_context(index_context)
         if enable_popup:
-            self._enable_tb_entry_navigation()
-        else:
-            self._disable_tb_entry_navigation()
+            for (
+                sequence,
+                label,
+                accelerator,
+                underline,
+                function,
+            ) in self._tb_entry_bindings():
+                self.bind(
+                    self.tb_entry,
+                    sequence,
+                    function=self.try_event(function),
+                )
+                self._tb_entry_popup.insert_command(
+                    index=tkinter.END,
+                    label=label,
+                    command=self.try_command(function, self._tb_entry_popup),
+                    accelerator=accelerator,
+                    underline=underline,
+                )
 
-    def move_to_game(self):
+    def move_to_game(self, event=None):
         """Move to first game with PGN Tag value starting text in filter."""
+        del event
         self.base_games.move_to_row_in_grid(self.tb_entry.get())
+        self.base_games.set_focus()
 
-    def move_to_partial(self):
+    def move_to_partial(self, event=None):
         """Move to first ChessQL statement with name starting filter text."""
+        del event
         self.base_partials.move_to_row_in_grid(self.tb_entry.get())
+        self.base_partials.set_focus()
 
-    def move_to_repertoire(self):
+    def move_to_repertoire(self, event=None):
         """Move to first repertoire with name starting text in filter."""
+        del event
         self.base_repertoires.move_to_row_in_grid(self.tb_entry.get())
+        self.base_repertoires.set_focus()
 
-    def move_to_selection(self):
+    def move_to_selection(self, event=None):
         """Move to first query with name starting text in filter."""
+        del event
         self.base_selections.move_to_row_in_grid(self.tb_entry.get())
+        self.base_selections.set_focus()
 
-    def filter_game(self):
+    def filter_game(self, event=None):
         """Show games with PGN Tag value starting text in filter."""
+        del event
         text = self.tb_entry.get()
         self.base_games.record_count = None
         self.base_games.set_partial_key(text if len(text) else None)
@@ -1931,21 +2011,28 @@ class ChessUI(Bindings):
                         )
                     ),
                 )
+        self.base_games.set_focus()
 
-    def filter_partial(self):
+    def filter_partial(self, event=None):
         """Show ChessQL statements with name starting text in filter."""
+        del event
         text = self.tb_entry.get()
         self.base_partials.load_new_partial_key(text if len(text) else None)
+        self.base_partials.set_focus()
 
-    def filter_repertoire(self):
+    def filter_repertoire(self, event=None):
         """Show repertoires with name starting text in filter."""
+        del event
         text = self.tb_entry.get()
         self.base_repertoires.load_new_partial_key(text if len(text) else None)
+        self.base_repertoires.set_focus()
 
-    def filter_selection(self):
+    def filter_selection(self, event=None):
         """Show query statements with name starting text in filter."""
+        del event
         text = self.tb_entry.get()
         self.base_selections.load_new_partial_key(text if len(text) else None)
+        self.base_selections.set_focus()
 
     def hide_scrollbars(self):
         """Hide the scrollbars in the game display widgets."""
@@ -2025,42 +2112,37 @@ class ChessUI(Bindings):
         """Process the tb_entry <Shift Up> event."""
         del event
         self._tb_entry_not_implemented("First")
+        self.base_games.set_focus()
 
     def _tb_entry_last(self, event=None):
         """Process the tb_entry <Shift Down> event."""
         del event
         self._tb_entry_not_implemented("Last")
+        self.base_games.set_focus()
 
     def _tb_entry_prev(self, event=None):
         """Process the tb_entry <Up> event."""
         del event
         self._tb_entry_not_implemented("Previous")
+        self.base_games.set_focus()
 
     def _tb_entry_next(self, event=None):
         """Process the tb_entry <Down> event."""
         del event
         self._tb_entry_not_implemented("Next")
+        self.base_games.set_focus()
 
     def _post_tb_entry_popup_menu(self, event):
         """Post the tb_entry popup menu."""
         del event
-        if self._tb_entry_popup is None:
-            self._tb_entry_popup = tkinter.Menu(
-                master=self.tb_entry, tearoff=False
-            )
-            for (
-                _,  # sequence,
-                label,
-                accelerator,
-                function,
-            ) in self._tb_entry_bindings():
-                self._tb_entry_popup.insert_command(
-                    index=tkinter.END,
-                    label=label,
-                    command=self.try_command(function, self._tb_entry_popup),
-                    accelerator=accelerator,
-                )
         self._tb_entry_popup.tk_popup(*self.tb_entry.winfo_pointerxy())
+
+    def _tb_entry_range_bindings(self, move_to, filter_):
+        """Return binding specification for selection entry widget."""
+        return (
+            EventSpec.select_index_move_to + (move_to,),
+            EventSpec.select_index_range + (filter_,),
+        )
 
     def _tb_entry_bindings(self):
         """Return binding specification for selection entry widget."""
@@ -2071,52 +2153,20 @@ class ChessUI(Bindings):
             EventSpec.select_index_last + (self._tb_entry_last,),
         )
 
-    def _disable_tb_entry_navigation(self):
-        """Disable tb_entry popup menu and equivalent keypresses.
-
-        These events are available only for PGN Tag index processing.
-
-        """
-        for (
-            sequence,
-            _,  # label,
-            _,  # accelerator,
-            _,  # function,
-        ) in self._tb_entry_bindings() + (EventSpec.buttonpress_3 + (None,),):
-            self.bind(
-                self.tb_entry,
-                sequence,
-                function="",
-            )
-
-    def _enable_tb_entry_navigation(self):
-        """Enable tb_entry popup menu and equivalent keypresses.
-
-        These events are available only for PGN Tag index processing.
-
-        """
-        for (
-            sequence,
-            _,  # label,
-            _,  # accelerator,
-            function,
-        ) in self._tb_entry_bindings() + (
-            EventSpec.buttonpress_3 + (self._post_tb_entry_popup_menu,),
-        ):
-            self.bind(
-                self.tb_entry,
-                sequence,
-                function=self.try_event(function),
-            )
-
-    def _set_base_games_tb_entry_navigation(self):
+    def set_base_games_tb_entry_navigation(self):
         """Enable select entry index navigation or disable for no index."""
         if self.base_games.datasource.dbname in self.allow_filter:
             self.set_toolbarframe_normal(
-                self.move_to_game, self.filter_game, enable_popup=True
+                (
+                    self.base_games.datasource.dbset,
+                    self.base_games.datasource.dbname,
+                ),
+                self.move_to_game,
+                self.filter_game,
+                enable_popup=True,
             )
         else:
-            self.set_toolbarframe_disabled()
+            self.set_toolbarframe_disabled(None)
 
     def _tb_entry_not_implemented(self, action):
         """Show not implemented dialogue."""

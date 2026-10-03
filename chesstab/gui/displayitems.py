@@ -209,7 +209,7 @@ class DisplayItems:
                     break
         else:
             gainfocus = losefocus
-        self.stack[-1].ui.set_toolbarframe_disabled()
+        self.stack[-1].ui.set_toolbarframe_disabled(None)
         if losefocus is not gainfocus:
             stack.append(stack.pop(stack.index(gainfocus)))
             losefocus.bind_for_widget_navigation()

@@ -99,7 +99,9 @@ class BlankTextEventBinding:
 
     def _set_popup_bindings_get_primary_activity_events(self, popup):
         """Call get_primary_activity_events in isolation."""
-        self._set_popup_bindings(popup, self.get_primary_activity_events())
+        self._set_popup_bindings_at_index(
+            popup, bindings=self.get_primary_activity_events()
+        )
 
     def _bind_for_set_primary_activity_bindings(self, switch):
         """Call _set_primary_activity_bindings in isolation."""

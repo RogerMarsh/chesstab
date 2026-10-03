@@ -779,9 +779,9 @@ class Game(Score, EventBinding, AnalysisEventBinding):
     def _create_primary_activity_popup(self):
         """Delegate then add navigation submenu and return popup menu."""
         popup = super()._create_primary_activity_popup()
-        self._set_popup_bindings(
+        self._set_popup_bindings_at_index(
             popup,
-            self._get_engine_analysis_events(),
+            bindings=self._get_engine_analysis_events(),
             index=self.export_popup_label,
         )
         self._create_widget_navigation_submenu_for_popup(popup)

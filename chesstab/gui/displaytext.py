@@ -90,7 +90,9 @@ class ShowText:
     def _create_database_submenu(self, menu):
         """Create and return popup submenu for database events."""
         submenu = tkinter.Menu(master=menu, tearoff=False)
-        self._set_popup_bindings(submenu, self._get_database_events())
+        self._set_popup_bindings_at_index(
+            submenu, bindings=self._get_database_events()
+        )
         return submenu
 
     # The only active bindings compared with displaypgn.ShowPGN.

@@ -321,7 +321,7 @@ class _QueryDisplay(
         """Add option to list games for selection rule to popup."""
         # index argument added when change in method resolution order caused
         # this entry to be added after 'Close Item' rather than before.
-        self._set_popup_bindings(
+        self._set_popup_bindings_at_index(
             popup, bindings=self._get_list_games_events(), index="Close Item"
         )
 
