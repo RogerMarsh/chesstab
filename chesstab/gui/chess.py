@@ -511,7 +511,6 @@ class Chess(Bindings):
                 )
             ) from exc
 
-    _index = GAMES_FILE_DEF
     _open_msg = "Open a chess database with Database | Open"
 
     def _create_menu3_game(self, menus, menubar):
@@ -1474,35 +1473,61 @@ class Chess(Bindings):
                     ),
                 )
             ui = self.ui
-            self._index = index
-            ui.base_games.set_data_source(
-                DataSource(
-                    self.opendatabase,
-                    GAMES_FILE_DEF,
-                    self._index,
-                    chess_db_row_game(ui),
-                ),
-                ui.base_games.on_data_change,
-            )
-            if ui.base_games.datasource.recno:
-                ui.base_games.set_partial_key()
-            ui.base_games.load_new_index()
-            if ui.base_games.datasource.dbname in ui.allow_filter:
-                ui.set_toolbarframe_normal(
-                    (
-                        ui.base_games.datasource.dbset,
-                        ui.base_games.datasource.dbname,
+            if index in ui.allow_filter:
+                ui.base_games.set_data_source(
+                    ui.selectionds(
+                        self.opendatabase,
+                        GAMES_FILE_DEF,
+                        GAMES_FILE_DEF,
+                        chess_db_row_game(ui),
                     ),
-                    ui.move_to_game,
-                    ui.filter_game,
+                    ui.base_games.on_data_change,
+                )
+                if ui.base_games.datasource.recno:
+                    ui.base_games.set_partial_key()
+                tb_entry = ui.tb_entry
+                context_key = (GAMES_FILE_DEF, index)
+                location = tb_entry.index_location.get(context_key)
+                if location is None:
+                    ui.base_games.set_initial_state(tb_entry, *context_key)
+                ui.set_toolbarframe_normal(
+                    (GAMES_FILE_DEF, index),
+                    ui.tb_entry_moveto,
+                    None,
                     enable_popup=True,
                 )
-            else:
-                ui.set_toolbarframe_disabled(
-                    (
-                        ui.base_games.datasource.dbset,
-                        ui.base_games.datasource.dbname,
+                dbhome = self.opendatabase
+                location_key = tb_entry.index_location.get(
+                    tb_entry.index_context_key
+                )
+                if location_key is not None:
+                    location_key = dbhome.encode_record_selector(location_key)
+                dbhome.start_read_only_transaction()
+                try:
+                    location_recordset = dbhome.recordlist_key(
+                        GAMES_FILE_DEF, index, key=location_key
                     )
+                finally:
+                    dbhome.end_read_only_transaction()
+                ui.base_games.datasource.get_selection_rule_games(
+                    location_recordset
+                )
+                ui.base_games.load_new_index()
+            else:
+                ui.base_games.set_data_source(
+                    DataSource(
+                        self.opendatabase,
+                        GAMES_FILE_DEF,
+                        index,
+                        chess_db_row_game(ui),
+                    ),
+                    ui.base_games.on_data_change,
+                )
+                if ui.base_games.datasource.recno:
+                    ui.base_games.set_partial_key()
+                ui.base_games.load_new_index()
+                ui.set_toolbarframe_disabled(
+                    (GAMES_FILE_DEF, ui.base_games.datasource.dbname)
                 )
 
         return index_changed
@@ -1598,16 +1623,18 @@ class Chess(Bindings):
             DataSource(
                 self.opendatabase,
                 GAMES_FILE_DEF,
-                self._index,
+                GAMES_FILE_DEF,
                 chess_db_row_game(self.ui),
             )
         )
         self.ui.show_game_grid(self.opendatabase)
+        self.ui.set_toolbarframe_disabled((GAMES_FILE_DEF, GAMES_FILE_DEF))
 
     def _close_database_and_hide_widgets(self):
         """Close database and hide database display widgets."""
         self._close_recordsets()
         self.opendatabase.close_database()
+        self.ui.set_toolbarframe_disabled(None)
         self.root.wm_title(self.get_application_name())
 
         # Order matters after changes to solentware-base first implemented as

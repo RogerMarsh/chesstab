@@ -677,7 +677,7 @@ class Database:
         valuespec.field = CQL_QUERY_FIELD_DEF
         self.start_transaction()
         try:
-            for key in self.find_values(valuespec, GAMES_FILE_DEF):
+            for key in self.find_values_ascending(valuespec, GAMES_FILE_DEF):
                 recordset = self.recordlist_key(
                     GAMES_FILE_DEF,
                     CQL_QUERY_FIELD_DEF,

@@ -219,28 +219,31 @@ class ChessDBrowGame(GamePosition, AllRow, ChessDBrecordGameTags, DataRow):
                 "  ".join(
                     [
                         "".join((tag, ' "', value, '"'))
-                        for tag, value in self._get_tags_display_order(
-                            self.value
-                        )
+                        for tag, value in self._get_tags_display_order()
                     ]
                 ),
             ),
             **kargs
         )
 
-    def _get_tags_display_order(self, pgn):
+    def _get_tags_display_order(self):
         """Return Tags not given their own column in display order."""
-        del pgn
-        str_tags = []
-        other_tags = []
-        tags = self.value.collected_game.pgn_tags
+        index_tag = self.ui.tb_entry.games_index_key[1]
+        tags = []
+        pgn_tags = self.value.collected_game.pgn_tags
         for tag in SEVEN_TAG_ROSTER:
             if tag not in constants.GRID_HEADER_SEVEN_TAG_ROSTER:
-                str_tags.append((tag, tags.get(tag, DEFAULT_TAG_VALUE)))
-        for key, value in sorted(tags.items()):
+                if tag == index_tag:
+                    tags.insert(0, (tag, pgn_tags.get(tag, DEFAULT_TAG_VALUE)))
+                else:
+                    tags.append((tag, pgn_tags.get(tag, DEFAULT_TAG_VALUE)))
+        for key, value in sorted(pgn_tags.items()):
             if key not in SEVEN_TAG_ROSTER:
-                other_tags.append((key, value))
-        return str_tags + other_tags
+                if key == index_tag:
+                    tags.insert(0, (key, value))
+                else:
+                    tags.append((key, value))
+        return tags
 
 
 def chess_db_row_game(chessui):

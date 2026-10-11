@@ -41,15 +41,12 @@ from solentware_base.core.constants import (
     SECONDARY,
     FIELDS,
 )
-from solentware_base.core.segmentsize import SegmentSize
-from solentware_base.core.record import Record
 
 from .. import ERROR_LOG, APPLICATION_NAME
 from ..core import filespec
 from ..core.filespec import GAMES_FILE_DEF
 from ..core import chessrecord
 from ..shared.alldu import get_filespec
-from ..core.constants import FILE, GAME
 
 # The DPT segment size is 65280 because 32 bytes are reserved and 8160 bytes of
 # the 8192 byte page are used for the bitmap.

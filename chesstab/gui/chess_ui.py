@@ -104,6 +104,8 @@ class ChessUI(Bindings):
 
         # Create widgets for toolbarframe (to left of Statusbar set by Chess).
         if toolbarframe is not None:
+            self.tb_label = tkinter.ttk.Label(toolbarframe, padding=(2,))
+            self.tb_label.pack(side=tkinter.LEFT)
             self.tb_entry = indexentry.IndexEntry(toolbarframe, width=20)
             self.tb_entry.pack(side=tkinter.LEFT)
             self.set_toolbarframe_disabled(None)
@@ -238,16 +240,16 @@ class ChessUI(Bindings):
 
         # These display the lists of games, repertoires, CQL queries, and
         # game selection rules, on the database.
-        self.base_games = self._create_tag_roster_grid()
+        self.base_games = TagRosterGrid(self)
         self.base_repertoires = RepertoireGrid(self)
-        self.base_partials = self._create_cql_grid()
+        self.base_partials = CQLGrid(self)
         self.base_selections = QueryGrid(self)
 
         # These display the lists of games, repertoires, and CQL queries,
         # which match the current position of the active displayed item.
-        self.game_games = self._create_game_position_games_grid()
+        self.game_games = GamePositionGames(self)
         self.repertoire_games = RepertoirePositionGames(self)
-        self.partial_games = self._create_partial_position_games_grid()
+        self.partial_games = PartialPositionGames(self)
 
         def add_panedwindow(widget, weight):
             self.pw_current_weights[widget] = 0
@@ -1033,14 +1035,11 @@ class ChessUI(Bindings):
         """Give widget displaying list of games on database the focus."""
         del event
         if self.database is not None:
-            if self.base_games.datasource.dbname in self.allow_filter:
+            if self.tb_entry.games_index_key[1] in self.allow_filter:
                 self.set_toolbarframe_normal(
-                    (
-                        self.base_games.datasource.dbset,
-                        self.base_games.datasource.dbname,
-                    ),
-                    self.move_to_game,
-                    self.filter_game,
+                    self.tb_entry.games_index_key,
+                    self.tb_entry_moveto,
+                    None,
                     enable_popup=True,
                 )
             else:
@@ -1880,9 +1879,16 @@ class ChessUI(Bindings):
     def set_toolbarframe_disabled(self, index_context):
         """Set state for widgets in toolbar frame."""
         self.tb_entry.configure(state=tkinter.NORMAL)
-        self.tb_entry.apply_index_context(index_context)
+        if index_context is None:
+            self.tb_entry.apply_index_context(index_context)
+            self.tb_label.configure(text="")
+        elif index_context[0] == GAMES_FILE_DEF:
+            self.tb_entry.apply_index_context(index_context, games_index=True)
+            self.tb_label.configure(text=index_context[1])
+        else:
+            self.tb_entry.apply_index_context(index_context)
+            self.tb_label.configure(text=index_context[0])
         self.tb_entry.configure(state=tkinter.DISABLED)
-        # self._tb_entry_popup.delete("0", tkinter.END)
         for spec in (
             self._tb_entry_range_bindings("", "")
             + self._tb_entry_bindings()
@@ -1907,6 +1913,8 @@ class ChessUI(Bindings):
             underline,
             function,
         ) in self._tb_entry_range_bindings(move_to, filter_):
+            if function is None:
+                continue
             self.bind(
                 self.tb_entry,
                 sequence,
@@ -1924,7 +1932,14 @@ class ChessUI(Bindings):
             EventSpec.buttonpress_3[0],
             function=self.try_event(self._post_tb_entry_popup_menu),
         )
-        self.tb_entry.apply_index_context(index_context)
+        if index_context is None:
+            self.tb_entry.apply_index_context(index_context)
+        elif index_context[0] == GAMES_FILE_DEF:
+            self.tb_entry.apply_index_context(index_context, games_index=True)
+            self.tb_label.configure(text=index_context[1])
+        else:
+            self.tb_entry.apply_index_context(index_context)
+            self.tb_label.configure(text=index_context[0])
         if enable_popup:
             for (
                 sequence,
@@ -2076,22 +2091,6 @@ class ChessUI(Bindings):
         for item, items in exceptions:
             items.remove(item)
 
-    def _create_tag_roster_grid(self):
-        """Return TagRosterGrid instance."""
-        return TagRosterGrid(self)
-
-    def _create_game_position_games_grid(self):
-        """Return GamePositionGames instance."""
-        return GamePositionGames(self)
-
-    def _create_partial_position_games_grid(self):
-        """Return PartialPositionGames instance."""
-        return PartialPositionGames(self)
-
-    def _create_cql_grid(self):
-        """Return CQLGrid instance."""
-        return CQLGrid(self)
-
     def is_database_access_inhibited(self):
         """Return True if database cannot be accessed."""
         if self.database is None or self.database.dbenv is None:
@@ -2111,26 +2110,27 @@ class ChessUI(Bindings):
     def _tb_entry_first(self, event=None):
         """Process the tb_entry <Shift Up> event."""
         del event
-        self._tb_entry_not_implemented("First")
-        self.base_games.set_focus()
+        self.base_games.set_first_index_value(self.tb_entry)
 
     def _tb_entry_last(self, event=None):
         """Process the tb_entry <Shift Down> event."""
         del event
-        self._tb_entry_not_implemented("Last")
-        self.base_games.set_focus()
+        self.base_games.set_last_index_value(self.tb_entry)
 
-    def _tb_entry_prev(self, event=None):
-        """Process the tb_entry <Up> event."""
+    def tb_entry_moveto(self, event=None):
+        """Process the tb_entry <Control m> event."""
         del event
-        self._tb_entry_not_implemented("Previous")
-        self.base_games.set_focus()
+        self.base_games.set_nearest_index_value(self.tb_entry)
 
     def _tb_entry_next(self, event=None):
         """Process the tb_entry <Down> event."""
         del event
-        self._tb_entry_not_implemented("Next")
-        self.base_games.set_focus()
+        self.base_games.set_next_index_value(self.tb_entry)
+
+    def _tb_entry_prev(self, event=None):
+        """Process the tb_entry <Up> event."""
+        del event
+        self.base_games.set_previous_index_value(self.tb_entry)
 
     def _post_tb_entry_popup_menu(self, event):
         """Post the tb_entry popup menu."""
@@ -2155,23 +2155,15 @@ class ChessUI(Bindings):
 
     def set_base_games_tb_entry_navigation(self):
         """Enable select entry index navigation or disable for no index."""
-        if self.base_games.datasource.dbname in self.allow_filter:
-            self.set_toolbarframe_normal(
-                (
-                    self.base_games.datasource.dbset,
-                    self.base_games.datasource.dbname,
-                ),
-                self.move_to_game,
-                self.filter_game,
-                enable_popup=True,
-            )
+        if self.tb_entry.games_index_key:
+            if self.tb_entry.games_index_key[1] in self.allow_filter:
+                self.set_toolbarframe_normal(
+                    self.tb_entry.games_index_key,
+                    self.tb_entry_moveto,
+                    None,
+                    enable_popup=True,
+                )
+            else:
+                self.set_toolbarframe_disabled(self.tb_entry.games_index_key)
         else:
             self.set_toolbarframe_disabled(None)
-
-    def _tb_entry_not_implemented(self, action):
-        """Show not implemented dialogue."""
-        tkinter.messagebox.showinfo(
-            parent=self.get_toplevel(),
-            title=action,
-            message="Not implemented",
-        )

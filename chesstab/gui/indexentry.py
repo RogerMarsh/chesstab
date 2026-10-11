@@ -22,15 +22,23 @@ class IndexEntry(tkinter.ttk.Entry):
     def __init__(self, *args, **kwargs):
         """Extend with a context dict."""
         super().__init__(*args, **kwargs)
-        for name in ("index_context", "apply_index_context"):
+        for name in (
+            "games_index_key",
+            "index_context",
+            "index_context_key",
+            "index_location",
+            "apply_index_context",
+        ):
             if hasattr(super(), name):
                 raise RuntimeError(
                     "tkinter.ttk.Entry superclass defines " + name
                 )
         self.index_context = {}
         self.index_context_key = None
+        self.index_location = {}
+        self.games_index_key = None
 
-    def apply_index_context(self, key):
+    def apply_index_context(self, key, games_index=False):
         """Update widget with context for key.
 
         Expected to be done when the associated list gets focus.
@@ -41,3 +49,5 @@ class IndexEntry(tkinter.ttk.Entry):
         self.delete("0", tkinter.END)
         self.insert(tkinter.END, self.index_context.get(key, ""))
         self.index_context_key = key
+        if games_index:
+            self.games_index_key = key

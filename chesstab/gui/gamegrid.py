@@ -18,6 +18,8 @@
 
 import tkinter.messagebox
 
+from solentware_base.core.wherevalues import ValuesClause
+
 from ..core.chessrecord import (
     PLAYER_NAME_TAGS,
     re_normalize_player_name,
@@ -578,8 +580,6 @@ class GameGridBaseTagRoster:
     datagrid module.
     """
 
-    y_scroll_limit = 9999
-
     def _set_initial_bindings(self):
         """Set the event bindings in __init__() method."""
         # pylint: disable=no-member
@@ -881,97 +881,76 @@ class GameGridBaseTagRoster:
                 key = " ".join(re_normalize_player_name.findall(key))
         super().load_new_partial_key(key)
 
-    def get_client_item_and_record_counts(self):
-        """Return scrollbar slider positioning information.
-
-        For non-primary datasources (indicies) where self.record_count
-        is None and the primary datasource has more than some number of
-        records, self.record_count is set to the number of records on
-        the primary datasource and the returned object is generated
-        without calling the superclass method.
-
-        Otherwise delegate to superclass method.
-
-        """
+    def set_initial_state(self, context, file, field):
+        """Set context index state on first access by <file, field>."""
         # pylint: disable=no-member
-        if not self.datasource.primary:
-            record_count = self.record_count
-            if record_count is None:
-                self.datasource.dbhome.start_read_only_transaction()
-                try:
-                    record_count = self.datasource.dbhome.count_all_records(
-                        self.datasource.dbset
-                    )
-                finally:
-                    self.datasource.dbhome.end_read_only_transaction()
-            if record_count > self.y_scroll_limit:
-                self.record_count = record_count
-                return (
-                    self.record_count,
-                    self.get_client_item_count(),
-                    0,
-                )
-        return super().get_client_item_and_record_counts()
+        valuespec = ValuesClause()
+        context_key = (file, field)
+        valuespec.field = field
+        dbhome = self.datasource.dbhome
+        dbhome.start_read_only_transaction()
+        try:
+            for key in dbhome.find_values_ascending(valuespec, file):
+                context.index_location[context_key] = key
+                break
+        finally:
+            dbhome.end_read_only_transaction()
 
-    def move_slider(self, event=None):
-        """Filter cases where vertical scrolling is allowed.
+    def set_first_index_value(self, context):
+        """Set grid to records for first index value in context."""
+        self._set_index_value(context, ValuesClause(), ascending=True)
 
-        Pointer events on the scrollbar are ignored for non-primary
-        datasources (indicies) with more than some number of records,
-        except for setting the record_count for this instance to the
-        number of records on the primary database and informing user
-        the event has been ignored.
+    def set_last_index_value(self, context):
+        """Set grid to records for last index value in context."""
+        self._set_index_value(context, ValuesClause(), ascending=False)
 
-        Otherwise delegate to superclass method.
+    def set_nearest_index_value(self, context):
+        """Set grid to records for nearest index value in context."""
+        valuespec = ValuesClause()
+        valuespec.from_value = context.get()
+        self._set_index_value(context, valuespec, ascending=True)
 
-        """
+    def set_next_index_value(self, context):
+        """Set grid to records for next index value in context."""
+        valuespec = ValuesClause()
+        location = context.index_location.get(context.index_context_key)
+        if location is not None:
+            valuespec.above_value = location
+        self._set_index_value(context, valuespec, ascending=True)
+
+    def set_previous_index_value(self, context):
+        """Set grid to records for previous index value in context."""
+        valuespec = ValuesClause()
+        location = context.index_location.get(context.index_context_key)
+        if location is not None:
+            valuespec.below_value = location
+        self._set_index_value(context, valuespec, ascending=False)
+
+    def _set_index_value(self, context, valuespec, ascending=True):
+        """Set grid to records for index value context in valuespec."""
         # pylint: disable=no-member
-        if not self.datasource.primary:
-            record_count = self.record_count
-            if record_count is None:
-                self.datasource.dbhome.start_read_only_transaction()
-                try:
-                    record_count = self.datasource.dbhome.count_all_records(
-                        self.datasource.dbset
-                    )
-                finally:
-                    self.datasource.dbhome.end_read_only_transaction()
-            if record_count > self.y_scroll_limit:
-                tkinter.messagebox.showinfo(
-                    parent=self.parent,
-                    title="Vertical Scrollbar Actions",
-                    message="".join(
-                        (
-                            "Pointer actions are inhibited because games ",
-                            "are sorted by a PGN Tag and there are more ",
-                            "than ",
-                            str(self.y_scroll_limit),
-                            " games in the database.\n\n",
-                            "Use keyboard scrolling, 'Move to', ",
-                            "or 'Filter', actions instead.",
-                        )
-                    ),
+        context_key = context.index_context_key
+        file, valuespec.field = context_key
+        dbhome = self.datasource.dbhome
+        if ascending:
+            action = dbhome.find_values_ascending
+        else:
+            action = dbhome.find_values_descending
+        dbhome.start_read_only_transaction()
+        try:
+            for key in action(valuespec, file):
+                context.index_location[context_key] = key
+                location_recordset = dbhome.recordlist_key(
+                    *context_key, key=dbhome.encode_record_selector(key)
                 )
-                self.record_count = record_count
+                break
+            else:
                 return
-        super().move_slider(event=event)
-
-    def set_yview(self, scroll=None, number=None, scrollunit=None):
-        """Filter cases where vertical scrolling is allowed.
-
-        Pointer events on the scrollbar are ignored for non-primary
-        datasources (indicies) with more than some number of records.
-
-        Otherwise delegate to superclass method.
-
-        """
-        # pylint: disable=no-member
-        if (
-            not self.datasource.primary
-            and self.record_count > self.y_scroll_limit
-        ):
-            return
-        super().set_yview(scroll=scroll, number=number, scrollunit=scrollunit)
+        finally:
+            dbhome.end_read_only_transaction()
+        self.datasource.get_selection_rule_games(location_recordset)
+        self.load_new_index()
+        self.set_focus()
 
 
 class PartialPositionGames(

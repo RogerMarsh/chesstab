@@ -80,7 +80,9 @@ class Database(database.Database, lmdb_database.Database):
     #        # infinite loop at the expense of crashing ChessTab when
     #        # the list of games matching the CQL query is displayed.
     #        prev_key = None
-    #        for key in self.find_values(valuespec, filespec.GAMES_FILE_DEF):
+    #        for key in self.find_values_ascending(
+    #            valuespec, filespec.GAMES_FILE_DEF
+    #        ):
     #            if prev_key == key:
     #                break
     #            prev_key = key
@@ -134,7 +136,7 @@ class Database(database.Database, lmdb_database.Database):
             # Database with zero, or more than one, keys is handled normally
             # by a copy of the code in the superclass method.
             if not single_key:
-                for key in self.find_values(
+                for key in self.find_values_ascending(
                     valuespec, filespec.GAMES_FILE_DEF
                 ):
                     recordset = self.recordlist_key(
