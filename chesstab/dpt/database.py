@@ -38,37 +38,25 @@ class Database(dptnofistat.Database):
         super().__init__(*args, **kwargs)
         self._broken_sizes = {}
 
-    def adjust_database_for_retry_import(self, files):
-        """Increase file sizes taking file full into account."""
-        # Increase the size of files allowing for the file full condition
-        # which occurred while doing a deferred update for import.
-        for dbn, broken_sizes in self._broken_sizes.items():
-            self.table[dbn].increase_size_of_full_file(
-                self.dbenv,
-                self.table[dbn].get_file_parameters(self.dbenv),
-                broken_sizes,
-            )
-
     def open_database(self, files=None):
         """Return True if all files are opened in Normal mode (FISTAT == 0)."""
         super().open_database(files=files)
-        fistat = {}
+        fistat = []
         for dbo in self.table.values():
-            fistat[dbo] = dbo.get_file_parameters(self.dbenv)["FISTAT"]
-        for dbo in self.table.values():
-            if fistat[dbo][0] != 0:
-                break
-        else:
+            parameters = dbo.get_file_parameters(self.dbenv)
+            fistat.extend(
+                [(k, v) for k, v in parameters.items() if k[1] == "FISTAT"]
+            )
+        fistat_errors = []
+        for item in fistat:
+            if item[1][0] != 0:
+                fistat_errors.append("\t".join((item[0][0], item[1][1])))
+        if not fistat_errors:
             self.increase_database_size(files=None)
             return True
 
         # At least one file is not in Normal state
-        report = "\n".join(
-            [
-                "\t".join((os.path.basename(dbo.file), fistat[dbo][1]))
-                for dbo in self.table.values()
-            ]
-        )
+        report = "\n".join(fistat_errors)
         tkinter.messagebox.showinfo(
             title="Open",
             message="".join(
@@ -106,9 +94,11 @@ class Database(dptnofistat.Database):
         file_sizes_for_import = {}
         for dbn, dbo in self.table.items():
             gfp = dbo.get_file_parameters(self.dbenv)
-            fistat[dbo] = gfp["FISTAT"]
+            fistat[dbo] = gfp[os.path.basename(dbo.file), "FISTAT"]
             if dbn in files:
-                file_sizes_for_import[dbn] = gfp
+                file_sizes_for_import[dbn] = gfp[
+                    os.path.basename(dbo.file), "FIFLAGS"
+                ]
         for dbo in self.table.values():
             if fistat[dbo][0] != 0:
                 break
@@ -120,11 +110,7 @@ class Database(dptnofistat.Database):
             return True
         # At least one file is not in Normal state after Import.
         # Check the files that had imports applied
-        for file_sizes in file_sizes_for_import.values():
-            # pylint message unused variable.
-            # Document what seemed to matter at some point.
-            # status = file_sizes["FISTAT"][0]
-            flags = file_sizes["FIFLAGS"]
+        for flags in file_sizes_for_import.values():
             if not (
                 (flags & FIFLAGS_FULL_TABLEB) or (flags & FIFLAGS_FULL_TABLED)
             ):
@@ -172,14 +158,3 @@ class Database(dptnofistat.Database):
         )
         # self.close_database()
         return True
-
-    def save_broken_database_details(self, files=()):
-        """Save database engine specific detail of broken files to be restored.
-
-        It is assumed that the Database Services object exists.
-
-        """
-        self._broken_sizes.clear()
-        broken = self._broken_sizes
-        for file in files:
-            broken[file] = self.table[file].get_file_parameters(self.dbenv)

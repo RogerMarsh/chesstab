@@ -79,9 +79,6 @@ class Database(alldu.Alldu, litedu.Litedu, dptdu_database.Database):
         """
         super(dptdu_database.Database, self).edit_instance(dbset, instance)
 
-    def _dptfileclass(self):
-        return DPTFile
-
 
 class DPTFile(dptdu_database.DPTFile):
     """This class is used to access files in a DPT database.

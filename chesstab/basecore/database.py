@@ -108,16 +108,6 @@ class Database:
         # Return True to fit behaviour of dpt.database version of method.
         return True
 
-    def save_broken_database_details(self, files=()):
-        """Save database engine specific detail of broken files to be restored.
-
-        It is assumed that the Database Services object exists.
-
-        """
-
-    def adjust_database_for_retry_import(self, files):
-        """Database engine specific actions done before re-trying an import."""
-
     def mark_games_evaluated(self, allexceptkey=None, commit=True):
         """Mark all games except allexceptkey as evaluated by CQL.
 
