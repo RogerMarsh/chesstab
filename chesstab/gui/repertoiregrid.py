@@ -357,34 +357,49 @@ class RepertoireGrid(GameListGrid):
 
     def _export_pgn(self, event=None):
         """Export selected repertoires in PGN export format."""
-        export_repertoire.export_selected_repertoires_pgn(
-            self, self.ui.get_export_filename("Repertoires", pgn=True)
+        self._try_export_pgn(
+            export_repertoire.export_selected_repertoires_pgn,
+            "Repertoires",
+            True,
         )
 
     def _export_pgn_no_comments(self, event=None):
         """Export selected repertoires in PGN export format no comments."""
-        export_repertoire.export_selected_repertoires_pgn_no_comments(
-            self,
-            self.ui.get_export_filename("Repertoires (no comments)", pgn=True),
+        self._try_export_pgn(
+            export_repertoire.export_selected_repertoires_pgn_no_comments,
+            "Repertoires (no comments)",
+            True,
         )
 
     def _export_text(self, event=None):
         """Export selected repertoires as text."""
-        export_repertoire.export_selected_repertoires_text(
-            self,
-            self.ui.get_export_filename(
-                "Repertoires (internal format)", pgn=False
-            ),
+        self._try_export_pgn(
+            export_repertoire.export_selected_repertoires_text,
+            "Repertoires (internal format)",
+            False,
         )
 
     def _export_pgn_import_format(self, event=None):
         """Export selected repertoires in a PGN import format."""
-        export_repertoire.export_selected_repertoires_pgn_import_format(
-            self,
-            self.ui.get_export_filename(
-                "Repertoires (import format)", pgn=True
-            ),
+        self._try_export_pgn(
+            export_repertoire.export_selected_repertoires_pgn_import_format,
+            "Repertoires (import format)",
+            True,
         )
+
+    def _try_export_pgn(self, method, title, pgn):
+        """Export selected games in PGN Reduced Export Format."""
+        try:
+            method(
+                self,
+                self.ui.get_export_filename(title, pgn=pgn),
+            )
+        except OSError as exc:
+            tkinter.messagebox.showinfo(
+                parent=self.get_frame(),
+                title="Repertoires output problem",
+                message=str(exc),
+            )
 
     def is_visible(self):
         """Return True if list of repertoire games is displayed."""

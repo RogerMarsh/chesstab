@@ -245,7 +245,17 @@ class DeferredUpdateEstimateProcess:
                         index_games.close()
             finally:
                 database.end_read_only_transaction()
-            if game_count > 0:
+            if game_count == 0:
+                try:
+                    if not self._estimate_games_in_import():
+                        return None
+                except OSError as exc:
+                    self._report_to_log("Unable to estimate import.")
+                    self._report_to_log_text_only("The reported error is:")
+                    self._report_to_log_text_only(str(exc))
+                    self._report_to_log_text_only("")
+                    return None
+            else:
                 self.estimate_data = True
                 self._report_to_log(
                     "Extract already done: skip count games scan."
@@ -253,8 +263,6 @@ class DeferredUpdateEstimateProcess:
                 self._report_to_log_text_only(
                     str(game_count) + " games were extracted."
                 )
-            elif not self._estimate_games_in_import():
-                return None
             if not self._allow_time():
                 self._report_to_log("Unable to verify import request.")
                 self._report_to_log_text_only("")

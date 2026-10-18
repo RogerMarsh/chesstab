@@ -295,9 +295,15 @@ class CQLListGrid(AllGrid, CQLGameListQuery, DataGrid, Display):
     def _export_partial(self, event=None):
         """Export selected CQL query definitions."""
         del event
-        export_chessql.export_selected_positions(
-            self, self.ui.get_export_filename("CQL Queries", pgn=False)
-        )
+        try:
+            export_chessql.export_selected_positions(
+                self, self.ui.get_export_filename("CQL Queries", pgn=False)
+            )
+        except OSError as exc:
+            tkinter.messagebox.showinfo(
+                title="CQL Query output problem",
+                message=str(exc),
+            )
 
 
 class CQLGrid(CQLListGrid):

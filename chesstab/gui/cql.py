@@ -153,9 +153,15 @@ class CQL(CQLText, EventBinding):
     def _export_partial(self, event=None):
         """Export displayed CQL query definition."""
         del event
-        export_chessql.export_single_position(
-            self.score.get("1.0", tkinter.END),
-            self.ui.get_export_filename_for_single_item(
-                "Partial Position", pgn=False
-            ),
-        )
+        try:
+            export_chessql.export_single_position(
+                self.score.get("1.0", tkinter.END),
+                self.ui.get_export_filename_for_single_item(
+                    "Partial Position", pgn=False
+                ),
+            )
+        except OSError as exc:
+            tkinter.messagebox.showinfo(
+                title="CQL Query output problem",
+                message=str(exc),
+            )

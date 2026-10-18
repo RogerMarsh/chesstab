@@ -1944,117 +1944,122 @@ class Chess(Bindings):
 
     def export_all_games_pgn_reduced_export_format(self):
         """Export all database games in PGN reduced export format."""
-        export_game.export_all_games_pgn_reduced_export_format(
-            self.opendatabase,
-            self.ui.get_export_filename(
-                "Games (reduced export format)", pgn=True
-            ),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn_reduced_export_format,
+            "Games (reduced export format)",
+            True,
         )
 
     def export_all_games_pgn_no_comments_no_ravs(self):
         """Export games in PGN export format excluding comments and RAVs."""
-        export_game.export_all_games_pgn_no_comments_no_ravs(
-            self.opendatabase,
-            self.ui.get_export_filename(
-                "Games (no comments no ravs)", pgn=True
-            ),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn_no_comments_no_ravs,
+            "Games (no comments no ravs)",
+            True,
         )
 
     def export_all_games_pgn_no_comments(self):
         """Export all games in PGN export format excluding comments."""
-        export_game.export_all_games_pgn_no_comments(
-            self.opendatabase,
-            self.ui.get_export_filename("Games (no comments)", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn_no_comments,
+            "Games (no comments)",
+            True,
         )
 
     def export_all_games_pgn(self):
         """Export all database games in PGN export format."""
-        export_game.export_all_games_pgn(
-            self.opendatabase,
-            self.ui.get_export_filename("Games", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn,
+            "Games",
+            True,
         )
 
     def export_all_games_pgn_import_format(self):
         """Export all database games in a PGN import format."""
-        export_game.export_all_games_pgn_import_format(
-            self.opendatabase,
-            self.ui.get_export_filename("Games (import format)", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn_import_format,
+            "Games (import format)",
+            True,
         )
 
     def export_all_games_text(self):
         """Export all games as a text file."""
-        export_game.export_all_games_text(
-            self.opendatabase,
-            self.ui.get_export_filename("Games (internal format)", pgn=False),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_text,
+            "Games (internal format)",
+            False,
         )
 
     def export_all_games_import_format_database_order(self):
         """Export all games in a PGN import format in database order."""
-        export_game.export_all_games_import_format_database_order(
-            self.opendatabase,
-            self.ui.get_export_filename(
-                "Games (import format database order)", pgn=True
-            ),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_import_format_database_order,
+            "Games (import format database order)",
+            True,
         )
 
     def export_all_games_pgn_no_structured_comments(self):
         """Export all games in PGN export format excluding {[%]} comments."""
-        export_game.export_all_games_pgn_no_structured_comments(
-            self.opendatabase,
-            self.ui.get_export_filename("Games (no {[%]} comments)", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_game.export_all_games_pgn_no_structured_comments,
+            "Games (no {[%]} comments)",
+            True,
         )
 
     def export_all_repertoires_pgn_no_comments(self):
         """Export all repertoires in PGN export format without comments."""
-        export_repertoire.export_all_repertoires_pgn_no_comments(
-            self.opendatabase,
-            self.ui.get_export_filename("Repertoires (no comments)", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_repertoire.export_all_repertoires_pgn_no_comments,
+            "Repertoires (no comments)",
+            True,
         )
 
     def export_all_repertoires_pgn(self):
         """Export all repertoires in PGN export format."""
-        export_repertoire.export_all_repertoires_pgn(
-            self.opendatabase,
-            self.ui.get_export_filename("Repertoires", pgn=True),
-            self.statusbar,
+        self._try_export_pgn(
+            export_repertoire.export_all_repertoires_pgn,
+            "Repertoires",
+            True,
         )
 
     def export_all_repertoires_pgn_import_format(self):
         """Export all repertoires in a PGN import format."""
-        export_repertoire.export_all_repertoires_pgn_import_format(
-            self.opendatabase,
-            self.ui.get_export_filename(
-                "Repertoires (import format)", pgn=True
-            ),
-            self.statusbar,
+        self._try_export_pgn(
+            export_repertoire.export_all_repertoires_pgn_import_format,
+            "Repertoires (import format)",
+            True,
         )
 
     def export_all_repertoires_text(self):
         """Export all repertoires as a text file."""
-        export_repertoire.export_all_repertoires_text(
-            self.opendatabase,
-            self.ui.get_export_filename(
-                "Repertoires (internal format)", pgn=False
-            ),
-            self.statusbar,
+        self._try_export_pgn(
+            export_repertoire.export_all_repertoires_text,
+            "Repertoires (internal format)",
+            False,
         )
 
     def _export_positions(self):
         """Export all positions as a text file."""
-        export_chessql.export_all_positions(
-            self.opendatabase,
-            self.ui.get_export_filename("Partial Positions", pgn=False),
-            self.statusbar,
+        self._try_export_pgn(
+            export_chessql.export_all_positions,
+            "Partial Positions",
+            False,
         )
+
+    def _try_export_pgn(self, method, title, pgn):
+        """Export all games, repertoires, or CQL queries."""
+        try:
+            method(
+                self.opendatabase,
+                self.ui.get_export_filename(title, pgn=pgn),
+                self.statusbar,
+            )
+        except OSError as exc:
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="Export from database problem",
+                message=str(exc),
+            )
 
     def _show_query_engines(self):
         """Show list of CQL query engines available."""
@@ -2144,6 +2149,13 @@ class Chess(Bindings):
                 parent=self._get_toplevel(),
                 title="Set",
                 message="No directory chosen",
+            )
+            return
+        if not os.access(directory, os.W_OK):
+            tkinter.messagebox.showinfo(
+                parent=self._get_toplevel(),
+                title="Set",
+                message="Cannot write to directory\n\n" + directory,
             )
             return
         self.opendatabase.start_transaction()

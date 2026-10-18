@@ -750,11 +750,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN export format compliant",
             )
             return
-        export_game.export_single_game_pgn_reduced_export_format(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn_reduced_export_format,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name + " (reduced export format)", pgn=True
-            ),
+            type_name + " (reduced export format)",
+            True,
         )
 
     def _export_pgn(self, event=None):
@@ -774,11 +774,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN export format compliant",
             )
             return
-        export_game.export_single_game_pgn(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                "Game", pgn=True
-            ),
+            "Game",
+            True,
         )
 
     def _export_pgn_no_comments_no_ravs(self, event=None):
@@ -802,11 +802,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN export format compliant",
             )
             return
-        export_game.export_single_game_pgn_no_comments_no_ravs(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn_no_comments_no_ravs,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name + " (no comments or RAVs)", pgn=True
-            ),
+            type_name + " (no comments or RAVs)",
+            True,
         )
 
     def _export_pgn_no_comments(self, event=None):
@@ -826,11 +826,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN export format compliant",
             )
             return
-        export_game.export_single_game_pgn_no_comments(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn_no_comments,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name + " (no comments)", pgn=True
-            ),
+            type_name + " (no comments)",
+            True,
         )
 
     def _export_pgn_no_structured_comments(self, event=None):
@@ -850,11 +850,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN export format compliant",
             )
             return
-        export_game.export_single_game_pgn_no_structured_comments(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn_no_structured_comments,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name + " (no {[%]} comments)", pgn=True
-            ),
+            type_name + " (no {[%]} comments)",
+            True,
         )
 
     def _export_pgn_import_format(self, event=None):
@@ -881,11 +881,11 @@ class Score(SharedTextScore, BlankText):
                 + " score is not PGN import format compliant",
             )
             return
-        export_game.export_single_game_pgn_import_format(
+        self._try_export_pgn(
+            export_game.export_single_game_pgn_import_format,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name + " (import format)", pgn=True
-            ),
+            type_name + " (import format)",
+            True,
         )
 
     def _export_text(self, event=None):
@@ -908,12 +908,27 @@ class Score(SharedTextScore, BlankText):
                 self.score.get("1.0", tkinter.END)
             )
         )
-        export_game.export_single_game_text(
+        self._try_export_pgn(
+            export_game.export_single_game_text,
             collected_game,
-            self.board.ui.get_export_filename_for_single_item(
-                type_name, pgn=False
-            ),
+            type_name,
+            False,
         )
+
+    def _try_export_pgn(self, method, collected_game, title, pgn):
+        """Export all games, repertoires, or CQL queries."""
+        try:
+            method(
+                collected_game,
+                self.board.ui.get_export_filename_for_single_item(
+                    title, pgn=pgn
+                ),
+            )
+        except OSError as exc:
+            tkinter.messagebox.showinfo(
+                title="Export from database problem",
+                message=str(exc),
+            )
 
     # The methods which display the score of a game of chess.
 
